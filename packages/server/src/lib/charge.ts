@@ -170,9 +170,6 @@ export function calculerCharges(entree: {
       else if (echeance <= limiteProche) m.proches += 1
       else m.plusTard += 1
     }
-    if (tache.statut === 'FAITE') {
-      for (const userId of tache.credites) de(userId).realisees += 1
-    }
   }
 
   for (const place of entree.places) {
@@ -183,6 +180,16 @@ export function calculerCharges(entree: {
       if (p.prochaine === null || place.debut < p.prochaine) {
         p.prochaine = place.debut
       }
+    }
+  }
+
+  // Les tâches réalisées se comptent en dernier, pour les seules personnes déjà
+  // listées : une personne seulement créditée n'entre pas dans la charge.
+  for (const tache of entree.taches) {
+    if (tache.statut !== 'FAITE') continue
+    for (const userId of tache.credites) {
+      const charge = charges.get(userId)
+      if (charge) charge.realisees += 1
     }
   }
 

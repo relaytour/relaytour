@@ -2583,6 +2583,10 @@ msgid "Ce choix vaut pour ce navigateur, sur cet appareil. Vous pouvez le change
 msgstr "This choice applies to this browser on this device. You can change it for one message in the “Write a message” window."
 
 #: src/pages/admin/Classement.tsx
+msgid "Ce classement est visible par toute l’équipe de l’activité."
+msgstr "This ranking is visible to the whole team of the activity."
+
+#: src/pages/admin/Classement.tsx
 msgid "Ce classement n’est visible que par les admins."
 msgstr "Only admins can see this ranking."
 
@@ -2974,8 +2978,8 @@ msgid "Chaque personne convoquée reçoit un mail avec la réunion à ajouter à
 msgstr "Each invited person receives an email with the meeting to add to their calendar, and replies in the organizer workspace."
 
 #: src/pages/admin/Classement.tsx
-msgid "Chaque personne voit seulement son propre score. Un palmarès public se décide en fin {periodeDe}."
-msgstr "Each person sees only their own score. A public leaderboard is decided at the end of {periodeDe}."
+msgid "Chaque personne voit seulement son propre score. Le module « Classement », dans l’écran « Activités », ouvre ce classement à toute l’équipe."
+msgstr "Each person sees only their own score. The Ranking module, in the Activities screen, opens this ranking to the whole team."
 
 #. Menu : la charge de travail des personnes de l’équipe
 #: src/composants/Coquille.tsx
@@ -3153,6 +3157,7 @@ msgstr "Choose a slot to rank people by their availability."
 msgid "Choisissez une séquence."
 msgstr "Choose a slot."
 
+#: src/composants/ChampsActivite.tsx
 #: src/composants/Coquille.tsx
 #: src/pages/admin/Classement.tsx
 msgid "Classement"
@@ -5855,6 +5860,10 @@ msgstr "The Cc field shows all email addresses. We recommend the Bcc field, exce
 msgid "Le changement est appliqué."
 msgstr "The change is applied."
 
+#: src/composants/ChampsActivite.tsx
+msgid "Le classement des scores de participation devient visible par toute l’équipe. Sans ce module, seuls les admins le lisent."
+msgstr "The participation score ranking becomes visible to the whole team. Without this module, only the admins can read it."
+
 #: src/lib/connexion.ts
 msgid "Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un nouveau code."
 msgstr "The code is incorrect, expired or used up. Check it, or request a new code."
@@ -6269,6 +6278,10 @@ msgstr "Activity admins and people with an appointment in one of its areas can r
 #: src/pages/Agenda.tsx
 msgid "Les admins de l’activité n’ont placé aucune date clé dans {periodeCette}."
 msgstr "The activity admins haven’t placed any key date in {periodeCette}."
+
+#: src/pages/admin/Classement.tsx
+msgid "Les admins de l’activité ont activé le module « Classement ». Le classement montre des totaux par personne, jamais le détail des tâches."
+msgstr "The activity admins have turned on the Ranking module. The ranking shows totals per person, never the detail of tasks."
 
 #: src/pages/MonEspace.tsx
 msgid "Les admins de l’activité préparent {laPeriode} à venir."

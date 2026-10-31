@@ -504,7 +504,7 @@ type ChargePersonne {
   places: ChargePlaces!
 
   """
-  Tâches faites où la personne est créditée. Lisible par elle-même et par les admins de l’activité ; null pour les autres.
+  Tâches faites où la personne est créditée. Lisible par elle-même, par les admins de l’activité, et par toute l’équipe avec le module CLASSEMENT ; null pour les autres.
   """
   realisees: Int
 }
@@ -1633,6 +1633,7 @@ enum ModeleDeDepart {
 enum ModuleActivite {
   AGENDA
   BENEVOLES
+  CLASSEMENT
   DOCUMENTS
 }
 

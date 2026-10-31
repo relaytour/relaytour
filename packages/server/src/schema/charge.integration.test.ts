@@ -331,6 +331,23 @@ describe('chargeEquipe', () => {
     expect(parAdmin(ids.bruno)?.realisees).toBe(1)
   })
 
+  it('montre les tâches réalisées à l’équipe avec le module « Classement »', async () => {
+    await prisma.activite.update({
+      where: { id: ACTIVITE },
+      data: { modules: ['CLASSEMENT'] },
+    })
+    try {
+      const parChloe = await charge(ids.chloe)
+      expect(parChloe(ids.alice)?.realisees).toBe(1)
+      expect(parChloe(ids.bruno)?.realisees).toBe(1)
+    } finally {
+      await prisma.activite.update({
+        where: { id: ACTIVITE },
+        data: { modules: [] },
+      })
+    }
+  })
+
   it('refuse une personne en découverte, sans lien ou sans session', async () => {
     for (const userId of [ids.noa, ids.emma, null]) {
       const r = await executer(userId, CHARGE, { e: ids.edition })

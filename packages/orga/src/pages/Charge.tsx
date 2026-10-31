@@ -393,7 +393,10 @@ export default function Charge() {
   const { t } = useLingui()
   const { activite, periode } = useActivite()
   const [parametres, setParametres] = useSearchParams()
-  const reglages = lireReglagesCharge(parametres)
+  const reglages = lireReglagesCharge(
+    parametres,
+    activite.groupes.map(g => g.cle)
+  )
   const { data: courante } = useQuery(EDITION_COURANTE)
   const editionId = parametres.get('edition') ?? courante?.editionCourante?.id
   const { data, error } = useQuery(CHARGE, {

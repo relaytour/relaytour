@@ -76,6 +76,11 @@ const routeur = createBrowserRouter([
             children: [{ path: 'agenda', element: <Agenda /> }],
           },
           { path: 'programme', element: <Programme /> },
+          // Le classement s'ouvre à l'équipe avec son module (ADR 0056).
+          {
+            element: <ReserveModule module="CLASSEMENT" />,
+            children: [{ path: 'classement', element: <Classement /> }],
+          },
           {
             element: <ReserveModule module="BENEVOLES" />,
             children: [
