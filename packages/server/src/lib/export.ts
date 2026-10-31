@@ -377,7 +377,10 @@ export async function construireExport(organisationId: string) {
       },
       creePar: { select: { email: true } },
       clotureePar: { select: { email: true } },
-      realiseePar: { select: { email: true } },
+      realisations: {
+        include: { user: { select: { email: true } } },
+        orderBy: { createdAt: 'asc' },
+      },
       assignations: { include: { user: { select: { email: true } } } },
       // Les commentaires de la tâche (ADR 0029), du plus ancien au plus récent.
       commentaires: {
@@ -534,7 +537,10 @@ export async function construireExport(organisationId: string) {
           accord: t.accord,
           creePar: t.creePar?.email ?? null,
           clotureePar: t.clotureePar?.email ?? null,
-          realiseePar: t.realiseePar?.email ?? null,
+          // Les personnes réalisatrices (ADR 0055). `realiseePar` reste pour un
+          // outil qui lit l'ancien format : la première personne, ou null.
+          realiseePar: t.realisations[0]?.user.email ?? null,
+          realisateurs: t.realisations.map(r => r.user.email),
           termineeLe: t.termineeLe?.toISOString() ?? null,
           assignes: t.assignations.map(x => x.user.email),
           commentaires: t.commentaires.map(c => ({

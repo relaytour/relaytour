@@ -10,9 +10,9 @@ import { aujourdhui } from './droits.ts'
 // davantage. Personne ne gagne de points en cochant et décochant.
 //
 // Barème :
-// - tâche faite : 3 points pour la personne indiquée comme réalisatrice, sinon pour
-//   la personne qui l'a cochée ; 1 point de plus si elle est faite avant ou le jour
-//   de son échéance ;
+// - tâche faite : 3 points pour chaque personne indiquée comme réalisatrice, sinon
+//   pour la personne qui l'a cochée ; 1 point de plus si elle est faite avant ou le
+//   jour de son échéance (ADR 0055) ;
 // - tâche créée et non abandonnée : 1 point pour la personne qui l'a créée ;
 // - fiche : 3 points par fiche créée, 2 points par fiche modifiée, au plus une fois
 //   par fiche et par jour.
@@ -104,23 +104,31 @@ export async function calculerScores(
       termineeLe: true,
       creeParId: true,
       clotureeParId: true,
-      realiseeParId: true,
+      realisations: { select: { userId: true } },
     },
   })
   for (const tache of taches) {
     if (tache.statut === 'FAITE') {
-      const auteur = tache.realiseeParId ?? tache.clotureeParId
-      if (auteur) {
+      // Chaque personne réalisatrice reçoit les points pleins (ADR 0055). Sans
+      // personne indiquée, la personne qui a coché les reçoit.
+      const auteurs =
+        tache.realisations.length > 0
+          ? tache.realisations.map(r => r.userId)
+          : tache.clotureeParId
+            ? [tache.clotureeParId]
+            : []
+      // Jour de clôture dans le fuseau de l'organisation : une tâche cochée à 1 h du
+      // matin le lendemain est en retard.
+      const faiteLe = tache.termineeLe
+        ? aujourdhui(tache.termineeLe, fuseau)
+        : undefined
+      const echeance = tache.echeance?.toISOString().slice(0, 10)
+      const aTemps = Boolean(faiteLe && echeance && faiteLe <= echeance)
+      for (const auteur of auteurs) {
         const score = de(auteur)
         score.tachesRealisees += 1
         score.points += BAREME.tacheRealisee
-        // Jour de clôture dans le fuseau de l'organisation : une tâche cochée à 1 h du
-        // matin le lendemain est en retard.
-        const faiteLe = tache.termineeLe
-          ? aujourdhui(tache.termineeLe, fuseau)
-          : undefined
-        const echeance = tache.echeance?.toISOString().slice(0, 10)
-        if (faiteLe && echeance && faiteLe <= echeance) {
+        if (aTemps) {
           score.tachesATemps += 1
           score.points += BAREME.bonusATemps
         }

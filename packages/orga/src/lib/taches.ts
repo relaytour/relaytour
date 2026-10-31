@@ -108,7 +108,7 @@ export const TACHE_CHAMPS = graphql(`
       id
       nom
     }
-    realiseePar {
+    realisateurs {
       id
       nom
     }
@@ -271,14 +271,14 @@ export const CHANGER_STATUT = graphql(`
   mutation ChangerStatutTache(
     $id: ID!
     $statut: StatutTache!
-    $realiseeParId: ID
+    $realisateurs: [ID!]
     $statutAttendu: StatutTache
     $confirmer: Boolean
   ) {
     changerStatutTache(
       id: $id
       statut: $statut
-      realiseeParId: $realiseeParId
+      realisateurs: $realisateurs
       statutAttendu: $statutAttendu
       confirmer: $confirmer
     ) {

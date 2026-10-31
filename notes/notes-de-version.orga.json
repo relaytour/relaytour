@@ -8,6 +8,60 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-31-orga-une-tache-faite-peut-etre-realisee-par-plusieurs-personnes",
+          "date": "2026-10-31",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une tâche faite peut être réalisée par plusieurs personnes",
+            "texte": "Quand vous marquez une tâche comme faite, l'application propose les personnes assignées comme personnes réalisatrices. Vous pouvez en ajouter ou en retirer. Chaque personne réalisatrice reçoit les points de la tâche dans le score de participation.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A completed task can be done by several people",
+            "texte": "When you mark a task as done, the app suggests the assigned people as the people who did it. You can add or remove people. Each of them receives the task's points in the participation score.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-31-orga-le-module-classement-ouvre-le-classement-a-toute-l-equipe",
+          "date": "2026-10-31",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le module « Classement » ouvre le classement à toute l’équipe",
+            "texte": "Dans l'écran « Activités », vous pouvez activer le module « Classement ». Toute l'équipe de l'activité lit alors le classement des scores de participation. Le module reste désactivé tant qu'un admin ne l'active pas, y compris dans les activités existantes.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The Ranking module opens the ranking to the whole team",
+            "texte": "In the Activities screen, you can turn on the Ranking module. The whole team of the activity can then read the participation score ranking. The module stays off until an admin turns it on, including in existing activities.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-31-orga-la-page-charge-montre-le-travail-de-chaque-personne-de-l-equ",
+          "date": "2026-10-31",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La page « Charge » montre le travail de chaque personne de l’équipe",
+            "texte": "La page « Charge » compte, pour chaque personne, les tâches ouvertes selon leur échéance et les places à venir au programme. La vue « Toute la période » montre toutes les tâches assignées, par statut et par phase. Un clic sur une personne affiche ses tâches et sa charge dans vos autres activités.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The Workload page shows each team member’s work",
+            "texte": "The Workload page counts, for each person, the open tasks by due date and the upcoming places in the schedule. The \"Whole period\" view shows all assigned tasks by status and by phase. Clicking a person shows their tasks and their workload in your other activities.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-31-orga-la-mention-du-contact-principal-s-affiche-sous-le-nom-dans-l",
           "date": "2026-10-31",
           "type": "correctif",

@@ -36,6 +36,7 @@ import Programme from './pages/Programme'
 import Preferences from './pages/Preferences'
 import Rejoindre from './pages/Rejoindre'
 import Retroplanning from './pages/Retroplanning'
+import Charge from './pages/Charge'
 import TousLesPerimetres from './pages/TousLesPerimetres'
 
 // Les écrans d'une activité vivent sous /<slug de l'activité>/ (ADR 0008). Une
@@ -67,12 +68,19 @@ const routeur = createBrowserRouter([
         children: [
           { index: true, element: <MonEspace /> },
           { path: 'retroplanning', element: <Retroplanning /> },
+          // La charge de l'équipe se lit par toute l'équipe qui voit les tâches (ADR 0055).
+          { path: 'charge', element: <Charge /> },
           // Un module inactif mène à « Mon espace » (ADR 0052).
           {
             element: <ReserveModule module="AGENDA" />,
             children: [{ path: 'agenda', element: <Agenda /> }],
           },
           { path: 'programme', element: <Programme /> },
+          // Le classement s'ouvre à l'équipe avec son module (ADR 0056).
+          {
+            element: <ReserveModule module="CLASSEMENT" />,
+            children: [{ path: 'classement', element: <Classement /> }],
+          },
           {
             element: <ReserveModule module="BENEVOLES" />,
             children: [

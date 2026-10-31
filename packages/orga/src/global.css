@@ -4391,3 +4391,107 @@ button.rt-carte-fiche {
 .rt-liste-modele .rt-texte-secondaire {
   margin-left: 4px;
 }
+
+/* Charge de l'équipe (ADR 0055) : une ligne par personne, une barre sur une
+   échelle commune à toute la liste. */
+.rt-charge-liste {
+  gap: 8px;
+}
+
+.rt-charge-ligne {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.1fr) minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 18px;
+  color: var(--rt-encre);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-charge-ligne:hover {
+  background:
+    linear-gradient(
+      rgba(var(--rt-encre-rgb), 0.05),
+      rgba(var(--rt-encre-rgb), 0.05)
+    ),
+    var(--rt-verre);
+}
+
+.rt-charge-ligne:focus-visible {
+  outline: 2px solid var(--rt-primaire);
+  outline-offset: 2px;
+}
+
+.rt-charge-personne {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rt-charge-nom {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.rt-charge-perimetres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rt-charge-mesure {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.rt-charge-barre {
+  background: transparent;
+}
+
+.rt-charge-resume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 13px;
+  color: var(--rt-encre-70);
+}
+
+.rt-charge-sous-titre {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rt-charge-phases {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+}
+
+.rt-charge-phases > li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+@media (max-width: 767px) {
+  .rt-charge-ligne {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}
