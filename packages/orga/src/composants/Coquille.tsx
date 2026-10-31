@@ -19,6 +19,7 @@ import {
   NotificationOutlined,
   ProjectOutlined,
   ScheduleOutlined,
+  BarChartOutlined,
   SearchOutlined,
   SettingOutlined,
   SolutionOutlined,
@@ -174,6 +175,14 @@ function Mise({ session }: { session: Session }) {
             key: lien('/retroplanning'),
             icon: <ScheduleOutlined />,
             label: t`Rétroplanning`,
+          },
+          {
+            key: lien('/charge'),
+            icon: <BarChartOutlined />,
+            label: t({
+              message: 'Charge',
+              comment: 'Menu : la charge de travail des personnes de l’équipe',
+            }),
           },
           // Les modules inactifs de l'activité quittent le menu (ADR 0052).
           ...(aModule('AGENDA')

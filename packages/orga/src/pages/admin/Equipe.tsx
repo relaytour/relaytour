@@ -422,14 +422,23 @@ export default function Equipe() {
       <Titre
         sousTitre={t(SOUS_TITRES[vue])}
         actions={
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={() => setEnReglage('nouveau')}
-          >
-            <Trans>Nouveau périmètre</Trans>
-          </Button>
+          <Space wrap>
+            <Link
+              to={lien(`/charge${editionId ? `?edition=${editionId}` : ''}`)}
+            >
+              <Button size="large">
+                <Trans>Charge de l’équipe</Trans>
+              </Button>
+            </Link>
+            <Button
+              type="primary"
+              size="large"
+              icon={<PlusOutlined />}
+              onClick={() => setEnReglage('nouveau')}
+            >
+              <Trans>Nouveau périmètre</Trans>
+            </Button>
+          </Space>
         }
       >
         {t`Équipe`}

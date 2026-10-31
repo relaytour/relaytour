@@ -160,6 +160,11 @@ msgstr "{arrondi} Ko"
 msgid "{arrondi} Mo"
 msgstr "{arrondi} Mo"
 
+#: src/pages/Charge.tsx
+msgid "{assignees, plural, one {# tâche assignée} other {# tâches assignées}}"
+msgstr "{assignees, plural, one {# tâche assignée} other {# tâches assignées}}"
+
+#: src/pages/Charge.tsx
 #: src/pages/MonEspace.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Programme.tsx
@@ -190,6 +195,10 @@ msgstr "{avecAcces} sur {total} a accès"
 #: src/composants/VerificationAcces.tsx
 msgid "{avecAcces} sur {total} ont accès"
 msgstr "{avecAcces} sur {total} ont accès"
+
+#: src/pages/Charge.tsx
+msgid "{aVenir, plural, one {# place à venir} other {# places à venir}}"
+msgstr "{aVenir, plural, one {# place à venir} other {# places à venir}}"
 
 #: src/pages/Perimetre.tsx
 msgid "{cettePeriodeMajuscule} est {periodeArchivee}. Ses tâches sont consultables en lecture seule."
@@ -243,6 +252,10 @@ msgstr "{ecrites, plural, one {# fiche écrite} other {# fiches écrites}}"
 msgid "{enAttente} en attente d’accord"
 msgstr "{enAttente} en attente d’accord"
 
+#: src/pages/Charge.tsx
+msgid "{enRetard} en retard"
+msgstr "{enRetard} en retard"
+
 #: src/composants/LigneTache.tsx
 msgid "{faites, plural, one {{nombrePerimetres} périmètres · # faite} other {{nombrePerimetres} périmètres · # faites}}"
 msgstr "{faites, plural, one {{nombrePerimetres} périmètres · # faite} other {{nombrePerimetres} périmètres · # faites}}"
@@ -250,6 +263,10 @@ msgstr "{faites, plural, one {{nombrePerimetres} périmètres · # faite} other 
 #: src/lib/declinaisons.ts
 msgid "{faites, plural, one {# faite sur {gardees}} other {# faites sur {gardees}}}"
 msgstr "{faites, plural, one {# faite sur {gardees}} other {# faites sur {gardees}}}"
+
+#: src/pages/Charge.tsx
+msgid "{faites, plural, one {# faite} other {# faites}}"
+msgstr "{faites, plural, one {# faite} other {# faites}}"
 
 #: src/composants/PremiersPas.tsx
 msgid "{faites} sur {total}"
@@ -518,6 +535,10 @@ msgstr "{nbInvitations, plural, one {# invitation attend un accord} other {# inv
 msgid "{nbLignesLues} lignes et {nbColonnesLues} colonnes lues."
 msgstr "{nbLignesLues} lignes et {nbColonnesLues} colonnes lues."
 
+#: src/pages/Charge.tsx
+msgid "{nbPersonnes, plural, one {# personne} other {# personnes}}"
+msgstr "{nbPersonnes, plural, one {# personne} other {# personnes}}"
+
 #: src/pages/ImportBenevoles.tsx
 msgid "{nbPersonnes, plural, one {# personne} other {# personnes}}, {nbEcarteesNavigateur, plural, one {# ligne écartée} other {# lignes écartées}}."
 msgstr "{nbPersonnes, plural, one {# personne} other {# personnes}}, {nbEcarteesNavigateur, plural, one {# ligne écartée} other {# lignes écartées}}."
@@ -542,6 +563,10 @@ msgstr "{nom} ({raccourci})"
 #: src/composants/Messages.tsx
 msgid "{nom} (Cc)"
 msgstr "{nom} (Cc)"
+
+#: src/pages/Charge.tsx
+msgid "{nom} (vous)"
+msgstr "{nom} (vous)"
 
 #: src/pages/admin/Personnes.tsx
 msgid "{nomAffiche} (archivée)"
@@ -732,6 +757,14 @@ msgstr "{organisation} : votre accès à l’espace organisateur"
 msgid "{oui} oui · {siBesoin} si besoin · {non} non"
 msgstr "{oui} oui · {siBesoin} si besoin · {non} non"
 
+#: src/pages/Charge.tsx
+msgid "{ouvertes, plural, one {# tâche ouverte} other {# tâches ouvertes}}"
+msgstr "{ouvertes, plural, one {# tâche ouverte} other {# tâches ouvertes}}"
+
+#: src/pages/Charge.tsx
+msgid "{partagees, plural, one {# partagée} other {# partagées}}"
+msgstr "{partagees, plural, one {# partagée} other {# partagées}}"
+
 #: src/composants/SondageDetail.tsx
 msgid "{participants, plural, one {{repondants} sur # personne a répondu.} other {{repondants} sur # personnes ont répondu.}}"
 msgstr "{participants, plural, one {{repondants} sur # personne a répondu.} other {{repondants} sur # personnes ont répondu.}}"
@@ -796,6 +829,10 @@ msgstr "{personnes} sur {effectif, plural, one {# souhaitée} other {# souhaité
 msgid "{personnes}. Effectif à définir."
 msgstr "{personnes}. Effectif à définir."
 
+#: src/pages/Charge.tsx
+msgid "{places, plural, one {# place au programme} other {# places au programme}}"
+msgstr "{places, plural, one {# place au programme} other {# places au programme}}"
+
 #: src/pages/AppelBenevoles.tsx
 msgid "{places, plural, one {# place recherchée} other {# places recherchées}}"
 msgstr "{places, plural, one {# place recherchée} other {# places recherchées}}"
@@ -827,6 +864,10 @@ msgstr "{quoi} ({champ})"
 #: src/composants/GestionAcces.tsx
 msgid "{raison} Relaytour le proposera de nouveau à la prochaine vérification."
 msgstr "{raison} Relaytour le proposera de nouveau à la prochaine vérification."
+
+#: src/pages/Charge.tsx
+msgid "{realisees, plural, one {# tâche réalisée sur cette période.} other {# tâches réalisées sur cette période.}}"
+msgstr "{realisees, plural, one {# tâche réalisée sur cette période.} other {# tâches réalisées sur cette période.}}"
 
 #: src/lib/declinaisons.ts
 msgid "{refusees, plural, one {# refusée} other {# refusées}}"
@@ -1174,6 +1215,10 @@ msgstr "{titreSequence} · {jourSequence}, {heureSequence}"
 msgid "{total, plural, one {# fiche} other {# fiches}}"
 msgstr "{total, plural, one {# fiche} other {# fiches}}"
 
+#: src/pages/Charge.tsx
+msgid "{total, plural, one {# tâche} other {# tâches}}"
+msgstr "{total, plural, one {# tâche} other {# tâches}}"
+
 #: src/lib/declinaisons.ts
 msgid "{total, plural, one {Déclinée dans # périmètre} other {Déclinée dans # périmètres}}"
 msgstr "{total, plural, one {Déclinée dans # périmètre} other {Déclinée dans # périmètres}}"
@@ -1255,8 +1300,10 @@ msgstr "À confirmer"
 #. Statut d’une tâche
 #. Statut d’une tâche
 #. Statut d’une tâche
+#. Statut d’une tâche
 #: src/lib/conflit.ts
 #: src/lib/taches.ts
+#: src/pages/Charge.tsx
 #: src/pages/Retroplanning.tsx
 msgid "À faire"
 msgstr "À faire"
@@ -1329,6 +1376,8 @@ msgstr "Abandonnée"
 
 #. Filtre : les tâches abandonnées
 #. Nombre de tâches abandonnées, au pluriel
+#. Nombre de tâches abandonnées, au pluriel
+#: src/pages/Charge.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Abandonnées"
@@ -2336,6 +2385,10 @@ msgstr "Aucune personne n’est affectée à ce périmètre pour la période."
 msgid "Aucune personne n’est attendue pour ce dossier."
 msgstr "Aucune personne n’est attendue pour ce dossier."
 
+#: src/pages/Charge.tsx
+msgid "Aucune personne ne correspond à ces filtres."
+msgstr "Aucune personne ne correspond à ces filtres."
+
 #: src/composants/ReunionsDuPerimetre.tsx
 msgid "Aucune réunion à venir pour ce périmètre."
 msgstr "Aucune réunion à venir pour ce périmètre."
@@ -2386,6 +2439,7 @@ msgid "Aucune tâche ouverte ne vous est assignée."
 msgstr "Aucune tâche ouverte ne vous est assignée."
 
 #: src/composants/CarteAvancement.tsx
+#: src/pages/Charge.tsx
 msgid "Aucune tâche."
 msgstr "Aucune tâche."
 
@@ -2923,6 +2977,17 @@ msgstr "Chaque personne convoquée reçoit un mail avec la réunion à ajouter �
 msgid "Chaque personne voit seulement son propre score. Un palmarès public se décide en fin {periodeDe}."
 msgstr "Chaque personne voit seulement son propre score. Un palmarès public se décide en fin {periodeDe}."
 
+#. Menu : la charge de travail des personnes de l’équipe
+#: src/composants/Coquille.tsx
+msgid "Charge"
+msgstr "Charge"
+
+#: src/pages/admin/Equipe.tsx
+#: src/pages/Charge.tsx
+#: src/pages/MonEspace.tsx
+msgid "Charge de l’équipe"
+msgstr "Charge de l’équipe"
+
 #: src/composants/FournisseurActivite.tsx
 #: src/composants/GardeSession.tsx
 msgid "Chargement"
@@ -3223,6 +3288,10 @@ msgstr "Communes"
 #: src/pages/admin/ImportTaches.tsx
 msgid "Communication"
 msgstr "Communication"
+
+#: src/pages/MonEspace.tsx
+msgid "Comparez les tâches ouvertes et les places au programme de chaque personne avant de répartir le travail."
+msgstr "Comparez les tâches ouvertes et les places au programme de chaque personne avant de répartir le travail."
 
 #: src/pages/AppelBenevoles.tsx
 msgid "Complet : liste d’attente"
@@ -3549,6 +3618,10 @@ msgstr "Dans la console Google Cloud de l’association, créez un projet et act
 #: src/pages/Preferences.tsx
 msgid "Dans le résumé par mail"
 msgstr "Dans le résumé par mail"
+
+#: src/pages/Charge.tsx
+msgid "Dans les autres activités"
+msgstr "Dans les autres activités"
 
 #. Sorte d’élément de l’agenda
 #: src/pages/Agenda.tsx
@@ -3932,6 +4005,10 @@ msgstr "Donner une nouvelle adresse à cet appel ?"
 msgid "Dont à temps"
 msgstr "Dont à temps"
 
+#: src/pages/Charge.tsx
+msgid "Dont en retard"
+msgstr "Dont en retard"
+
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Dossier"
 msgstr "Dossier"
@@ -4006,6 +4083,14 @@ msgstr "Échéance {dateEcheance}"
 #: src/composants/TacheFormulaire.tsx
 msgid "Échéance dans ces périmètres (facultatif)"
 msgstr "Échéance dans ces périmètres (facultatif)"
+
+#: src/pages/Charge.tsx
+msgid "Échéance plus lointaine"
+msgstr "Échéance plus lointaine"
+
+#: src/pages/Charge.tsx
+msgid "Échéance sous 7 jours"
+msgstr "Échéance sous 7 jours"
 
 #: src/composants/PreferencePush.tsx
 #: src/pages/Preferences.tsx
@@ -4142,10 +4227,12 @@ msgstr "En attente de votre accord dans Nextcloud. <0>Rouvrir la page de Nextclo
 #. Statut d’une tâche
 #. Statut d’une tâche
 #. Statut d’une tâche
+#. Statut d’une tâche
 #: src/lib/conflit.ts
 #: src/lib/messages.ts
 #: src/lib/taches.ts
 #: src/pages/admin/Editions.tsx
+#: src/pages/Charge.tsx
 #: src/pages/Retroplanning.tsx
 msgid "En cours"
 msgstr "En cours"
@@ -4167,6 +4254,7 @@ msgstr "en renfort"
 #: src/composants/DeclinaisonsTache.tsx
 #: src/composants/LigneTache.tsx
 #: src/pages/admin/Equipe.tsx
+#: src/pages/Charge.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
 msgid "En retard"
@@ -4386,6 +4474,8 @@ msgstr "Faite"
 
 #. Filtre : les tâches faites
 #. Nombre de tâches faites, au pluriel
+#. Nombre de tâches faites, au pluriel
+#: src/pages/Charge.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Faites"
@@ -4751,6 +4841,7 @@ msgid "Groupe « {nomGroupe} », ajouts automatiques"
 msgstr "Groupe « {nomGroupe} », ajouts automatiques"
 
 #: src/pages/admin/Equipe.tsx
+#: src/pages/Charge.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Groupe de périmètres"
 msgstr "Groupe de périmètres"
@@ -5436,6 +5527,10 @@ msgstr "La borne doit dépasser la précédente."
 #: src/lib/guide-markdown.ts
 msgid "La case se coche en modifiant la fiche, et non d’un clic. Une case de fiche ne crée pas de tâche."
 msgstr "La case se coche en modifiant la fiche, et non d’un clic. Une case de fiche ne crée pas de tâche."
+
+#: src/pages/Charge.tsx
+msgid "La charge de l’équipe n’a pas pu être chargée."
+msgstr "La charge de l’équipe n’a pas pu être chargée."
 
 #: src/pages/Preferences.tsx
 msgid "La cloche de la barre haute affiche les nouvelles de vos tâches, quel que soit votre choix pour les mails. Elle se met à jour sans recharger la page."
@@ -6464,6 +6559,10 @@ msgstr "Les tâches d’un tableur rejoignent une période. Une tâche déjà pr
 msgid "Les tâches de"
 msgstr "Les tâches de"
 
+#: src/pages/Charge.tsx
+msgid "Les tâches ouvertes et les places à venir de chaque personne {dePeriode}."
+msgstr "Les tâches ouvertes et les places à venir de chaque personne {dePeriode}."
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Les tâches proposées à ce périmètre n’ont pas pu être chargées. Rechargez la page dans un instant."
 msgstr "Les tâches proposées à ce périmètre n’ont pas pu être chargées. Rechargez la page dans un instant."
@@ -6727,6 +6826,10 @@ msgstr "Mail d’invitation du fournisseur"
 #: src/pages/Preferences.tsx
 msgid "Mails immédiats"
 msgstr "Mails immédiats"
+
+#: src/pages/Charge.tsx
+msgid "Maintenant"
+msgstr "Maintenant"
 
 #: src/composants/TacheCarte.tsx
 msgid "Marquer comme faite"
@@ -7539,6 +7642,10 @@ msgstr "Paliers de disponibilité"
 msgid "par {nomDecideur}"
 msgstr "par {nomDecideur}"
 
+#: src/pages/Charge.tsx
+msgid "Par charge"
+msgstr "Par charge"
+
 #: src/pages/Perimetre.tsx
 msgid "Par échéance"
 msgstr "Par échéance"
@@ -7564,10 +7671,15 @@ msgstr "Par lieu"
 msgid "Par mois"
 msgstr "Par mois"
 
+#: src/pages/Charge.tsx
+msgid "Par nom"
+msgstr "Par nom"
+
 #: src/composants/Repartition.tsx
 msgid "Par périmètre"
 msgstr "Par périmètre"
 
+#: src/pages/Charge.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Par phase"
@@ -7758,6 +7870,10 @@ msgstr "Périmètres souhaités pour {nomEdition}"
 msgid "Période"
 msgstr "Période"
 
+#: src/pages/Charge.tsx
+msgid "Période de lecture"
+msgstr "Période de lecture"
+
 #: src/composants/SequenceFormulaire.tsx
 #: src/pages/admin/Admins.tsx
 #: src/pages/admin/Classement.tsx
@@ -7883,6 +7999,10 @@ msgstr "Placer quand même"
 #: src/composants/SequenceFormulaire.tsx
 msgid "Placer une personne"
 msgstr "Placer une personne"
+
+#: src/pages/Charge.tsx
+msgid "Places à venir au programme"
+msgstr "Places à venir au programme"
 
 #: src/pages/ImportBenevoles.tsx
 msgid "Places directes : chaque personne reçoit sa fiche et ses places."
@@ -8088,6 +8208,10 @@ msgstr "Prévenir par mail : la première place d’une personne lui envoie son 
 msgid "Primaire"
 msgstr "Primaire"
 
+#: src/pages/Charge.tsx
+msgid "Prochaine place au programme : {dateProchaine}."
+msgstr "Prochaine place au programme : {dateProchaine}."
+
 #: src/composants/ReunionsDuPerimetre.tsx
 msgid "Prochaines réunions"
 msgstr "Prochaines réunions"
@@ -8214,6 +8338,7 @@ msgid "Recharger la page"
 msgstr "Recharger la page"
 
 #: src/pages/Agenda.tsx
+#: src/pages/Charge.tsx
 #: src/pages/Programme.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Rechargez la page dans un instant."
@@ -8244,6 +8369,10 @@ msgstr "Rechercher un périmètre ou une personne"
 #: src/pages/Fiches.tsx
 msgid "Rechercher une fiche"
 msgstr "Rechercher une fiche"
+
+#: src/pages/Charge.tsx
+msgid "Rechercher une personne ou un périmètre"
+msgstr "Rechercher une personne ou un périmètre"
 
 #: src/composants/Recherche.tsx
 msgid "Rechercher une tâche, une fiche ou une personne"
@@ -8999,6 +9128,7 @@ msgid "Sans date, les périmètres reçoivent l’échéance de cette tâche."
 msgstr "Sans date, les périmètres reçoivent l’échéance de cette tâche."
 
 #: src/composants/LigneTache.tsx
+#: src/pages/Charge.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Sans échéance"
@@ -9344,6 +9474,7 @@ msgstr "Supprimer mes informations"
 msgid "Supprimer vos informations ?"
 msgstr "Supprimer vos informations ?"
 
+#: src/pages/Charge.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Sur cette sélection"
 msgstr "Sur cette sélection"
@@ -9429,6 +9560,10 @@ msgstr "Tâche rouverte."
 msgid "Tâches"
 msgstr "Tâches"
 
+#: src/pages/Charge.tsx
+msgid "Tâches assignées"
+msgstr "Tâches assignées"
+
 #: src/composants/Contribution.tsx
 #: src/pages/admin/Classement.tsx
 msgid "Tâches créées"
@@ -9463,6 +9598,14 @@ msgstr "Tâches liées"
 #: src/composants/ReunionFormulaire.tsx
 msgid "Tâches liées (facultatives)"
 msgstr "Tâches liées (facultatives)"
+
+#: src/pages/Charge.tsx
+msgid "Tâches ouvertes"
+msgstr "Tâches ouvertes"
+
+#: src/pages/Charge.tsx
+msgid "Tâches ouvertes assignées"
+msgstr "Tâches ouvertes assignées"
 
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Tâches proposées à ce périmètre"
@@ -9626,8 +9769,10 @@ msgstr "Touchez le menu « ⋮ », en haut à droite."
 #. Filtre : tous les périmètres
 #. Filtre : toutes les personnes, quel que soit le rôle
 #. Tous les groupes de périmètres
+#. Tous les groupes de périmètres
 #: src/pages/admin/Equipe.tsx
 #: src/pages/admin/Personnes.tsx
+#: src/pages/Charge.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Tous"
 msgstr "Tous"
@@ -9717,6 +9862,7 @@ msgid "toute la période"
 msgstr "toute la période"
 
 #: src/composants/AppelsBenevoles.tsx
+#: src/pages/Charge.tsx
 msgid "Toute la période"
 msgstr "Toute la période"
 
@@ -9752,6 +9898,10 @@ msgstr "Toutes les fiches sont masquées."
 msgid "Toutes les fiches, communes comprises"
 msgstr "Toutes les fiches, communes comprises"
 
+#: src/pages/Charge.tsx
+msgid "Toutes les tâches assignées et les places de chaque personne sur {laPeriode}."
+msgstr "Toutes les tâches assignées et les places de chaque personne sur {laPeriode}."
+
 #: src/composants/VerificationAcces.tsx
 msgid "Toutes ont accès chez le fournisseur."
 msgstr "Toutes ont accès chez le fournisseur."
@@ -9772,6 +9922,10 @@ msgstr "Transmettre les besoins au pôle"
 #: src/pages/admin/Equipe.tsx
 msgid "Tri des périmètres"
 msgstr "Tri des périmètres"
+
+#: src/pages/Charge.tsx
+msgid "Tri des personnes"
+msgstr "Tri des personnes"
 
 #: src/lib/guide-markdown.ts
 msgid "Trois accents graves sur une ligne ouvrent un bloc de plusieurs lignes, et trois autres le ferment."
@@ -10181,6 +10335,10 @@ msgstr "Une séquence"
 msgid "Une tâche acceptée entre parmi les tâches du périmètre. Une tâche refusée n’y entre pas."
 msgstr "Une tâche acceptée entre parmi les tâches du périmètre. Une tâche refusée n’y entre pas."
 
+#: src/pages/Charge.tsx
+msgid "Une tâche assignée à plusieurs personnes compte pour chacune d’elles."
+msgstr "Une tâche assignée à plusieurs personnes compte pour chacune d’elles."
+
 #: src/composants/Contribution.tsx
 msgid "Une tâche rouverte ou abandonnée perd ses points."
 msgstr "Une tâche rouverte ou abandonnée perd ses points."
@@ -10304,6 +10462,10 @@ msgstr "Voir l’agenda"
 #: src/pages/ImportBenevoles.tsx
 msgid "Voir l’aperçu"
 msgstr "Voir l’aperçu"
+
+#: src/pages/MonEspace.tsx
+msgid "Voir la charge de l’équipe"
+msgstr "Voir la charge de l’équipe"
 
 #: src/pages/FicheEditeur.tsx
 msgid "Voir la version actuelle"

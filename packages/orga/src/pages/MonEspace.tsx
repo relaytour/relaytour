@@ -205,6 +205,19 @@ export default function MonEspace() {
                 editionId={edition.id}
                 nomEdition={String(edition.annee)}
               />
+              {affectations.length > 0 && (
+                <Panneau titre={t`Charge de l’équipe`}>
+                  <p className="rt-texte-secondaire" style={{ margin: 0 }}>
+                    <Trans>
+                      Comparez les tâches ouvertes et les places au programme de
+                      chaque personne avant de répartir le travail.
+                    </Trans>
+                  </p>
+                  <Link to={lien(`/charge?edition=${edition.id}`)}>
+                    <Trans>Voir la charge de l’équipe</Trans>
+                  </Link>
+                </Panneau>
+              )}
             </>
           }
         >
