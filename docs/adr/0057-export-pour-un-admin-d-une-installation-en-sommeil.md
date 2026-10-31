@@ -26,9 +26,12 @@ Enfin, l'export complet n'existait que par le script `organisation:exporter` et 
 
 ### Jeton et limite
 
-- L'installation garde dans Valkey l'empreinte SHA-256 du jeton, l'organisation et les comptes destinataires, pendant une heure. Le jeton lui-même ne se garde pas. Il ne sert qu'à un envoi : la clé disparaît quand les mails sont partis.
-- Une panne du transport laisse le jeton valable, et la mutation lève une erreur. L'hébergeur peut alors relancer l'envoi.
-- La limite de 24 heures se pose quand un lien demandé par un admin est parti. Elle se lit avant l'adresse : une panne de Valkey se produit de la même façon pour une adresse connue ou inconnue.
+- L'installation garde dans Valkey l'empreinte SHA-256 du jeton, l'organisation et les comptes destinataires, pendant une heure. Le jeton lui-même ne se garde pas.
+- L'envoi prend le jeton en une seule commande (`GETDEL`). Deux appels simultanés ne l'obtiennent donc pas tous les deux, et le lien ne part qu'une fois.
+- Une panne du transport rend le jeton avec les seuls destinataires que le lien n'a pas atteints, jusqu'à sa fin de validité d'origine. La mutation lève une erreur, et l'hébergeur peut relancer l'envoi sans écrire une seconde fois aux admins déjà servis.
+- Un export demandé par un admin réserve l'organisation pendant la validité de son jeton. Une autre demande rend alors `null` et n'écrit aucun fichier : le disque ne se remplit pas d'exports jamais envoyés. La réservation se pose après la vérification de l'adresse, pour qu'une adresse inconnue ne retarde pas la demande d'un admin.
+- La limite de 24 heures prend le relais quand le lien est parti. La limite et la réservation se lisent avant l'adresse : une panne de Valkey se produit de la même façon pour une adresse connue ou inconnue.
+- Le dernier export, préparé sans adresse, n'a ni réservation ni limite. Seul l'hébergeur l'appelle, une fois avant la suppression.
 - Valkey garde ses données sur le disque (`appendonly`) : la limite tient entre deux réveils.
 
 ### Le mail

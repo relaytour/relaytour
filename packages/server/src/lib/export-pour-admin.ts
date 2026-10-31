@@ -31,6 +31,8 @@ const DUREE_DU_JETON_SECONDES = 3_600
 
 interface ExportPrepare {
   organisationId: string
+  /** Fin de validité du jeton, en millisecondes : une reprise garde la même. */
+  expireLe: number
   /** Les comptes qui recevront le lien, relus à l'envoi. */
   destinataires: string[]
   /** Le dernier export, envoyé à tous les admins avant la suppression. */
@@ -47,6 +49,10 @@ const cleDuJeton = (jeton: string) =>
   `export-admin:jeton:${createHash('sha256').update(jeton).digest('hex')}`
 const cleDuDernierEnvoi = (organisationId: string) =>
   `export-admin:dernier-envoi:${organisationId}`
+// Un export demandé par un admin attend son envoi : aucun autre ne s'écrit pendant
+// la validité de son jeton, et le disque ne se remplit pas d'exports jamais envoyés.
+const cleDeLExportEnAttente = (organisationId: string) =>
+  `export-admin:en-attente:${organisationId}`
 
 async function organisationDuSlug(prisma: PrismaClient, slug: string) {
   const organisation = await prisma.organisation.findUnique({
@@ -59,6 +65,13 @@ async function organisationDuSlug(prisma: PrismaClient, slug: string) {
     )
   }
   return organisation.id
+}
+
+/** Remet un jeton pris par GETDEL, jusqu'à sa fin de validité d'origine. */
+async function rendreJeton(jeton: string, valeur: string, expireLe: number) {
+  const reste = expireLe - Date.now()
+  if (reste <= 0) return
+  await (await connexion()).set(cleDuJeton(jeton), valeur, 'PX', reste)
 }
 
 /** Les admins actifs d'une organisation, ou celui qui porte l'adresse. */
@@ -97,15 +110,33 @@ export async function preparerExportPourAdmin(
   if (dernier) {
     destinataires = await admins(prisma, organisationId)
   } else {
-    // La limite se lit avant l'adresse : une panne de Valkey se produit de la même
-    // façon pour une adresse connue ou inconnue.
+    // Les limites se lisent avant l'adresse : une panne de Valkey se produit de la
+    // même façon pour une adresse connue ou inconnue.
+    const redis = await connexion()
     const recent =
-      (await (await connexion()).exists(cleDuDernierEnvoi(organisationId))) > 0
+      (await redis.exists(
+        cleDuDernierEnvoi(organisationId),
+        cleDeLExportEnAttente(organisationId)
+      )) > 0
     const adresse = adresseDuRappel(courriel)
     destinataires =
       recent || adresse === null
         ? []
         : await admins(prisma, organisationId, adresse)
+    // La réservation se pose après l'adresse : une adresse inconnue ne retarde pas
+    // la demande d'un admin. NX départage deux demandes simultanées.
+    if (
+      destinataires.length > 0 &&
+      (await redis.set(
+        cleDeLExportEnAttente(organisationId),
+        '1',
+        'EX',
+        DUREE_DU_JETON_SECONDES,
+        'NX'
+      )) === null
+    ) {
+      destinataires = []
+    }
   }
   if (destinataires.length === 0) {
     journal.info(
@@ -117,7 +148,12 @@ export async function preparerExportPourAdmin(
 
   const { chemin, octets } = await ecrireExport(slug, dossier)
   const jeton = randomBytes(32).toString('base64url')
-  const prepare: ExportPrepare = { organisationId, destinataires, dernier }
+  const prepare: ExportPrepare = {
+    organisationId,
+    expireLe: Date.now() + DUREE_DU_JETON_SECONDES * 1000,
+    destinataires,
+    dernier,
+  }
   await (
     await connexion()
   ).set(
@@ -144,7 +180,7 @@ export async function preparerExportPourAdmin(
  * Envoie tout de suite, sans la file du worker, le lien d'un export préparé à ses
  * destinataires. Lève une erreur quand le jeton est inconnu, ou quand le transport
  * est en panne pour un destinataire : le jeton reste alors valable pour un nouvel
- * essai.
+ * essai, vers les seuls destinataires qui n'ont pas reçu le lien.
  */
 export async function envoyerLienDExport(
   prisma: PrismaClient,
@@ -154,9 +190,13 @@ export async function envoyerLienDExport(
 ): Promise<void> {
   const organisationId = await organisationDuSlug(prisma, slug)
   const redis = await connexion()
-  const brut = await redis.get(cleDuJeton(jeton))
+  // GETDEL prend le jeton en une commande : deux appels simultanés ne l'obtiennent
+  // pas tous les deux, et le lien ne part qu'une fois.
+  const brut = await redis.getdel(cleDuJeton(jeton))
   const prepare = brut === null ? null : (JSON.parse(brut) as ExportPrepare)
   if (prepare === null || prepare.organisationId !== organisationId) {
+    // Le jeton d'une autre organisation lui reste.
+    if (prepare !== null) await rendreJeton(jeton, brut!, prepare.expireLe)
     throw erreurSaisie(i18n._('Ce jeton d’export est inconnu ou expiré.'))
   }
 
@@ -164,7 +204,7 @@ export async function envoyerLienDExport(
   const actifs = new Set(await admins(prisma, organisationId))
   const plafond = env.COURRIEL_PLAFOND_QUOTIDIEN
   let partis = 0
-  let pannes = 0
+  const enPanne: string[] = []
   for (const userId of prepare.destinataires.filter(id => actifs.has(id))) {
     const user = await prisma.user.findUniqueOrThrow({
       where: { id: userId },
@@ -195,25 +235,33 @@ export async function envoyerLienDExport(
     )
     if (issue === 'panne') {
       await rendreEnvoi(plafond, reserveLe)
-      pannes += 1
+      enPanne.push(userId)
     } else if (issue === 'parti') {
       partis += 1
     }
   }
-  if (pannes > 0) {
+  if (enPanne.length > 0) {
+    // Le jeton revient avec les seuls destinataires en panne : une reprise n'écrit
+    // pas une seconde fois aux admins déjà servis.
+    await rendreJeton(
+      jeton,
+      JSON.stringify({ ...prepare, destinataires: enPanne }),
+      prepare.expireLe
+    )
     throw new Error(
-      `Le lien d’export n’est pas parti vers ${pannes} admin(s) : nouvel essai possible.`
+      `Le lien d’export n’est pas parti vers ${enPanne.length} admin(s) : nouvel essai possible.`
     )
   }
 
-  await redis.del(cleDuJeton(jeton))
   if (!prepare.dernier) {
+    // La limite de 24 heures prend le relais de la réservation.
     await redis.set(
       cleDuDernierEnvoi(organisationId),
       new Date().toISOString(),
       'EX',
       INTERVALLE_EXPORTS_SECONDES
     )
+    await redis.del(cleDeLExportEnAttente(organisationId))
   }
   journal.info(
     {

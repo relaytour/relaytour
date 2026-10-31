@@ -5,8 +5,12 @@ import path from 'node:path'
 
 import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
-import { createTransport } from 'nodemailer'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import {
+  createTransport,
+  type SendMailOptions,
+  type Transporter,
+} from 'nodemailer'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
 import { schema } from '../schema/index.ts'
@@ -87,12 +91,22 @@ async function creerCompte(
   return id
 }
 
-/** Un transport qui garde les mails bruts, sans rien envoyer. */
-function transportDeTest() {
-  const transport = createTransport({ streamTransport: true, buffer: true })
-  const envoi = vi.spyOn(transport, 'sendMail')
+/**
+ * Un transport qui garde les mails, sans rien envoyer. Vers `enPanne`, l'envoi
+ * échoue sans code SMTP : une panne temporaire, comme une connexion coupée.
+ */
+function transportDeTest(enPanne?: string) {
+  const reel = createTransport({ streamTransport: true, buffer: true })
+  const envoyes: SendMailOptions[] = []
+  const transport = {
+    sendMail: async (options: SendMailOptions) => {
+      if (options.to === enPanne) throw new Error('Connexion interrompue')
+      envoyes.push(options)
+      return reel.sendMail(options)
+    },
+  } as unknown as Transporter
   const mails = () =>
-    envoi.mock.calls.map(([options]) => ({
+    envoyes.map(options => ({
       a: options.to as string,
       sujet: options.subject ?? '',
       texte: options.text as string,
@@ -132,7 +146,9 @@ afterAll(async () => {
   const { connection } = await import('../jobs/queues.ts')
   await connection.del(
     `export-admin:dernier-envoi:${ids.organisation}`,
-    `export-admin:dernier-envoi:${ids.autre}`
+    `export-admin:dernier-envoi:${ids.autre}`,
+    `export-admin:en-attente:${ids.organisation}`,
+    `export-admin:en-attente:${ids.autre}`
   )
   await rm(dossier, { recursive: true, force: true })
   await apollo.stop()
@@ -172,6 +188,12 @@ describe('préparation d’un export pour un admin', () => {
     expect(contenu.format).toBe('relaytour-export')
     expect(contenu.membres.map(m => m.email)).toContain(adresse('admin-en'))
 
+    // Tant que le lien attend son envoi, une autre demande n'écrit aucun export.
+    expect(
+      await preparerExportPourAdmin(prisma, slug, adresse('admin-en'), dossier)
+    ).toBeNull()
+    expect(await fichiersEcrits()).toHaveLength(1)
+
     const { transport, mails } = transportDeTest()
     await envoyerLienDExport(prisma, slug, jeton, transport)
     const envoyes = mails()
@@ -207,6 +229,40 @@ describe('préparation d’un export pour un admin', () => {
     expect(anglais.texte).toContain('Here is the last export')
     const francais = envoyes.find(m => m.a === adresse('admin-fr'))!
     expect(francais.texte).toContain('Voici le dernier export')
+  })
+
+  it('reprend un envoi en panne vers les seuls admins qui n’ont pas reçu le lien', async () => {
+    const { jeton } = (await preparerExportPourAdmin(
+      prisma,
+      slug,
+      null,
+      dossier
+    ))!
+    const panne = transportDeTest(adresse('admin-en'))
+    await expect(
+      envoyerLienDExport(prisma, slug, jeton, panne.transport)
+    ).rejects.toThrow(/nouvel essai possible/)
+    expect(panne.mails().map(m => m.a)).toEqual([adresse('admin-fr')])
+
+    const reprise = transportDeTest()
+    await envoyerLienDExport(prisma, slug, jeton, reprise.transport)
+    expect(reprise.mails().map(m => m.a)).toEqual([adresse('admin-en')])
+  })
+
+  it('n’envoie le lien qu’une fois quand deux appels arrivent ensemble', async () => {
+    const { jeton } = (await preparerExportPourAdmin(
+      prisma,
+      slug,
+      null,
+      dossier
+    ))!
+    const { transport, mails } = transportDeTest()
+    const issues = await Promise.allSettled([
+      envoyerLienDExport(prisma, slug, jeton, transport),
+      envoyerLienDExport(prisma, slug, jeton, transport),
+    ])
+    expect(issues.map(i => i.status).sort()).toEqual(['fulfilled', 'rejected'])
+    expect(mails()).toHaveLength(2)
   })
 
   it('refuse le jeton d’une autre organisation', async () => {

@@ -17,5 +17,7 @@ fr:
 ---
 
 `lib/export-pour-admin.ts`. Valkey garde l'empreinte du jeton une heure, et la
-date du dernier lien envoyé 24 heures. La sorte `lien-export` ne passe jamais
+date du dernier lien envoyé 24 heures. L'envoi prend le jeton par `GETDEL` ; une
+panne le rend avec les seuls destinataires non servis. Une demande en attente
+d'envoi bloque les autres pendant une heure. La sorte `lien-export` ne passe jamais
 par la file ; elle entre dans le plafond quotidien sans jamais être reportée.
