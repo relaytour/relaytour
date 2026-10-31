@@ -72,24 +72,34 @@ export async function rappelerAdresses(
   }
 
   let enFile = 0
+  const appartenanceOuverte = {
+    archiveLe: null,
+    organisation: { statut: { in: [...STATUTS_OUVERTS] } },
+  }
   const compte = await prisma.user.findFirst({
-    where: {
-      email: adresse,
+    where: { email: adresse, appartenances: { some: appartenanceOuverte } },
+    select: {
+      id: true,
+      // Le mail porte le nom et les couleurs d'une organisation du compte : sans elle,
+      // un compte de plusieurs organisations recevrait l'identité de la première
+      // organisation de l'installation, dont il n'est peut-être pas membre.
       appartenances: {
-        some: {
-          archiveLe: null,
-          organisation: { statut: { in: [...STATUTS_OUVERTS] } },
-        },
+        where: appartenanceOuverte,
+        select: { organisationId: true },
+        orderBy: { organisation: { nom: 'asc' } },
+        take: 1,
       },
     },
-    select: { id: true },
   })
   if (compte !== null) {
     if (
       await mettreEnFile(
         'rappel-adresse',
         { userId: compte.id },
-        { jobId: `rappel-adresse-${compte.id}-${maintenant.getTime()}` }
+        {
+          jobId: `rappel-adresse-${compte.id}-${maintenant.getTime()}`,
+          organisationId: compte.appartenances[0]?.organisationId,
+        }
       )
     ) {
       enFile += 1

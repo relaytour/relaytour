@@ -141,7 +141,11 @@ describe('rappelerAdresses', () => {
     ).toBe(1)
     expect(
       await retirerJob(`rappel-adresse-${ids.membre}-${maintenant.getTime()}`)
-    ).toMatchObject({ sorte: 'rappel-adresse', userId: ids.membre })
+    ).toMatchObject({
+      sorte: 'rappel-adresse',
+      userId: ids.membre,
+      organisationId: ids.ouverte,
+    })
   })
 
   it('n’écrit pas deux fois à la même adresse en dix minutes', async () => {
