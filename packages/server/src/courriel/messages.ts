@@ -99,6 +99,9 @@ export function sujets(
     'rappel-adresse': i18n._('{nomCourt} : l’adresse de votre espace', {
       nomCourt,
     }),
+    'lien-export': i18n._('{nomCourt} : l’export de vos données', {
+      nomCourt,
+    }),
   }
 }
 
@@ -110,11 +113,13 @@ function activiteDuSujet(
 }
 
 // Un mail demandé par la personne elle-même ne reçoit pas de réponse : l'équipe
-// d'organisation n'en est pas à l'origine (ADR 0054).
+// d'organisation n'en est pas à l'origine (ADR 0054). Le lien d'export part d'une
+// installation en sommeil, dont l'équipe ne lit peut-être plus le contact (ADR 0055).
 const SANS_REPONSE = new Set<SorteCourriel>([
   'essai',
   'code-connexion',
   'rappel-adresse',
+  'lien-export',
 ])
 
 /** L'adresse nue d'un expéditeur « Nom <adresse> ». */
@@ -501,6 +506,36 @@ export async function composer(
     variables.nom = user.name
     variables.organisations = user.appartenances.map(a => a.organisation.nom)
     variables.lienConnexion = `${origine}/connexion`
+  }
+
+  if (job.sorte === 'lien-export') {
+    if (job.exportPourAdmin === undefined) {
+      throw new Error('Le mail « lien-export » exige un jeton.')
+    }
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: job.userId },
+      select: { name: true },
+    })
+    variables.nom = user.name
+    variables.lienExport = `${origine}/sommeil/telechargement/${job.exportPourAdmin.jeton}`
+    const nom = configuration.nom
+    if (job.exportPourAdmin.dernier) {
+      variables.intro = i18n._(
+        'L’hébergement de l’espace de {nom} a pris fin, et l’espace sera bientôt supprimé. Voici le dernier export de ses données.',
+        { nom }
+      )
+      variables.avertissement = i18n._(
+        'Chaque admin de l’organisation reçoit ce message.'
+      )
+    } else {
+      variables.intro = i18n._(
+        'Vous avez demandé l’export des données de {nom} depuis la page de l’espace en sommeil.',
+        { nom }
+      )
+      variables.avertissement = i18n._(
+        'Si vous n’êtes pas à l’origine de cette demande, ignorez ce message. Ce lien n’est envoyé qu’à votre adresse.'
+      )
+    }
   }
 
   if (job.sorte === 'tache-modifiee') {

@@ -686,6 +686,7 @@ msgid "Cette édition est archivée : ses tâches sont en lecture seule."
 msgstr "This edition is archived: its tasks are read-only."
 
 #. js-lingui-explicit-id
+#: src/lib/export-pour-admin.ts
 #: src/lib/installation.ts
 #: src/schema/installation.ts
 msgid "Aucune organisation ne porte le slug « {slug} »."
@@ -1789,6 +1790,11 @@ msgstr "The query is too expensive (complexity {complexite}, maximum {maximum}).
 #: src/lib/erreurs.ts
 msgid "Le serveur a rencontré une erreur (référence {reference}). Réessayez, puis contactez un admin si elle persiste."
 msgstr "The server encountered an error (reference {reference}). Try again, then contact an admin if it persists."
+
+#. js-lingui-explicit-id
+#: src/lib/export-pour-admin.ts
+msgid "Ce jeton d’export est inconnu ou expiré."
+msgstr "This export token is unknown or has expired."
 
 #. js-lingui-explicit-id
 #: src/lib/formulaire.ts
@@ -3009,6 +3015,36 @@ msgstr "Sign in: {lienConnexion}"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
+msgid "L’export de vos données"
+msgstr "Your data export"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Le lien de téléchargement reste valable 7 jours."
+msgstr "The download link remains valid for 7 days."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Le fichier contient les activités, les fiches, les tâches, les membres et leurs affectations. Il porte des noms et des adresses : conservez-le dans un lieu sûr."
+msgstr "The file contains the activities, sheets, tasks, members, and their appointments. It includes names and email addresses: keep it in a safe place."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Télécharger l’export"
+msgstr "Download the export"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Le lien reste valable 7 jours. Le fichier est ensuite supprimé."
+msgstr "The link remains valid for 7 days. The file is then deleted."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Télécharger l’export : {lienExport}"
+msgstr "Download the export: {lienExport}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
 msgid "L’adresse de votre espace"
 msgstr "The address of your workspace"
 
@@ -3198,6 +3234,11 @@ msgstr "{nomCourt}: the address of your workspace"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
+msgid "{nomCourt} : l’export de vos données"
+msgstr "{nomCourt}: your data export"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
 msgid "Pour toute question, répondez à ce mail."
 msgstr "If you have any questions, reply to this email."
 
@@ -3285,6 +3326,26 @@ msgstr "{n, plural, one {A request to join the team of the activity {activite} i
 #: src/courriel/messages.ts
 msgid "{n, plural, one {# minute} other {# minutes}}"
 msgstr "{n, plural, one {# minute} other {# minutes}}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "L’hébergement de l’espace de {nom} a pris fin, et l’espace sera bientôt supprimé. Voici le dernier export de ses données."
+msgstr "The hosting of the {nom} workspace has ended, and the workspace will be deleted soon. Here is the last export of its data."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Chaque admin de l’organisation reçoit ce message."
+msgstr "Each admin of the organization receives this message."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Vous avez demandé l’export des données de {nom} depuis la page de l’espace en sommeil."
+msgstr "You requested the export of the {nom} data from the page of the dormant workspace."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Si vous n’êtes pas à l’origine de cette demande, ignorez ce message. Ce lien n’est envoyé qu’à votre adresse."
+msgstr "If you did not make this request, ignore this message. This link is sent only to your address."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts

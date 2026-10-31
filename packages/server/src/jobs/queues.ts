@@ -27,6 +27,9 @@ export type SorteCourriel =
   | 'benevole-places'
   // Rappel de l'adresse de l'espace, demandé par l'hébergeur (ADR 0054).
   | 'rappel-adresse'
+  // Lien de l'export d'une installation en sommeil (ADR 0055). Envoyé tout de suite
+  // par l'API, jamais mis en file : le worker ne tourne pas pendant le réveil.
+  | 'lien-export'
 
 // La charge utile ne contient ni corps de mail ni jeton. Le processeur relit l'adresse
 // en base au moment de l'envoi. `destinataire` sert seulement quand aucun compte n'existe.
@@ -66,6 +69,9 @@ export interface CourrielJobData {
   // Pour `benevole-lien` et `benevole-places` (ADR 0041) : la fiche, dont l'adresse
   // se relit à l'envoi. Le jeton du lien se crée à l'envoi, jamais dans la file.
   benevoleId?: string
+  // Pour `lien-export` (ADR 0055) : le jeton du lien de téléchargement, et le dernier
+  // export envoyé à tous les admins. Cette sorte ne passe jamais par la file.
+  exportPourAdmin?: { jeton: string; dernier: boolean }
 }
 
 export const courrielQueue = new Queue<CourrielJobData>(COURRIEL_QUEUE, {

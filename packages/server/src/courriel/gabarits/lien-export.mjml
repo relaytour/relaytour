@@ -1,0 +1,43 @@
+<mjml>
+  <mj-head>
+    <mj-title>[[L’export de vos données]]</mj-title>
+    <mj-preview>[[Le lien de téléchargement reste valable 7 jours.]]</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="24px" color="#010101" padding="0 0 16px" />
+    </mj-attributes>
+  </mj-head>
+
+  <mj-body background-color="#040404" width="480px">
+    <mj-include path="./_entete.mjml" />
+
+    <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
+      <mj-column>
+        <mj-text font-size="20px" line-height="28px" font-weight="700">
+          [[Bonjour {{nom}},]]
+        </mj-text>
+        <mj-text>
+          {{intro}}
+        </mj-text>
+        <mj-text>
+          [[Le fichier contient les activités, les fiches, les tâches, les membres et
+          leurs affectations. Il porte des noms et des adresses : conservez-le dans un
+          lieu sûr.]]
+        </mj-text>
+        <mj-button href="{{lienExport}}" background-color="#030303" color="#FFFFFF"
+                   border-radius="10px" font-size="15px" font-weight="700"
+                   padding="8px 0 16px" inner-padding="13px 24px">
+          [[Télécharger l’export]]
+        </mj-button>
+        <mj-text>
+          [[Le lien reste valable 7 jours. Le fichier est ensuite supprimé.]]
+        </mj-text>
+        <mj-text padding="0 0 4px" font-size="13px" line-height="20px">
+          {{avertissement}}
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-include path="./_pied.mjml" />
+  </mj-body>
+</mjml>

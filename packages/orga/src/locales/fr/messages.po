@@ -4367,6 +4367,10 @@ msgstr "Exemples"
 msgid "Expire le {jourExpiration}"
 msgstr "Expire le {jourExpiration}"
 
+#: src/pages/admin/Organisation.tsx
+msgid "Export complet de l’organisation"
+msgstr "Export complet de l’organisation"
+
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Export des fiches"
 msgstr "Export des fiches"
@@ -5845,6 +5849,10 @@ msgstr "Le dossier reste chez le fournisseur cloud. Les membres ne le lisent plu
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Le dossier reste chez le fournisseur cloud. Relaytour y a créé {accesCrees, plural, one {un accès, qui reste} other {# accès, qui restent}} sans suivi."
 msgstr "Le dossier reste chez le fournisseur cloud. Relaytour y a créé {accesCrees, plural, one {un accès, qui reste} other {# accès, qui restent}} sans suivi."
+
+#: src/pages/admin/Organisation.tsx
+msgid "Le fichier JSON contient les activités, les périodes, les fiches avec leur historique, les tâches, les membres et leurs affectations. Il porte des noms et des adresses : conservez-le dans un lieu sûr. L’export reste possible quand l’organisation est en lecture seule."
+msgstr "Le fichier JSON contient les activités, les périodes, les fiches avec leur historique, les tâches, les membres et leurs affectations. Il porte des noms et des adresses : conservez-le dans un lieu sûr. L’export reste possible quand l’organisation est en lecture seule."
 
 #: src/lib/medias.ts
 msgid "Le fichier ne peut pas être lu."
@@ -9488,6 +9496,10 @@ msgstr "Tâches types ajoutées : {typesAjoutes}."
 #: src/composants/Liseuse.tsx
 msgid "Télécharger"
 msgstr "Télécharger"
+
+#: src/pages/admin/Organisation.tsx
+msgid "Télécharger l’export complet (JSON)"
+msgstr "Télécharger l’export complet (JSON)"
 
 #: src/pages/admin/Organisation.tsx
 msgid "Télécharger le contenu (zip)"

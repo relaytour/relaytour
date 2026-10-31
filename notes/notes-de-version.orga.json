@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-31-orga-un-admin-telecharge-l-export-complet-de-son-organisation-mem",
+          "date": "2026-10-31",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un admin télécharge l'export complet de son organisation, même en lecture seule",
+            "texte": "La page « Organisation » propose « Télécharger l'export complet (JSON) ». Le fichier contient les activités, les périodes, les fiches avec leur historique, les tâches, les membres et leurs affectations. L'export reste possible quand l'organisation est en lecture seule, par exemple après la fin d'un essai.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An admin downloads the full export of their organization, even when it is read-only",
+            "texte": "The \"Organization\" page offers \"Download the full export (JSON)\". The file contains the activities, periods, sheets with their history, tasks, members, and their appointments. The export remains available when the organization is read-only, for example after a trial ends.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-31-orga-la-mention-du-contact-principal-s-affiche-sous-le-nom-dans-l",
           "date": "2026-10-31",
           "type": "correctif",
