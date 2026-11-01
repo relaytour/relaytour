@@ -50,7 +50,7 @@
     "versionner": "node outils/versionner.mjs"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.0",
+    "@eslint/js": "^10.0.1",
     "@types/node": "^24.13.0",
     "concurrently": "^10.0.6",
     "eslint": "^9.39.0",
