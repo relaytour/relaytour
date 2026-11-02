@@ -516,23 +516,32 @@ builder.mutationFields(t => {
         if (lieu === null) throw accesRefuse()
         await ctx.exigerActivite(lieu.activiteId)
         await ctx.exigerAdminDe(lieu.activiteId)
-        // Un lieu archivé ne se choisit plus dans une séquence : le comptage
-        // reste donc juste jusqu'à la suppression.
         if (lieu.archivedAt === null) {
           throw erreurSaisie(i18n._('Archivez le lieu avant de le supprimer.'))
         }
-        const sequences = await prisma.sequence.count({
-          where: { lieuId: lieu.id },
+        // La vérification et la suppression tiennent en une seule requête : une
+        // séquence rattachée entre-temps empêche la suppression, au lieu de
+        // perdre son lieu (onDelete: SetNull).
+        const { count } = await prisma.lieu.deleteMany({
+          where: {
+            id: lieu.id,
+            archivedAt: { not: null },
+            sequences: { none: {} },
+          },
         })
-        if (sequences > 0) {
+        if (count === 0) {
+          const sequences = await prisma.sequence.count({
+            where: { lieuId: lieu.id },
+          })
           throw erreurSaisie(
-            i18n._(
-              '{nombre, plural, one {Une séquence utilise ce lieu} other {# séquences utilisent ce lieu}}. Choisissez un autre lieu pour ces séquences, ou gardez ce lieu archivé.',
-              { nombre: sequences }
-            )
+            sequences > 0
+              ? i18n._(
+                  '{nombre, plural, one {Une séquence utilise ce lieu} other {# séquences utilisent ce lieu}}. Choisissez un autre lieu pour ces séquences, ou gardez ce lieu archivé.',
+                  { nombre: sequences }
+                )
+              : i18n._('Archivez le lieu avant de le supprimer.')
           )
         }
-        await prisma.lieu.delete({ where: { id: lieu.id } })
         publierPourActivite('PROGRAMME', ctx.organisation!.id, lieu.activiteId)
         return true
       },
