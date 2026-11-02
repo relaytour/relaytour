@@ -64,6 +64,11 @@ msgstr "(you)"
 msgid "[à compléter : {libelle}]"
 msgstr "[to complete: {libelle}]"
 
+#. placeholder {0}: lieu.sequences
+#: src/composants/LieuxFenetre.tsx
+msgid "{0, plural, one {Une séquence utilise ce lieu.} other {# séquences utilisent ce lieu.}} Choisissez un autre lieu pour ces séquences avant de le supprimer."
+msgstr "{0, plural, one {One slot uses this venue.} other {# slots use this venue.}} Choose another venue for these slots before deleting it."
+
 #: src/lib/declinaisons.ts
 msgid "{abandonnees, plural, one {# abandonnée} other {# abandonnées}}"
 msgstr "{abandonnees, plural, one {# abandoned} other {# abandoned}}"
@@ -1895,6 +1900,7 @@ msgstr "Canceled"
 #: src/composants/GestionAcces.tsx
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/LienBenevole.tsx
+#: src/composants/LieuxFenetre.tsx
 #: src/composants/MesInvitations.tsx
 #: src/composants/ModeleDeDepart.tsx
 #: src/composants/NouvelleEdition.tsx
@@ -6054,6 +6060,10 @@ msgstr "The personal link and the confirmation follow the email address you keep
 msgid "Le lien repart par mail. Ce renvoi ne se fait qu’une fois."
 msgstr "The link is sent again by email. You can resend it only once."
 
+#: src/composants/LieuxFenetre.tsx
+msgid "Le lieu ne figurera plus dans aucune période de l’activité. Cette suppression est définitive."
+msgstr "The venue will no longer appear in any period of the activity. This deletion is permanent."
+
 #: src/lib/guide-markdown.ts
 msgid "Le local ferme **à 19 h précises**."
 msgstr "The room closes **at 7 p.m. sharp**."
@@ -6448,8 +6458,8 @@ msgid "Les lecteurs de {perimetresSansAcces} n’ouvriront pas ce document : le 
 msgstr "Readers of {perimetresSansAcces} won’t be able to open this document: the linked folder “{nomDossierLie}” doesn’t cover these areas."
 
 #: src/composants/LieuxFenetre.tsx
-msgid "Les lieux servent d’une période à l’autre. Le programme les affiche par ordre croissant. Un lieu archivé ne se propose plus."
-msgstr "Venues carry over from one period to the next. The schedule lists them in ascending order. An archived venue is no longer offered."
+msgid "Les lieux servent d’une période à l’autre. Le programme les affiche par ordre croissant. Un lieu archivé ne se propose plus. Un lieu archivé qu’aucune séquence n’utilise peut être supprimé."
+msgstr "Venues carry over from one period to the next. The schedule shows them in ascending order. An archived venue is no longer offered. An archived venue that no slot uses can be deleted."
 
 #: src/composants/AssistantTableur.tsx
 msgid "Les lignes ci-dessous sont écrites. Revenez à la vérification pour relancer l’import : une ligne déjà importée ne sera pas recréée."
@@ -6722,6 +6732,10 @@ msgstr "Link a sheet (optional)"
 #: src/composants/SequenceFormulaire.tsx
 msgid "Lieu (facultatif)"
 msgstr "Venue (optional)"
+
+#: src/composants/LieuxFenetre.tsx
+msgid "Lieu supprimé."
+msgstr "Venue deleted."
 
 #: src/pages/Programme.tsx
 msgid "Lieux"
@@ -9443,6 +9457,7 @@ msgid "Support {organisation} ({relaytour})"
 msgstr "{organisation} support ({relaytour})"
 
 #: src/composants/FilTache.tsx
+#: src/composants/LieuxFenetre.tsx
 #: src/composants/SequenceDetail.tsx
 #: src/composants/SondageDetail.tsx
 #: src/pages/Agenda.tsx
@@ -9486,6 +9501,14 @@ msgstr "Delete the slot"
 #: src/pages/FicheEditeur.tsx
 msgid "Supprimer le brouillon"
 msgstr "Delete the draft"
+
+#: src/composants/LieuxFenetre.tsx
+msgid "Supprimer le lieu"
+msgstr "Delete the venue"
+
+#: src/composants/LieuxFenetre.tsx
+msgid "Supprimer le lieu « {nom} » ?"
+msgstr "Delete the venue “{nom}”?"
 
 #: src/composants/SondageDetail.tsx
 msgid "Supprimer le sondage"

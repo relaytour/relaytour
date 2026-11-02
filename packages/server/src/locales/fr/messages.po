@@ -861,6 +861,16 @@ msgstr "Une activité compte 200 lieux au plus."
 
 #. js-lingui-explicit-id
 #: src/schema/programme.ts
+msgid "Archivez le lieu avant de le supprimer."
+msgstr "Archivez le lieu avant de le supprimer."
+
+#. js-lingui-explicit-id
+#: src/schema/programme.ts
+msgid "{nombre, plural, one {Une séquence utilise ce lieu} other {# séquences utilisent ce lieu}}. Choisissez un autre lieu pour ces séquences, ou gardez ce lieu archivé."
+msgstr "{nombre, plural, one {Une séquence utilise ce lieu} other {# séquences utilisent ce lieu}}. Choisissez un autre lieu pour ces séquences, ou gardez ce lieu archivé."
+
+#. js-lingui-explicit-id
+#: src/schema/programme.ts
 msgid "Une période compte {max} séquences au plus."
 msgstr "Une période compte {max} séquences au plus."
 

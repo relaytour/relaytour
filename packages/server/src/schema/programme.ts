@@ -57,6 +57,10 @@ export const LieuRef = builder.prismaObject('Lieu', {
     description: t.exposeString('description', { nullable: true }),
     ordre: t.exposeInt('ordre'),
     archive: t.boolean({ resolve: l => l.archivedAt !== null }),
+    sequences: t.relationCount('sequences', {
+      description:
+        'Le nombre de séquences qui utilisent le lieu, toutes périodes confondues.',
+    }),
   }),
 })
 
@@ -497,6 +501,40 @@ builder.mutationFields(t => {
         })
         publierPourActivite('PROGRAMME', ctx.organisation!.id, lieu.activiteId)
         return modifie
+      },
+    }),
+
+    supprimerLieu: t.boolean({
+      authScopes: { gestion: true },
+      description:
+        'Supprime un lieu archivé qu’aucune séquence n’utilise, toutes périodes confondues.',
+      args: { id: t.arg.id({ required: true }) },
+      resolve: async (_root, args, ctx) => {
+        const lieu = await prisma.lieu.findFirst({
+          where: { id: String(args.id), organisationId: ctx.organisation!.id },
+        })
+        if (lieu === null) throw accesRefuse()
+        await ctx.exigerActivite(lieu.activiteId)
+        await ctx.exigerAdminDe(lieu.activiteId)
+        // Un lieu archivé ne se choisit plus dans une séquence : le comptage
+        // reste donc juste jusqu'à la suppression.
+        if (lieu.archivedAt === null) {
+          throw erreurSaisie(i18n._('Archivez le lieu avant de le supprimer.'))
+        }
+        const sequences = await prisma.sequence.count({
+          where: { lieuId: lieu.id },
+        })
+        if (sequences > 0) {
+          throw erreurSaisie(
+            i18n._(
+              '{nombre, plural, one {Une séquence utilise ce lieu} other {# séquences utilisent ce lieu}}. Choisissez un autre lieu pour ces séquences, ou gardez ce lieu archivé.',
+              { nombre: sequences }
+            )
+          )
+        }
+        await prisma.lieu.delete({ where: { id: lieu.id } })
+        publierPourActivite('PROGRAMME', ctx.organisation!.id, lieu.activiteId)
+        return true
       },
     }),
 

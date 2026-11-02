@@ -1436,6 +1436,11 @@ type Lieu {
   id: ID!
   nom: String!
   ordre: Int!
+
+  """
+  Le nombre de séquences qui utilisent le lieu, toutes périodes confondues.
+  """
+  sequences: Int!
 }
 
 """
@@ -2411,6 +2416,11 @@ type Mutation {
   """
   supprimerCorrespondanceImport(id: ID!): Boolean!
   supprimerDateCle(id: ID!): Boolean!
+
+  """
+  Supprime un lieu archivé qu’aucune séquence n’utilise, toutes périodes confondues.
+  """
+  supprimerLieu(id: ID!): Boolean!
 
   """
   Supprime la fiche de la personne, avec ses plages. Refusé tant qu’une place à venir la retient. Utilisable sans session.
