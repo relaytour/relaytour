@@ -5756,6 +5756,10 @@ msgstr "The selection contains only your own account, or no one."
 msgid "La séquence n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
 msgstr "The slot could not be reloaded. Your entry stays on screen: try again in a moment."
 
+#: src/composants/SequenceFormulaire.tsx
+msgid "La séquence quittera son périmètre actuel. Un appel à bénévoles ouvert sur cette séquence passera aussi dans le nouveau périmètre."
+msgstr "The slot will leave its current area. A volunteer call opened on this slot will also move to the new area."
+
 #: src/composants/FilTache.tsx
 msgid "La suppression est définitive."
 msgstr "Deletion is permanent."

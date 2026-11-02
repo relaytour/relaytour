@@ -5756,6 +5756,10 @@ msgstr "La sélection ne contient que votre propre compte, ou aucune personne."
 msgid "La séquence n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
 msgstr "La séquence n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
 
+#: src/composants/SequenceFormulaire.tsx
+msgid "La séquence quittera son périmètre actuel. Un appel à bénévoles ouvert sur cette séquence passera aussi dans le nouveau périmètre."
+msgstr "La séquence quittera son périmètre actuel. Un appel à bénévoles ouvert sur cette séquence passera aussi dans le nouveau périmètre."
+
 #: src/composants/FilTache.tsx
 msgid "La suppression est définitive."
 msgstr "La suppression est définitive."

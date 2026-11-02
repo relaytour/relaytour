@@ -2229,6 +2229,11 @@ type Mutation {
     """Pour une séquence qui passe minuit. Sans valeur : le jour."""
     jourFin: Date
     lieuId: ID
+
+    """
+    Le nouveau périmètre ; null : toute l’activité. Sans ce champ, la séquence garde son périmètre.
+    """
+    perimetreId: ID
     places: [PlaceSequenceInput!]
     titre: String!
 

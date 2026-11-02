@@ -25,6 +25,7 @@ const ids = {
   edition: '',
   natation: '',
   basket: '',
+  tennis: '', // périmètre de l'autre activité
   bassin: '',
   terrain: '',
   lieuAutre: '',
@@ -158,6 +159,7 @@ beforeAll(async () => {
       groupe: 'sport',
     },
   })
+  ids.tennis = tennis.id
   for (const cle of ['natation', 'basket'] as const) {
     ids[cle] = (
       await prisma.perimetre.create({
@@ -570,6 +572,87 @@ describe('séquences', () => {
     expect(code(await executer(null, PROGRAMME, { e: ids.edition }))).toBe(
       'FORBIDDEN'
     )
+  })
+
+  it('changent de périmètre pour qui écrit dans les deux, avec leur appel', async () => {
+    const DEPLACER = `mutation ($id: ID!, $p: ID, $v: Int!) {
+      modifierSequence(id: $id, perimetreId: $p, titre: "Buvette", jour: "2027-06-05", heureDebut: "16:00", heureFin: "18:00", versionAttendue: $v) { perimetre { id } version }
+    }`
+    const sequence = await sequenceNatation({ t: 'Buvette' })
+    const appel = await prisma.appelBenevoles.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        editionId: ids.edition,
+        portee: 'SEQUENCE',
+        perimetreId: ids.natation,
+        sequenceId: sequence.id,
+        nom: 'Buvette',
+        ouvertLe: new Date('2027-05-01'),
+        fermeLe: new Date('2027-06-05'),
+        sel: 'x'.repeat(43),
+        empreinte: '0'.repeat(64),
+        fin: 'xxxxxx',
+      },
+    })
+    try {
+      // Le référent de la natation n'écrit ni dans le basket, ni dans toute
+      // l'activité ; la basketteuse n'écrit pas dans la natation.
+      for (const [qui, p] of [
+        [ids.referent, ids.basket],
+        [ids.referent, null],
+        [ids.basketteuse, ids.basket],
+        [ids.adminActivite, ids.tennis],
+      ] as const) {
+        expect(
+          code(await executer(qui, DEPLACER, { id: sequence.id, p, v: 0 }))
+        ).toBe('FORBIDDEN')
+      }
+      expect(
+        await prisma.sequence.findUnique({
+          where: { id: sequence.id },
+          select: { perimetreId: true, version: true },
+        })
+      ).toEqual({ perimetreId: ids.natation, version: 0 })
+
+      const vers = async (p: string | null, v: number) =>
+        donnees<{ perimetre: { id: string } | null; version: number }>(
+          await executer(ids.adminActivite, DEPLACER, {
+            id: sequence.id,
+            p,
+            v,
+          }),
+          'modifierSequence'
+        )
+      expect(await vers(ids.basket, 0)).toEqual({
+        perimetre: { id: ids.basket },
+        version: 1,
+      })
+      expect(
+        (await prisma.appelBenevoles.findUnique({ where: { id: appel.id } }))
+          ?.perimetreId
+      ).toBe(ids.basket)
+      expect(await vers(null, 1)).toEqual({ perimetre: null, version: 2 })
+      expect(
+        (await prisma.appelBenevoles.findUnique({ where: { id: appel.id } }))
+          ?.perimetreId
+      ).toBeNull()
+      // Sans le champ, la séquence garde son périmètre.
+      const gardee = donnees<Sequence & { perimetre: null }>(
+        await executer(ids.adminActivite, MODIFIER, {
+          id: sequence.id,
+          t: 'Buvette',
+          j: '2027-06-05',
+          d: '16:00',
+          f: '18:00',
+          v: 2,
+        }),
+        'modifierSequence'
+      )
+      expect(gardee.perimetre).toBeNull()
+    } finally {
+      await prisma.appelBenevoles.delete({ where: { id: appel.id } })
+    }
   })
 })
 
