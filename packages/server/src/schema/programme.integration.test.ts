@@ -686,4 +686,47 @@ describe('lieux', () => {
     )
     expect(lus.map(l => l.nom)).toEqual(['Bassin', 'Terrain 2'])
   })
+
+  it('se suppriment archivés et sans séquence, par les admins seulement', async () => {
+    const SUPPRIMER = 'mutation ($id: ID!) { supprimerLieu(id: $id) }'
+    const lieu = donnees<{ id: string }>(
+      await executer(ids.adminActivite, CREER_LIEU, {
+        a: ids.activite,
+        n: 'Buvette',
+      }),
+      'creerLieu'
+    )
+    // Un lieu non archivé ne se supprime pas.
+    expect(
+      code(await executer(ids.adminActivite, SUPPRIMER, { id: lieu.id }))
+    ).toBe('SAISIE_INVALIDE')
+    const sequence = await sequenceNatation({ t: 'Buvette', l: lieu.id })
+    await prisma.lieu.update({
+      where: { id: lieu.id },
+      data: { archivedAt: new Date() },
+    })
+    const lus = donnees<{ id: string; sequences: number }[]>(
+      await executer(
+        ids.adminActivite,
+        'query ($a: ID!) { lieux(activiteId: $a, inclureArchives: true) { id sequences } }',
+        { a: ids.activite }
+      ),
+      'lieux'
+    )
+    expect(lus.find(l => l.id === lieu.id)?.sequences).toBe(1)
+    // Une séquence, même passée, garde son lieu.
+    expect(
+      code(await executer(ids.adminActivite, SUPPRIMER, { id: lieu.id }))
+    ).toBe('SAISIE_INVALIDE')
+    await prisma.sequence.delete({ where: { id: sequence.id } })
+    for (const qui of [ids.referent, ids.etrangere, null]) {
+      expect(code(await executer(qui, SUPPRIMER, { id: lieu.id }))).toBe(
+        'FORBIDDEN'
+      )
+    }
+    expect(
+      (await executer(ids.adminActivite, SUPPRIMER, { id: lieu.id })).data
+    ).toEqual({ supprimerLieu: true })
+    expect(await prisma.lieu.count({ where: { id: lieu.id } })).toBe(0)
+  })
 })

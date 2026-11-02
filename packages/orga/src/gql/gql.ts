@@ -49,7 +49,8 @@ type Documents = {
     "\n  mutation RetirerInvitation($id: ID!) {\n    retirerInvitation(id: $id)\n  }\n": typeof types.RetirerInvitationDocument,
     "\n  mutation LienEspaceBenevole($benevoleId: ID!, $nouveau: Boolean) {\n    lienEspaceBenevole(benevoleId: $benevoleId, nouveau: $nouveau)\n  }\n": typeof types.LienEspaceBenevoleDocument,
     "\n  mutation RenvoyerLienBenevole($benevoleId: ID!) {\n    renvoyerLienBenevole(benevoleId: $benevoleId)\n  }\n": typeof types.RenvoyerLienBenevoleDocument,
-    "\n  query LieuxTous($activiteId: ID!) {\n    lieux(activiteId: $activiteId, inclureArchives: true) {\n      id\n      nom\n      description\n      ordre\n      archive\n    }\n  }\n": typeof types.LieuxTousDocument,
+    "\n  query LieuxTous($activiteId: ID!) {\n    lieux(activiteId: $activiteId, inclureArchives: true) {\n      id\n      nom\n      description\n      ordre\n      archive\n      sequences\n    }\n  }\n": typeof types.LieuxTousDocument,
+    "\n  mutation SupprimerLieu($id: ID!) {\n    supprimerLieu(id: $id)\n  }\n": typeof types.SupprimerLieuDocument,
     "\n  mutation CreerLieu($activiteId: ID!, $nom: String!, $ordre: Int) {\n    creerLieu(activiteId: $activiteId, nom: $nom, ordre: $ordre) {\n      id\n    }\n  }\n": typeof types.CreerLieuDocument,
     "\n  mutation ModifierLieu(\n    $id: ID!\n    $nom: String!\n    $description: String\n    $ordre: Int!\n    $archive: Boolean!\n  ) {\n    modifierLieu(\n      id: $id\n      nom: $nom\n      description: $description\n      ordre: $ordre\n      archive: $archive\n    ) {\n      id\n      nom\n      ordre\n      archive\n    }\n  }\n": typeof types.ModifierLieuDocument,
     "\n  mutation AfficherPremiersPas {\n    afficherPremiersPas {\n      masques\n    }\n  }\n": typeof types.AfficherPremiersPasDocument,
@@ -308,7 +309,8 @@ const documents: Documents = {
     "\n  mutation RetirerInvitation($id: ID!) {\n    retirerInvitation(id: $id)\n  }\n": types.RetirerInvitationDocument,
     "\n  mutation LienEspaceBenevole($benevoleId: ID!, $nouveau: Boolean) {\n    lienEspaceBenevole(benevoleId: $benevoleId, nouveau: $nouveau)\n  }\n": types.LienEspaceBenevoleDocument,
     "\n  mutation RenvoyerLienBenevole($benevoleId: ID!) {\n    renvoyerLienBenevole(benevoleId: $benevoleId)\n  }\n": types.RenvoyerLienBenevoleDocument,
-    "\n  query LieuxTous($activiteId: ID!) {\n    lieux(activiteId: $activiteId, inclureArchives: true) {\n      id\n      nom\n      description\n      ordre\n      archive\n    }\n  }\n": types.LieuxTousDocument,
+    "\n  query LieuxTous($activiteId: ID!) {\n    lieux(activiteId: $activiteId, inclureArchives: true) {\n      id\n      nom\n      description\n      ordre\n      archive\n      sequences\n    }\n  }\n": types.LieuxTousDocument,
+    "\n  mutation SupprimerLieu($id: ID!) {\n    supprimerLieu(id: $id)\n  }\n": types.SupprimerLieuDocument,
     "\n  mutation CreerLieu($activiteId: ID!, $nom: String!, $ordre: Int) {\n    creerLieu(activiteId: $activiteId, nom: $nom, ordre: $ordre) {\n      id\n    }\n  }\n": types.CreerLieuDocument,
     "\n  mutation ModifierLieu(\n    $id: ID!\n    $nom: String!\n    $description: String\n    $ordre: Int!\n    $archive: Boolean!\n  ) {\n    modifierLieu(\n      id: $id\n      nom: $nom\n      description: $description\n      ordre: $ordre\n      archive: $archive\n    ) {\n      id\n      nom\n      ordre\n      archive\n    }\n  }\n": types.ModifierLieuDocument,
     "\n  mutation AfficherPremiersPas {\n    afficherPremiersPas {\n      masques\n    }\n  }\n": types.AfficherPremiersPasDocument,
@@ -689,7 +691,11 @@ export function graphql(source: "\n  mutation RenvoyerLienBenevole($benevoleId: 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query LieuxTous($activiteId: ID!) {\n    lieux(activiteId: $activiteId, inclureArchives: true) {\n      id\n      nom\n      description\n      ordre\n      archive\n    }\n  }\n"): (typeof documents)["\n  query LieuxTous($activiteId: ID!) {\n    lieux(activiteId: $activiteId, inclureArchives: true) {\n      id\n      nom\n      description\n      ordre\n      archive\n    }\n  }\n"];
+export function graphql(source: "\n  query LieuxTous($activiteId: ID!) {\n    lieux(activiteId: $activiteId, inclureArchives: true) {\n      id\n      nom\n      description\n      ordre\n      archive\n      sequences\n    }\n  }\n"): (typeof documents)["\n  query LieuxTous($activiteId: ID!) {\n    lieux(activiteId: $activiteId, inclureArchives: true) {\n      id\n      nom\n      description\n      ordre\n      archive\n      sequences\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SupprimerLieu($id: ID!) {\n    supprimerLieu(id: $id)\n  }\n"): (typeof documents)["\n  mutation SupprimerLieu($id: ID!) {\n    supprimerLieu(id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
