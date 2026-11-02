@@ -2,10 +2,10 @@
   "schemaVersion": 5,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.23.0",
+  "version": "0.24.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.24.0",
       "notes": [
         {
           "id": "2026-10-31-serveur-l-administration-de-l-installation-peut-envoyer-l-export-d-u",

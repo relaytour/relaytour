@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.24.0
 fr:
   titre: >-
     Une séquence peut changer de périmètre

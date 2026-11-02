@@ -3,6 +3,7 @@ cible: orga
 type: correctif
 audience: interne
 etat: prevu
+version: 0.24.0
 fr:
   titre: >-
     La mention du contact principal s'affiche sous le nom dans le panneau des personnes affectées

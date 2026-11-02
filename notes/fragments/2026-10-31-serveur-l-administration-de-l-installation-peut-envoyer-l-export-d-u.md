@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.24.0
 fr:
   titre: >-
     L'administration de l'installation peut envoyer l'export d'une installation en sommeil à ses admins
