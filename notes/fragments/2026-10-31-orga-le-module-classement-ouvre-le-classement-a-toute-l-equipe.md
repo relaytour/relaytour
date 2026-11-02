@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.24.0
 fr:
   titre: >-
     Le module « Classement » ouvre le classement à toute l’équipe

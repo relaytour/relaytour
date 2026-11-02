@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.24.0
 fr:
   titre: >-
     Les abonnements à l'agenda choisissent leurs types d'événements

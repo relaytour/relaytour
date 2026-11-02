@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.24.0
 fr:
   titre: >-
     L'administration de l'installation peut envoyer à un membre le rappel de ses espaces

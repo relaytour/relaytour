@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: admin-organisation
 etat: prevu
+version: 0.24.0
 fr:
   titre: >-
     Les mails n'invitent plus à répondre quand personne ne reçoit la réponse

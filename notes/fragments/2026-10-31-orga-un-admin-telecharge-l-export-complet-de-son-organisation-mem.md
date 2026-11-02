@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-organisation
 etat: prevu
+version: 0.24.0
 fr:
   titre: >-
     Un admin télécharge l'export complet de son organisation, même en lecture seule

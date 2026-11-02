@@ -3,6 +3,7 @@ cible: serveur
 type: securite
 audience: interne
 etat: prevu
+version: 0.24.0
 fr:
   titre: >-
     graphql-scalars passe en version 2.0.1

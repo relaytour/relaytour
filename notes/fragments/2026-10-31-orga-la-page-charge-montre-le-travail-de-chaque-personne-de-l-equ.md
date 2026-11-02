@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.24.0
 fr:
   titre: >-
     La page « Charge » montre le travail de chaque personne de l’équipe
