@@ -1405,6 +1405,12 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'supprimerLieu',
+    query: 'mutation ($id: ID!) { supprimerLieu(id: $id) }',
+    variables: () => ({ id: a.lieu }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'creerSequence',
     query:
       'mutation ($e: ID!, $p: ID) { creerSequence(editionId: $e, perimetreId: $p, titre: "Intrusion", jour: "2027-06-05", heureDebut: "09:00", heureFin: "10:00") { id } }',

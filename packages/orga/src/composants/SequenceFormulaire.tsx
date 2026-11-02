@@ -58,6 +58,7 @@ const CREER = graphql(`
 const MODIFIER = graphql(`
   mutation ModifierSequence(
     $id: ID!
+    $perimetreId: ID
     $lieuId: ID
     $titre: String!
     $jour: Date!
@@ -72,6 +73,7 @@ const MODIFIER = graphql(`
   ) {
     modifierSequence(
       id: $id
+      perimetreId: $perimetreId
       lieuId: $lieuId
       titre: $titre
       jour: $jour
@@ -274,6 +276,7 @@ export default function SequenceFormulaire({
         await modifier({
           variables: {
             id: existante.id,
+            perimetreId: v.agenda === GLOBAL ? null : v.agenda,
             versionAttendue: existante.version,
             ...champs,
           },
@@ -326,9 +329,16 @@ export default function SequenceFormulaire({
         onFinish={v => void enregistrer(v)}
         requiredMark={false}
       >
-        <Form.Item label={t`Périmètre`} name="agenda">
+        <Form.Item
+          label={t`Périmètre`}
+          name="agenda"
+          extra={
+            existante !== null && agenda !== (existante.perimetreId ?? GLOBAL)
+              ? t`La séquence quittera son périmètre actuel. Un appel à bénévoles ouvert sur cette séquence passera aussi dans le nouveau périmètre.`
+              : undefined
+          }
+        >
           <Select
-            disabled={existante !== null}
             options={agendas.map(a => ({
               value: a.perimetreId ?? GLOBAL,
               label: a.nom,

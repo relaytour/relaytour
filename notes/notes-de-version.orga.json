@@ -8,6 +8,42 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-11-02-orga-une-sequence-change-de-perimetre",
+          "date": "2026-11-02",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une séquence peut changer de périmètre",
+            "texte": "La fenêtre « Modifier la séquence » propose maintenant le champ « Périmètre ». Vous pouvez y placer la séquence dans un autre périmètre où vous écrivez, ou dans toute l'activité si vous en êtes admin. La séquence garde ses places, son lieu et ses consignes. Un appel à bénévoles ouvert sur cette séquence passe dans le nouveau périmètre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A slot can move to another area",
+            "texte": "The \"Edit the slot\" window now shows the \"Area\" field. You can move the slot to another area where you can write, or to the whole activity if you are one of its admins. The slot keeps its places, its venue and its instructions. A volunteer call opened on this slot moves to the new area.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-11-02-orga-un-lieu-archive-peut-etre-supprime",
+          "date": "2026-11-02",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un lieu archivé peut être supprimé",
+            "texte": "La fenêtre « Lieux de l'activité » propose un bouton de suppression sur chaque lieu archivé. Le bouton reste inactif tant qu'une séquence utilise le lieu, quelle que soit sa période. La suppression demande une confirmation et reste définitive.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An archived venue can be deleted",
+            "texte": "The \"Activity venues\" window shows a delete button on each archived venue. The button stays disabled while a slot uses the venue, whatever its period. The deletion asks for a confirmation and is permanent.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-31-orga-une-tache-faite-peut-etre-realisee-par-plusieurs-personnes",
           "date": "2026-10-31",
           "type": "fonctionnalite",

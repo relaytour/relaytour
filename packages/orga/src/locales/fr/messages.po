@@ -64,6 +64,11 @@ msgstr "(vous)"
 msgid "[à compléter : {libelle}]"
 msgstr "[à compléter : {libelle}]"
 
+#. placeholder {0}: lieu.sequences
+#: src/composants/LieuxFenetre.tsx
+msgid "{0, plural, one {Une séquence utilise ce lieu.} other {# séquences utilisent ce lieu.}} Choisissez un autre lieu pour ces séquences avant de le supprimer."
+msgstr "{0, plural, one {Une séquence utilise ce lieu.} other {# séquences utilisent ce lieu.}} Choisissez un autre lieu pour ces séquences avant de le supprimer."
+
 #: src/lib/declinaisons.ts
 msgid "{abandonnees, plural, one {# abandonnée} other {# abandonnées}}"
 msgstr "{abandonnees, plural, one {# abandonnée} other {# abandonnées}}"
@@ -1895,6 +1900,7 @@ msgstr "Annulée"
 #: src/composants/GestionAcces.tsx
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/LienBenevole.tsx
+#: src/composants/LieuxFenetre.tsx
 #: src/composants/MesInvitations.tsx
 #: src/composants/ModeleDeDepart.tsx
 #: src/composants/NouvelleEdition.tsx
@@ -5756,6 +5762,10 @@ msgstr "La sélection ne contient que votre propre compte, ou aucune personne."
 msgid "La séquence n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
 msgstr "La séquence n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
 
+#: src/composants/SequenceFormulaire.tsx
+msgid "La séquence quittera son périmètre actuel. Un appel à bénévoles ouvert sur cette séquence passera aussi dans le nouveau périmètre."
+msgstr "La séquence quittera son périmètre actuel. Un appel à bénévoles ouvert sur cette séquence passera aussi dans le nouveau périmètre."
+
 #: src/composants/FilTache.tsx
 msgid "La suppression est définitive."
 msgstr "La suppression est définitive."
@@ -6049,6 +6059,10 @@ msgstr "Le lien personnel et la confirmation suivent l’adresse gardée. Les no
 #: src/composants/LienBenevole.tsx
 msgid "Le lien repart par mail. Ce renvoi ne se fait qu’une fois."
 msgstr "Le lien repart par mail. Ce renvoi ne se fait qu’une fois."
+
+#: src/composants/LieuxFenetre.tsx
+msgid "Le lieu ne figurera plus dans aucune période de l’activité. Cette suppression est définitive."
+msgstr "Le lieu ne figurera plus dans aucune période de l’activité. Cette suppression est définitive."
 
 #: src/lib/guide-markdown.ts
 msgid "Le local ferme **à 19 h précises**."
@@ -6444,8 +6458,8 @@ msgid "Les lecteurs de {perimetresSansAcces} n’ouvriront pas ce document : le 
 msgstr "Les lecteurs de {perimetresSansAcces} n’ouvriront pas ce document : le dossier lié « {nomDossierLie} » ne sert pas ces périmètres."
 
 #: src/composants/LieuxFenetre.tsx
-msgid "Les lieux servent d’une période à l’autre. Le programme les affiche par ordre croissant. Un lieu archivé ne se propose plus."
-msgstr "Les lieux servent d’une période à l’autre. Le programme les affiche par ordre croissant. Un lieu archivé ne se propose plus."
+msgid "Les lieux servent d’une période à l’autre. Le programme les affiche par ordre croissant. Un lieu archivé ne se propose plus. Un lieu archivé qu’aucune séquence n’utilise peut être supprimé."
+msgstr "Les lieux servent d’une période à l’autre. Le programme les affiche par ordre croissant. Un lieu archivé ne se propose plus. Un lieu archivé qu’aucune séquence n’utilise peut être supprimé."
 
 #: src/composants/AssistantTableur.tsx
 msgid "Les lignes ci-dessous sont écrites. Revenez à la vérification pour relancer l’import : une ligne déjà importée ne sera pas recréée."
@@ -6718,6 +6732,10 @@ msgstr "Lier une fiche (facultatif)"
 #: src/composants/SequenceFormulaire.tsx
 msgid "Lieu (facultatif)"
 msgstr "Lieu (facultatif)"
+
+#: src/composants/LieuxFenetre.tsx
+msgid "Lieu supprimé."
+msgstr "Lieu supprimé."
 
 #: src/pages/Programme.tsx
 msgid "Lieux"
@@ -9439,6 +9457,7 @@ msgid "Support {organisation} ({relaytour})"
 msgstr "Support {organisation} ({relaytour})"
 
 #: src/composants/FilTache.tsx
+#: src/composants/LieuxFenetre.tsx
 #: src/composants/SequenceDetail.tsx
 #: src/composants/SondageDetail.tsx
 #: src/pages/Agenda.tsx
@@ -9482,6 +9501,14 @@ msgstr "Supprimer la séquence"
 #: src/pages/FicheEditeur.tsx
 msgid "Supprimer le brouillon"
 msgstr "Supprimer le brouillon"
+
+#: src/composants/LieuxFenetre.tsx
+msgid "Supprimer le lieu"
+msgstr "Supprimer le lieu"
+
+#: src/composants/LieuxFenetre.tsx
+msgid "Supprimer le lieu « {nom} » ?"
+msgstr "Supprimer le lieu « {nom} » ?"
 
 #: src/composants/SondageDetail.tsx
 msgid "Supprimer le sondage"

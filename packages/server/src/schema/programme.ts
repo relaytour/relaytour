@@ -57,6 +57,10 @@ export const LieuRef = builder.prismaObject('Lieu', {
     description: t.exposeString('description', { nullable: true }),
     ordre: t.exposeInt('ordre'),
     archive: t.boolean({ resolve: l => l.archivedAt !== null }),
+    sequences: t.relationCount('sequences', {
+      description:
+        'Le nombre de séquences qui utilisent le lieu, toutes périodes confondues.',
+    }),
   }),
 })
 
@@ -500,6 +504,49 @@ builder.mutationFields(t => {
       },
     }),
 
+    supprimerLieu: t.boolean({
+      authScopes: { gestion: true },
+      description:
+        'Supprime un lieu archivé qu’aucune séquence n’utilise, toutes périodes confondues.',
+      args: { id: t.arg.id({ required: true }) },
+      resolve: async (_root, args, ctx) => {
+        const lieu = await prisma.lieu.findFirst({
+          where: { id: String(args.id), organisationId: ctx.organisation!.id },
+        })
+        if (lieu === null) throw accesRefuse()
+        await ctx.exigerActivite(lieu.activiteId)
+        await ctx.exigerAdminDe(lieu.activiteId)
+        if (lieu.archivedAt === null) {
+          throw erreurSaisie(i18n._('Archivez le lieu avant de le supprimer.'))
+        }
+        // La vérification et la suppression tiennent en une seule requête : une
+        // séquence rattachée entre-temps empêche la suppression, au lieu de
+        // perdre son lieu (onDelete: SetNull).
+        const { count } = await prisma.lieu.deleteMany({
+          where: {
+            id: lieu.id,
+            archivedAt: { not: null },
+            sequences: { none: {} },
+          },
+        })
+        if (count === 0) {
+          const sequences = await prisma.sequence.count({
+            where: { lieuId: lieu.id },
+          })
+          throw erreurSaisie(
+            sequences > 0
+              ? i18n._(
+                  '{nombre, plural, one {Une séquence utilise ce lieu} other {# séquences utilisent ce lieu}}. Choisissez un autre lieu pour ces séquences, ou gardez ce lieu archivé.',
+                  { nombre: sequences }
+                )
+              : i18n._('Archivez le lieu avant de le supprimer.')
+          )
+        }
+        publierPourActivite('PROGRAMME', ctx.organisation!.id, lieu.activiteId)
+        return true
+      },
+    }),
+
     creerSequence: t.field({
       type: SequenceRef,
       authScopes: { connecte: true },
@@ -572,6 +619,10 @@ builder.mutationFields(t => {
         'Change une séquence et ses places. Les places reçues remplacent les places actuelles.',
       args: {
         id: t.arg.id({ required: true }),
+        perimetreId: t.arg.id({
+          description:
+            'Le nouveau périmètre ; null : toute l’activité. Sans ce champ, la séquence garde son périmètre.',
+        }),
         ...champsSequence,
         versionAttendue: t.arg.int({
           required: true,
@@ -582,6 +633,20 @@ builder.mutationFields(t => {
       resolve: async (_root, args, ctx) => {
         const actuelle = await sequenceVisible(ctx, String(args.id))
         const { activiteId } = await exigerEcritureReunion(ctx, actuelle)
+        // Changer de périmètre exige d'écrire dans l'ancien et dans le nouveau.
+        // Un champ absent garde le périmètre : un client antérieur ne le change pas.
+        const perimetreId =
+          args.perimetreId === undefined
+            ? actuelle.perimetreId
+            : args.perimetreId
+              ? String(args.perimetreId)
+              : null
+        if (perimetreId !== actuelle.perimetreId) {
+          await exigerEcritureReunion(ctx, {
+            editionId: actuelle.editionId,
+            perimetreId,
+          })
+        }
         const valides = await champsValides(ctx, args, {
           editionId: actuelle.editionId,
           activiteId,
@@ -594,7 +659,7 @@ builder.mutationFields(t => {
         await prisma.$transaction(async tx => {
           const { count } = await tx.sequence.updateMany({
             where: { id: actuelle.id, version: args.versionAttendue },
-            data: { ...valides.champs, version: { increment: 1 } },
+            data: { ...valides.champs, perimetreId, version: { increment: 1 } },
           })
           if (count === 0) {
             // La version relue après l'échec : celle qu'une autre écriture a
@@ -607,6 +672,14 @@ builder.mutationFields(t => {
               i18n._('Cette séquence a été modifiée depuis votre lecture.'),
               { versionCourante: version, modifieeLe: updatedAt.toISOString() }
             )
+          }
+          // Un appel ouvert sur la séquence suit son périmètre : les personnes
+          // qui écrivent dans le nouveau périmètre le gèrent.
+          if (perimetreId !== actuelle.perimetreId) {
+            await tx.appelBenevoles.updateMany({
+              where: { sequenceId: actuelle.id, portee: 'SEQUENCE' },
+              data: { perimetreId },
+            })
           }
           // Une place gardée garde sa date de confirmation : une place à
           // confirmer le reste (ADR 0041).
@@ -652,7 +725,19 @@ builder.mutationFields(t => {
           ],
           actuelle
         )
+        // Les écrans de l'ancien et du nouveau périmètre se relisent.
         signal(actuelle)
+        if (perimetreId !== actuelle.perimetreId) {
+          signal({ ...actuelle, perimetreId })
+          publierPourActivite(
+            'CANDIDATURE',
+            actuelle.organisationId,
+            activiteId,
+            {
+              editionId: actuelle.editionId,
+            }
+          )
+        }
         return lireSequence(ctx, await sequenceVisible(ctx, actuelle.id))
       },
     }),

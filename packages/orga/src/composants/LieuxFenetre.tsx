@@ -1,7 +1,8 @@
-import { PlusOutlined } from '@ant-design/icons'
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { App, Button, Input, InputNumber, Modal, Switch } from 'antd'
+import { App, Button, Input, InputNumber, Modal, Switch, Tooltip } from 'antd'
 import { useRef, useState } from 'react'
 
 import { graphql } from '../gql'
@@ -15,7 +16,14 @@ const LIEUX_TOUS = graphql(`
       description
       ordre
       archive
+      sequences
     }
+  }
+`)
+
+const SUPPRIMER = graphql(`
+  mutation SupprimerLieu($id: ID!) {
+    supprimerLieu(id: $id)
   }
 `)
 
@@ -54,8 +62,9 @@ const RELIRE = ['LieuxTous', 'Lieux', 'Programme']
 
 /**
  * Fenêtre des lieux d'une activité (ADR 0040), pour ses admins : ajouter,
- * renommer, ordonner, archiver. Un lieu archivé garde ses séquences passées et ne
- * se propose plus.
+ * renommer, ordonner, archiver, supprimer. Un lieu archivé garde ses séquences
+ * passées et ne se propose plus. Seul un lieu archivé qu'aucune séquence
+ * n'utilise se supprime, après confirmation.
  */
 export default function LieuxFenetre({
   activiteId,
@@ -66,7 +75,7 @@ export default function LieuxFenetre({
   ouvert: boolean
   onFermer: () => void
 }) {
-  const { message } = App.useApp()
+  const { message, modal } = App.useApp()
   const { t } = useLingui()
   const { data } = useQuery(LIEUX_TOUS, {
     variables: { activiteId },
@@ -74,6 +83,7 @@ export default function LieuxFenetre({
   })
   const [creer, creation] = useMutation(CREER, { refetchQueries: RELIRE })
   const [modifier] = useMutation(MODIFIER, { refetchQueries: RELIRE })
+  const [supprimer] = useMutation(SUPPRIMER, { refetchQueries: RELIRE })
   const [nouveau, setNouveau] = useState('')
   const lieux = data?.lieux ?? []
   // Le dernier état voulu de chaque lieu, et la file de ses enregistrements :
@@ -107,6 +117,27 @@ export default function LieuxFenetre({
     )
   }
 
+  const confirmerSuppression = (lieu: (typeof lieux)[number]) => {
+    const nom = lieu.nom
+    modal.confirm({
+      title: t`Supprimer le lieu « ${nom} » ?`,
+      content: t`Le lieu ne figurera plus dans aucune période de l’activité. Cette suppression est définitive.`,
+      okText: t`Supprimer`,
+      okButtonProps: { danger: true },
+      cancelText: t`Annuler`,
+      onOk: () =>
+        file.current.then(() =>
+          supprimer({ variables: { id: lieu.id } }).then(
+            () => {
+              brouillons.current.delete(lieu.id)
+              message.success(t`Lieu supprimé.`)
+            },
+            (e: unknown) => message.error(messageErreur(e))
+          )
+        ),
+    })
+  }
+
   const fermer = () => {
     brouillons.current.clear()
     onFermer()
@@ -128,7 +159,8 @@ export default function LieuxFenetre({
       <p className="rt-texte-secondaire">
         <Trans>
           Les lieux servent d’une période à l’autre. Le programme les affiche
-          par ordre croissant. Un lieu archivé ne se propose plus.
+          par ordre croissant. Un lieu archivé ne se propose plus. Un lieu
+          archivé qu’aucune séquence n’utilise peut être supprimé.
         </Trans>
       </p>
       <ul className="rt-lieux">
@@ -164,6 +196,27 @@ export default function LieuxFenetre({
                 <Trans comment="Statut d’un lieu mis de côté">Archivé</Trans>
               </span>
             </span>
+            {lieu.archive && (
+              <Tooltip
+                title={
+                  lieu.sequences > 0
+                    ? t`${plural(lieu.sequences, {
+                        one: 'Une séquence utilise ce lieu.',
+                        other: '# séquences utilisent ce lieu.',
+                      })} Choisissez un autre lieu pour ces séquences avant de le supprimer.`
+                    : t`Supprimer le lieu`
+                }
+              >
+                <Button
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  aria-label={t`Supprimer le lieu`}
+                  disabled={lieu.sequences > 0}
+                  onClick={() => confirmerSuppression(lieu)}
+                />
+              </Tooltip>
+            )}
           </li>
         ))}
       </ul>

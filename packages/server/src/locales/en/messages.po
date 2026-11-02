@@ -861,6 +861,16 @@ msgstr "An activity has 200 venues at most."
 
 #. js-lingui-explicit-id
 #: src/schema/programme.ts
+msgid "Archivez le lieu avant de le supprimer."
+msgstr "Archive the venue before deleting it."
+
+#. js-lingui-explicit-id
+#: src/schema/programme.ts
+msgid "{nombre, plural, one {Une séquence utilise ce lieu} other {# séquences utilisent ce lieu}}. Choisissez un autre lieu pour ces séquences, ou gardez ce lieu archivé."
+msgstr "{nombre, plural, one {One slot uses this venue} other {# slots use this venue}}. Choose another venue for these slots, or keep this venue archived."
+
+#. js-lingui-explicit-id
+#: src/schema/programme.ts
 msgid "Une période compte {max} séquences au plus."
 msgstr "A period has {max} slots at most."
 
