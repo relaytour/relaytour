@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: application-langues-et-versions
+  parent: 21
+---
+
 # ADR 0047 — Langues de l'interface et traduction communautaire
 
 - **Statut** : acceptée

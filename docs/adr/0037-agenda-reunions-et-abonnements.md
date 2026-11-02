@@ -1,3 +1,8 @@
+---
+compadr:
+  feature: agenda
+---
+
 # ADR 0037 — Agenda, réunions, convocations et abonnements
 
 - **Statut** : acceptée

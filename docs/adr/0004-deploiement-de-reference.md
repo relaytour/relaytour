@@ -1,3 +1,8 @@
+---
+compadr:
+  feature: socle-licence-exploitation
+---
+
 # ADR 0004 — Déploiement de référence : une pile Compose sur un VPS
 
 - **Statut** : acceptée

@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: fiches-et-fichiers
+  parent: 9
+---
+
 # ADR 0039 — Fiches connexes et mentions de périmètre ou de groupe
 
 - **Statut** : acceptée

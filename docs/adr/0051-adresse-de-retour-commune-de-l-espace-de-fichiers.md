@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: mails-et-messagerie
+  parent: 16
+---
+
 # ADR 0051 — Adresse de retour commune de l'espace de fichiers
 
 - **Statut** : acceptée

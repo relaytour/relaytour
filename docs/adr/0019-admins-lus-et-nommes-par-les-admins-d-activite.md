@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: droits-admins-et-equipe
+  parent: 10
+---
+
 # ADR 0019 — Admins lus et nommés par les admins d'activité
 
 - **Statut** : acceptée

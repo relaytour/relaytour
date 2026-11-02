@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: droits-admins-et-equipe
+  parent: 10
+---
+
 # ADR 0011 — Contact principal d'un périmètre
 
 - **Statut** : acceptée

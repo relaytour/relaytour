@@ -1,3 +1,8 @@
+---
+compadr:
+  feature: connexion
+---
+
 # ADR 0002 — Connexion par code mail avec Better Auth
 
 - **Statut** : acceptée (mise en œuvre en phase 1)

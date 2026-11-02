@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: socle-licence-exploitation
+  parent: 4
+---
+
 # ADR 0005 — Licence AGPL-3.0 et indépendance du logiciel
 
 - **Statut** : acceptée

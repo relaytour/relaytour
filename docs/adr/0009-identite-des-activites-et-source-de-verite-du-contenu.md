@@ -1,3 +1,8 @@
+---
+compadr:
+  feature: fiches-et-fichiers
+---
+
 # ADR 0009 — Identité des activités et source de vérité du contenu
 
 - **Statut** : acceptée

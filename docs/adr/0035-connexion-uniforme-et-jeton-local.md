@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: connexion
+  parent: 2
+---
+
 # ADR 0035 — Connexion à réponse uniforme et jeton d'administration local par défaut
 
 - **Statut** : acceptée

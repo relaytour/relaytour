@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: fiches-et-fichiers
+  parent: 9
+---
+
 # ADR 0003 — Fiches et tâches types versionnées dans Git
 
 - **Statut** : acceptée (mise en œuvre en phase 3)

@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: organisations-et-cloisonnement
+  parent: 8
+---
+
 # ADR 0052 — Modules d'une activité
 
 - **Statut** : acceptée

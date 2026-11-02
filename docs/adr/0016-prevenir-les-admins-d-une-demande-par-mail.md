@@ -1,3 +1,8 @@
+---
+compadr:
+  feature: mails-et-messagerie
+---
+
 # ADR 0016 — Prévenir les admins d'une demande par un mail regroupé
 
 - **Statut** : acceptée

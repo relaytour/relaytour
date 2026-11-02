@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: benevoles
+  parent: 40
+---
+
 # ADR 0042 — Import de listes de bénévoles, doublons et fusion des fiches
 
 - **Statut** : acceptée

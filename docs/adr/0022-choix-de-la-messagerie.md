@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: mails-et-messagerie
+  parent: 16
+---
+
 # ADR 0022 — Choix de la messagerie qui reçoit un message
 
 - **Statut** : acceptée

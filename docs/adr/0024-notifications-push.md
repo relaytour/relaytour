@@ -1,3 +1,8 @@
+---
+compadr:
+  feature: notifications
+---
+
 # ADR 0024 — Notifications push
 
 - **Statut** : acceptée

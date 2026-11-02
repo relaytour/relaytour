@@ -1,3 +1,8 @@
+---
+compadr:
+  feature: droits-admins-et-equipe
+---
+
 # ADR 0010 — Admins d'activité et visibilité des activités
 
 - **Statut** : acceptée

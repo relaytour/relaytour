@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: droits-admins-et-equipe
+  parent: 10
+---
+
 # ADR 0013 — Administrer l'équipe depuis le serveur
 
 - **Statut** : acceptée

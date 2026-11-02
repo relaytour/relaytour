@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: application-langues-et-versions
+  parent: 21
+---
+
 # ADR 0023 — Application installable et écran hors connexion
 
 - **Statut** : acceptée
