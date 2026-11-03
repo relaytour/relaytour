@@ -2,6 +2,7 @@
 cible: serveur
 type: rupture
 audience: public
+version: 0.25.0
 fr:
   titre: >-
     Le lien de l'export d'une installation en sommeil part depuis le conteneur du worker
