@@ -76,7 +76,7 @@ Un hébergeur a aussi besoin d'un portail client, d'une facturation et de palier
 
 ### Limites
 
-- `Organisation.limites` est un objet JSON (`{ activites?: number, periodesOuvertes?: number }`), nul par défaut. Une valeur nulle ou vide signifie qu'aucune limite ne s'applique. Seule l'administration de l'installation le modifie.
+- `Organisation.limites` est un objet JSON (`{ activites?: number, periodesOuvertes?: number }`), nul par défaut. Une valeur nulle ou vide signifie qu'aucune limite ne s'applique. Seule l'administration de l'installation le modifie. La limite de membres vit dans sa propre colonne (ADR 0058).
 - `activites` plafonne le nombre d'activités non archivées. `periodesOuvertes` plafonne le nombre de périodes non archivées, toutes activités confondues. Un hébergeur peut ainsi vendre l'ouverture d'une période plutôt qu'un abonnement au mois ou à l'année.
 - `creerActivite`, `creerEdition` et l'import refusent une création au-delà d'une limite. Le message renvoie vers `CONTACT_HEBERGEUR`, adresse ou URL facultative de l'installation. Sans cette variable, le message renvoie vers un admin.
 - Une limite ne bloque jamais la lecture. Les périodes archivées, les fiches et l'historique restent consultables, et l'export reste possible. Le plafond porte sur l'ouverture, pas sur la consultation.

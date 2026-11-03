@@ -15,7 +15,7 @@ import {
 // Poste local :
 //   yarn workspace @relaytour/server organisation:creer rencontres "Les Rencontres" \
 //     [--sigle Rencontres] [--fuseau Europe/Paris] [--domaines exemple.org,autre.org] \
-//     [--limite-activites 1] [--limite-periodes 1] \
+//     [--limite-activites 1] [--limite-periodes 1] [--limite-membres 200] \
 //     [--admin adresse@exemple.org --admin-nom "Prénom Nom"]
 // Conteneur : node dist/creer-organisation.js rencontres "Les Rencontres" …
 
@@ -27,6 +27,7 @@ const { values, positionals } = parseArgs({
     domaines: { type: 'string' },
     'limite-activites': { type: 'string' },
     'limite-periodes': { type: 'string' },
+    'limite-membres': { type: 'string' },
     admin: { type: 'string' },
     'admin-nom': { type: 'string' },
   },
@@ -45,7 +46,7 @@ const entier = (brut: string | undefined, option: string) => {
 
 if (slug === undefined || nom === undefined) {
   console.error(
-    'Usage : creer-organisation <slug> "<nom>" [--sigle …] [--fuseau …] [--domaines a.org,b.org] [--limite-activites n] [--limite-periodes n] [--admin adresse --admin-nom "Prénom Nom"]'
+    'Usage : creer-organisation <slug> "<nom>" [--sigle …] [--fuseau …] [--domaines a.org,b.org] [--limite-activites n] [--limite-periodes n] [--limite-membres n] [--admin adresse --admin-nom "Prénom Nom"]'
   )
   process.exit(1)
 }
@@ -56,6 +57,7 @@ if ((values.admin === undefined) !== (values['admin-nom'] === undefined)) {
 
 const activites = entier(values['limite-activites'], 'limite-activites')
 const periodesOuvertes = entier(values['limite-periodes'], 'limite-periodes')
+const membres = entier(values['limite-membres'], 'limite-membres')
 
 try {
   // L'admin se vérifie avant la création : une adresse refusée ne laisse pas
@@ -75,6 +77,7 @@ try {
     limites: {
       ...(activites === undefined ? {} : { activites }),
       ...(periodesOuvertes === undefined ? {} : { periodesOuvertes }),
+      ...(membres === undefined ? {} : { membres }),
     },
   })
   console.log(`✔ Organisation « ${slug} » créée, avec sa première activité.`)

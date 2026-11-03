@@ -160,10 +160,11 @@ describe('accès à l’administration de l’installation', () => {
         'modulesAutorises',
         'nom',
         'nombreMembres',
+        'placesMembresOccupees',
         'slug',
         'statut',
       ],
-      LimitesOrganisation: ['activites', 'periodesOuvertes'],
+      LimitesOrganisation: ['activites', 'membres', 'periodesOuvertes'],
       ActiviteInstallation: [
         'archive',
         'nature',

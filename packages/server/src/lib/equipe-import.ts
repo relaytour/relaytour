@@ -7,7 +7,12 @@ import { mettreEnFile } from '../courriel/file.ts'
 import { creerAffectations } from './affectations.ts'
 import { estRattachee, rattacher } from './rattachements.ts'
 import { creerOuRattacherCompte } from './comptes.ts'
-import { annoncerInvitation, inviterCompteExterne } from './invitations.ts'
+import {
+  annoncerInvitation,
+  aUneInvitationEnAttente,
+  inviterCompteExterne,
+} from './invitations.ts'
+import { placesMembres } from './limites.ts'
 import { annoncerChangementEquipe } from './equipe.ts'
 import { adresseValide } from './saisie.ts'
 
@@ -186,6 +191,9 @@ export async function importerEquipe(
 
   await prisma.$transaction(
     async tx => {
+      // Chaque compte créé et chaque invitation nouvelle prend une place de membre
+      // (ADR 0058). La simulation compte de même, sans rien écrire.
+      const places = await placesMembres(tx, organisationId, instant)
       for (const p of personnes) {
         const compte = await creerOuRattacherCompte(tx, {
           email: p.adresse,
@@ -202,6 +210,7 @@ export async function importerEquipe(
         const { userId } = compte
         const nouveau = compte.issue === 'cree'
         if (nouveau) {
+          await places.prendre()
           rapport.comptesCrees.push(p.nom)
           aInviter.push(userId)
         } else if (compte.issue === 'externe') {
@@ -209,6 +218,12 @@ export async function importerEquipe(
           // affectations, les souhaits et le contact principal que le fichier déclare.
           rapport.invitationsEnAttente.push(p.nom)
           enAttente.push(userId)
+          if (
+            !ecrire &&
+            !(await aUneInvitationEnAttente(tx, organisationId, userId, instant))
+          ) {
+            await places.prendre()
+          }
           if (ecrire) {
             const affectes = p.affectations.map(slug => perimetres.get(slug)!)
             await inviterCompteExterne(tx, {
@@ -218,6 +233,7 @@ export async function importerEquipe(
               nom: p.nom,
               origine: 'IMPORT',
               inviteParId: null,
+              places,
               lot: {
                 editionId: edition.id,
                 activiteId,

@@ -18,6 +18,16 @@ export const LimitesSchema = z.strictObject({
 
 export type Limites = z.infer<typeof LimitesSchema>
 
+// Les limites vues par l'administration de l'installation (ADR 0058). La limite de
+// membres vit dans la colonne `limiteMembres`, hors de `limites` : le schéma strict
+// d'une version antérieure refuserait la clé, et l'organisation perdrait toutes ses
+// limites après un retour arrière (comme les modules, ADR 0052).
+export const LimitesInstallationSchema = LimitesSchema.extend({
+  membres: z.number().int().min(0).optional(),
+})
+
+export type LimitesInstallation = z.infer<typeof LimitesInstallationSchema>
+
 /** Les limites portées par la colonne JSON. Une valeur illisible vaut aucune limite. */
 export function lireLimites(brut: unknown): Limites {
   const r = LimitesSchema.safeParse(brut ?? {})
@@ -44,9 +54,16 @@ export async function sousVerrouOrganisation<T>(
   options: { timeout?: number } = {}
 ): Promise<T> {
   return prisma.$transaction(async tx => {
-    await tx.$queryRaw`SELECT id FROM Organisation WHERE id = ${organisationId} FOR UPDATE`
+    await verrouillerOrganisation(tx, organisationId)
     return operation(tx)
   }, options)
+}
+
+async function verrouillerOrganisation(
+  tx: Prisma.TransactionClient,
+  organisationId: string
+): Promise<void> {
+  await tx.$queryRaw`SELECT id FROM Organisation WHERE id = ${organisationId} FOR UPDATE`
 }
 
 async function limitesDe(organisationId: string, db: Client): Promise<Limites> {
@@ -99,5 +116,58 @@ export async function exigerPlacePeriode(
       ),
       await contactHebergeur()
     )
+  }
+}
+
+export interface PlacesMembres {
+  /** Consomme une place, ou refuse quand la limite est atteinte. */
+  prendre(): Promise<void>
+}
+
+/**
+ * Les places de membres d'une organisation, pour une transaction qui peut y faire
+ * entrer des personnes. À appeler avant toute lecture ordinaire de la transaction :
+ * le verrou sur la ligne de l'organisation sérialise les entrées, et le comptage lit
+ * l'état qui suit le verrou (sous MariaDB 11.8, une lecture faite avant fige la vue
+ * de la transaction). Le comptage est lui-même une lecture ordinaire : un verrou de
+ * compte que la transaction prend d'emblée (`verrouillerCompte`) le précède.
+ *
+ * Une place est une appartenance active ou une invitation en attente (ADR 0030) :
+ * une invitation acceptée garde la place qu'elle occupait. L'appelant prend une
+ * place pour un compte créé, une invitation nouvelle ou une personne rétablie, et
+ * jamais pour une personne déjà membre. Le compteur avance dans la transaction : un
+ * import et sa simulation refusent la même ligne.
+ */
+export async function placesMembres(
+  tx: Prisma.TransactionClient,
+  organisationId: string,
+  instant = new Date()
+): Promise<PlacesMembres> {
+  await verrouillerOrganisation(tx, organisationId)
+  const { limiteMembres: membres } = await tx.organisation.findUniqueOrThrow({
+    where: { id: organisationId },
+    select: { limiteMembres: true },
+  })
+  if (membres === null) return { prendre: async () => {} }
+  const [actives, invitations] = await Promise.all([
+    tx.appartenance.count({ where: { organisationId, archiveLe: null } }),
+    tx.invitationOrganisation.count({
+      where: { organisationId, expireLe: { gt: instant } },
+    }),
+  ])
+  let occupees = actives + invitations
+  return {
+    prendre: async () => {
+      if (occupees >= membres) {
+        throw limiteAtteinte(
+          i18n._(
+            '{membres, plural, one {Votre organisation a atteint sa limite de # membre. Archivez une personne partie ou demandez une limite plus haute.} other {Votre organisation a atteint sa limite de # membres. Archivez une personne partie ou demandez une limite plus haute.}}',
+            { membres }
+          ),
+          await contactHebergeur()
+        )
+      }
+      occupees += 1
+    },
   }
 }

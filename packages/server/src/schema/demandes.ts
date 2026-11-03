@@ -26,6 +26,7 @@ import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { annoncerInvitation, inviterCompteExterne } from '../lib/invitations.ts'
 import { journal } from '../lib/journal.ts'
 import { i18n } from '../lib/langue.ts'
+import { placesMembres } from '../lib/limites.ts'
 import { notifierLesAdmins } from '../lib/notifications-admin.ts'
 import { adresseValide, rejouerSurDoublon, texteRequis } from '../lib/saisie.ts'
 import { perimetresSouhaitesValides, SOUHAITS_MAX } from '../lib/souhaits.ts'
@@ -452,12 +453,16 @@ builder.mutationFields(t => ({
           if (!(await verrouillerEnAttente(tx, demande.id))) {
             throw erreurSaisie(dejaTraitee())
           }
+          // Le verrou de l'organisation précède toute lecture ordinaire : il compte
+          // les places de membres (ADR 0058).
+          const places = await placesMembres(tx, organisationId, instant)
           const compte = await creerOuRattacherCompte(tx, {
             email: demande.adresse,
             nom: demande.nom,
             organisationId,
             role: 'MEMBRE',
           })
+          if (compte.issue === 'cree') await places.prendre()
           // La personne est archivée dans cette organisation (ADR 0031) : un admin
           // de l'organisation la rétablit depuis l'annuaire.
           if (compte.issue === 'archive') {
@@ -492,6 +497,7 @@ builder.mutationFields(t => ({
               nom: demande.nom,
               origine: 'PERSONNE',
               inviteParId: ctx.personne!.id,
+              places,
               lot: {
                 editionId: demande.editionId,
                 activiteId: demande.activiteId,
