@@ -25,7 +25,7 @@ import { invaliderConfigurationOrganisation } from './organisation.ts'
 // Export pour un admin d'une installation en sommeil (ADR 0057) : seule une adresse
 // d'admin actif mène à un export, un lien part au plus une fois par 24 heures, et
 // le dernier export part à tous les admins. Seul le jeton de l'installation ouvre
-// les deux mutations. Un admin exporte aussi depuis l'application en lecture seule.
+// la mutation. Un admin exporte aussi depuis l'application en lecture seule.
 
 const s = randomUUID().slice(0, 8)
 const apollo = new ApolloServer<AppContext>({ schema })
@@ -265,6 +265,21 @@ describe('préparation d’un export pour un admin', () => {
     expect(mails()).toHaveLength(2)
   })
 
+  it('garde le jeton quand aucun SMTP n’est configuré', async () => {
+    const { jeton } = (await preparerExportPourAdmin(
+      prisma,
+      slug,
+      null,
+      dossier
+    ))!
+    await expect(
+      envoyerLienDExport(prisma, slug, jeton, null)
+    ).rejects.toThrow(/Aucun SMTP/)
+    const { transport, mails } = transportDeTest()
+    await envoyerLienDExport(prisma, slug, jeton, transport)
+    expect(mails()).toHaveLength(2)
+  })
+
   it('refuse le jeton d’une autre organisation', async () => {
     const prepare = await preparerExportPourAdmin(prisma, slug, null, dossier)
     await expect(
@@ -282,9 +297,6 @@ describe('préparation d’un export pour un admin', () => {
 describe('mutations d’administration', () => {
   const PREPARER = `mutation ($o: String!, $c: String) {
     preparerExportPourAdmin(organisation: $o, courriel: $c) { fichier jeton }
-  }`
-  const ENVOYER = `mutation ($o: String!, $j: String!) {
-    envoyerLienDExport(organisation: $o, jeton: $j)
   }`
 
   async function executer(
@@ -317,13 +329,11 @@ describe('mutations d’administration', () => {
       await buildContext('127.0.0.1', null),
       await contexteDeTest(ids.adminAutre, slugAutre),
     ]) {
-      for (const [query, variables] of [
-        [PREPARER, { o: slugAutre, c: adresse('admin-autre') }],
-        [ENVOYER, { o: slugAutre, j: 'jeton' }],
-      ] as const) {
-        const r = await executer(contexte, query, variables)
-        expect(r.errors?.[0]?.extensions?.code, query).toBe('FORBIDDEN')
-      }
+      const r = await executer(contexte, PREPARER, {
+        o: slugAutre,
+        c: adresse('admin-autre'),
+      })
+      expect(r.errors?.[0]?.extensions?.code).toBe('FORBIDDEN')
     }
   })
 

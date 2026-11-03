@@ -1963,11 +1963,6 @@ type Mutation {
   envoyerDemande(activite: String!, disponibilite: String, email: String!, nom: String!, organisation: String, perimetres: [String!]!, reponse: String, siteWeb: String, texte: String): Boolean!
 
   """
-  Envoie tout de suite, sans la file du worker, le lien de téléchargement d’un export préparé par preparerExportPourAdmin (ADR 0057). Le lien reste valable 7 jours.
-  """
-  envoyerLienDExport(jeton: String!, organisation: String!): Boolean!
-
-  """
   Lance tout de suite l’export des fiches vers l’espace de fichiers. Le résultat arrive dans le rapport d’export.
   """
   exporterFichesMaintenant: Boolean!
