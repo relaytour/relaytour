@@ -14,7 +14,6 @@ import {
   type PeriodeInstallation,
 } from '../lib/installation.ts'
 import {
-  envoyerLienDExport,
   preparerExportPourAdmin,
 } from '../lib/export-pour-admin.ts'
 import { rappelerAdresses } from '../lib/rappel-adresses.ts'
@@ -315,17 +314,4 @@ builder.mutationFields(t => ({
     },
   }),
 
-  envoyerLienDExport: t.boolean({
-    authScopes: { administration: true },
-    description:
-      'Envoie tout de suite, sans la file du worker, le lien de téléchargement d’un export préparé par preparerExportPourAdmin (ADR 0057). Le lien reste valable 7 jours.',
-    args: {
-      organisation: t.arg.string({ required: true }),
-      jeton: t.arg.string({ required: true }),
-    },
-    resolve: async (_root, args) => {
-      await envoyerLienDExport(prisma, args.organisation, args.jeton)
-      return true
-    },
-  }),
 }))

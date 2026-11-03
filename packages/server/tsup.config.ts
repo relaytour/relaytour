@@ -14,6 +14,7 @@ export default defineConfig({
     'orga-exporter': 'scripts/orga-exporter.ts',
     'equipe-importer': 'scripts/equipe-importer.ts',
     'essai-courriel': 'scripts/essai-courriel.ts',
+    'envoyer-lien-export': 'scripts/envoyer-lien-export.ts',
     'planification-lancer': 'scripts/planification-lancer.ts',
   },
   format: ['esm'],

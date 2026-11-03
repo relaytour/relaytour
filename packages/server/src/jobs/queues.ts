@@ -27,8 +27,9 @@ export type SorteCourriel =
   | 'benevole-places'
   // Rappel de l'adresse de l'espace, demandé par l'hébergeur (ADR 0054).
   | 'rappel-adresse'
-  // Lien de l'export d'une installation en sommeil (ADR 0057). Envoyé tout de suite
-  // par l'API, jamais mis en file : le worker ne tourne pas pendant le réveil.
+  // Lien de l'export d'une installation en sommeil (ADR 0057). Envoyé tout de suite par
+  // la commande `envoyer-lien-export`, jamais mis en file : le worker ne tourne pas
+  // pendant le réveil.
   | 'lien-export'
 
 // La charge utile ne contient ni corps de mail ni jeton. Le processeur relit l'adresse

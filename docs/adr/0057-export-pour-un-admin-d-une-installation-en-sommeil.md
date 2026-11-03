@@ -16,19 +16,21 @@ Enfin, l'export complet n'existait que par le script `organisation:exporter` et 
 
 ## Décision
 
-### Deux mutations d'administration
+### Une mutation d'administration et une commande
 
-- Les mutations `preparerExportPourAdmin(organisation, courriel)` et `envoyerLienDExport(organisation, jeton)` s'ouvrent au seul jeton `JETON_ADMINISTRATION` (ADR 0013 et 0035).
+- La mutation `preparerExportPourAdmin(organisation, courriel)` s'ouvre au seul jeton `JETON_ADMINISTRATION` (ADR 0013 et 0035).
 - `preparerExportPourAdmin` vérifie que l'adresse appartient à un admin actif de l'organisation. Un admin archivé et un membre sans le rôle d'admin ne reçoivent rien. Elle écrit ensuite l'export complet dans `EXPORTS_DIR`, comme `demanderExport`, et tire un jeton aléatoire de 32 octets. Elle renvoie le nom du fichier et le jeton.
 - Elle renvoie `null` quand l'adresse n'appartient à aucun admin actif, ou quand un lien est déjà parti pour l'organisation depuis moins de 24 heures. La réponse ne distingue pas les deux cas.
 - Sans adresse, elle prépare le dernier export pour tous les admins actifs, sans limite de 24 heures. Elle renvoie `null` quand l'organisation n'a aucun admin actif. Une adresse vide n'équivaut pas à une absence d'adresse : elle mène à `null`.
-- `envoyerLienDExport` envoie tout de suite le lien `<ORIGINE_ORGA>/sommeil/telechargement/<jeton>` à chaque destinataire, sans la file du worker. Elle répond vrai quand l'envoi n'a pas d'erreur. Un jeton inconnu, expiré ou d'une autre organisation est refusé.
+- La commande `envoyer-lien-export <organisation>` envoie tout de suite le lien `<ORIGINE_ORGA>/sommeil/telechargement/<jeton>` à chaque destinataire, sans la file du worker. Elle lit le jeton sur l'entrée standard, jamais dans ses arguments. Elle se termine sans erreur quand l'envoi n'a pas d'erreur. Un jeton inconnu, expiré ou d'une autre organisation est refusé.
+- L'hébergeur lance cette commande dans un conteneur ponctuel du service `worker`, le seul qui reçoit le SMTP. Le serveur, exposé derrière le relais, ne reçoit jamais le mot de passe SMTP.
+- Sans SMTP configuré, la commande échoue et rend le jeton. Un envoi sans transport ne doit pas passer pour réussi.
 
 ### Jeton et limite
 
 - L'installation garde dans Valkey l'empreinte SHA-256 du jeton, l'organisation et les comptes destinataires, pendant une heure. Le jeton lui-même ne se garde pas.
 - L'envoi prend le jeton en une seule commande (`GETDEL`). Deux appels simultanés ne l'obtiennent donc pas tous les deux, et le lien ne part qu'une fois.
-- Une panne du transport rend le jeton avec les seuls destinataires que le lien n'a pas atteints, jusqu'à sa fin de validité d'origine. La mutation lève une erreur, et l'hébergeur peut relancer l'envoi sans écrire une seconde fois aux admins déjà servis.
+- Une panne du transport rend le jeton avec les seuls destinataires que le lien n'a pas atteints, jusqu'à sa fin de validité d'origine. La commande échoue, et l'hébergeur peut relancer l'envoi sans écrire une seconde fois aux admins déjà servis.
 - Un export demandé par un admin réserve l'organisation pendant la validité de son jeton. Une autre demande rend alors `null` et n'écrit aucun fichier : le disque ne se remplit pas d'exports jamais envoyés. La réservation se pose après la vérification de l'adresse, pour qu'une adresse inconnue ne retarde pas la demande d'un admin.
 - La limite de 24 heures prend le relais quand le lien est parti. La limite et la réservation se lisent avant l'adresse : une panne de Valkey se produit de la même façon pour une adresse connue ou inconnue.
 - Le dernier export, préparé sans adresse, n'a ni réservation ni limite. Seul l'hébergeur l'appelle, une fois avant la suppression.
@@ -57,3 +59,7 @@ Enfin, l'export complet n'existait que par le script `organisation:exporter` et 
 - Un hébergeur peut proposer l'export depuis la page de sommeil sans lire aucune donnée de l'organisation. Il transmet une adresse et apprend seulement si un export a été préparé.
 - Le script de l'hébergeur ne doit rendre à la page de sommeil que la même réponse pour toute adresse. La durée du réveil dépend peu de l'adresse, car le démarrage de la pile domine l'écriture de l'export.
 - Un admin d'une organisation en lecture seule télécharge l'export complet lui-même. Le fichier quitte alors l'installation sous sa seule responsabilité.
+
+## Révision du 2026-11-03
+
+La première version envoyait le lien par une mutation `envoyerLienDExport`, depuis le serveur. Dans la pile de référence, seul le worker reçoit le SMTP : le serveur taisait chaque mail, et la mutation répondait vrai sans qu'aucun lien parte. La mutation est retirée au profit de la commande `envoyer-lien-export`, lancée dans le conteneur du worker. Le refus d'un envoi sans transport empêche qu'un tel défaut passe de nouveau inaperçu.

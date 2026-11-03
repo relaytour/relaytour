@@ -87,7 +87,7 @@ COPY content/exemple    /app/content/exemple
 COPY content/exemple-en /app/content/exemple-en
 # Commandes disponibles dans dist/ : creer-admin, creer-edition, creer-organisation,
 # exporter-organisation, orga-valider, orga-importer, orga-exporter, essai-courriel,
-# planification-lancer (liste tenue par tsup.config.ts).
+# envoyer-lien-export, planification-lancer (liste tenue par tsup.config.ts).
 # Le contenu d'une organisation ne fait pas partie de l'image : montez-le en volume
 # et lancez `node dist/orga-importer.js --dossier /contenu --edition <année>`.
 # /exports reçoit les exports d'organisation (ADR 0008). Un volume nommé monté ici

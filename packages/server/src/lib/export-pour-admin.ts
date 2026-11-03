@@ -19,10 +19,11 @@ import { adresseDuRappel } from './rappel-adresses.ts'
 // Export pour un admin d'une installation en sommeil (ADR 0057).
 //
 // La pile d'une installation en sommeil est arrêtée. Pour un export, l'hébergeur la
-// réveille brièvement, sans le worker, et appelle deux mutations d'administration :
-// la première écrit l'export et tire un jeton, la seconde envoie le lien de
-// téléchargement aux admins. L'hébergeur transmet une adresse et n'apprend rien
-// d'autre que l'absence d'export : il ne lit aucune donnée de l'organisation.
+// réveille brièvement, sans le worker. La mutation d'administration écrit l'export et
+// tire un jeton. La commande `envoyer-lien-export`, lancée une fois dans le conteneur
+// du worker, envoie ensuite le lien de téléchargement aux admins : seul le worker
+// reçoit le SMTP. L'hébergeur transmet une adresse et n'apprend rien d'autre que
+// l'absence d'export : il ne lit aucune donnée de l'organisation.
 
 /** Un export demandé par un admin au plus par organisation et par 24 heures. */
 export const INTERVALLE_EXPORTS_SECONDES = 86_400
@@ -178,9 +179,10 @@ export async function preparerExportPourAdmin(
 
 /**
  * Envoie tout de suite, sans la file du worker, le lien d'un export préparé à ses
- * destinataires. Lève une erreur quand le jeton est inconnu, ou quand le transport
- * est en panne pour un destinataire : le jeton reste alors valable pour un nouvel
- * essai, vers les seuls destinataires qui n'ont pas reçu le lien.
+ * destinataires. Lève une erreur quand le jeton est inconnu, quand aucun SMTP n'est
+ * configuré, ou quand le transport est en panne pour un destinataire : le jeton reste
+ * alors valable pour un nouvel essai, vers les seuls destinataires qui n'ont pas reçu
+ * le lien.
  */
 export async function envoyerLienDExport(
   prisma: PrismaClient,
@@ -198,6 +200,14 @@ export async function envoyerLienDExport(
     // Le jeton d'une autre organisation lui reste.
     if (prepare !== null) await rendreJeton(jeton, brut!, prepare.expireLe)
     throw erreurSaisie(i18n._('Ce jeton d’export est inconnu ou expiré.'))
+  }
+  // Sans transport, expedier() tait chaque mail sans erreur : le lien ne partirait
+  // vers personne, et l'hébergeur croirait l'envoi fait.
+  if (transport === null || (transport === undefined && env.COURRIEL === null)) {
+    await rendreJeton(jeton, brut!, prepare.expireLe)
+    throw new Error(
+      'Aucun SMTP n’est configuré : le lien d’export n’est pas parti. Lancez l’envoi dans le conteneur du worker.'
+    )
   }
 
   // Un admin archivé depuis la préparation ne reçoit plus le lien.
