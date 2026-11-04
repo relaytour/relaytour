@@ -119,7 +119,7 @@ Le score classe les tâches retenues. Il ne décide pas de leur entrée dans les
 
 ### Calcul et API
 
-- Une fonction pure de `packages/commun` calcule le score et les raisons. Des tests unitaires couvrent chaque critère.
+- Une fonction pure du serveur (`packages/server/src/lib/priorites.ts`) calcule l'horizon, le score et le classement. Des tests unitaires couvrent chaque critère.
 - Le serveur calcule les priorités à la lecture. Il ne stocke ni score ni classement.
 - Une requête renvoie, pour une période, l'horizon, le prochain point et les priorités de chaque périmètre consulté. Elle renvoie aussi la ligne « Ensuite » et le nombre de priorités au-delà du plafond.
 - Chaque raison est un code accompagné de ses valeurs (nombre de jours, nombre de déclinaisons). L'espace organisateur la traduit (ADR 0047).
@@ -139,4 +139,4 @@ Le score classe les tâches retenues. Il ne décide pas de leur entrée dans les
 - Une tâche sans échéance n'apparaît pas d'elle-même. Les équipes qui veulent voir une tâche dans les priorités lui donnent une échéance ou un ajustement.
 - Un retard ancien reste visible avec la raison « à revoir ». Les échéances périmées deviennent ainsi un signal pour l'équipe.
 - Le classement s'explique tâche par tâche. Une personne qui conteste une place lit les raisons, puis ajuste la tâche si elle en a le droit.
-- Un nouveau critère s'ajoute à la fonction de `packages/commun`, avec son code de raison, sa traduction et son test.
+- Un nouveau critère s'ajoute à `lib/priorites.ts`, avec son code de raison, sa traduction et son test.
