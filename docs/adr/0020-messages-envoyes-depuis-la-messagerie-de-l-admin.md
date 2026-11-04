@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: mails-et-messagerie
+  parent: 16
+---
+
 # ADR 0020 — Messages écrits dans l'application, envoyés depuis la messagerie de l'admin
 
 - **Statut** : acceptée

@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: organisations-et-cloisonnement
+  parent: 8
+---
+
 # ADR 0030 — Cloisonnement des organisations d'une installation partagée
 
 - **Statut** : acceptée

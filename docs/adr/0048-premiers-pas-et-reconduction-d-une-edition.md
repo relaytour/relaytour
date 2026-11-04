@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: application-langues-et-versions
+  parent: 21
+---
+
 # ADR 0048 — Premiers pas d'une activité et reconduction d'une édition
 
 - **Statut** : acceptée

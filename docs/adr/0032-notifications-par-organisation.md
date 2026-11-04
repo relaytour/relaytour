@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: notifications
+  parent: 24
+---
+
 # ADR 0032 — Préférences de notification par organisation et notifications qui nomment leur contexte
 
 - **Statut** : acceptée

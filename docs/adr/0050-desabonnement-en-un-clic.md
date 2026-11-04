@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: mails-et-messagerie
+  parent: 16
+---
+
 # ADR 0050 — Désabonnement en un clic
 
 - **Statut** : acceptée

@@ -1,3 +1,8 @@
+---
+compadr:
+  feature: taches
+---
+
 # ADR 0025 — Phases d'une activité et regroupement des tâches
 
 - **Statut** : acceptée

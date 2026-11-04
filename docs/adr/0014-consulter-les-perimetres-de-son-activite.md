@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: droits-admins-et-equipe
+  parent: 10
+---
+
 # ADR 0014 — Consulter les périmètres de son activité
 
 - **Statut** : acceptée

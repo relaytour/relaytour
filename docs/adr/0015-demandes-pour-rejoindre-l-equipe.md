@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: droits-admins-et-equipe
+  parent: 10
+---
+
 # ADR 0015 — Demandes pour rejoindre l'équipe
 
 - **Statut** : acceptée

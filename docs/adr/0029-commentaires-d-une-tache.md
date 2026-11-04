@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: taches
+  parent: 25
+---
+
 # ADR 0029 — Commentaires d'une tâche
 
 - **Statut** : acceptée

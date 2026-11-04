@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: notifications
+  parent: 24
+---
+
 # ADR 0033 — Notifications d'admin, rangées par activité et par périmètre
 
 - **Statut** : acceptée

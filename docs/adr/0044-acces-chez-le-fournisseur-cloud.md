@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: fiches-et-fichiers
+  parent: 9
+---
+
 # ADR 0044 — Accès chez le fournisseur cloud : vérification et propositions
 
 - **Statut** : acceptée

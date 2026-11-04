@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: fiches-et-fichiers
+  parent: 9
+---
+
 # ADR 0049 — Imports depuis l'espace organisateur
 
 - **Statut** : acceptée

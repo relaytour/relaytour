@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: droits-admins-et-equipe
+  parent: 10
+---
+
 # ADR 0027 — Écran « Équipe » à deux vues et écran « Messages »
 
 - **Statut** : acceptée

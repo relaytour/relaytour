@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: benevoles
+  parent: 40
+---
+
 # ADR 0041 — Appels à bénévoles, candidatures et répartition
 
 - **Statut** : acceptée

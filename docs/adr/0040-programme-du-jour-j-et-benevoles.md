@@ -1,3 +1,8 @@
+---
+compadr:
+  feature: benevoles
+---
+
 # ADR 0040 — Programme du jour J, séquences et bénévoles
 
 - **Statut** : acceptée
