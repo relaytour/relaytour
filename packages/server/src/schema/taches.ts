@@ -129,8 +129,11 @@ export const TacheRef = builder.prismaObject('Tache', {
     perimetre: t.relation('perimetre', { type: PerimetreRef }),
     edition: t.relation('edition', { type: EditionRef }),
     // Les personnes assignées sont chargées avec la tâche, sans requête par tâche.
+    // Une tâche en porte rarement plus de cinq : le coût d'une liste de tâches suit
+    // cette estimation, et non le multiplicateur de dix par défaut.
     assignes: t.field({
       type: [PersonneRef],
+      complexity: { field: 1, multiplier: 5 },
       select: (_args, _ctx, selection) => ({
         assignations: {
           select: { user: selection(true) },
@@ -155,6 +158,7 @@ export const TacheRef = builder.prismaObject('Tache', {
     // avec la tâche : une liste de tâches ne fait pas une requête par tâche.
     realisateurs: t.field({
       type: [PersonneRef],
+      complexity: { field: 1, multiplier: 5 },
       select: (_args, _ctx, selection) => ({
         perimetre: { select: { activiteId: true } },
         realisations: {
@@ -436,6 +440,8 @@ builder.prismaObjectFields(PerimetreRef, t => ({
   // contact principal vient en tête, les autres suivent par nom (ADR 0011).
   referents: t.prismaField({
     type: [PersonneRef],
+    // Un périmètre compte rarement plus de cinq personnes par édition.
+    complexity: { field: 1, multiplier: 5 },
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (query, perimetre, { editionId }, ctx) => {
       await exigerConsultation(ctx, perimetre)

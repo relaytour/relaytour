@@ -5,6 +5,29 @@
   "version": "0.26.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-11-04-serveur-mon-espace-affiche-de-nouveau-vos-perimetres-et-vos-taches",
+          "date": "2026-11-04",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "« Mon espace » affiche de nouveau vos périmètres et vos tâches",
+            "texte": "Depuis la version 0.24.0, « Mon espace » indiquait qu'aucun périmètre ne vous était affecté et qu'aucune tâche ne vous était assignée. Vos périmètres, vos tâches et les tâches à prendre s'affichent de nouveau.",
+            "migration": null
+          },
+          "en": {
+            "titre": "\"My space\" shows your areas and tasks again",
+            "texte": "Since version 0.24.0, \"My space\" said that you had no area and no assigned task. Your areas, your tasks and the tasks to take are shown again.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.26.0",
       "notes": [
         {
