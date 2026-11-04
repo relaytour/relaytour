@@ -35,6 +35,7 @@ import {
   OBJET_MAX,
   champParDefaut,
   composer,
+  listerPriorites,
   listerTaches,
   passagesACompleter,
   preparerLien,
@@ -55,11 +56,14 @@ import {
 } from '../lib/messagerie'
 import { useOrganisation } from '../lib/organisation'
 import { prenom } from '../lib/personnes'
+import { jourAvecNom } from '../lib/priorites'
+import { heureCourte, minutes } from '../lib/programme'
 import { EDITIONS, PERIMETRES } from '../lib/requetes'
 import {
   CREER_MESSAGE,
   DEFINIR_STATUT_MESSAGE,
   INFORMATIONS_MESSAGE,
+  PRIORITES_MESSAGE,
 } from '../lib/requetes-messages'
 import { useSession } from '../lib/session'
 import { comparer } from '../lib/tableau'
@@ -173,6 +177,10 @@ function Redaction({
     variables: { editionId: editionId ?? '' },
     skip: editionId === undefined,
   })
+  const { data: lesPriorites } = useQuery(PRIORITES_MESSAGE, {
+    variables: { editionId: editionId ?? '' },
+    skip: editionId === undefined,
+  })
   const [creer, creation] = useMutation(CREER_MESSAGE, {
     refetchQueries: ['Messages'],
   })
@@ -211,6 +219,17 @@ function Redaction({
           : t`du ${debut} au ${fin}`
     }
     const adresseFormulaire = `${origine}/rejoindre/${organisation.slug}/${activite.slug}`
+    const priorites = lesPriorites?.priorites
+    const point = priorites?.prochainPoint
+    let prochainPoint: string | null = null
+    if (point) {
+      const jourPoint = jourAvecNom(point.jour)
+      const heurePoint = heureCourte(minutes(point.heureDebut))
+      const lienVisio = point.lienVisio
+      prochainPoint = lienVisio
+        ? t`le ${jourPoint} à ${heurePoint} (lien de la visio : ${lienVisio})`
+        : t`le ${jourPoint} à ${heurePoint}`
+    }
     const aPourvoir = (lues?.postesAPourvoir ?? [])
       .filter(p => p.aPourvoir > 0)
       .map(p => p.perimetre)
@@ -249,6 +268,25 @@ function Redaction({
                   [g.titre, ...g.noms.map(p => `- ${p.nom}`)].join('\n')
                 )
                 .join('\n\n'),
+      priorites: priorites
+        ? listerPriorites(
+            priorites.perimetres
+              .filter(
+                p => perimetreId === undefined || p.perimetre.id === perimetreId
+              )
+              .map(p => ({
+                perimetre: p.perimetre.nom,
+                referents: p.perimetre.referents.map(r => r.nom),
+                taches: p.priorites.map(({ tache }) => ({
+                  titre: tache.titre,
+                  echeance: tache.echeance ? dateCourte(tache.echeance) : null,
+                  assignes: tache.assignes.map(a => a.nom),
+                })),
+              })),
+            t`Aucune priorité n’est prévue avant le prochain point.`
+          )
+        : null,
+      prochainPoint,
       invitationFormulaire: activite.formulaireOuvert
         ? t`Vous pouvez déposer votre demande par ce formulaire :
 ${adresseFormulaire}`
@@ -259,6 +297,7 @@ ${adresseFormulaire}`
   }, [
     activite,
     edition,
+    lesPriorites,
     lien,
     lues,
     moi.nom,

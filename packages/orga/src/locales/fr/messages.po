@@ -823,6 +823,10 @@ msgid "{periode} : la préparation commence"
 msgstr "{periode} : la préparation commence"
 
 #: src/lib/messages.ts
+msgid "{periode} : les priorités avant le prochain point"
+msgstr "{periode} : les priorités avant le prochain point"
+
+#: src/lib/messages.ts
 msgid "{periode} : merci"
 msgstr "{periode} : merci"
 
@@ -853,6 +857,10 @@ msgstr "{periodeAucune} n’est en préparation."
 #: src/pages/admin/Equipe.tsx
 msgid "{personnes} sur {effectif, plural, one {# souhaitée} other {# souhaitées}}."
 msgstr "{personnes} sur {effectif, plural, one {# souhaitée} other {# souhaitées}}."
+
+#: src/lib/messages.ts
+msgid "{personnes}, pour le {echeance}"
+msgstr "{personnes}, pour le {echeance}"
 
 #: src/pages/admin/Equipe.tsx
 msgid "{personnes}. Effectif à définir."
@@ -1191,6 +1199,32 @@ msgstr "{salutation}\n"
 "\n"
 "Vous retrouvez les tâches et les fiches dans l’espace organisateur :\n"
 "{lienEspace}\n"
+"\n"
+"{signature}"
+
+#: src/lib/messages.ts
+msgid "{salutation}\n"
+"\n"
+"Voici les priorités de chaque périmètre avant le prochain point, {prochainPoint}. Les tâches sont aussi dans l’espace organisateur.\n"
+"\n"
+"{priorites}\n"
+"\n"
+"Vous retrouvez ces priorités dans « Mon espace » :\n"
+"{lienEspace}\n"
+"\n"
+"Merci pour votre aide.\n"
+"\n"
+"{signature}"
+msgstr "{salutation}\n"
+"\n"
+"Voici les priorités de chaque périmètre avant le prochain point, {prochainPoint}. Les tâches sont aussi dans l’espace organisateur.\n"
+"\n"
+"{priorites}\n"
+"\n"
+"Vous retrouvez ces priorités dans « Mon espace » :\n"
+"{lienEspace}\n"
+"\n"
+"Merci pour votre aide.\n"
 "\n"
 "{signature}"
 
@@ -2442,6 +2476,10 @@ msgstr "Aucune personne ne correspond à ces filtres."
 #: src/composants/Priorites.tsx
 msgid "Aucune priorité jusqu’au {fin}."
 msgstr "Aucune priorité jusqu’au {fin}."
+
+#: src/composants/EcrireMessage.tsx
+msgid "Aucune priorité n’est prévue avant le prochain point."
+msgstr "Aucune priorité n’est prévue avant le prochain point."
 
 #: src/composants/Priorites.tsx
 msgid "Aucune priorité ne correspond à ce filtre."
@@ -3718,6 +3756,10 @@ msgstr "Date de l’accord"
 #: src/composants/SondageFormulaire.tsx
 msgid "Date du point d’étape"
 msgstr "Date du point d’étape"
+
+#: src/lib/messages.ts
+msgid "date du prochain point"
+msgstr "date du prochain point"
 
 #: src/pages/admin/Editions.tsx
 msgid "Dates"
@@ -5951,6 +5993,14 @@ msgstr "le {debut}"
 msgid "le {jour} à {heure} h {minute}"
 msgstr "le {jour} à {heure} h {minute}"
 
+#: src/composants/EcrireMessage.tsx
+msgid "le {jourPoint} à {heurePoint}"
+msgstr "le {jourPoint} à {heurePoint}"
+
+#: src/composants/EcrireMessage.tsx
+msgid "le {jourPoint} à {heurePoint} (lien de la visio : {lienVisio})"
+msgstr "le {jourPoint} à {heurePoint} (lien de la visio : {lienVisio})"
+
 #: src/lib/repartition.ts
 msgid "Le besoin de la séquence est déjà atteint."
 msgstr "Le besoin de la séquence est déjà atteint."
@@ -6192,6 +6242,10 @@ msgstr "Le message est prêt dans votre messagerie"
 #: src/lib/messages.ts
 msgid "Le message liste les périmètres qui manquent de référentes et de référents."
 msgstr "Le message liste les périmètres qui manquent de référentes et de référents."
+
+#: src/lib/messages.ts
+msgid "Le message liste les priorités de chaque périmètre avant le prochain point de l’agenda global."
+msgstr "Le message liste les priorités de chaque périmètre avant le prochain point de l’agenda global."
 
 #: src/lib/messages.ts
 msgid "Le message liste les tâches encore ouvertes du périmètre choisi, ou de toute la période."
@@ -8248,6 +8302,10 @@ msgstr "Pour changer vos disponibilités, écrivez à l’organisation."
 msgid "Pour l’équipe seulement : la page publique ne l’affiche pas."
 msgstr "Pour l’équipe seulement : la page publique ne l’affiche pas."
 
+#: src/lib/messages.ts
+msgid "pour le {echeance}"
+msgstr "pour le {echeance}"
+
 #: src/composants/InvitationRapide.tsx
 msgid "Pour nommer un admin ou inviter dans plusieurs activités, passez par l’écran <0>Personnes</0>."
 msgstr "Pour nommer un admin ou inviter dans plusieurs activités, passez par l’écran <0>Personnes</0>."
@@ -8374,6 +8432,14 @@ msgstr "Priorité haute"
 #: src/composants/Priorites.tsx
 msgid "Priorités"
 msgstr "Priorités"
+
+#: src/lib/messages.ts
+msgid "Priorités de la période"
+msgstr "Priorités de la période"
+
+#: src/lib/messages.ts
+msgid "priorités des périmètres"
+msgstr "priorités des périmètres"
 
 #: src/composants/Priorites.tsx
 msgid "Prochain point : {jourPoint} à {heurePoint}."
