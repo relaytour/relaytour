@@ -2,10 +2,10 @@
   "schemaVersion": 5,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.26.1",
+  "version": "0.27.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.27.0",
       "notes": [
         {
           "id": "2026-11-04-serveur-le-serveur-calcule-les-priorites-d-une-periode",

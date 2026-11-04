@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.27.0
 fr:
   titre: >-
     « Mon espace » affiche les priorités de la période

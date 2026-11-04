@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 etat: prevu
 role: admin-activite
+version: 0.27.0
 fr:
   titre: >-
     Le modèle « Priorités de la période » prépare le message des priorités
