@@ -5,6 +5,8 @@ import {
   EditOutlined,
   MessageOutlined,
   MoreOutlined,
+  PushpinFilled,
+  PushpinOutlined,
   ShareAltOutlined,
   UndoOutlined,
   UserAddOutlined,
@@ -15,13 +17,15 @@ import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Dropdown, Form, Modal, Select, Typography } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 
-import type { TacheChampsFragment } from '../gql/graphql'
+import type { AjustementPriorite, TacheChampsFragment } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { enumerer } from '../lib/langue'
+import { useLibelleAjustement } from '../lib/priorites'
 import { useCommentairesDeLaPeriode } from '../lib/commentaires'
 import type { ResumeDeclinaisons } from '../lib/declinaisons'
 import { dateCourte } from '../lib/erreurs'
 import {
+  AJUSTER_PRIORITE,
   ASSIGNER_TACHE,
   CHANGER_STATUT,
   estOuverte,
@@ -110,6 +114,10 @@ export default function TacheCarte({
   const [changerStatut, changement] = useMutation(CHANGER_STATUT, {
     refetchQueries: VUES_TACHES,
   })
+  const [ajuster, ajustement] = useMutation(AJUSTER_PRIORITE, {
+    refetchQueries: VUES_TACHES,
+  })
+  const libelleAjustement = useLibelleAjustement()
   const [cloture, setCloture] = useState(false)
   const [realisateurs, setRealisateurs] = useState<string[]>([])
   const [choixAssignation, setChoixAssignation] = useState(false)
@@ -137,7 +145,8 @@ export default function TacheCarte({
 
   const assignee = tache.assignes.some(p => p.id === moiId)
   const ouverte = estOuverte(tache)
-  const enAction = assignation.loading || changement.loading
+  const enAction =
+    assignation.loading || changement.loading || ajustement.loading
   // Le serveur refuse d'assigner une personne non affectée au périmètre pour l'édition.
   const affectee = referents.some(r => r.id === moiId)
   // Toute personne qui écrit dans le périmètre assigne et retire les autres
@@ -184,10 +193,36 @@ export default function TacheCarte({
           },
         ]
       : []),
+    // L'ajustement de la tâche dans les priorités (ADR 0059).
+    ...(peutModifier && ouverte
+      ? [
+          {
+            key: 'priorite',
+            icon: <PushpinOutlined />,
+            label: t`Priorité`,
+            children: [
+              { key: 'priorite:EPINGLEE', label: t`Épingler` },
+              { key: 'priorite:HAUTE', label: t`Priorité haute` },
+              { key: 'priorite:BASSE', label: t`Priorité basse` },
+              ...(tache.ajustement
+                ? [{ key: 'priorite:', label: t`Retirer l’ajustement` }]
+                : []),
+            ],
+          },
+        ]
+      : []),
     ...(ouverte
       ? [{ key: 'ABANDONNEE', label: t`Abandonner`, danger: true }]
       : []),
   ]
+
+  const ajusterPriorite = (niveau: AjustementPriorite | null) =>
+    executer(
+      () => ajuster({ variables: { id: tache.id, niveau } }),
+      niveau === null
+        ? t`L’ajustement est retiré.`
+        : t`La priorité est ajustée jusqu’au prochain point.`
+    )
 
   const assignerPersonne = (
     personneId: string,
@@ -347,6 +382,19 @@ export default function TacheCarte({
         )}
         <div className="rt-meta">
           <PastilleStatut statut={tache.statut} />
+          {tache.ajustement && ouverte && (
+            <PastilleEtat
+              variante="en-cours"
+              icone={
+                tache.ajustement.niveau === 'EPINGLEE' ? (
+                  <PushpinFilled aria-hidden />
+                ) : undefined
+              }
+              sansPoint
+            >
+              {libelleAjustement(tache.ajustement.niveau)}
+            </PastilleEtat>
+          )}
           {tache.fiche && (
             <PastilleEtat
               variante="alerte"
@@ -517,6 +565,12 @@ export default function TacheCarte({
                     void statut('A_FAIRE', t`Tâche remise à faire.`)
                   if (key === 'ABANDONNEE')
                     void statut('ABANDONNEE', t`Tâche abandonnée.`)
+                  if (key.startsWith('priorite:')) {
+                    const niveau = key.slice('priorite:'.length)
+                    void ajusterPriorite(
+                      niveau === '' ? null : (niveau as AjustementPriorite)
+                    )
+                  }
                 },
               }}
             >

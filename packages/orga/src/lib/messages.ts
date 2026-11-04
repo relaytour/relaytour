@@ -85,6 +85,10 @@ export interface Informations {
   tachesEnCours: string | null
   tachesEnRetard: string | null
   postesAPourvoir: string | null
+  /** Les priorités de chaque périmètre avant le prochain point (ADR 0059). */
+  priorites: string | null
+  /** Le jour et l'heure du prochain point de l'agenda global. */
+  prochainPoint: string | null
   invitationFormulaire: string
   contact: string | null
   pageEquipe: string | null
@@ -130,6 +134,12 @@ export const LIBELLES: Record<CleInformation, string> = {
   get postesAPourvoir() {
     return t`périmètres à pourvoir`
   },
+  get priorites() {
+    return t`priorités des périmètres`
+  },
+  get prochainPoint() {
+    return t`date du prochain point`
+  },
   get invitationFormulaire() {
     return t`lien du formulaire public`
   },
@@ -153,6 +163,8 @@ export const INSERABLES: CleInformation[] = [
   'tachesEnCours',
   'tachesEnRetard',
   'postesAPourvoir',
+  'priorites',
+  'prochainPoint',
   'invitationFormulaire',
   'contact',
   'pageEquipe',
@@ -224,6 +236,49 @@ export function listerTaches(taches: TacheListee[], aucune: string): string {
     )
   }
   return lignes.join('\n')
+}
+
+/** Les priorités d'un périmètre, telles qu'un message les liste. */
+export interface PrioritesListees {
+  perimetre: string
+  referents: string[]
+  taches: {
+    titre: string
+    /** Date sans heure, déjà formatée, ou null. */
+    echeance: string | null
+    assignes: string[]
+  }[]
+}
+
+/**
+ * Les priorités par périmètre (ADR 0059) : le nom du périmètre et ses référents,
+ * puis une tâche par ligne. Un périmètre sans priorité ne s'affiche pas.
+ */
+export function listerPriorites(
+  perimetres: PrioritesListees[],
+  aucune: string
+): string {
+  const blocs = perimetres
+    .filter(p => p.taches.length > 0)
+    .map(p => {
+      const nom = p.perimetre
+      const referents = p.referents.join(', ')
+      const titre = referents ? `${nom} (${referents})` : nom
+      const lignes = p.taches.map(tache => {
+        const titreTache = tache.titre
+        const personnes = tache.assignes.join(', ')
+        const echeance = tache.echeance
+        const precision =
+          personnes && echeance
+            ? t`${personnes}, pour le ${echeance}`
+            : echeance
+              ? t`pour le ${echeance}`
+              : personnes
+        return precision ? `- ${titreTache} (${precision})` : `- ${titreTache}`
+      })
+      return [titre, ...lignes].join('\n')
+    })
+  return blocs.length === 0 ? aucune : blocs.join('\n\n')
 }
 
 // ── Modèles ──────────────────────────────────────────────────────────────────
@@ -556,6 +611,35 @@ Nous avons besoin d’aide pour ces missions :
 Vous pouvez transmettre ce message aux personnes de votre entourage.
 
 Pour proposer votre aide, vous pouvez répondre à ce message.
+
+${signature}`
+    },
+  },
+  {
+    cle: 'priorites',
+    get libelle() {
+      return t`Priorités de la période`
+    },
+    get description() {
+      return t`Le message liste les priorités de chaque périmètre avant le prochain point de l’agenda global.`
+    },
+    get objet() {
+      const { periode } = JETONS
+      return t`${periode} : les priorités avant le prochain point`
+    },
+    get corps() {
+      const { salutation, prochainPoint, priorites, lienEspace, signature } =
+        JETONS
+      return t`${salutation}
+
+Voici les priorités de chaque périmètre avant le prochain point, ${prochainPoint}. Les tâches sont aussi dans l’espace organisateur.
+
+${priorites}
+
+Vous retrouvez ces priorités dans « Mon espace » :
+${lienEspace}
+
+Merci pour votre aide.
 
 ${signature}`
     },

@@ -5,6 +5,47 @@
   "version": "0.26.1",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-11-04-orga-mon-espace-affiche-les-priorites-de-la-periode",
+          "date": "2026-11-04",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "« Mon espace » affiche les priorités de la période",
+            "texte": "Le panneau « Priorités » ouvre « Mon espace ». Il montre, pour chaque périmètre, les tâches à traiter avant le prochain point de l'agenda global, avec les raisons de leur place. Vous filtrez la liste sur vos périmètres, sur les tâches à prendre ou sur un groupe. Les personnes qui écrivent dans un périmètre épinglent une tâche ou ajustent sa priorité depuis sa carte, jusqu'au prochain point.",
+            "migration": null
+          },
+          "en": {
+            "titre": "\"My space\" shows the priorities of the period",
+            "texte": "The \"Priorities\" panel opens \"My space\". For each area, it shows the tasks to handle before the next check-in of the shared calendar, with the reasons for their rank. You can filter the list on your areas, on the tasks to take or on a group. People who write in an area can pin a task or adjust its priority from its card, until the next check-in.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-11-04-orga-le-modele-priorites-de-la-periode-prepare-le-message-des-pri",
+          "date": "2026-11-04",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le modèle « Priorités de la période » prépare le message des priorités",
+            "texte": "Le modèle reprend les priorités de chaque périmètre, avec ses référentes et référents, la personne assignée et l'échéance de chaque tâche. Il indique le prochain point de l'agenda global et le lien de sa visio. Depuis la carte d'un périmètre, le message ne liste que les priorités de ce périmètre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The \"Priorities of the period\" template prepares the priorities message",
+            "texte": "The template lists the priorities of each area, with its coordinators, and the assignee and due date of each task. It gives the next check-in of the shared calendar and its video call link. From the card of an area, the message lists the priorities of that area only.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.24.0",
       "notes": [
         {
