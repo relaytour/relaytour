@@ -3,6 +3,7 @@ cible: serveur
 type: correctif
 audience: organisateurs
 etat: prevu
+version: 0.26.1
 fr:
   titre: >-
     « Mon espace » affiche de nouveau vos périmètres et vos tâches
