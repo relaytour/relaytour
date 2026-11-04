@@ -60,5 +60,6 @@
 | [0056](0056-module-classement.md) | Module « Classement » | Proposée |
 | [0057](0057-export-pour-un-admin-d-une-installation-en-sommeil.md) | Export pour un admin d'une installation en sommeil | Proposée |
 | [0058](0058-limite-de-membres-d-une-organisation.md) | Limite de membres d'une organisation | Proposée |
+| [0059](0059-priorites-d-une-periode.md) | Priorités d'une période | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

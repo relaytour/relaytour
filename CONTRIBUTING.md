@@ -198,6 +198,9 @@ Un seul mot par notion. La colonne « Anglais » fixe le terme du catalogue angl
 | équipe | team | Les membres de l'organisation liés à une activité par un rattachement, une affectation, un souhait ou un rôle d'admin, toutes périodes confondues (ADR 0018, 0045). |
 | annuaire | directory | La liste de tous les membres de l'organisation, lue par ses admins seulement (ADR 0018). |
 | charge | workload | Ce qu'une personne porte dans une édition : ses tâches assignées, ses places au programme et ses affectations. Elle se compte en tâches et en places, sans estimation d'effort (ADR 0055). |
+| priorités | priorities | Les tâches d'une période à traiter avant le prochain point, classées par un score que l'application calcule. Le score est commun à toute l'équipe (ADR 0059). |
+| horizon | horizon | Période que couvrent les priorités : d'aujourd'hui au prochain point de l'agenda global, entre 14 et 30 jours (ADR 0059). |
+| ajustement | adjustment | Correction temporaire de la place d'une tâche dans les priorités : basse, haute ou épinglée. Il cesse à la fin de l'horizon (ADR 0059). |
 | personne réalisatrice | completed by | Personne indiquée comme ayant réalisé une tâche faite. Une tâche en porte une ou plusieurs ; chacune reçoit les points de la tâche (ADR 0055). |
 | classement | ranking | Liste des personnes d'une édition rangées par score de participation. Les admins le lisent ; le module « Classement » l'ouvre à l'équipe (ADR 0056). |
 | journal | activity log | Trace de qui a fait quoi, et quand. Le journal alimente les notifications et le score de participation. |
