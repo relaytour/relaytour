@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { parseArgs } from 'node:util'
 
 import { prisma } from '@relaytour/database'
+import { GraphQLError } from 'graphql'
 
 import { connection, courrielQueue } from '../src/jobs/queues.ts'
 import {
@@ -84,7 +85,12 @@ try {
     )
   }
 } catch (erreur) {
-  if (erreur instanceof ErreurEquipe) {
+  // Une limite de membres atteinte (ADR 0058) s'affiche comme un fichier refusé.
+  if (
+    erreur instanceof ErreurEquipe ||
+    (erreur instanceof GraphQLError &&
+      erreur.extensions.code === 'LIMITE_ATTEINTE')
+  ) {
     console.error(erreur.message)
     process.exitCode = 1
   } else {

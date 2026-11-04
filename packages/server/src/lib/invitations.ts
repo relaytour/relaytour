@@ -16,6 +16,7 @@ import { rattacher } from './rattachements.ts'
 import { journal } from './journal.ts'
 import { SOUHAITS_MAX } from './souhaits.ts'
 import { i18n } from './langue.ts'
+import type { PlacesMembres } from './limites.ts'
 
 // Invitation d'un compte qui existe déjà hors de l'organisation (ADR 0030).
 //
@@ -97,6 +98,20 @@ function expiration(instant: Date): Date {
   return new Date(instant.getTime() + INVITATION_JOURS * 24 * 3600 * 1000)
 }
 
+/** Vrai quand le compte a une invitation en attente dans l'organisation. */
+export async function aUneInvitationEnAttente(
+  tx: Prisma.TransactionClient,
+  organisationId: string,
+  userId: string,
+  instant: Date
+): Promise<boolean> {
+  const enCours = await tx.invitationOrganisation.findUnique({
+    where: { organisationId_userId: { organisationId, userId } },
+    select: { expireLe: true },
+  })
+  return enCours !== null && enCours.expireLe > instant
+}
+
 /**
  * Enregistre l'invitation d'un compte extérieur à l'organisation, ou complète celle
  * qui attend déjà : ses périmètres se réunissent, le rôle d'admin l'emporte, et le
@@ -115,6 +130,11 @@ export async function inviterCompteExterne(
     /** Activités où rattacher la personne sans périmètre (ADR 0045). */
     rattachements?: string[]
     instant: Date
+    /**
+     * Les places de membres de la transaction (ADR 0058). Une invitation nouvelle
+     * en prend une ; compléter une invitation en attente n'en prend pas.
+     */
+    places?: PlacesMembres
   }
 ): Promise<{ id: string }> {
   const { organisationId, userId, instant, lot } = invitation
@@ -135,6 +155,7 @@ export async function inviterCompteExterne(
   // Une invitation expirée ne compte plus : la nouvelle la remplace entièrement.
   const reprise =
     enCours !== null && enCours.expireLe > instant ? enCours : null
+  if (reprise === null) await invitation.places?.prendre()
   const lots =
     lot === undefined
       ? lireLots(reprise?.lots)

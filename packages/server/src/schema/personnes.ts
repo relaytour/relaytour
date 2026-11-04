@@ -35,6 +35,7 @@ import {
 import { journal } from '../lib/journal.ts'
 import { i18n } from '../lib/langue.ts'
 import { limiterParCle } from '../lib/limite.ts'
+import { placesMembres } from '../lib/limites.ts'
 import {
   retirerDesReunionsDeLOrganisation,
   retirerDesReunionsDuPerimetre,
@@ -543,12 +544,14 @@ builder.mutationFields(t => ({
       // seconde relit le compte créé par la première.
       const { compte, creees } = await rejouerSurDoublon(() =>
         prisma.$transaction(async tx => {
+          const places = await placesMembres(tx, organisationId, instant)
           const compte = await creerOuRattacherCompte(tx, {
             email,
             nom: name,
             organisationId,
             role,
           })
+          if (compte.issue === 'cree') await places.prendre()
           const refusee = i18n._('Cette adresse ne peut pas être invitée.')
           // La personne est archivée dans cette organisation (ADR 0031). Seul l'admin
           // de l'organisation, qui lit l'annuaire et peut la rétablir, l'apprend.
@@ -571,6 +574,7 @@ builder.mutationFields(t => ({
               nom: name,
               origine: 'PERSONNE',
               inviteParId: ctx.personne!.id,
+              places,
               ...(cible === null
                 ? {}
                 : {
@@ -904,6 +908,12 @@ builder.mutationFields(t => ({
       const instant = new Date()
       const change = await prisma.$transaction(async tx => {
         await verrouillerCompte(tx, id)
+        // Rétablir une personne reprend une place de membre (ADR 0058). Le comptage
+        // suit le verrou du compte : deux rétablissements simultanés dans deux
+        // organisations se suivent sans lire une vue figée.
+        const places = args.archive
+          ? null
+          : await placesMembres(tx, organisationId, instant)
         // Une personne déjà archivée garde la date de son archivage.
         const { count } = await tx.appartenance.updateMany({
           where: {
@@ -913,6 +923,7 @@ builder.mutationFields(t => ({
           },
           data: { archiveLe: args.archive ? instant : null },
         })
+        if (count > 0) await places?.prendre()
         await synchroniserArchivageDuCompte(tx, id, instant)
         // Une personne archivée quitte les réunions à venir de l'organisation,
         // sans mail (ADR 0037).

@@ -1541,6 +1541,11 @@ Plafonds d’une organisation. Un champ nul signifie aucune limite. Une limite b
 """
 type LimitesOrganisation {
   activites: Int
+
+  """
+  Appartenances actives et invitations en attente. Une personne archivée libère sa place.
+  """
+  membres: Int
   periodesOuvertes: Int
 }
 
@@ -1549,6 +1554,7 @@ Une valeur nulle retire la limite ; un champ absent la laisse telle quelle.
 """
 input LimitesOrganisationInput {
   activites: Int
+  membres: Int
   periodesOuvertes: Int
 }
 
@@ -2597,7 +2603,14 @@ type OrganisationInstallation {
   """
   modulesAutorises: [ModuleActivite!]!
   nom: String!
+
+  """Appartenances, archivées comprises."""
   nombreMembres: Int!
+
+  """
+  Appartenances actives et invitations en attente : ce que compte la limite de membres.
+  """
+  placesMembresOccupees: Int!
   slug: String!
   statut: StatutOrganisation!
 }

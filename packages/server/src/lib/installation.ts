@@ -10,10 +10,10 @@ import { erreurSaisie } from './erreurs.ts'
 import { i18n } from './langue.ts'
 import { lireModules, modulesValides, type Module } from './modules.ts'
 import {
-  LimitesSchema,
+  LimitesInstallationSchema,
   lireLimites,
   sousVerrouOrganisation,
-  type Limites,
+  type LimitesInstallation,
 } from './limites.ts'
 import {
   assurerOrganisationParDefaut,
@@ -41,7 +41,7 @@ export interface NouvelleOrganisation {
   sigle?: string
   fuseauHoraire?: string
   domainesCourrielAutorises?: string[]
-  limites?: Limites
+  limites?: LimitesInstallation
   /** Modules autorisés (ADR 0052). Absents : tous. */
   modulesAutorises?: string[]
 }
@@ -75,10 +75,11 @@ export async function creerOrganisation(
   if (!declaration.success) {
     throw erreurSaisie(messageValidation(declaration.error.issues))
   }
-  const limites = LimitesSchema.safeParse(donnees.limites ?? {})
+  const limites = LimitesInstallationSchema.safeParse(donnees.limites ?? {})
   if (!limites.success) {
     throw erreurSaisie(messageValidation(limites.error.issues))
   }
+  const { membres, ...limitesDeLaColonne } = limites.data
   const modulesAutorises =
     donnees.modulesAutorises === undefined
       ? undefined
@@ -94,7 +95,8 @@ export async function creerOrganisation(
         sigle: d.sigle ?? null,
         fuseauHoraire: d.fuseauHoraire,
         configuration: d,
-        limites: limites.data,
+        limites: limitesDeLaColonne,
+        limiteMembres: membres ?? null,
         ...(modulesAutorises === undefined ? {} : { modulesAutorises }),
         activites: {
           create: {
@@ -287,37 +289,47 @@ export async function modifierOrganisation(
   slug: string,
   changement: {
     statut?: StatutOrganisation
-    limites?: { activites?: number | null; periodesOuvertes?: number | null }
+    limites?: {
+      activites?: number | null
+      periodesOuvertes?: number | null
+      membres?: number | null
+    }
     modulesAutorises?: string[] | null
   }
 ): Promise<void> {
   const organisation = await prisma.organisation.findUnique({
     where: { slug },
-    select: { id: true, limites: true },
+    select: { id: true, limites: true, limiteMembres: true },
   })
   if (organisation === null) {
     throw erreurSaisie(
       i18n._('Aucune organisation ne porte le slug « {slug} ».', { slug })
     )
   }
-  let limites: Limites | undefined
+  let limites: LimitesInstallation | undefined
   if (changement.limites !== undefined) {
     const fusion: Record<string, number> = {
       ...lireLimites(organisation.limites),
+      ...(organisation.limiteMembres === null
+        ? {}
+        : { membres: organisation.limiteMembres }),
     }
     for (const [cle, valeur] of Object.entries(changement.limites)) {
       if (valeur === null || valeur === undefined) delete fusion[cle]
       else fusion[cle] = valeur
     }
-    const r = LimitesSchema.safeParse(fusion)
+    const r = LimitesInstallationSchema.safeParse(fusion)
     if (!r.success) throw erreurSaisie(messageValidation(r.error.issues))
     limites = r.data
   }
+  const { membres, ...limitesDeLaColonne } = limites ?? {}
   await prisma.organisation.update({
     where: { id: organisation.id },
     data: {
       ...(changement.statut === undefined ? {} : { statut: changement.statut }),
-      ...(limites === undefined ? {} : { limites }),
+      ...(limites === undefined
+        ? {}
+        : { limites: limitesDeLaColonne, limiteMembres: membres ?? null }),
       ...(changement.modulesAutorises === undefined
         ? {}
         : {
@@ -351,10 +363,11 @@ export interface OrganisationInstallation {
   slug: string
   nom: string
   statut: StatutOrganisation
-  limites: Limites
+  limites: LimitesInstallation
   modulesAutorises: Module[]
   creeLe: Date
   nombreMembres: number
+  placesMembresOccupees: number
   activites: ActiviteInstallation[]
 }
 
@@ -366,46 +379,69 @@ export interface OrganisationInstallation {
 export async function organisationsInstallation(): Promise<
   OrganisationInstallation[]
 > {
-  const lignes = await prisma.organisation.findMany({
-    orderBy: { createdAt: 'asc' },
-    select: {
-      slug: true,
-      nom: true,
-      statut: true,
-      limites: true,
-      modulesAutorises: true,
-      createdAt: true,
-      _count: { select: { appartenances: true } },
-      activites: {
-        orderBy: [{ ordre: 'asc' }, { nom: 'asc' }],
-        select: {
-          slug: true,
-          nom: true,
-          nature: true,
-          archivedAt: true,
-          editions: {
-            where: { statut: { not: 'ARCHIVEE' } },
-            orderBy: { annee: 'asc' },
-            select: {
-              annee: true,
-              nom: true,
-              statut: true,
-              debut: true,
-              fin: true,
+  const maintenant = new Date()
+  const [lignes, actives, invitations] = await Promise.all([
+    prisma.organisation.findMany({
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        slug: true,
+        nom: true,
+        statut: true,
+        limites: true,
+        limiteMembres: true,
+        modulesAutorises: true,
+        createdAt: true,
+        _count: { select: { appartenances: true } },
+        activites: {
+          orderBy: [{ ordre: 'asc' }, { nom: 'asc' }],
+          select: {
+            slug: true,
+            nom: true,
+            nature: true,
+            archivedAt: true,
+            editions: {
+              where: { statut: { not: 'ARCHIVEE' } },
+              orderBy: { annee: 'asc' },
+              select: {
+                annee: true,
+                nom: true,
+                statut: true,
+                debut: true,
+                fin: true,
+              },
             },
           },
         },
       },
-    },
-  })
+    }),
+    prisma.appartenance.groupBy({
+      by: ['organisationId'],
+      where: { archiveLe: null },
+      _count: { _all: true },
+    }),
+    prisma.invitationOrganisation.groupBy({
+      by: ['organisationId'],
+      where: { expireLe: { gt: maintenant } },
+      _count: { _all: true },
+    }),
+  ])
+  const compte = (
+    groupes: { organisationId: string; _count: { _all: number } }[],
+    id: string
+  ) => groupes.find(g => g.organisationId === id)?._count._all ?? 0
   return lignes.map(o => ({
     slug: o.slug,
     nom: o.nom,
     statut: o.statut,
-    limites: lireLimites(o.limites),
+    limites: {
+      ...lireLimites(o.limites),
+      ...(o.limiteMembres === null ? {} : { membres: o.limiteMembres }),
+    },
     modulesAutorises: lireModules(o.modulesAutorises),
     creeLe: o.createdAt,
     nombreMembres: o._count.appartenances,
+    placesMembresOccupees: compte(actives, o.id) + compte(invitations, o.id),
     activites: o.activites.map(a => ({
       slug: a.slug,
       nom: a.nom,

@@ -3,7 +3,7 @@ import { prisma, StatutOrganisation } from '@relaytour/database'
 import { erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
 import { i18n } from '../lib/langue.ts'
-import type { Limites } from '../lib/limites.ts'
+import type { LimitesInstallation } from '../lib/limites.ts'
 import {
   creerOrganisation,
   inviterAdmin,
@@ -13,9 +13,7 @@ import {
   type OrganisationInstallation,
   type PeriodeInstallation,
 } from '../lib/installation.ts'
-import {
-  preparerExportPourAdmin,
-} from '../lib/export-pour-admin.ts'
+import { preparerExportPourAdmin } from '../lib/export-pour-admin.ts'
 import { rappelerAdresses } from '../lib/rappel-adresses.ts'
 
 import { ModuleActiviteEnum } from './activites.ts'
@@ -33,14 +31,21 @@ const StatutOrganisationEnum = builder.enumType(StatutOrganisation, {
     'ACTIVE : tout est permis. LECTURE_SEULE : les membres lisent, personne n’écrit. SUSPENDUE et ARCHIVEE : plus aucun accès.',
 })
 
-const LimitesRef = builder.objectRef<Limites>('LimitesOrganisation').implement({
-  description:
-    'Plafonds d’une organisation. Un champ nul signifie aucune limite. Une limite bloque une création, jamais la lecture ni l’export.',
-  fields: t => ({
-    activites: t.exposeInt('activites', { nullable: true }),
-    periodesOuvertes: t.exposeInt('periodesOuvertes', { nullable: true }),
-  }),
-})
+const LimitesRef = builder
+  .objectRef<LimitesInstallation>('LimitesOrganisation')
+  .implement({
+    description:
+      'Plafonds d’une organisation. Un champ nul signifie aucune limite. Une limite bloque une création, jamais la lecture ni l’export.',
+    fields: t => ({
+      activites: t.exposeInt('activites', { nullable: true }),
+      periodesOuvertes: t.exposeInt('periodesOuvertes', { nullable: true }),
+      membres: t.exposeInt('membres', {
+        nullable: true,
+        description:
+          'Appartenances actives et invitations en attente. Une personne archivée libère sa place.',
+      }),
+    }),
+  })
 
 const LimitesInput = builder.inputType('LimitesOrganisationInput', {
   description:
@@ -48,6 +53,7 @@ const LimitesInput = builder.inputType('LimitesOrganisationInput', {
   fields: t => ({
     activites: t.int(),
     periodesOuvertes: t.int(),
+    membres: t.int(),
   }),
 })
 
@@ -96,7 +102,13 @@ const OrganisationInstallationRef = builder
         resolve: o => o.modulesAutorises,
       }),
       creeLe: t.expose('creeLe', { type: 'DateTime' }),
-      nombreMembres: t.exposeInt('nombreMembres'),
+      nombreMembres: t.exposeInt('nombreMembres', {
+        description: 'Appartenances, archivées comprises.',
+      }),
+      placesMembresOccupees: t.exposeInt('placesMembresOccupees', {
+        description:
+          'Appartenances actives et invitations en attente : ce que compte la limite de membres.',
+      }),
       activites: t.field({
         type: [ActiviteInstallationRef],
         resolve: o => o.activites,
@@ -164,6 +176,9 @@ builder.mutationFields(t => ({
           ...(args.limites?.periodesOuvertes == null
             ? {}
             : { periodesOuvertes: args.limites.periodesOuvertes }),
+          ...(args.limites?.membres == null
+            ? {}
+            : { membres: args.limites.membres }),
         },
       })
       journal.info(
@@ -313,5 +328,4 @@ builder.mutationFields(t => ({
       )
     },
   }),
-
 }))

@@ -50,6 +50,10 @@ model Organisation {
   // Modules que l'administration de l'installation autorise (ADR 0052). Nul : tous.
   // Hors de `limites`, dont le schéma strict refuserait une clé inconnue.
   modulesAutorises     Json?
+  // Plafond de membres fixé par l'administration de l'installation (ADR 0058) :
+  // appartenances actives et invitations en attente. Nul : aucune limite. Hors de
+  // `limites`, pour la même raison que les modules.
+  limiteMembres        Int?
   // Source de vérité du contenu (ADR 0009) : dernière modification faite dans
   // l'application, et dernier import ou export du dossier de contenu. Un import
   // refuse d'écraser une modification plus récente que la dernière synchronisation.

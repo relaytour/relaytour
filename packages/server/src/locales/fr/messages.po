@@ -2047,6 +2047,11 @@ msgid "{periodes, plural, one {Votre organisation a atteint sa limite de # péri
 msgstr "{periodes, plural, one {Votre organisation a atteint sa limite de # période ouverte. Archivez une période terminée ou demandez une limite plus haute. Les périodes archivées restent consultables.} other {Votre organisation a atteint sa limite de # périodes ouvertes. Archivez une période terminée ou demandez une limite plus haute. Les périodes archivées restent consultables.}}"
 
 #. js-lingui-explicit-id
+#: src/lib/limites.ts
+msgid "{membres, plural, one {Votre organisation a atteint sa limite de # membre. Archivez une personne partie ou demandez une limite plus haute.} other {Votre organisation a atteint sa limite de # membres. Archivez une personne partie ou demandez une limite plus haute.}}"
+msgstr "{membres, plural, one {Votre organisation a atteint sa limite de # membre. Archivez une personne partie ou demandez une limite plus haute.} other {Votre organisation a atteint sa limite de # membres. Archivez une personne partie ou demandez une limite plus haute.}}"
+
+#. js-lingui-explicit-id
 #: src/lib/medias.ts
 msgid "Le fichier SVG contient un script : il est refusé."
 msgstr "Le fichier SVG contient un script : il est refusé."
