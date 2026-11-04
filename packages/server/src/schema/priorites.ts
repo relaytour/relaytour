@@ -171,10 +171,11 @@ const PrioriteRef = builder.objectRef<PrioriteLue>('Priorite').implement({
   fields: t => ({
     tache: t.field({ type: TacheRef, resolve: p => p.tache }),
     score: t.exposeInt('score'),
-    // Une tâche porte six raisons au plus.
+    // Une tâche cumule huit raisons au plus : une pour l'échéance, puis le point,
+    // la réunion, les déclinaisons, l'accord, la prise, le statut et l'ajustement.
     raisons: t.field({
       type: [RaisonRef],
-      complexity: { field: 1, multiplier: 3 },
+      complexity: { field: 1, multiplier: 8 },
       resolve: p => p.raisons,
     }),
   }),
