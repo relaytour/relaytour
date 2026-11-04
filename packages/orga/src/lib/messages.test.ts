@@ -13,6 +13,7 @@ import {
   composer,
   libelleModele,
   lienMailto,
+  listerPriorites,
   listerTaches,
   passagesACompleter,
   preparerLien,
@@ -34,6 +35,8 @@ const informations: Informations = {
   tachesEnCours: '- Réserver le stade',
   tachesEnRetard: '- Commander les maillots',
   postesAPourvoir: 'Sports\n- Volley',
+  priorites: 'Football (Alex Durand)\n- Réserver le stade',
+  prochainPoint: 'le lundi 9 novembre à 19 h',
   invitationFormulaire: '',
   contact: 'contact@exemple.org',
   pageEquipe: null,
@@ -232,5 +235,54 @@ describe('lien vers la messagerie', () => {
     const { lien, omis } = preparerLien({ ...envoi, cci })
     expect(omis).toBe('adresses')
     expect(lien).toBe('mailto:?subject=R%C3%A9union%20%26%20suite')
+  })
+})
+
+describe('listerPriorites', () => {
+  it('liste les priorités par périmètre, avec les référents', () => {
+    expect(
+      listerPriorites(
+        [
+          {
+            perimetre: 'Buvette',
+            referents: ['Odile', 'Benoit'],
+            taches: [
+              {
+                titre: 'Fixer les prix',
+                echeance: '15 novembre',
+                assignes: ['Odile'],
+              },
+              { titre: 'Commander les pizzas', echeance: null, assignes: [] },
+            ],
+          },
+          { perimetre: 'Logistique', referents: [], taches: [] },
+          {
+            perimetre: 'Animations',
+            referents: [],
+            taches: [
+              {
+                titre: 'Arrêter le programme',
+                echeance: '8 novembre',
+                assignes: [],
+              },
+            ],
+          },
+        ],
+        'Aucune priorité.'
+      )
+    ).toBe(
+      [
+        'Buvette (Odile, Benoit)',
+        '- Fixer les prix (Odile, pour le 15 novembre)',
+        '- Commander les pizzas',
+        '',
+        'Animations',
+        '- Arrêter le programme (pour le 8 novembre)',
+      ].join('\n')
+    )
+  })
+
+  it('rend le texte prévu quand aucun périmètre n’a de priorité', () => {
+    expect(listerPriorites([], 'Aucune priorité.')).toBe('Aucune priorité.')
   })
 })

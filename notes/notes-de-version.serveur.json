@@ -5,6 +5,25 @@
   "version": "0.26.1",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-11-04-serveur-le-serveur-calcule-les-priorites-d-une-periode",
+          "date": "2026-11-04",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le serveur calcule les priorités d'une période",
+            "texte": "La requête `priorites` rend, pour chaque périmètre d'une activité, les tâches à traiter avant le prochain point de l'agenda global, avec leur score et ses raisons (ADR 0059). La mutation `ajusterPriorite` pose ou retire un ajustement temporaire sur une tâche. Une migration additive ajoute l'ajustement à la tâche et un type au journal.",
+            "migration": null
+          },
+          "en": null
+        }
+      ]
+    },
+    {
       "version": "0.26.1",
       "notes": [
         {

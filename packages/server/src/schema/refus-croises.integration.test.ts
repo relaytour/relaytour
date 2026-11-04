@@ -953,6 +953,14 @@ const CAS: Cas[] = [
     variables: () => ({ id: a.tache, u: a.referente }),
     attente: INTERDIT,
   },
+  // L'ajustement d'une tâche dans les priorités (ADR 0059).
+  {
+    operation: 'ajusterPriorite',
+    query:
+      'mutation ($id: ID!) { ajusterPriorite(id: $id, niveau: EPINGLEE) { id } }',
+    variables: () => ({ id: a.tache }),
+    attente: INTERDIT,
+  },
   {
     operation: 'changerStatutTache',
     query:
@@ -2023,6 +2031,8 @@ const CAS: Cas[] = [
       ['tachesAPrendre', 'tachesAPrendre(editionId: $e) { id }'],
       // La charge de l'équipe (ADR 0055).
       ['chargeEquipe', 'chargeEquipe(editionId: $e) { personne { id } }'],
+      // Les priorités d'une période (ADR 0059).
+      ['priorites', 'priorites(editionId: $e) { fin }'],
     ] as const
   ).map(([operation, champ]) => ({
     operation,

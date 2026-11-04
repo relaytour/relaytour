@@ -193,6 +193,24 @@ type Agenda {
   peutGerer: Boolean!
 }
 
+"""
+Niveau d’un ajustement des priorités. BASSE : 20 points en moins. HAUTE : 20 points en plus, et la tâche entre dans les priorités. EPINGLEE : la tâche entre dans les priorités et passe en tête de son périmètre.
+"""
+enum AjustementPriorite {
+  BASSE
+  EPINGLEE
+  HAUTE
+}
+
+"""L’ajustement en cours d’une tâche dans les priorités."""
+type AjustementTache {
+  """Dernier jour où l’ajustement compte."""
+  jusquAu: Date!
+  le: DateTime!
+  niveau: AjustementPriorite!
+  par: Personne
+}
+
 type ApercuPerimetreModele {
   groupe: String!
   nom: String!
@@ -558,6 +576,22 @@ enum CibleConvocation {
   CHOIX
   EQUIPE
   PERIMETRE
+}
+
+"""
+Ce qui donne des points à une tâche. L’espace organisateur traduit chaque code.
+"""
+enum CodeRaisonPriorite {
+  ACCORD_ATTENDU
+  AJUSTEMENT
+  AVANT_LE_POINT
+  A_PRENDRE
+  DECLINAISONS
+  ECHEANCE_PROCHE
+  EN_COURS
+  RETARD
+  RETARD_A_REVOIR
+  REUNION_A_VENIR
 }
 
 """
@@ -1698,6 +1732,11 @@ type Mutation {
 
   """Affiche de nouveau la liste « Premiers pas » de l’activité."""
   afficherPremiersPas(activiteId: ID): PremiersPas!
+
+  """
+  Pose ou retire l’ajustement d’une tâche dans les priorités (ADR 0059). Un niveau absent retire l’ajustement. L’ajustement compte jusqu’à la fin de l’horizon du jour. Il ne change pas la version de la tâche.
+  """
+  ajusterPriorite(id: ID!, niveau: AjustementPriorite): Tache!
   annulerReunion(id: ID!): Reunion!
 
   """
@@ -2987,6 +3026,39 @@ type PremiersPas {
   termines: Boolean!
 }
 
+type Priorite {
+  raisons: [RaisonPriorite!]!
+  score: Int!
+  tache: Tache!
+}
+
+type Priorites {
+  """
+  Dernier jour de l’horizon (AAAA-MM-JJ), dans le fuseau de l’organisation.
+  """
+  fin: String!
+
+  """Les périmètres non archivés de l’activité, dans leur ordre."""
+  perimetres: [PrioritesDuPerimetre!]!
+
+  """
+  La prochaine réunion de l’agenda global, non annulée. Null sans réunion prévue ou sans module Agenda.
+  """
+  prochainPoint: Reunion
+}
+
+type PrioritesDuPerimetre {
+  """Priorités au-delà du plafond de cinq."""
+  autres: Int!
+
+  """
+  La prochaine tâche ouverte, quand le périmètre n’a aucune priorité. Ce n’est pas une priorité.
+  """
+  ensuite: Tache
+  perimetre: Perimetre!
+  priorites: [Priorite!]!
+}
+
 type Proposition {
   creeLe: DateTime!
   id: ID!
@@ -3245,6 +3317,11 @@ type Query {
   premiersPas(activiteId: ID): PremiersPas!
 
   """
+  Les priorités d’une période (ADR 0059) : pour chaque périmètre de l’activité, les tâches à traiter avant le prochain point, classées par score.
+  """
+  priorites(editionId: ID!): Priorites!
+
+  """
   Les séquences d’une période, par début. Les filtres gardent un périmètre, ou les séquences où la personne connectée est placée.
   """
   programme(editionId: ID!, mesSequences: Boolean = false, perimetreId: ID): [Sequence!]!
@@ -3345,6 +3422,20 @@ type Query {
   Numéro de version de l’installation. Lisible sans session, comme sur /health.
   """
   versionInstallation: String!
+}
+
+type RaisonPriorite {
+  code: CodeRaisonPriorite!
+
+  """
+  Jours de retard (RETARD, RETARD_A_REVOIR) ou jours avant l’échéance (ECHEANCE_PROCHE).
+  """
+  jours: Int
+  niveau: AjustementPriorite
+
+  """Déclinaisons actives (DECLINAISONS)."""
+  nombre: Int
+  points: Int!
 }
 
 """Résultat du dernier export des fiches vers l’espace de fichiers."""
@@ -3834,6 +3925,11 @@ type Tache {
   Pour une déclinaison : l’accord de son périmètre. Null pour une tâche ordinaire et pour une tâche partagée.
   """
   accord: AccordDeclinaison
+
+  """
+  L’ajustement de la tâche dans les priorités, tant qu’il compte (ADR 0059).
+  """
+  ajustement: AjustementTache
   assignes: [Personne!]!
   clotureePar: Personne
   creeLe: DateTime!

@@ -690,7 +690,7 @@ type TacheChargee = Prisma.TacheGetPayload<{
   }
 }>
 
-async function chargerTache(id: string): Promise<TacheChargee> {
+export async function chargerTache(id: string): Promise<TacheChargee> {
   const tache = await prisma.tache.findUnique({
     where: { id },
     include: {
@@ -710,7 +710,7 @@ async function chargerTache(id: string): Promise<TacheChargee> {
  * son périmètre : elle ne se modifie pas, ne change pas de statut et ne s'assigne
  * pas (ADR 0026).
  */
-function exigerDeclinaisonAcceptee(tache: {
+export function exigerDeclinaisonAcceptee(tache: {
   accord: AccordDeclinaison | null
 }) {
   if (tache.accord === 'EN_ATTENTE') {

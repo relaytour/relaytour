@@ -117,6 +117,9 @@ export const TACHE_CHAMPS = graphql(`
       slug
       titre
     }
+    ajustement {
+      niveau
+    }
   }
 `)
 
@@ -282,6 +285,15 @@ export const CHANGER_STATUT = graphql(`
       statutAttendu: $statutAttendu
       confirmer: $confirmer
     ) {
+      ...TacheChamps
+    }
+  }
+`)
+
+// Ajustement d'une tâche dans les priorités (ADR 0059) : un niveau absent le retire.
+export const AJUSTER_PRIORITE = graphql(`
+  mutation AjusterPriorite($id: ID!, $niveau: AjustementPriorite) {
+    ajusterPriorite(id: $id, niveau: $niveau) {
       ...TacheChamps
     }
   }

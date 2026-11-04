@@ -4495,3 +4495,61 @@ button.rt-carte-fiche {
     gap: 8px;
   }
 }
+
+/* Priorités d'une période (ADR 0059) : le premier panneau de « Mon espace ». */
+.rt-priorites-filtres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-bottom: 14px;
+}
+
+.rt-priorites {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.rt-priorites-titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.rt-priorites-titre a {
+  color: var(--rt-encre);
+}
+
+.rt-priorites-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rt-priorite-raisons {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 4px 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--rt-encre-55);
+}
+
+.rt-priorites-ensuite {
+  margin: 0;
+}
+
+.rt-priorites-suite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 6px 0 0;
+  font-size: 13px;
+}
