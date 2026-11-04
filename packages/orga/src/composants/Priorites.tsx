@@ -133,11 +133,14 @@ function useTexteRaison() {
 function BlocPerimetre({
   bloc,
   mien,
+  aPrendre,
   moiId,
   editionId,
 }: {
   bloc: PerimetrePriorites
   mien: boolean
+  /** Vrai quand le filtre « À prendre » est actif. */
+  aPrendre: boolean
   moiId: string
   editionId: string
 }) {
@@ -226,7 +229,9 @@ function BlocPerimetre({
               {t`${plural(cachees, { one: 'Voir l’autre priorité', other: 'Voir les # autres priorités' })}`}
             </Button>
           )}
-          {autres > 0 && (
+          {/* Le nombre du serveur compte toutes les tâches : avec le filtre
+              « À prendre », il compterait des tâches que le filtre masque. */}
+          {autres > 0 && !aPrendre && (
             <Link
               to={lien(`/perimetres/${perimetre.slug}?edition=${editionId}`)}
             >
@@ -370,6 +375,7 @@ export default function Priorites({
                   key={bloc.perimetre.id}
                   bloc={bloc}
                   mien={mesPerimetres.has(bloc.perimetre.id)}
+                  aPrendre={filtreEffectif.aPrendre}
                   moiId={moiId}
                   editionId={editionId}
                 />

@@ -78,6 +78,38 @@ export const INFORMATIONS_MESSAGE = graphql(`
   }
 `)
 
+// Les priorités de la période et le prochain point, pour le modèle « Priorités »
+// (ADR 0059).
+export const PRIORITES_MESSAGE = graphql(`
+  query PrioritesMessage($editionId: ID!) {
+    priorites(editionId: $editionId) {
+      prochainPoint {
+        jour
+        heureDebut
+        lienVisio
+      }
+      perimetres {
+        perimetre {
+          id
+          nom
+          referents(editionId: $editionId) {
+            nom
+          }
+        }
+        priorites {
+          tache {
+            titre
+            echeance
+            assignes {
+              nom
+            }
+          }
+        }
+      }
+    }
+  }
+`)
+
 // Les adresses de l'équipe de l'activité affichée, pour un message écrit depuis
 // l'écran « Équipe ».
 export const ADRESSES_EQUIPE = graphql(`

@@ -823,6 +823,10 @@ msgid "{periode} : la préparation commence"
 msgstr "{periode}: preparation begins"
 
 #: src/lib/messages.ts
+msgid "{periode} : les priorités avant le prochain point"
+msgstr "{periode}: priorities before the next check-in"
+
+#: src/lib/messages.ts
 msgid "{periode} : merci"
 msgstr "{periode}: thank you"
 
@@ -853,6 +857,10 @@ msgstr "{periodeAucune} is in preparation."
 #: src/pages/admin/Equipe.tsx
 msgid "{personnes} sur {effectif, plural, one {# souhaitée} other {# souhaitées}}."
 msgstr "{personnes} out of {effectif, plural, one {# wanted} other {# wanted}}."
+
+#: src/lib/messages.ts
+msgid "{personnes}, pour le {echeance}"
+msgstr "{personnes}, due {echeance}"
 
 #: src/pages/admin/Equipe.tsx
 msgid "{personnes}. Effectif à définir."
@@ -1191,6 +1199,32 @@ msgstr "{salutation}\n"
 "\n"
 "You can find the tasks and sheets in the Organizer workspace:\n"
 "{lienEspace}\n"
+"\n"
+"{signature}"
+
+#: src/lib/messages.ts
+msgid "{salutation}\n"
+"\n"
+"Voici les priorités de chaque périmètre avant le prochain point, {prochainPoint}. Les tâches sont aussi dans l’espace organisateur.\n"
+"\n"
+"{priorites}\n"
+"\n"
+"Vous retrouvez ces priorités dans « Mon espace » :\n"
+"{lienEspace}\n"
+"\n"
+"Merci pour votre aide.\n"
+"\n"
+"{signature}"
+msgstr "{salutation}\n"
+"\n"
+"Here are the priorities of each area before the next check-in, {prochainPoint}. The tasks are also in the organizer workspace.\n"
+"\n"
+"{priorites}\n"
+"\n"
+"You can find these priorities in “My space”:\n"
+"{lienEspace}\n"
+"\n"
+"Thank you for your help.\n"
 "\n"
 "{signature}"
 
@@ -2442,6 +2476,10 @@ msgstr "No one matches these filters."
 #: src/composants/Priorites.tsx
 msgid "Aucune priorité jusqu’au {fin}."
 msgstr "No priority until {fin}."
+
+#: src/composants/EcrireMessage.tsx
+msgid "Aucune priorité n’est prévue avant le prochain point."
+msgstr "No priority is planned before the next check-in."
 
 #: src/composants/Priorites.tsx
 msgid "Aucune priorité ne correspond à ce filtre."
@@ -3718,6 +3756,10 @@ msgstr "Consent date"
 #: src/composants/SondageFormulaire.tsx
 msgid "Date du point d’étape"
 msgstr "Check-in date"
+
+#: src/lib/messages.ts
+msgid "date du prochain point"
+msgstr "date of the next check-in"
 
 #: src/pages/admin/Editions.tsx
 msgid "Dates"
@@ -5951,6 +5993,14 @@ msgstr "on {debut}"
 msgid "le {jour} à {heure} h {minute}"
 msgstr "on {jour} at {heure}:{minute}"
 
+#: src/composants/EcrireMessage.tsx
+msgid "le {jourPoint} à {heurePoint}"
+msgstr "on {jourPoint} at {heurePoint}"
+
+#: src/composants/EcrireMessage.tsx
+msgid "le {jourPoint} à {heurePoint} (lien de la visio : {lienVisio})"
+msgstr "on {jourPoint} at {heurePoint} (video call link: {lienVisio})"
+
 #: src/lib/repartition.ts
 msgid "Le besoin de la séquence est déjà atteint."
 msgstr "The slot’s volunteer need is already met."
@@ -6192,6 +6242,10 @@ msgstr "The message is ready in your mail app"
 #: src/lib/messages.ts
 msgid "Le message liste les périmètres qui manquent de référentes et de référents."
 msgstr "The message lists the areas that lack coordinators."
+
+#: src/lib/messages.ts
+msgid "Le message liste les priorités de chaque périmètre avant le prochain point de l’agenda global."
+msgstr "The message lists the priorities of each area before the next check-in of the shared calendar."
 
 #: src/lib/messages.ts
 msgid "Le message liste les tâches encore ouvertes du périmètre choisi, ou de toute la période."
@@ -8248,6 +8302,10 @@ msgstr "To change your availability, write to the organization."
 msgid "Pour l’équipe seulement : la page publique ne l’affiche pas."
 msgstr "For the team only: the public page does not show it."
 
+#: src/lib/messages.ts
+msgid "pour le {echeance}"
+msgstr "due {echeance}"
+
 #: src/composants/InvitationRapide.tsx
 msgid "Pour nommer un admin ou inviter dans plusieurs activités, passez par l’écran <0>Personnes</0>."
 msgstr "To name an admin or invite to several activities, use the <0>People</0> screen."
@@ -8374,6 +8432,14 @@ msgstr "High priority"
 #: src/composants/Priorites.tsx
 msgid "Priorités"
 msgstr "Priorities"
+
+#: src/lib/messages.ts
+msgid "Priorités de la période"
+msgstr "Priorities of the period"
+
+#: src/lib/messages.ts
+msgid "priorités des périmètres"
+msgstr "priorities of the areas"
 
 #: src/composants/Priorites.tsx
 msgid "Prochain point : {jourPoint} à {heurePoint}."
