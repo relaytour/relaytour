@@ -1,4 +1,15 @@
+import { readFileSync } from 'node:fs'
+
 import { ApolloServer } from '@apollo/server'
+import { complexityFromQuery } from '@pothos/plugin-complexity'
+import {
+  Kind,
+  parseType,
+  visit,
+  type DocumentNode,
+  type FieldNode,
+  type TypeNode,
+} from 'graphql'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import type { AppContext } from '../context.ts'
@@ -175,5 +186,103 @@ describe('limites de complexité des requêtes', () => {
     expect(resultat.errors).toBeUndefined()
     const bareme = resultat.data?.baremeScore as { tacheRealisee: number }
     expect(typeof bareme.tacheRealisee).toBe('number')
+  })
+})
+
+// Chaque requête de l'espace organisateur passe les limites du serveur, avec le
+// __typename qu'Apollo ajoute à chaque sélection. Un fragment enrichi peut sinon
+// faire échouer en silence un écran qui le lit plusieurs fois : « Mon espace » a
+// ainsi dépassé le plafond de complexité en 0.24.0, et ses listes restaient vides.
+const DOCUMENTS = [
+  ...readFileSync(
+    new URL('../../../orga/src/gql/graphql.ts', import.meta.url),
+    'utf8'
+  ).matchAll(
+    /^export const (\w+)Document = (\{.*\}) as unknown as DocumentNode/gm
+  ),
+].map(([, nom, json]) => [nom!, JSON.parse(json!) as DocumentNode] as const)
+
+const TYPENAME: FieldNode = {
+  kind: Kind.FIELD,
+  name: { kind: Kind.NAME, value: '__typename' },
+}
+
+/** Le document tel qu'Apollo l'envoie : un __typename dans chaque sélection. */
+function avecTypename(document: DocumentNode): DocumentNode {
+  return visit(document, {
+    SelectionSet(selection, _cle, parent) {
+      const racine =
+        parent !== undefined &&
+        !Array.isArray(parent) &&
+        (parent as { kind?: string }).kind === Kind.OPERATION_DEFINITION
+      const deja = selection.selections.some(
+        s => s.kind === Kind.FIELD && s.name.value === '__typename'
+      )
+      return racine || deja
+        ? undefined
+        : { ...selection, selections: [...selection.selections, TYPENAME] }
+    },
+  })
+}
+
+/**
+ * Une valeur factice d'un type d'entrée : seuls les champs requis sont remplis.
+ * Le type se lit dans sa syntaxe : les classes du schéma viennent d'un autre
+ * exemplaire du module `graphql`.
+ */
+function valeurFactice(type: TypeNode): unknown {
+  if (type.kind === Kind.NON_NULL_TYPE) return valeurFactice(type.type)
+  if (type.kind === Kind.LIST_TYPE) return [valeurFactice(type.type)]
+  const nom = type.name.value
+  const nomme = schema.getType(nom) as unknown as {
+    getValues?: () => { name: string }[]
+    getFields?: () => Record<
+      string,
+      { name: string; type: { toString(): string } }
+    >
+  } | null
+  if (nomme?.getValues) return nomme.getValues()[0]!.name
+  if (nomme?.getFields && !['ID', 'String'].includes(nom)) {
+    return Object.fromEntries(
+      Object.values(nomme.getFields())
+        .filter(champ => champ.type.toString().endsWith('!'))
+        .map(champ => [
+          champ.name,
+          valeurFactice(parseType(champ.type.toString())),
+        ])
+    )
+  }
+  if (nom === 'Int' || nom === 'Float') return 1
+  if (nom === 'Boolean') return false
+  if (nom === 'Date') return '2026-01-01'
+  if (nom === 'DateTime') return '2026-01-01T00:00:00.000Z'
+  if (nom === 'JSONObject') return {}
+  return 'x'
+}
+
+function variablesFactices(document: DocumentNode): Record<string, unknown> {
+  const variables: Record<string, unknown> = {}
+  for (const definition of document.definitions) {
+    if (definition.kind !== Kind.OPERATION_DEFINITION) continue
+    for (const v of definition.variableDefinitions ?? []) {
+      variables[v.variable.name.value] = valeurFactice(v.type)
+    }
+  }
+  return variables
+}
+
+describe('requêtes de l’espace organisateur', () => {
+  it('trouve les documents générés', () => {
+    expect(DOCUMENTS.length).toBeGreaterThan(100)
+  })
+
+  it.each(DOCUMENTS)('%s passe les limites du serveur', (_nom, document) => {
+    const { complexity, breadth, depth } = complexityFromQuery(
+      avecTypename(document),
+      { schema, variables: variablesFactices(document) }
+    )
+    expect(complexity).toBeLessThanOrEqual(2_000)
+    expect(breadth).toBeLessThanOrEqual(100)
+    expect(depth).toBeLessThanOrEqual(8)
   })
 })
