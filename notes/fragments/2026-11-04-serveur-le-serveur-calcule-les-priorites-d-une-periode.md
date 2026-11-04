@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.27.0
 fr:
   titre: >-
     Le serveur calcule les priorités d'une période
