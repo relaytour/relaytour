@@ -3,7 +3,7 @@
 - **Statut** : proposée
 - **Date** : 2026-11-04
 - Complète l'ADR 0014 (consultation des périmètres), l'ADR 0026 (tâches partagées), l'ADR 0037 (agenda et réunions) et l'ADR 0020 (messages à l'équipe).
-- Remplace, dans l'ADR 0025, la règle « aucun champ de priorité ne s'ajoute à la tâche ». Le reste de l'ADR 0025 ne change pas.
+- Remplace en partie la règle de l'ADR 0025 « Aucune étiquette libre et aucun champ de priorité ne s'ajoutent à la tâche. » Seul le champ de priorité est concerné. L'interdiction des étiquettes libres et le reste de l'ADR 0025 ne changent pas.
 
 ## Contexte
 
@@ -43,7 +43,7 @@ L'application calcule les **priorités** d'une période : un score commun à tou
 
 ### Score
 
-Le score est la somme des points ci-dessous. Chaque point ajouté porte une raison, que l'écran affiche sous la tâche.
+Le score classe les tâches retenues. Il ne décide pas de leur entrée dans les priorités : l'horizon et l'ajustement en décident. Le score est la somme des points ci-dessous. Chaque point ajouté porte une raison, que l'écran affiche sous la tâche.
 
 | Critère | Points |
 |---|---|
@@ -52,12 +52,11 @@ Le score est la somme des points ci-dessous. Chaque point ajouté porte une rais
 | Échéance dans 7 jours au plus | 35 |
 | Échéance dans 8 à 14 jours | 25 |
 | Échéance dans 15 à 30 jours | 12 |
-| Échéance dans 31 à 90 jours | de 12 à 0, en décroissant chaque jour |
 | Échéance avant le prochain point (sans point : dans les 7 jours) | 15 |
 | Tâche liée à une réunion à venir (ADR 0037) | 10 |
 | Tâche partagée, par déclinaison active | 5, et 15 au plus |
 | Tâche partagée dont une déclinaison attend l'accord | 5 |
-| Personne n'est assignée, et l'échéance tombe dans les 45 jours | 8 |
+| Personne n'est assignée | 8 |
 | Tâche en cours | 3 |
 
 - Une tâche partagée prend l'échéance la plus proche entre la sienne et celles de ses déclinaisons ouvertes. Une déclinaison garde sa propre échéance.
@@ -78,7 +77,8 @@ Le score est la somme des points ci-dessous. Chaque point ajouté porte une rais
 - L'ajustement n'est pas une priorité permanente. Le score part de l'échéance, comme le voulait l'ADR 0025, et l'ajustement ne fait que le corriger pour un temps.
 - Un ajustement reste valable jusqu'à la fin de l'horizon du jour où il a été posé. Il cesse ensuite de compter, sans tâche planifiée ni écriture. Un ajustement oublié ne fausse donc pas la liste pendant des semaines.
 - L'écran affiche l'ajustement comme une raison, avec son auteur et sa date.
-- Chaque ajustement entre dans le journal de la tâche (ADR 0029). Il ne change pas la version de la tâche, comme le statut et les assignations.
+- Chaque ajustement entre dans le journal de la tâche. Le fil de la tâche ne le reprend pas : il garde les cinq événements de l'ADR 0029. Le panneau affiche déjà l'auteur et la date de l'ajustement.
+- Un ajustement ne change pas la version de la tâche, comme le statut et les assignations.
 
 ### Limites de la liste
 
