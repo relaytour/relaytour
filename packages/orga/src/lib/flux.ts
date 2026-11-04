@@ -38,6 +38,8 @@ const VUES_DES_TACHES = [
   'FilTache',
   // Les échéances de l'agenda (ADR 0037).
   'Agenda',
+  // Les priorités d'une période (ADR 0059).
+  'Priorites',
   // La charge de l'équipe et le détail d'une personne (ADR 0055).
   'ChargeEquipe',
   'TachesDe',
@@ -137,6 +139,8 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
   ],
   AGENDA: [
     'Agenda',
+    // Le prochain point fixe l'horizon des priorités (ADR 0059).
+    'Priorites',
     'Reunions',
     'ReunionsDuPerimetre',
     'Reunion',

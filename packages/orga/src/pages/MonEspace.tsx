@@ -9,6 +9,7 @@ import Avancement from '../composants/Avancement'
 import Contribution from '../composants/Contribution'
 import { DeuxColonnes, Groupe, Panneau } from '../composants/Panneau'
 import PremiersPas from '../composants/PremiersPas'
+import Priorites from '../composants/Priorites'
 import TacheCarte from '../composants/TacheCarte'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
@@ -121,6 +122,17 @@ export default function MonEspace() {
       >
         <Trans>Bonjour {prenomPersonne}</Trans>
       </Titre>
+
+      {/* Les priorités de la période passent avant tout autre panneau (ADR 0059). */}
+      {edition && data && (
+        <div style={{ marginBottom: 16 }}>
+          <Priorites
+            editionId={edition.id}
+            moiId={moiId}
+            mesPerimetres={new Set(affectations.map(a => a.perimetre.id))}
+          />
+        </div>
+      )}
 
       {gere && (
         <div style={{ marginBottom: 16 }}>
