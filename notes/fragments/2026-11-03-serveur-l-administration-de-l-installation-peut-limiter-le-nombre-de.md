@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.26.0
 fr:
   titre: >-
     L'administration de l'installation peut limiter le nombre de membres d'une organisation
