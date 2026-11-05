@@ -193,6 +193,24 @@ type Agenda {
   peutGerer: Boolean!
 }
 
+"""
+Niveau d’un ajustement des priorités. BASSE : 20 points en moins. HAUTE : 20 points en plus, et la tâche entre dans les priorités. EPINGLEE : la tâche entre dans les priorités et passe en tête de son périmètre.
+"""
+enum AjustementPriorite {
+  BASSE
+  EPINGLEE
+  HAUTE
+}
+
+"""L’ajustement en cours d’une tâche dans les priorités."""
+type AjustementTache {
+  """Dernier jour où l’ajustement compte."""
+  jusquAu: Date!
+  le: DateTime!
+  niveau: AjustementPriorite!
+  par: Personne
+}
+
 type ApercuPerimetreModele {
   groupe: String!
   nom: String!
@@ -558,6 +576,22 @@ enum CibleConvocation {
   CHOIX
   EQUIPE
   PERIMETRE
+}
+
+"""
+Ce qui donne des points à une tâche. L’espace organisateur traduit chaque code.
+"""
+enum CodeRaisonPriorite {
+  ACCORD_ATTENDU
+  AJUSTEMENT
+  AVANT_LE_POINT
+  A_PRENDRE
+  DECLINAISONS
+  ECHEANCE_PROCHE
+  EN_COURS
+  RETARD
+  RETARD_A_REVOIR
+  REUNION_A_VENIR
 }
 
 """
@@ -989,17 +1023,19 @@ type EspaceFichiers {
 }
 
 """
-Étape de l’accord d’une déclinaison. IMPOSEE : un admin de l’activité l’a ajoutée sans accord du périmètre.
+Étape de l’accord d’une déclinaison. IMPOSEE : un admin de l’activité l’a ajoutée sans accord du périmètre. RATTACHEE : une tâche existante est devenue la déclinaison (ADR 0061). DETACHEE : la déclinaison est redevenue une tâche ordinaire.
 """
 enum EtapeAccord {
   ACCEPTEE
+  DETACHEE
   IMPOSEE
   PROPOSEE
+  RATTACHEE
   REFUSEE
 }
 
 """
-Une étape de l’accord d’une déclinaison : qui l’a proposée, acceptée, refusée ou imposée, et quand.
+Une étape de l’accord d’une déclinaison : qui l’a proposée, acceptée, refusée, imposée, rattachée ou détachée, et quand.
 """
 type EtapeAccordDeclinaison {
   etape: EtapeAccord!
@@ -1698,6 +1734,11 @@ type Mutation {
 
   """Affiche de nouveau la liste « Premiers pas » de l’activité."""
   afficherPremiersPas(activiteId: ID): PremiersPas!
+
+  """
+  Pose ou retire l’ajustement d’une tâche dans les priorités (ADR 0059). Un niveau absent retire l’ajustement. L’ajustement compte jusqu’à la fin de l’horizon du jour. Il ne change pas la version de la tâche.
+  """
+  ajusterPriorite(id: ID!, niveau: AjustementPriorite): Tache!
   annulerReunion(id: ID!): Reunion!
 
   """
@@ -1863,6 +1904,11 @@ type Mutation {
     """Les personnes convoquées, pour la cible CHOIX."""
     personneIds: [ID!]
 
+    """
+    Point d’équipe : la réunion fixe l’horizon des priorités (ADR 0059). Réservé à l’agenda global. Sans valeur : la valeur actuelle, ou à la création vrai pour la cible EQUIPE.
+    """
+    pointEquipe: Boolean
+
     """Le sondage clos dont la réunion découle, du même agenda (ADR 0037)."""
     sondageId: ID
     tacheIds: [ID!]
@@ -1952,6 +1998,11 @@ type Mutation {
   Retire l’abonnement push de cet appareil. Rend vrai quand un abonnement de la personne connectée a été retiré.
   """
   desabonnerPush(adresse: String!): Boolean!
+
+  """
+  Détache une déclinaison acceptée de sa tâche partagée : elle redevient une tâche ordinaire de son périmètre, avec son statut, ses personnes assignées et son fil. Demande d’écrire dans les deux périmètres (ADR 0061). Rend la tâche détachée.
+  """
+  detacherDeclinaison(id: ID!): Tache!
 
   """
   Écarte une proposition : rien ne change chez le fournisseur. Elle ne revient pas tant que la situation de la personne ne change pas.
@@ -2210,6 +2261,11 @@ type Mutation {
 
     """Les personnes convoquées, pour la cible CHOIX."""
     personneIds: [ID!]
+
+    """
+    Point d’équipe : la réunion fixe l’horizon des priorités (ADR 0059). Réservé à l’agenda global. Sans valeur : la valeur actuelle, ou à la création vrai pour la cible EQUIPE.
+    """
+    pointEquipe: Boolean
     tacheIds: [ID!]
     titre: String!
 
@@ -2295,6 +2351,17 @@ type Mutation {
   """
   rappelerAdresses(courriel: String!): Boolean!
   rattacherALActivite(activiteId: ID!, userId: ID!): Boolean!
+
+  """
+  Rattache une tâche existante d’un autre périmètre de la période à une tâche partagée : elle en devient la déclinaison, acceptée d’office, sans rien perdre de son statut, de ses personnes assignées ni de son fil. Demande d’écrire dans les deux périmètres (ADR 0061). Rend la tâche partagée.
+  """
+  rattacherDeclinaison(
+    """La tâche partagée, ou la tâche qui le devient."""
+    id: ID!
+
+    """La tâche existante qui devient la déclinaison."""
+    tacheId: ID!
+  ): Tache!
 
   """
   Recrée dans la période cible les tâches choisies de la période source, avec le même écart en jours depuis le premier jour, et les effectifs souhaités. Une tâche déjà présente n’est pas recréée.
@@ -2761,6 +2828,11 @@ type PersonneAcces {
 }
 
 type PersonneConvocable {
+  """
+  Vrai pour le contact principal d’un périmètre de l’activité pour la période (ADR 0011).
+  """
+  contactPrincipal: Boolean!
+
   """Vrai pour une personne affectée au périmètre pour la période."""
   duPerimetre: Boolean!
   nom: String!
@@ -2985,6 +3057,39 @@ type PremiersPas {
 
   """Toutes les étapes sont faites."""
   termines: Boolean!
+}
+
+type Priorite {
+  raisons: [RaisonPriorite!]!
+  score: Int!
+  tache: Tache!
+}
+
+type Priorites {
+  """
+  Dernier jour de l’horizon (AAAA-MM-JJ), dans le fuseau de l’organisation.
+  """
+  fin: String!
+
+  """Les périmètres non archivés de l’activité, dans leur ordre."""
+  perimetres: [PrioritesDuPerimetre!]!
+
+  """
+  Le prochain point d’équipe : une réunion de l’agenda global marquée comme point d’équipe, non annulée. Null sans point d’équipe prévu ou sans module Agenda.
+  """
+  prochainPoint: Reunion
+}
+
+type PrioritesDuPerimetre {
+  """Priorités au-delà du plafond de cinq."""
+  autres: Int!
+
+  """
+  La prochaine tâche ouverte, quand le périmètre n’a aucune priorité. Ce n’est pas une priorité.
+  """
+  ensuite: Tache
+  perimetre: Perimetre!
+  priorites: [Priorite!]!
 }
 
 type Proposition {
@@ -3245,6 +3350,11 @@ type Query {
   premiersPas(activiteId: ID): PremiersPas!
 
   """
+  Les priorités d’une période (ADR 0059) : pour chaque périmètre de l’activité, les tâches à traiter avant le prochain point, classées par score.
+  """
+  priorites(editionId: ID!): Priorites!
+
+  """
   Les séquences d’une période, par début. Les filtres gardent un périmètre, ou les séquences où la personne connectée est placée.
   """
   programme(editionId: ID!, mesSequences: Boolean = false, perimetreId: ID): [Sequence!]!
@@ -3345,6 +3455,20 @@ type Query {
   Numéro de version de l’installation. Lisible sans session, comme sur /health.
   """
   versionInstallation: String!
+}
+
+type RaisonPriorite {
+  code: CodeRaisonPriorite!
+
+  """
+  Jours de retard (RETARD, RETARD_A_REVOIR) ou jours avant l’échéance (ECHEANCE_PROCHE).
+  """
+  jours: Int
+  niveau: AjustementPriorite
+
+  """Déclinaisons actives (DECLINAISONS)."""
+  nombre: Int
+  points: Int!
 }
 
 """Résultat du dernier export des fiches vers l’espace de fichiers."""
@@ -3580,6 +3704,11 @@ type Reunion {
   """Le périmètre de la réunion ; nul pour l’agenda global."""
   perimetre: Perimetre
   peutModifier: Boolean!
+
+  """
+  Point d’équipe : la réunion fixe l’horizon des priorités de la période (ADR 0059).
+  """
+  pointEquipe: Boolean!
 
   """Les réponses des personnes convoquées, en nombre."""
   reponses: ReponsesReunion
@@ -3834,6 +3963,11 @@ type Tache {
   Pour une déclinaison : l’accord de son périmètre. Null pour une tâche ordinaire et pour une tâche partagée.
   """
   accord: AccordDeclinaison
+
+  """
+  L’ajustement de la tâche dans les priorités, tant qu’il compte (ADR 0059).
+  """
+  ajustement: AjustementTache
   assignes: [Personne!]!
   clotureePar: Personne
   creeLe: DateTime!

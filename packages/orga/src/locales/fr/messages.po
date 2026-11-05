@@ -48,6 +48,7 @@ msgid "« {titreSequence} » quitte le programme, avec ses personnes placées."
 msgstr "« {titreSequence} » quitte le programme, avec ses personnes placées."
 
 #: src/composants/DeclinerTache.tsx
+#: src/composants/RattacherTache.tsx
 #: src/composants/TacheCarte.tsx
 msgid "« {titreTache} »"
 msgstr "« {titreTache} »"
@@ -193,6 +194,10 @@ msgstr "{auteur} a modifié cette tâche {moment}. « Écraser » enregistre vot
 msgid "{auteur} a modifié cette tâche. « Écraser » enregistre votre version à la place de la sienne. « Recharger » abandonne votre saisie et affiche la sienne."
 msgstr "{auteur} a modifié cette tâche. « Écraser » enregistre votre version à la place de la sienne. « Recharger » abandonne votre saisie et affiche la sienne."
 
+#: src/composants/Priorites.tsx
+msgid "{autres, plural, one {# autre tâche au-delà des cinq priorités} other {# autres tâches au-delà des cinq priorités}}"
+msgstr "{autres, plural, one {# autre tâche au-delà des cinq priorités} other {# autres tâches au-delà des cinq priorités}}"
+
 #: src/composants/VerificationAcces.tsx
 msgid "{avecAcces} sur {total} a accès"
 msgstr "{avecAcces} sur {total} a accès"
@@ -204,6 +209,10 @@ msgstr "{avecAcces} sur {total} ont accès"
 #: src/pages/Charge.tsx
 msgid "{aVenir, plural, one {# place à venir} other {# places à venir}}"
 msgstr "{aVenir, plural, one {# place à venir} other {# places à venir}}"
+
+#: src/composants/Priorites.tsx
+msgid "{cachees, plural, one {Voir l’autre priorité} other {Voir les # autres priorités}}"
+msgstr "{cachees, plural, one {Voir l’autre priorité} other {Voir les # autres priorités}}"
 
 #: src/pages/Perimetre.tsx
 msgid "{cettePeriodeMajuscule} est {periodeArchivee}. Ses tâches sont consultables en lecture seule."
@@ -364,6 +373,18 @@ msgstr "{jourPlage}, {heureDebut} → {heureFin}"
 #: src/pages/EspaceBenevole.tsx
 msgid "{jourPlage}, {heureDebut} → {heureFin} le lendemain"
 msgstr "{jourPlage}, {heureDebut} → {heureFin} le lendemain"
+
+#: src/composants/Priorites.tsx
+msgid "{jours, plural, one {Échéance dans # jour} other {Échéance dans # jours}}"
+msgstr "{jours, plural, one {Échéance dans # jour} other {Échéance dans # jours}}"
+
+#: src/composants/Priorites.tsx
+msgid "{jours, plural, one {Échéance dépassée depuis # jour, à revoir} other {Échéance dépassée depuis # jours, à revoir}}"
+msgstr "{jours, plural, one {Échéance dépassée depuis # jour, à revoir} other {Échéance dépassée depuis # jours, à revoir}}"
+
+#: src/composants/Priorites.tsx
+msgid "{jours, plural, one {En retard de # jour} other {En retard de # jours}}"
+msgstr "{jours, plural, one {En retard de # jour} other {En retard de # jours}}"
 
 #: src/composants/Tableau.tsx
 msgid "{largeur} pixels"
@@ -605,6 +626,10 @@ msgstr "{nombre, plural, one {# personne} other {# personnes}}"
 msgid "{nombre, plural, one {# séquence} other {# séquences}}"
 msgstr "{nombre, plural, one {# séquence} other {# séquences}}"
 
+#: src/composants/Priorites.tsx
+msgid "{nombre, plural, one {Reprise dans # autre périmètre} other {Reprise dans # autres périmètres}}"
+msgstr "{nombre, plural, one {Reprise dans # autre périmètre} other {Reprise dans # autres périmètres}}"
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "{nombreAAccepter} à accepter"
 msgstr "{nombreAAccepter} à accepter"
@@ -799,6 +824,10 @@ msgid "{periode} : la préparation commence"
 msgstr "{periode} : la préparation commence"
 
 #: src/lib/messages.ts
+msgid "{periode} : les priorités avant le prochain point"
+msgstr "{periode} : les priorités avant le prochain point"
+
+#: src/lib/messages.ts
 msgid "{periode} : merci"
 msgstr "{periode} : merci"
 
@@ -829,6 +858,10 @@ msgstr "{periodeAucune} n’est en préparation."
 #: src/pages/admin/Equipe.tsx
 msgid "{personnes} sur {effectif, plural, one {# souhaitée} other {# souhaitées}}."
 msgstr "{personnes} sur {effectif, plural, one {# souhaitée} other {# souhaitées}}."
+
+#: src/lib/messages.ts
+msgid "{personnes}, pour le {echeance}"
+msgstr "{personnes}, pour le {echeance}"
 
 #: src/pages/admin/Equipe.tsx
 msgid "{personnes}. Effectif à définir."
@@ -1173,6 +1206,32 @@ msgstr "{salutation}\n"
 #: src/lib/messages.ts
 msgid "{salutation}\n"
 "\n"
+"Voici les priorités de chaque périmètre avant le prochain point, {prochainPoint}. Les tâches sont aussi dans l’espace organisateur.\n"
+"\n"
+"{priorites}\n"
+"\n"
+"Vous retrouvez ces priorités dans « Mon espace » :\n"
+"{lienEspace}\n"
+"\n"
+"Merci pour votre aide.\n"
+"\n"
+"{signature}"
+msgstr "{salutation}\n"
+"\n"
+"Voici les priorités de chaque périmètre avant le prochain point, {prochainPoint}. Les tâches sont aussi dans l’espace organisateur.\n"
+"\n"
+"{priorites}\n"
+"\n"
+"Vous retrouvez ces priorités dans « Mon espace » :\n"
+"{lienEspace}\n"
+"\n"
+"Merci pour votre aide.\n"
+"\n"
+"{signature}"
+
+#: src/lib/messages.ts
+msgid "{salutation}\n"
+"\n"
 "Voici les tâches encore ouvertes pour {periode} :\n"
 "\n"
 "{tachesEnCours}\n"
@@ -1199,6 +1258,14 @@ msgstr "{salutation}\n"
 #: src/composants/Demandes.tsx
 msgid "{souhaits} souhaits de membres attendent aussi une affectation dans <0>Équipe</0>."
 msgstr "{souhaits} souhaits de membres attendent aussi une affectation dans <0>Équipe</0>."
+
+#: src/composants/Priorites.tsx
+msgid "{texte} le {jour}"
+msgstr "{texte} le {jour}"
+
+#: src/composants/Priorites.tsx
+msgid "{texte} par {auteur} le {jour}"
+msgstr "{texte} par {auteur} le {jour}"
 
 #: src/lib/messages.ts
 msgid "{titre} (échéance : {echeance})"
@@ -1338,6 +1405,10 @@ msgstr "à partir du {dateDeDebut}"
 msgid "À pourvoir"
 msgstr "À pourvoir"
 
+#: src/composants/Priorites.tsx
+msgid "À prendre"
+msgstr "À prendre"
+
 #: src/pages/MonEspace.tsx
 msgid "À prendre dans vos périmètres"
 msgstr "À prendre dans vos périmètres"
@@ -1466,6 +1537,10 @@ msgstr "Accès chez le fournisseur : « {nomDossier} »"
 #: src/composants/VerificationAcces.tsx
 msgid "Accès en trop"
 msgstr "Accès en trop"
+
+#: src/composants/Priorites.tsx
+msgid "Accord attendu d’un autre périmètre"
+msgstr "Accord attendu d’un autre périmètre"
 
 #: src/pages/admin/Redaction.tsx
 msgid "Accorder"
@@ -1816,6 +1891,10 @@ msgstr "Ajouter au {cible}"
 msgid "Ajouter des tâches"
 msgstr "Ajouter des tâches"
 
+#: src/composants/AjouterContactsPrincipaux.tsx
+msgid "Ajouter les contacts principaux ({nombre})"
+msgstr "Ajouter les contacts principaux ({nombre})"
+
 #: src/pages/FicheEditeur.tsx
 msgid "Ajouter les mentions à « Concerne aussi » ?"
 msgstr "Ajouter les mentions à « Concerne aussi » ?"
@@ -1889,6 +1968,7 @@ msgstr "Annulée"
 #: src/composants/ConnexionEspace.tsx
 #: src/composants/DateCleFormulaire.tsx
 #: src/composants/DeclinaisonsProposees.tsx
+#: src/composants/DeclinaisonsTache.tsx
 #: src/composants/DeclinerTache.tsx
 #: src/composants/Demandes.tsx
 #: src/composants/DepotContenu.tsx
@@ -1905,6 +1985,7 @@ msgstr "Annulée"
 #: src/composants/ModeleDeDepart.tsx
 #: src/composants/NouvelleEdition.tsx
 #: src/composants/ProposerPersonne.tsx
+#: src/composants/RattacherTache.tsx
 #: src/composants/ReconductionEdition.tsx
 #: src/composants/ReglagePerimetre.tsx
 #: src/composants/Repartition.tsx
@@ -2240,6 +2321,10 @@ msgstr "Aucun périmètre ne correspond à ces filtres."
 msgid "Aucun périmètre pour l’instant"
 msgstr "Aucun périmètre pour l’instant"
 
+#: src/composants/Priorites.tsx
+msgid "Aucun point d’équipe n’est prévu : les priorités couvrent les 14 prochains jours."
+msgstr "Aucun point d’équipe n’est prévu : les priorités couvrent les 14 prochains jours."
+
 #: src/composants/Recherche.tsx
 msgid "Aucun résultat."
 msgstr "Aucun résultat."
@@ -2395,6 +2480,18 @@ msgstr "Aucune personne n’est attendue pour ce dossier."
 msgid "Aucune personne ne correspond à ces filtres."
 msgstr "Aucune personne ne correspond à ces filtres."
 
+#: src/composants/Priorites.tsx
+msgid "Aucune priorité jusqu’au {fin}."
+msgstr "Aucune priorité jusqu’au {fin}."
+
+#: src/composants/EcrireMessage.tsx
+msgid "Aucune priorité n’est prévue avant le prochain point."
+msgstr "Aucune priorité n’est prévue avant le prochain point."
+
+#: src/composants/Priorites.tsx
+msgid "Aucune priorité ne correspond à ce filtre."
+msgstr "Aucune priorité ne correspond à ce filtre."
+
 #: src/composants/ReunionsDuPerimetre.tsx
 msgid "Aucune réunion à venir pour ce périmètre."
 msgstr "Aucune réunion à venir pour ce périmètre."
@@ -2424,6 +2521,10 @@ msgstr "Aucune tâche dans {cette}."
 msgid "Aucune tâche dans cette catégorie."
 msgstr "Aucune tâche dans cette catégorie."
 
+#: src/composants/RattacherTache.tsx
+msgid "Aucune tâche de ce périmètre ne peut être rattachée. Une déclinaison et une tâche partagée ne se rattachent pas."
+msgstr "Aucune tâche de ce périmètre ne peut être rattachée. Une déclinaison et une tâche partagée ne se rattachent pas."
+
 #: src/pages/Fiche.tsx
 msgid "Aucune tâche de l’édition en cours ne renvoie à cette fiche."
 msgstr "Aucune tâche de l’édition en cours ne renvoie à cette fiche."
@@ -2439,6 +2540,10 @@ msgstr "Aucune tâche n’est en cours."
 #: src/pages/Retroplanning.tsx
 msgid "Aucune tâche ne correspond à ces filtres."
 msgstr "Aucune tâche ne correspond à ces filtres."
+
+#: src/composants/Priorites.tsx
+msgid "Aucune tâche ouverte avec une échéance."
+msgstr "Aucune tâche ouverte avec une échéance."
 
 #: src/pages/MonEspace.tsx
 msgid "Aucune tâche ouverte ne vous est assignée."
@@ -2485,6 +2590,10 @@ msgstr "Avancement"
 #: src/lib/guide-markdown.ts
 msgid "Avant la journée"
 msgstr "Avant la journée"
+
+#: src/composants/Priorites.tsx
+msgid "Avant le prochain point"
+msgstr "Avant le prochain point"
 
 #: src/composants/GestionAcces.tsx
 msgid "Avec cette connexion, Relaytour vérifie les accès sans pouvoir les changer."
@@ -2874,6 +2983,10 @@ msgid "Cette personne s’est déjà connectée : elle modifie son nom dans ses 
 msgstr "Cette personne s’est déjà connectée : elle modifie son nom dans ses préférences."
 
 #: src/composants/ReunionDetail.tsx
+msgid "Cette réunion fixe la fin de la période que couvrent les priorités de toute l’équipe."
+msgstr "Cette réunion fixe la fin de la période que couvrent les priorités de toute l’équipe."
+
+#: src/composants/ReunionDetail.tsx
 msgid "Cette réunion n’existe pas ou ne vous est pas accessible."
 msgstr "Cette réunion n’existe pas ou ne vous est pas accessible."
 
@@ -3050,6 +3163,10 @@ msgstr "Choisir un fichier {format}"
 msgid "Choisir un lieu"
 msgstr "Choisir un lieu"
 
+#: src/composants/RattacherTache.tsx
+msgid "Choisir un périmètre"
+msgstr "Choisir un périmètre"
+
 #: src/composants/DepotContenu.tsx
 msgid "Choisir une autre archive"
 msgstr "Choisir une autre archive"
@@ -3061,6 +3178,10 @@ msgstr "Choisir une organisation"
 #: src/composants/TacheCarte.tsx
 msgid "Choisir une ou plusieurs personnes"
 msgstr "Choisir une ou plusieurs personnes"
+
+#: src/composants/RattacherTache.tsx
+msgid "Choisir une tâche"
+msgstr "Choisir une tâche"
 
 #: src/pages/AppelBenevoles.tsx
 msgid "Choisissez au moins un moment, ou proposez votre aide là où il manque du monde."
@@ -3124,6 +3245,7 @@ msgid "Choisissez un jour."
 msgstr "Choisissez un jour."
 
 #: src/composants/AppelsBenevoles.tsx
+#: src/composants/RattacherTache.tsx
 #: src/pages/admin/Redaction.tsx
 msgid "Choisissez un périmètre."
 msgstr "Choisissez un périmètre."
@@ -3162,6 +3284,10 @@ msgstr "Choisissez une séquence pour classer les personnes selon leurs disponib
 #: src/composants/AppelsBenevoles.tsx
 msgid "Choisissez une séquence."
 msgstr "Choisissez une séquence."
+
+#: src/composants/RattacherTache.tsx
+msgid "Choisissez une tâche."
+msgstr "Choisissez une tâche."
 
 #: src/composants/ChampsActivite.tsx
 #: src/composants/Coquille.tsx
@@ -3659,6 +3785,10 @@ msgstr "Date de l’accord"
 msgid "Date du point d’étape"
 msgstr "Date du point d’étape"
 
+#: src/lib/messages.ts
+msgid "date du prochain point"
+msgstr "date du prochain point"
+
 #: src/pages/admin/Editions.tsx
 msgid "Dates"
 msgstr "Dates"
@@ -3725,6 +3855,10 @@ msgstr "Décrire l’activité"
 #: src/composants/Demandes.tsx
 msgid "Déjà dans votre équipe"
 msgstr "Déjà dans votre équipe"
+
+#: src/composants/Priorites.tsx
+msgid "Déjà en cours"
+msgstr "Déjà en cours"
 
 #: src/composants/AssistantTableur.tsx
 msgid "Déjà importée"
@@ -3937,6 +4071,18 @@ msgstr "Destination"
 msgid "Destination des fiches"
 msgstr "Destination des fiches"
 
+#: src/lib/declinaisons.ts
+msgid "Détachée par {personne} le {jour}"
+msgstr "Détachée par {personne} le {jour}"
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "Détacher"
+msgstr "Détacher"
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "Détacher la tâche du périmètre {nomPerimetre} ?"
+msgstr "Détacher la tâche du périmètre {nomPerimetre} ?"
+
 #: src/composants/AssistantTableur.tsx
 #: src/composants/Repartition.tsx
 msgid "Détail"
@@ -4090,6 +4236,10 @@ msgstr "Échéance (date ou J-30)"
 msgid "Échéance {dateEcheance}"
 msgstr "Échéance {dateEcheance}"
 
+#: src/composants/Priorites.tsx
+msgid "Échéance aujourd’hui"
+msgstr "Échéance aujourd’hui"
+
 #: src/composants/DeclinerTache.tsx
 #: src/composants/TacheFormulaire.tsx
 msgid "Échéance dans ces périmètres (facultatif)"
@@ -4150,6 +4300,10 @@ msgid "Écrire à la sélection ({nbSelectionnees})"
 msgstr "Écrire à la sélection ({nbSelectionnees})"
 
 #: src/pages/admin/Equipe.tsx
+msgid "Écrire aux contacts principaux"
+msgstr "Écrire aux contacts principaux"
+
+#: src/pages/admin/Equipe.tsx
 msgid "Écrire aux référentes et aux référents"
 msgstr "Écrire aux référentes et aux référents"
 
@@ -4208,6 +4362,10 @@ msgstr "Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les co
 #: src/pages/admin/Personnes.tsx
 msgid "Elle quitte l’équipe de l’activité, et ses souhaits des périodes en cours sont retirés. Son compte reste dans l’organisation."
 msgstr "Elle quitte l’équipe de l’activité, et ses souhaits des périodes en cours sont retirés. Son compte reste dans l’organisation."
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "Elle redevient une tâche ordinaire de ce périmètre. Elle garde son statut, ses personnes assignées et ses commentaires. Vous pourrez la rattacher de nouveau."
+msgstr "Elle redevient une tâche ordinaire de ce périmètre. Elle garde son statut, ses personnes assignées et ses commentaires. Vous pourrez la rattacher de nouveau."
 
 #. Colonne : nombre de candidatures qui attendent une revue
 #. Statut du choix de séquence d’une candidature de bénévole
@@ -4327,6 +4485,14 @@ msgstr "Enregistrer mes réponses"
 msgid "Enregistrez votre travail en cours, puis rechargez l’application pour l’utiliser."
 msgstr "Enregistrez votre travail en cours, puis rechargez l’application pour l’utiliser."
 
+#: src/composants/Priorites.tsx
+msgid "Ensuite : {titreEnsuite}, le {dateEnsuite}."
+msgstr "Ensuite : {titreEnsuite}, le {dateEnsuite}."
+
+#: src/composants/Priorites.tsx
+msgid "Ensuite : {titreEnsuite}."
+msgstr "Ensuite : {titreEnsuite}."
+
 #: src/composants/ReunionDetail.tsx
 msgid "envoi en attente"
 msgstr "envoi en attente"
@@ -4357,6 +4523,14 @@ msgstr "Envoyer ma candidature"
 #: src/pages/Rejoindre.tsx
 msgid "Envoyer ma demande"
 msgstr "Envoyer ma demande"
+
+#: src/lib/priorites.ts
+msgid "Épinglée"
+msgstr "Épinglée"
+
+#: src/composants/TacheCarte.tsx
+msgid "Épingler"
+msgstr "Épingler"
 
 #: src/composants/Tableau.tsx
 msgid "Épingler les premières colonnes"
@@ -4542,6 +4716,7 @@ msgid "Fermeture"
 msgstr "Fermeture"
 
 #: src/composants/DeclinerTache.tsx
+#: src/composants/RattacherTache.tsx
 msgid "Fermez cette fenêtre et réessayez dans un instant."
 msgstr "Fermez cette fenêtre et réessayez dans un instant."
 
@@ -4855,6 +5030,7 @@ msgstr "Groupe « {nomGroupe} »"
 msgid "Groupe « {nomGroupe} », ajouts automatiques"
 msgstr "Groupe « {nomGroupe} », ajouts automatiques"
 
+#: src/composants/Priorites.tsx
 #: src/pages/admin/Equipe.tsx
 #: src/pages/Charge.tsx
 #: src/pages/Retroplanning.tsx
@@ -5265,6 +5441,10 @@ msgstr "Jours passés"
 msgid "jusqu’au {dateDeFin} · {borneRelative}"
 msgstr "jusqu’au {dateDeFin} · {borneRelative}"
 
+#: src/composants/Priorites.tsx
+msgid "jusqu’au {fin}"
+msgstr "jusqu’au {fin}"
+
 #: src/composants/AbonnementAgenda.tsx
 msgid "L’abonnement de l’activité n’a pas pu être lu. Rechargez la page dans un instant."
 msgstr "L’abonnement de l’activité n’a pas pu être lu. Rechargez la page dans un instant."
@@ -5337,6 +5517,10 @@ msgstr "L’agenda {periodeDe} est vide."
 #: src/pages/Agenda.tsx
 msgid "L’agenda n’a pas pu être chargé."
 msgstr "L’agenda n’a pas pu être chargé."
+
+#: src/composants/TacheCarte.tsx
+msgid "L’ajustement est retiré."
+msgstr "L’ajustement est retiré."
 
 #: src/composants/LienBenevole.tsx
 msgid "L’ancien lien cesse de répondre, y compris celui des mails déjà reçus. Aucun mail ne part : envoyez le nouveau lien vous-même."
@@ -5734,6 +5918,10 @@ msgstr "La personne revient dans les bénévoles à répartir. Une adresse confi
 msgid "La personne tient déjà une place à la même heure."
 msgstr "La personne tient déjà une place à la même heure."
 
+#: src/composants/TacheCarte.tsx
+msgid "La priorité est ajustée jusqu’au prochain point."
+msgstr "La priorité est ajustée jusqu’au prochain point."
+
 #: src/composants/ImportFiches.tsx
 msgid "la racine"
 msgstr "la racine"
@@ -5769,6 +5957,18 @@ msgstr "La séquence quittera son périmètre actuel. Un appel à bénévoles ou
 #: src/composants/FilTache.tsx
 msgid "La suppression est définitive."
 msgstr "La suppression est définitive."
+
+#: src/composants/RattacherTache.tsx
+msgid "La tâche choisie devient une déclinaison de cette tâche. Elle garde son titre, son statut, ses personnes assignées et ses commentaires. Vous suivez son avancement depuis cette tâche, et vous pouvez la détacher plus tard."
+msgstr "La tâche choisie devient une déclinaison de cette tâche. Elle garde son titre, son statut, ses personnes assignées et ses commentaires. Vous suivez son avancement depuis cette tâche, et vous pouvez la détacher plus tard."
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "La tâche du périmètre {nomPerimetre} est détachée."
+msgstr "La tâche du périmètre {nomPerimetre} est détachée."
+
+#: src/composants/RattacherTache.tsx
+msgid "La tâche du périmètre {nomPerimetre} est rattachée."
+msgstr "La tâche du périmètre {nomPerimetre} est rattachée."
 
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "La tâche est ajoutée à votre périmètre."
@@ -5853,6 +6053,14 @@ msgstr "le {debut}"
 #: src/lib/conflit.ts
 msgid "le {jour} à {heure} h {minute}"
 msgstr "le {jour} à {heure} h {minute}"
+
+#: src/composants/EcrireMessage.tsx
+msgid "le {jourPoint} à {heurePoint}"
+msgstr "le {jourPoint} à {heurePoint}"
+
+#: src/composants/EcrireMessage.tsx
+msgid "le {jourPoint} à {heurePoint} (lien de la visio : {lienVisio})"
+msgstr "le {jourPoint} à {heurePoint} (lien de la visio : {lienVisio})"
 
 #: src/lib/repartition.ts
 msgid "Le besoin de la séquence est déjà atteint."
@@ -6095,6 +6303,10 @@ msgstr "Le message est prêt dans votre messagerie"
 #: src/lib/messages.ts
 msgid "Le message liste les périmètres qui manquent de référentes et de référents."
 msgstr "Le message liste les périmètres qui manquent de référentes et de référents."
+
+#: src/lib/messages.ts
+msgid "Le message liste les priorités de chaque périmètre avant le prochain point de l’agenda global."
+msgstr "Le message liste les priorités de chaque périmètre avant le prochain point de l’agenda global."
 
 #: src/lib/messages.ts
 msgid "Le message liste les tâches encore ouvertes du périmètre choisi, ou de toute la période."
@@ -6523,6 +6735,7 @@ msgid "Les périmètres de l’activité n’ont aucune tâche type."
 msgstr "Les périmètres de l’activité n’ont aucune tâche type."
 
 #: src/composants/DeclinerTache.tsx
+#: src/composants/RattacherTache.tsx
 msgid "Les périmètres qui portent déjà cette tâche n’ont pas pu être chargés."
 msgstr "Les périmètres qui portent déjà cette tâche n’ont pas pu être chargés."
 
@@ -6562,6 +6775,10 @@ msgstr "Les phases, les dates clés, les réunions et les échéances {periodeDe
 msgid "Les phases, qui occupent chacune plusieurs semaines de l’agenda"
 msgstr "Les phases, qui occupent chacune plusieurs semaines de l’agenda"
 
+#: src/composants/ReunionFormulaire.tsx
+msgid "Les priorités de toute l’équipe couvrent les jours jusqu’au prochain point d’équipe. Un rendez-vous à quelques personnes ne change pas cette période."
+msgstr "Les priorités de toute l’équipe couvrent les jours jusqu’au prochain point d’équipe. Un rendez-vous à quelques personnes ne change pas cette période."
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
 msgstr "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
@@ -6593,6 +6810,10 @@ msgstr "Les tâches d’un tableur rejoignent une période. Une tâche déjà pr
 #: src/composants/NouvelleEdition.tsx
 msgid "Les tâches de"
 msgstr "Les tâches de"
+
+#: src/composants/RattacherTache.tsx
+msgid "Les tâches de ce périmètre n’ont pas pu être chargées."
+msgstr "Les tâches de ce périmètre n’ont pas pu être chargées."
 
 #: src/pages/Charge.tsx
 msgid "Les tâches ouvertes et les places à venir de chaque personne {dePeriode}."
@@ -6654,6 +6875,10 @@ msgstr "Libellé requis."
 #: src/composants/Tableau.tsx
 msgid "Libérer les premières colonnes"
 msgstr "Libérer les premières colonnes"
+
+#: src/composants/Priorites.tsx
+msgid "Liée à une réunion à venir"
+msgstr "Liée à une réunion à venir"
 
 #: src/composants/EditeurMarkdown.tsx
 #: src/composants/EditeurVisuel.tsx
@@ -6953,6 +7178,7 @@ msgstr "Merci ! Votre participation est confirmée."
 msgid "Merci pour votre aide."
 msgstr "Merci pour votre aide."
 
+#: src/composants/Priorites.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Mes périmètres"
 msgstr "Mes périmètres"
@@ -7801,6 +8027,7 @@ msgstr "Performance"
 #. Portée d’un appel à bénévoles dont le périmètre est inconnu
 #: src/composants/AppelsBenevoles.tsx
 #: src/composants/EcrireMessage.tsx
+#: src/composants/RattacherTache.tsx
 #: src/composants/ReconductionEdition.tsx
 #: src/composants/SequenceFormulaire.tsx
 #: src/pages/admin/ImportTaches.tsx
@@ -7858,6 +8085,10 @@ msgstr "Périmètres affectés"
 #: src/pages/admin/Personnes.tsx
 msgid "Périmètres affectés pour {nomEdition}"
 msgstr "Périmètres affectés pour {nomEdition}"
+
+#: src/composants/Priorites.tsx
+msgid "Périmètres affichés"
+msgstr "Périmètres affichés"
 
 #: src/pages/admin/Equipe.tsx
 msgid "Périmètres archivés ({nbArchives})"
@@ -7943,6 +8174,10 @@ msgstr "Personne n’attend de place."
 #: src/composants/TacheCarte.tsx
 msgid "Personne n’est assigné·e"
 msgstr "Personne n’est assigné·e"
+
+#: src/composants/Priorites.tsx
+msgid "Personne n’est assignée"
+msgstr "Personne n’est assignée"
 
 #: src/composants/SequenceDetail.tsx
 msgid "Personne n’est encore placé dans cette séquence."
@@ -8063,6 +8298,11 @@ msgstr "Pluriel requis."
 msgid "PNG carré de 512 pixels de côté. Elle s’affiche sur l’écran d’accueil d’un téléphone qui installe l’application."
 msgstr "PNG carré de 512 pixels de côté. Elle s’affiche sur l’écran d’accueil d’un téléphone qui installe l’application."
 
+#: src/composants/ReunionDetail.tsx
+#: src/composants/ReunionFormulaire.tsx
+msgid "Point d’équipe"
+msgstr "Point d’équipe"
+
 #: src/composants/ReunionFormulaire.tsx
 msgid "Point d’étape du pôle"
 msgstr "Point d’étape du pôle"
@@ -8137,6 +8377,10 @@ msgstr "Pour changer vos disponibilités, écrivez à l’organisation."
 #: src/composants/AppelsBenevoles.tsx
 msgid "Pour l’équipe seulement : la page publique ne l’affiche pas."
 msgstr "Pour l’équipe seulement : la page publique ne l’affiche pas."
+
+#: src/lib/messages.ts
+msgid "pour le {echeance}"
+msgstr "pour le {echeance}"
 
 #: src/composants/InvitationRapide.tsx
 msgid "Pour nommer un admin ou inviter dans plusieurs activités, passez par l’écran <0>Personnes</0>."
@@ -8247,6 +8491,36 @@ msgstr "Prévenir par mail : la première place d’une personne lui envoie son 
 msgid "Primaire"
 msgstr "Primaire"
 
+#: src/composants/TacheCarte.tsx
+msgid "Priorité"
+msgstr "Priorité"
+
+#: src/composants/TacheCarte.tsx
+#: src/lib/priorites.ts
+msgid "Priorité basse"
+msgstr "Priorité basse"
+
+#: src/composants/TacheCarte.tsx
+#: src/lib/priorites.ts
+msgid "Priorité haute"
+msgstr "Priorité haute"
+
+#: src/composants/Priorites.tsx
+msgid "Priorités"
+msgstr "Priorités"
+
+#: src/lib/messages.ts
+msgid "Priorités de la période"
+msgstr "Priorités de la période"
+
+#: src/lib/messages.ts
+msgid "priorités des périmètres"
+msgstr "priorités des périmètres"
+
+#: src/composants/Priorites.tsx
+msgid "Prochain point d’équipe : {jourPoint} à {heurePoint}."
+msgstr "Prochain point d’équipe : {jourPoint} à {heurePoint}."
+
 #: src/pages/Charge.tsx
 msgid "Prochaine place au programme : {dateProchaine}."
 msgstr "Prochaine place au programme : {dateProchaine}."
@@ -8353,6 +8627,19 @@ msgstr "Rappel des tâches en retard"
 #: src/pages/ImportBenevoles.tsx
 msgid "Rapport"
 msgstr "Rapport"
+
+#: src/lib/declinaisons.ts
+msgid "Rattachée par {personne} le {jour}"
+msgstr "Rattachée par {personne} le {jour}"
+
+#: src/composants/RattacherTache.tsx
+msgid "Rattacher"
+msgstr "Rattacher"
+
+#: src/composants/RattacherTache.tsx
+#: src/composants/TacheCarte.tsx
+msgid "Rattacher une tâche existante"
+msgstr "Rattacher une tâche existante"
 
 #: src/composants/TacheCarte.tsx
 msgid "Réalisée par (facultatif)"
@@ -8559,6 +8846,7 @@ msgstr "Rejoindre « {nomFiche} »"
 msgid "Rejoindre l’équipe d’organisation"
 msgstr "Rejoindre l’équipe d’organisation"
 
+#: src/composants/Priorites.tsx
 #: src/composants/ReunionDetail.tsx
 msgid "Rejoindre la visio"
 msgstr "Rejoindre la visio"
@@ -8910,6 +9198,10 @@ msgstr "Retirer de l’activité"
 #: src/composants/GestionAcces.tsx
 msgid "Retirer du {cible}"
 msgstr "Retirer du {cible}"
+
+#: src/composants/TacheCarte.tsx
+msgid "Retirer l’ajustement"
+msgstr "Retirer l’ajustement"
 
 #: src/pages/admin/Activites.tsx
 msgid "Retirer la phase"
@@ -9547,6 +9839,7 @@ msgstr "Tableau"
 msgid "Tableaux"
 msgstr "Tableaux"
 
+#: src/composants/RattacherTache.tsx
 #: src/composants/ReconductionEdition.tsx
 #: src/pages/admin/ImportTaches.tsx
 msgid "Tâche"
@@ -9833,6 +10126,10 @@ msgstr "Tous"
 msgid "Tous les destinataires reçoivent le même texte : il ne porte aucune information propre à une personne."
 msgstr "Tous les destinataires reçoivent le même texte : il ne porte aucune information propre à une personne."
 
+#: src/composants/Priorites.tsx
+msgid "Tous les groupes"
+msgstr "Tous les groupes"
+
 #: src/pages/admin/Personnes.tsx
 msgid "Tous les membres de l’organisation, avec les activités de chacun. Seules les personnes invitées peuvent se connecter à l’espace organisateur."
 msgstr "Tous les membres de l’organisation, avec les activités de chacun. Seules les personnes invitées peuvent se connecter à l’espace organisateur."
@@ -9844,6 +10141,7 @@ msgstr "Tous les membres des périmètres lecteurs"
 #: src/composants/Coquille.tsx
 #: src/composants/EcrireMessage.tsx
 #: src/composants/PremiersPas.tsx
+#: src/composants/Priorites.tsx
 #: src/composants/Repartition.tsx
 #: src/pages/admin/Personnes.tsx
 #: src/pages/Retroplanning.tsx
@@ -9852,6 +10150,7 @@ msgid "Tous les périmètres"
 msgstr "Tous les périmètres"
 
 #: src/composants/DeclinerTache.tsx
+#: src/composants/RattacherTache.tsx
 msgid "Tous les périmètres de l’activité portent déjà cette tâche."
 msgstr "Tous les périmètres de l’activité portent déjà cette tâche."
 
@@ -10543,6 +10842,10 @@ msgstr "Voir les noms"
 msgid "Voir les premiers pas"
 msgstr "Voir les premiers pas"
 
+#: src/composants/Priorites.tsx
+msgid "Voir tous les périmètres"
+msgstr "Voir tous les périmètres"
+
 #: src/lib/guide-markdown.ts
 msgid "Volley"
 msgstr "Volley"
@@ -10768,8 +11071,10 @@ msgstr "Votre texte reste à l’écran et n’est pas enregistré. Consultez la
 msgid "vous"
 msgstr "vous"
 
+#. Périmètre de la personne
 #: src/composants/FilTache.tsx
 #: src/composants/LigneTache.tsx
+#: src/composants/Priorites.tsx
 #: src/composants/SequenceDetail.tsx
 #: src/composants/TacheCarte.tsx
 #: src/pages/admin/Admins.tsx

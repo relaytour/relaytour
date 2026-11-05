@@ -28,6 +28,7 @@ import {
   LIEU_MAX,
   lienVisioValide,
   personnesConvoquees,
+  pointEquipeValide,
   tachesLieesValides,
   TITRE_REUNION_MAX,
 } from '../lib/reunions.ts'
@@ -174,6 +175,11 @@ export const ReunionRef = builder.objectRef<ReunionLue>('Reunion').implement({
       nullable: true,
       resolve: l => l.reunion.cible,
     }),
+    pointEquipe: t.boolean({
+      description:
+        'Point d’équipe : la réunion fixe l’horizon des priorités de la période (ADR 0059).',
+      resolve: l => l.reunion.pointEquipe,
+    }),
     version: t.int({ resolve: l => l.reunion.version }),
     perimetre: t.field({
       type: PerimetreRef,
@@ -302,6 +308,7 @@ interface PersonneConvocable {
   id: string
   nom: string
   duPerimetre: boolean
+  contactPrincipal: boolean
 }
 
 const PersonneConvocableRef = builder
@@ -314,6 +321,10 @@ const PersonneConvocableRef = builder
       duPerimetre: t.exposeBoolean('duPerimetre', {
         description:
           'Vrai pour une personne affectée au périmètre pour la période.',
+      }),
+      contactPrincipal: t.exposeBoolean('contactPrincipal', {
+        description:
+          'Vrai pour le contact principal d’un périmètre de l’activité pour la période (ADR 0011).',
       }),
     }),
   })
@@ -336,6 +347,15 @@ builder.queryFields(t => ({
         perimetreId: args.perimetreId ? String(args.perimetreId) : null,
       }
       const { activiteId } = await exigerEcritureReunion(ctx, lieu)
+      const contacts = await prisma.affectation.findMany({
+        where: {
+          editionId: lieu.editionId,
+          contactPrincipal: true,
+          perimetre: { archivedAt: null },
+        },
+        select: { userId: true },
+      })
+      const contactIds = new Set(contacts.map(c => c.userId))
       const personnes = await prisma.user.findMany({
         where: {
           AND: [
@@ -364,6 +384,7 @@ builder.queryFields(t => ({
         id: p.id,
         nom: p.name,
         duPerimetre: (p.affectations?.length ?? 0) > 0,
+        contactPrincipal: contactIds.has(p.id),
       }))
     },
   }),
@@ -423,13 +444,15 @@ interface Saisie {
   tacheIds?: readonly (string | number)[] | null
   cible?: CibleConvocation | null
   personneIds?: readonly (string | number)[] | null
+  pointEquipe?: boolean | null
 }
 
 /** Les champs écrits en base, et les personnes à convoquer. */
 async function champsValides(
   ctx: AppContext,
   saisie: Saisie,
-  lieu: { editionId: string; perimetreId: string | null; activiteId: string }
+  lieu: { editionId: string; perimetreId: string | null; activiteId: string },
+  pointActuel: boolean | null = null
 ) {
   const edition = await prisma.edition.findUniqueOrThrow({
     where: { id: lieu.editionId },
@@ -459,6 +482,11 @@ async function champsValides(
         DESCRIPTION_REUNION_MAX
       ),
       cible,
+      pointEquipe: pointEquipeValide(saisie.pointEquipe, {
+        perimetreId: lieu.perimetreId,
+        cible,
+        actuel: pointActuel,
+      }),
     },
     tacheIds: await tachesLieesValides(saisie.tacheIds, lieu),
     convoquees: await personnesConvoquees(ctx.organisation!.id, {
@@ -496,6 +524,10 @@ builder.mutationFields(t => {
     cible: t.arg({ type: CibleConvocationEnum }),
     personneIds: t.arg.idList({
       description: 'Les personnes convoquées, pour la cible CHOIX.',
+    }),
+    pointEquipe: t.arg.boolean({
+      description:
+        'Point d’équipe : la réunion fixe l’horizon des priorités (ADR 0059). Réservé à l’agenda global. Sans valeur : la valeur actuelle, ou à la création vrai pour la cible EQUIPE.',
     }),
   }
   return {
@@ -606,7 +638,12 @@ builder.mutationFields(t => {
           perimetreId: actuelle.perimetreId,
         }
         const { activiteId } = await exigerEcritureReunion(ctx, lieu)
-        const valides = await champsValides(ctx, args, { ...lieu, activiteId })
+        const valides = await champsValides(
+          ctx,
+          args,
+          { ...lieu, activiteId },
+          actuelle.pointEquipe
+        )
         const majeur = CHAMPS_MAJEURS.some(champ => {
           const avant = actuelle[champ]
           const apres = valides.champs[champ]

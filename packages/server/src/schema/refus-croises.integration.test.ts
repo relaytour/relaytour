@@ -761,6 +761,21 @@ const MELES: Cas[] = [
     variables: () => ({ id: b.tache, p: [a.perimetre] }),
     attente: REFUSE,
   },
+  // Rattacher (ADR 0061) : la tâche de B, d'un côté ou de l'autre.
+  {
+    operation: 'rattacherDeclinaison',
+    query:
+      'mutation ($id: ID!, $t: ID!) { rattacherDeclinaison(id: $id, tacheId: $t) { id } }',
+    variables: () => ({ id: a.tache, t: b.tache }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'rattacherDeclinaison',
+    query:
+      'mutation ($id: ID!, $t: ID!) { rattacherDeclinaison(id: $id, tacheId: $t) { id } }',
+    variables: () => ({ id: b.tache, t: a.tache }),
+    attente: REFUSE,
+  },
   {
     operation: 'accorderDroitRedaction',
     query:
@@ -851,8 +866,8 @@ const CAS: Cas[] = [
     variables: () => ({ a: a.activite }),
     attente: INTERDIT,
   },
-  // Tâches partagées (ADR 0026) : accorder, décliner et imposer portent sur une
-  // tâche de l'activité principale de A.
+  // Tâches partagées (ADR 0026, 0061) : accorder, décliner, imposer, rattacher et
+  // détacher portent sur une tâche de l'activité principale de A.
   {
     operation: 'accorderDeclinaison',
     query:
@@ -870,6 +885,19 @@ const CAS: Cas[] = [
   {
     operation: 'imposerDeclinaison',
     query: 'mutation ($id: ID!) { imposerDeclinaison(id: $id) { id } }',
+    variables: () => ({ id: a.tache }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'rattacherDeclinaison',
+    query:
+      'mutation ($id: ID!, $t: ID!) { rattacherDeclinaison(id: $id, tacheId: $t) { id } }',
+    variables: () => ({ id: a.tache, t: a.tache }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'detacherDeclinaison',
+    query: 'mutation ($id: ID!) { detacherDeclinaison(id: $id) { id } }',
     variables: () => ({ id: a.tache }),
     attente: INTERDIT,
   },
@@ -951,6 +979,14 @@ const CAS: Cas[] = [
     query:
       'mutation ($id: ID!, $u: ID) { assignerTache(id: $id, assigne: true, personneId: $u) { id } }',
     variables: () => ({ id: a.tache, u: a.referente }),
+    attente: INTERDIT,
+  },
+  // L'ajustement d'une tâche dans les priorités (ADR 0059).
+  {
+    operation: 'ajusterPriorite',
+    query:
+      'mutation ($id: ID!) { ajusterPriorite(id: $id, niveau: EPINGLEE) { id } }',
+    variables: () => ({ id: a.tache }),
     attente: INTERDIT,
   },
   {
@@ -2023,6 +2059,8 @@ const CAS: Cas[] = [
       ['tachesAPrendre', 'tachesAPrendre(editionId: $e) { id }'],
       // La charge de l'équipe (ADR 0055).
       ['chargeEquipe', 'chargeEquipe(editionId: $e) { personne { id } }'],
+      // Les priorités d'une période (ADR 0059).
+      ['priorites', 'priorites(editionId: $e) { fin }'],
     ] as const
   ).map(([operation, champ]) => ({
     operation,

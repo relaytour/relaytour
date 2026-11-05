@@ -1,8 +1,8 @@
 import {
   AccordDeclinaison,
   prisma,
+  Prisma,
   StatutTache,
-  type Prisma,
   type TypeJournal,
   type User,
 } from '@relaytour/database'
@@ -61,12 +61,14 @@ const ETAPES_ACCORD = {
   DECLINAISON_ACCEPTEE: 'ACCEPTEE',
   DECLINAISON_REFUSEE: 'REFUSEE',
   DECLINAISON_IMPOSEE: 'IMPOSEE',
+  DECLINAISON_RATTACHEE: 'RATTACHEE',
+  DECLINAISON_DETACHEE: 'DETACHEE',
 } as const satisfies Partial<Record<TypeJournal, string>>
 type TypeAccord = keyof typeof ETAPES_ACCORD
 
 const EtapeAccordEnum = builder.enumType('EtapeAccord', {
   description:
-    'Étape de l’accord d’une déclinaison. IMPOSEE : un admin de l’activité l’a ajoutée sans accord du périmètre.',
+    'Étape de l’accord d’une déclinaison. IMPOSEE : un admin de l’activité l’a ajoutée sans accord du périmètre. RATTACHEE : une tâche existante est devenue la déclinaison (ADR 0061). DETACHEE : la déclinaison est redevenue une tâche ordinaire.',
   values: Object.values(ETAPES_ACCORD),
 })
 
@@ -76,7 +78,7 @@ const EtapeAccordRef = builder
   )
   .implement({
     description:
-      'Une étape de l’accord d’une déclinaison : qui l’a proposée, acceptée, refusée ou imposée, et quand.',
+      'Une étape de l’accord d’une déclinaison : qui l’a proposée, acceptée, refusée, imposée, rattachée ou détachée, et quand.',
     fields: t => ({
       etape: t.field({
         type: EtapeAccordEnum,
@@ -690,7 +692,7 @@ type TacheChargee = Prisma.TacheGetPayload<{
   }
 }>
 
-async function chargerTache(id: string): Promise<TacheChargee> {
+export async function chargerTache(id: string): Promise<TacheChargee> {
   const tache = await prisma.tache.findUnique({
     where: { id },
     include: {
@@ -710,7 +712,7 @@ async function chargerTache(id: string): Promise<TacheChargee> {
  * son périmètre : elle ne se modifie pas, ne change pas de statut et ne s'assigne
  * pas (ADR 0026).
  */
-function exigerDeclinaisonAcceptee(tache: {
+export function exigerDeclinaisonAcceptee(tache: {
   accord: AccordDeclinaison | null
 }) {
   if (tache.accord === 'EN_ATTENTE') {
@@ -1542,9 +1544,15 @@ builder.mutationFields(t => ({
       const cibles = voulues.filter(c => !servies.has(c.id))
       if (cibles.length === 0) return relire()
       const declinaisons = await prisma
-        .$transaction(tx =>
-          creerDeclinaisons(tx, tache, cibles, args, acteur.id)
-        )
+        .$transaction(async tx => {
+          // Une tâche rattachée entre-temps à une tâche partagée ne se décline
+          // plus (ADR 0061) : le verrou précède la relecture.
+          const lues = await verrouillerTaches(tx, [tache.id])
+          if (lues.get(tache.id) !== null) {
+            throw erreurSaisie(i18n._('Une déclinaison ne se décline pas.'))
+          }
+          return creerDeclinaisons(tx, tache, cibles, args, acteur.id)
+        })
         .catch((erreur: unknown) => {
           // P2002 : une autre requête vient de servir un de ces périmètres. Rien
           // n'est écrit ici : la personne relit la tâche et recommence au besoin.
@@ -1751,7 +1759,257 @@ builder.mutationFields(t => ({
       return relire()
     },
   }),
+
+  // Une tâche existante d'un autre périmètre devient une déclinaison, acceptée
+  // d'office (ADR 0061). Elle garde son statut, ses personnes assignées et son fil.
+  rattacherDeclinaison: t.prismaField({
+    type: TacheRef,
+    authScopes: { connecte: true },
+    description:
+      'Rattache une tâche existante d’un autre périmètre de la période à une tâche partagée : elle en devient la déclinaison, acceptée d’office, sans rien perdre de son statut, de ses personnes assignées ni de son fil. Demande d’écrire dans les deux périmètres (ADR 0061). Rend la tâche partagée.',
+    args: {
+      id: t.arg.id({
+        required: true,
+        description: 'La tâche partagée, ou la tâche qui le devient.',
+      }),
+      tacheId: t.arg.id({
+        required: true,
+        description: 'La tâche existante qui devient la déclinaison.',
+      }),
+    },
+    resolve: async (query, _root, args, ctx) => {
+      const origine = await chargerTache(String(args.id))
+      const acteur = await exigerEcriture(
+        ctx,
+        origine.perimetreId,
+        origine.editionId
+      )
+      const tache = await chargerTache(String(args.tacheId))
+      await exigerEcriture(ctx, tache.perimetreId, tache.editionId)
+      const relire = () =>
+        prisma.tache.findUniqueOrThrow({ ...query, where: { id: origine.id } })
+      // Déjà rattachée à cette tâche partagée : rien ne change.
+      if (tache.origineId === origine.id) return relire()
+      await exigerRattachable(origine, tache)
+      const ecrite = await prisma
+        .$transaction(async tx => {
+          // Les deux tâches se verrouillent avant toute autre lecture, puis les
+          // règles du lien se relisent : deux rattachements simultanés, ou un
+          // rattachement et une déclinaison, ne créent jamais un second niveau.
+          const lues = await verrouillerTaches(tx, [origine.id, tache.id])
+          if (lues.get(origine.id) !== null) {
+            throw erreurSaisie(i18n._('Une déclinaison ne se décline pas.'))
+          }
+          if (lues.get(tache.id) === origine.id) return true
+          if ((await tx.tache.count({ where: { origineId: tache.id } })) > 0) {
+            throw erreurSaisie(
+              i18n._(
+                'Cette tâche porte ses propres déclinaisons : elle ne se rattache pas.'
+              )
+            )
+          }
+          const { count } = await tx.tache.updateMany({
+            where: { id: tache.id, origineId: null },
+            data: {
+              origineId: origine.id,
+              accord: 'ACCEPTE',
+              accordParId: acteur.id,
+              accordLe: new Date(),
+            },
+          })
+          if (count === 0) return false
+          await tx.journal.create({
+            data: {
+              type: 'DECLINAISON_RATTACHEE',
+              acteurId: acteur.id,
+              editionId: tache.editionId,
+              perimetreId: tache.perimetreId,
+              tacheId: tache.id,
+            },
+          })
+          return true
+        })
+        .catch((erreur: unknown) => {
+          // P2002 : le périmètre vient de recevoir une autre déclinaison de cette
+          // tâche partagée.
+          if ((erreur as { code?: string }).code !== 'P2002') throw erreur
+          throw dejaServi()
+        })
+      if (!ecrite) {
+        const actuelle = await prisma.tache.findUniqueOrThrow({
+          where: { id: tache.id },
+          select: { origineId: true },
+        })
+        if (actuelle.origineId === origine.id) return relire()
+        throw erreurSaisie(
+          i18n._('Cette tâche est déjà la déclinaison d’une autre tâche.')
+        )
+      }
+      publierLien(origine, tache)
+      return relire()
+    },
+  }),
+
+  // Une déclinaison acceptée redevient une tâche ordinaire de son périmètre
+  // (ADR 0061). Une déclinaison qui attend un accord, ou refusée, ne se détache pas.
+  detacherDeclinaison: t.prismaField({
+    type: TacheRef,
+    authScopes: { connecte: true },
+    description:
+      'Détache une déclinaison acceptée de sa tâche partagée : elle redevient une tâche ordinaire de son périmètre, avec son statut, ses personnes assignées et son fil. Demande d’écrire dans les deux périmètres (ADR 0061). Rend la tâche détachée.',
+    args: { id: t.arg.id({ required: true }) },
+    resolve: async (query, _root, args, ctx) => {
+      const tache = await chargerTache(String(args.id))
+      const acteur = await exigerEcriture(
+        ctx,
+        tache.perimetreId,
+        tache.editionId
+      )
+      const relire = () =>
+        prisma.tache.findUniqueOrThrow({ ...query, where: { id: tache.id } })
+      if (tache.origineId === null || tache.origine === null) return relire()
+      await exigerEcriture(ctx, tache.origine.perimetreId, tache.editionId)
+      if (tache.accord !== 'ACCEPTE') {
+        throw erreurSaisie(
+          i18n._(
+            'Seule une déclinaison acceptée se détache. Refusez cette déclinaison si elle ne concerne pas votre périmètre.'
+          )
+        )
+      }
+      const origine = {
+        id: tache.origineId,
+        perimetreId: tache.origine.perimetreId,
+      }
+      const ecrite = await prisma.$transaction(async tx => {
+        const { count } = await tx.tache.updateMany({
+          where: { id: tache.id, origineId: origine.id, accord: 'ACCEPTE' },
+          data: {
+            origineId: null,
+            accord: null,
+            accordParId: null,
+            accordLe: null,
+          },
+        })
+        if (count === 0) return false
+        await tx.journal.create({
+          data: {
+            type: 'DECLINAISON_DETACHEE',
+            acteurId: acteur.id,
+            editionId: tache.editionId,
+            perimetreId: tache.perimetreId,
+            tacheId: tache.id,
+          },
+        })
+        return true
+      })
+      if (ecrite) publierLien(origine, tache)
+      return relire()
+    },
+  }),
 }))
+
+/**
+ * Verrouille des tâches dans un ordre fixe, pour éviter un interblocage, et rend
+ * leur origine lue sous le verrou. Sous MariaDB 11.8, le verrou se prend avant
+ * toute lecture ordinaire de la transaction.
+ */
+async function verrouillerTaches(
+  tx: Prisma.TransactionClient,
+  ids: readonly string[]
+): Promise<Map<string, string | null>> {
+  const tries = [...new Set(ids)].sort()
+  const lignes = await tx.$queryRaw<{ id: string; origineId: string | null }[]>`
+    SELECT id, origineId FROM Tache WHERE id IN (${Prisma.join(tries)})
+    ORDER BY id FOR UPDATE`
+  return new Map(lignes.map(l => [l.id, l.origineId]))
+}
+
+/** Le refus d'un périmètre qui porte déjà une déclinaison de la tâche partagée. */
+function dejaServi() {
+  return erreurSaisie(
+    i18n._('Ce périmètre porte déjà une déclinaison de cette tâche.')
+  )
+}
+
+/**
+ * Les règles du lien d'une tâche partagée (ADR 0026), pour une tâche existante qui
+ * devient sa déclinaison (ADR 0061) : même période, autre périmètre non archivé, un
+ * seul niveau de lien, une seule déclinaison par périmètre.
+ */
+async function exigerRattachable(
+  origine: TacheChargee,
+  tache: TacheChargee
+): Promise<void> {
+  if (tache.editionId !== origine.editionId) {
+    throw erreurSaisie(
+      i18n._('Les deux tâches doivent appartenir à la même période.')
+    )
+  }
+  if (tache.perimetreId === origine.perimetreId) {
+    throw erreurSaisie(
+      i18n._('Une tâche ne se décline pas dans son propre périmètre.')
+    )
+  }
+  if (origine.origineId !== null) {
+    throw erreurSaisie(i18n._('Une déclinaison ne se décline pas.'))
+  }
+  if (tache.origineId !== null) {
+    throw erreurSaisie(
+      i18n._('Cette tâche est déjà la déclinaison d’une autre tâche.')
+    )
+  }
+  const [declinaisons, perimetre, servi] = await Promise.all([
+    prisma.tache.count({ where: { origineId: tache.id } }),
+    prisma.perimetre.findUniqueOrThrow({
+      where: { id: tache.perimetreId },
+      select: { nom: true, archivedAt: true },
+    }),
+    prisma.tache.findFirst({
+      where: { origineId: origine.id, perimetreId: tache.perimetreId },
+      select: { id: true },
+    }),
+  ])
+  if (declinaisons > 0) {
+    throw erreurSaisie(
+      i18n._(
+        'Cette tâche porte ses propres déclinaisons : elle ne se rattache pas.'
+      )
+    )
+  }
+  if (perimetre.archivedAt !== null) {
+    throw erreurSaisie(
+      i18n._('Le périmètre « {nom} » est archivé.', { nom: perimetre.nom })
+    )
+  }
+  if (servi !== null) throw dejaServi()
+}
+
+/**
+ * Prévient les pages des deux périmètres qu'un lien a changé. La fiche citée par
+ * la déclinaison devient connexe pour son périmètre, ou cesse de l'être (ADR 0039).
+ */
+function publierLien(
+  origine: { id: string; perimetreId: string },
+  tache: {
+    id: string
+    perimetreId: string
+    editionId: string
+    ficheId: string | null
+  }
+) {
+  for (const [perimetreId, id] of [
+    [origine.perimetreId, origine.id],
+    [tache.perimetreId, tache.id],
+  ] as const) {
+    publierPourPerimetre('TACHE', perimetreId, {
+      id,
+      editionId: tache.editionId,
+    })
+  }
+  if (tache.ficheId !== null) {
+    publierPourPerimetre('FICHE', tache.perimetreId, { id: tache.ficheId })
+  }
+}
 
 /** L'activité d'un périmètre, pour les contrôles d'admin d'activité (ADR 0010). */
 async function activiteDuPerimetre(perimetreId: string): Promise<string> {

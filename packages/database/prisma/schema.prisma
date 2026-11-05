@@ -357,6 +357,7 @@ model User {
   tachesCloturees         Tache[]                  @relation("TacheCloture")
   tachesRealisees         Tache[]                  @relation("TacheRealisation")
   tachesAccordees         Tache[]                  @relation("TacheAccord")
+  tachesAjustees          Tache[]                  @relation("TacheAjustement")
   versionsFiches          FicheVersion[]
   fichesConnexesAjoutees  FicheConnexe[]           @relation("FicheConnexeAuteur")
   groupesConnexesAjoutes  FicheGroupeConnexe[]     @relation("FicheGroupeConnexeAuteur")
@@ -785,6 +786,13 @@ enum StatutTache {
 
 // Accord du périmètre cible sur une déclinaison (ADR 0026). EN_ATTENTE : la
 // déclinaison est proposée, et ne compte pas encore parmi les tâches du périmètre.
+// Niveau d'un ajustement des priorités (ADR 0059). Le niveau normal n'a pas de valeur.
+enum AjustementPriorite {
+  BASSE
+  HAUTE
+  EPINGLEE
+}
+
 enum AccordDeclinaison {
   EN_ATTENTE
   ACCEPTE
@@ -794,39 +802,46 @@ enum AccordDeclinaison {
 // Action datée d'un périmètre pour une édition. Une tâche ne se supprime pas :
 // elle s'abandonne, pour garder l'historique.
 model Tache {
-  id            String             @id @default(cuid())
-  editionId     String
-  perimetreId   String
-  titre         String
-  description   String?            @db.Text
-  echeance      DateTime?          @db.Date
-  statut        StatutTache        @default(A_FAIRE)
+  id                 String              @id @default(cuid())
+  editionId          String
+  perimetreId        String
+  titre              String
+  description        String?             @db.Text
+  echeance           DateTime?           @db.Date
+  statut             StatutTache         @default(A_FAIRE)
   // Identifiant du modèle Git d'origine (phase 3), null pour une tâche créée dans l'app.
-  modeleSlug    String?
-  ficheId       String?
-  creeParId     String?
+  modeleSlug         String?
+  ficheId            String?
+  creeParId          String?
   // Personne qui a coché la tâche. Elle n'est lisible, comme les personnes
   // réalisatrices (`realisations`), que par la personne qui a coché et par les admins.
-  termineeLe    DateTime?
-  clotureeParId String?
+  termineeLe         DateTime?
+  clotureeParId      String?
   // Ancienne personne réalisatrice unique, recopiée dans `TacheRealisation` (ADR 0055).
   // Plus lue ni écrite ; sa suppression attend une migration distincte.
-  realiseeParId String?
+  realiseeParId      String?
   // Compte les modifications du contenu (titre, description, échéance, fiche). Une
   // modification porte la version lue : le serveur refuse d'écraser un changement
   // fait entre-temps. Le statut et les assignations ne changent pas la version.
-  version       Int                @default(0)
+  version            Int                 @default(0)
   // Tâche partagée dont celle-ci est la déclinaison dans son périmètre (ADR 0026).
   // Null pour une tâche ordinaire et pour la tâche partagée elle-même. Une
   // déclinaison ne se décline pas.
-  origineId     String?
+  origineId          String?
   // Accord du périmètre cible, pour une déclinaison seulement : qui l'a donné ou
   // refusé, et quand.
-  accord        AccordDeclinaison?
-  accordParId   String?
-  accordLe      DateTime?
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  accord             AccordDeclinaison?
+  accordParId        String?
+  accordLe           DateTime?
+  // Ajustement de la place de la tâche dans les priorités (ADR 0059) : qui l'a posé,
+  // quand, et le dernier jour où il compte (la fin de l'horizon du jour de la pose).
+  // Null : niveau normal. Un ajustement dépassé ne compte plus, sans écriture.
+  ajustementPriorite AjustementPriorite?
+  ajustementParId    String?
+  ajustementLe       DateTime?
+  ajustementJusquAu  DateTime?           @db.Date
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
   edition       Edition            @relation(fields: [editionId], references: [id], onDelete: Restrict)
   perimetre     Perimetre          @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
@@ -837,6 +852,7 @@ model Tache {
   origine       Tache?             @relation("Declinaisons", fields: [origineId], references: [id], onDelete: Restrict)
   declinaisons  Tache[]            @relation("Declinaisons")
   accordPar     User?              @relation("TacheAccord", fields: [accordParId], references: [id], onDelete: SetNull)
+  ajustementPar User?              @relation("TacheAjustement", fields: [ajustementParId], references: [id], onDelete: SetNull)
   assignations  TacheAssignation[]
   realisations  TacheRealisation[]
   commentaires  CommentaireTache[]
@@ -968,6 +984,9 @@ model Reunion {
   statut         StatutReunion     @default(PREVUE)
   // Les personnes convoquées ; null sans convocation.
   cible          CibleConvocation?
+  // Point d'équipe : seule une réunion globale ainsi marquée fixe l'horizon des
+  // priorités (ADR 0059). Une réunion de périmètre ne l'est jamais.
+  pointEquipe    Boolean           @default(false)
   // Version iCalendar (SEQUENCE) : elle monte à chaque changement du titre, de
   // l'horaire, du lieu ou du lien, et à l'annulation.
   sequence       Int               @default(0)
@@ -1545,16 +1564,21 @@ enum TypeJournal {
   DECLINAISON_ACCEPTEE
   DECLINAISON_REFUSEE
   DECLINAISON_IMPOSEE
+  // Une tâche existante rattachée à une tâche partagée, puis détachée (ADR 0061).
+  DECLINAISON_RATTACHEE
+  DECLINAISON_DETACHEE
   // Une fiche connexe masquée, puis affichée de nouveau, par un périmètre cible
   // (ADR 0039) : le périmètre de la ligne est le périmètre cible.
   FICHE_CONNEXE_MASQUEE
   FICHE_CONNEXE_AFFICHEE
+  // Ajustement des priorités posé ou retiré (ADR 0059). Le fil ne le reprend pas.
+  TACHE_PRIORITE
 }
 
 // Journal : qui a fait quoi, et quand. Il alimente les notifications et le score
 // de participation. Nommé Activite jusqu'à l'ADR 0008, qui donne ce mot aux activités.
 model Journal {
-  id            String       @id @default(cuid())
+  id            String              @id @default(cuid())
   type          TypeJournal
   acteurId      String
   // Nuls pour une action sur une fiche commune, qui n'appartient à aucun périmètre ni édition.
@@ -1567,7 +1591,9 @@ model Journal {
   // Pour TACHE_STATUT : le nouveau statut.
   statut        StatutTache?
   realiseeParId String?
-  createdAt     DateTime     @default(now())
+  // Pour TACHE_PRIORITE : le niveau posé, null quand l'ajustement est retiré.
+  ajustement    AjustementPriorite?
+  createdAt     DateTime            @default(now())
 
   acteur    User       @relation("JournalActeur", fields: [acteurId], references: [id], onDelete: Restrict)
   edition   Edition?   @relation(fields: [editionId], references: [id], onDelete: Restrict)

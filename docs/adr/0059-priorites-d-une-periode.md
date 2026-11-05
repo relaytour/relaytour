@@ -2,6 +2,7 @@
 
 - **Statut** : proposée
 - **Date** : 2026-11-04
+- **Amendée** : 2026-11-05 (point d'équipe, voir « Horizon » et « Amendement du 2026-11-05 »)
 - Complète l'ADR 0014 (consultation des périmètres), l'ADR 0026 (tâches partagées), l'ADR 0037 (agenda et réunions) et l'ADR 0020 (messages à l'équipe).
 - Remplace en partie la règle de l'ADR 0025 « Aucune étiquette libre et aucun champ de priorité ne s'ajoutent à la tâche. » Seul le champ de priorité est concerné. L'interdiction des étiquettes libres et le reste de l'ADR 0025 ne changent pas.
 
@@ -28,8 +29,10 @@ L'application calcule les **priorités** d'une période : un score commun à tou
 ### Horizon
 
 - L'**horizon** est la période que couvre la liste. Il commence aujourd'hui et se termine le jour du prochain point.
-- Le prochain point est la prochaine réunion de l'agenda global de l'activité (ADR 0037) qui n'est pas annulée.
-- L'horizon dure au moins 14 jours et au plus 30 jours. Sans prochain point, il dure 14 jours.
+- Le prochain point est le prochain **point d'équipe** de l'activité qui n'est pas annulé.
+- Un point d'équipe est une réunion de l'agenda global (ADR 0037) que la personne qui l'écrit marque comme telle. Une réunion de périmètre n'est jamais un point d'équipe.
+- Une autre réunion de l'agenda global, comme un rendez-vous à quelques personnes, ne fixe pas l'horizon.
+- L'horizon dure au moins 14 jours et au plus 30 jours. Sans prochain point d'équipe, il dure 14 jours.
 - Les jours se comptent dans le fuseau de l'organisation, comme dans l'agenda.
 
 ### Tâches retenues
@@ -89,7 +92,7 @@ Le score classe les tâches retenues. Il ne décide pas de leur entrée dans les
 ### Affichage dans « Mon espace »
 
 - Le panneau « Priorités » est le premier panneau de « Mon espace ». Il se place sous le titre, avant « Premiers pas » et « Vos périmètres ».
-- Son en-tête indique la fin de l'horizon et le prochain point, avec l'horaire et le lien de visio de la réunion.
+- Son en-tête indique la fin de l'horizon et le prochain point d'équipe, avec l'horaire et le lien de visio de la réunion. Sans point d'équipe prévu, il indique que les priorités couvrent les 14 prochains jours.
 - Les périmètres suivent leur ordre dans l'activité. Les périmètres de la personne portent une pastille, sans changer de place.
 - Le panneau montre 3 priorités par périmètre. Un lien « Voir les autres » montre les suivantes, jusqu'au plafond de 5.
 - Chaque tâche montre son titre, son échéance, les personnes assignées et les raisons de son score.
@@ -119,12 +122,13 @@ Le score classe les tâches retenues. Il ne décide pas de leur entrée dans les
 
 ### Calcul et API
 
-- Une fonction pure de `packages/commun` calcule le score et les raisons. Des tests unitaires couvrent chaque critère.
+- Une fonction pure du serveur (`packages/server/src/lib/priorites.ts`) calcule l'horizon, le score et le classement. Des tests unitaires couvrent chaque critère.
 - Le serveur calcule les priorités à la lecture. Il ne stocke ni score ni classement.
 - Une requête renvoie, pour une période, l'horizon, le prochain point et les priorités de chaque périmètre consulté. Elle renvoie aussi la ligne « Ensuite » et le nombre de priorités au-delà du plafond.
 - Chaque raison est un code accompagné de ses valeurs (nombre de jours, nombre de déclinaisons). L'espace organisateur la traduit (ADR 0047).
 - Une mutation pose ou retire l'ajustement d'une tâche. Elle émet le signal de la tâche (ADR 0017).
 - Une migration additive ajoute à `Tache` le niveau d'ajustement, son auteur, sa date et sa fin de validité.
+- Une seconde migration additive ajoute à `Reunion` le marqueur `pointEquipe` (amendement du 2026-11-05).
 
 ### Hors de cette décision
 
@@ -133,10 +137,33 @@ Le score classe les tâches retenues. Il ne décide pas de leur entrée dans les
 - L'historique des priorités d'un point à l'autre.
 - Une notification ou un mail quand une tâche entre dans les priorités.
 
+## Amendement du 2026-11-05 : le point d'équipe
+
+### Contexte
+
+La première version retenait comme prochain point la prochaine réunion de l'agenda global, quelle qu'elle soit. Une équipe qui place dans cet agenda des points à deux ou des rendez-vous avec un pôle voyait alors l'horizon de toute l'équipe raccourcir. Les équipes ne peuvent pas déplacer ces rendez-vous dans un agenda de périmètre quand ils concernent plusieurs périmètres.
+
+### Décision
+
+- La réunion porte un marqueur « point d'équipe ». Seule une réunion de l'agenda global le porte, et le serveur le refuse sur une réunion de périmètre.
+- Les admins de l'activité, qui écrivent dans l'agenda global, posent ou retirent le marqueur dans le formulaire de la réunion.
+- À la création, la case est cochée quand la réunion convoque toute l'équipe. La personne peut la décocher, ou la cocher pour une réunion qui convoque des personnes choisies, comme les contacts principaux.
+- Une réunion créée depuis un sondage de toute l'équipe est cochée d'office.
+- Une modification qui ne transmet pas le marqueur garde sa valeur.
+- La migration marque les réunions globales à venir qui convoquent toute l'équipe. Ces réunions gardent ainsi leur effet sur l'horizon. Une réunion globale à venir sans convocation, ou qui convoque des personnes choisies, le perd : un admin de l'activité la marque s'il s'agit d'un point d'équipe.
+- Le détail de la réunion affiche le repère « Point d'équipe ».
+- Sans point d'équipe à venir, l'horizon dure 14 jours. Aucune autre réunion ne le remplace.
+
+### Options écartées
+
+- **Retenir les seules réunions qui convoquent toute l'équipe.** La règle évitait une migration. Elle liait pourtant l'horizon à l'envoi des convocations : un point d'équipe annoncé par un autre canal ne comptait pas. La cible par défaut d'une réunion globale est aussi « toute l'équipe » : un rendez-vous saisi sans changer ce réglage aurait encore fixé l'horizon.
+- **Revenir à l'ancienne règle quand aucune réunion n'est marquée.** Le comportement aurait changé sans avertissement à la première case cochée. La case cochée d'office couvre déjà les activités qui ne s'occupent pas du marqueur.
+
 ## Conséquences
 
 - Les priorités restent à jour sans aucun geste de l'équipe. L'ajustement sert à corriger le calcul, pas à tenir la liste.
 - Une tâche sans échéance n'apparaît pas d'elle-même. Les équipes qui veulent voir une tâche dans les priorités lui donnent une échéance ou un ajustement.
 - Un retard ancien reste visible avec la raison « à revoir ». Les échéances périmées deviennent ainsi un signal pour l'équipe.
 - Le classement s'explique tâche par tâche. Une personne qui conteste une place lit les raisons, puis ajuste la tâche si elle en a le droit.
-- Un nouveau critère s'ajoute à la fonction de `packages/commun`, avec son code de raison, sa traduction et son test.
+- Un nouveau critère s'ajoute à `lib/priorites.ts`, avec son code de raison, sa traduction et son test.
+- Un rendez-vous de l'agenda global ne change plus l'horizon de toute l'équipe. Une équipe qui veut qu'une réunion fixe l'horizon la marque comme point d'équipe.

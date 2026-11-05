@@ -37,6 +37,7 @@ const REUNION = graphql(`
       heureFin
       statut
       cible
+      pointEquipe
       version
       perimetre {
         id
@@ -191,6 +192,7 @@ export default function ReunionDetail({
       tacheIds: reunion.taches.map(tache => tache.id),
       cible: reunion.cible,
       personneIds: (reunion.convocations ?? []).map(c => c.personneId),
+      pointEquipe: reunion.pointEquipe,
       version: reunion.version,
     })
   }
@@ -247,7 +249,18 @@ export default function ReunionDetail({
                   <Trans>Agenda global de l’activité</Trans>
                 </span>
               )}
+              {reunion.pointEquipe && (
+                <Tag style={{ marginInlineStart: 8 }}>{t`Point d’équipe`}</Tag>
+              )}
             </p>
+            {reunion.pointEquipe && !annulee && (
+              <p className="rt-note">
+                <Trans>
+                  Cette réunion fixe la fin de la période que couvrent les
+                  priorités de toute l’équipe.
+                </Trans>
+              </p>
+            )}
 
             {reunion.detailMasque ? (
               <p className="rt-note">

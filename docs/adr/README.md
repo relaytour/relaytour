@@ -27,7 +27,7 @@
 | [0023](0023-application-installable-et-ecran-hors-connexion.md) | Application installable et écran hors connexion | Acceptée |
 | [0024](0024-notifications-push.md) | Notifications push | Acceptée |
 | [0025](0025-phases-d-une-activite-et-regroupement-des-taches.md) | Phases d'une activité et regroupement des tâches | Acceptée |
-| [0026](0026-taches-partagees.md) | Tâches partagées entre périmètres | Acceptée |
+| [0026](0026-taches-partagees.md) | Tâches partagées entre périmètres | Acceptée, rattachement depuis l'espace organisateur ajouté par l'ADR 0061 |
 | [0027](0027-ecran-equipe-a-deux-vues-et-ecran-messages.md) | Écran « Équipe » à deux vues et écran « Messages » | Acceptée |
 | [0028](0028-assigner-une-tache-entre-referents.md) | Assigner une tâche entre référentes et référents | Acceptée |
 | [0029](0029-commentaires-d-une-tache.md) | Commentaires d'une tâche | Acceptée |
@@ -62,5 +62,6 @@
 | [0058](0058-limite-de-membres-d-une-organisation.md) | Limite de membres d'une organisation | Proposée |
 | [0059](0059-priorites-d-une-periode.md) | Priorités d'une période | Proposée |
 | [0060](0060-evenements-suivis-par-une-periode.md) | Événements suivis par une période | Proposée |
+| [0061](0061-rattacher-une-tache-existante-a-une-tache-partagee.md) | Rattacher une tâche existante à une tâche partagée | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

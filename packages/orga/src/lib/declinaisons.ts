@@ -65,7 +65,7 @@ export function libelleDeclinaisons(resume: ResumeDeclinaisons): {
 }
 
 export type EtapeAccordDeclinaison =
-  'PROPOSEE' | 'ACCEPTEE' | 'REFUSEE' | 'IMPOSEE'
+  'PROPOSEE' | 'ACCEPTEE' | 'REFUSEE' | 'IMPOSEE' | 'RATTACHEE' | 'DETACHEE'
 
 /**
  * Une étape de l'accord d'une déclinaison, pour l'historique lu par les admins :
@@ -85,6 +85,10 @@ export function libelleEtapeAccord(
       return t`Refusée par ${personne} le ${jour}`
     case 'IMPOSEE':
       return t`Ajoutée sans accord par ${personne} le ${jour}`
+    case 'RATTACHEE':
+      return t`Rattachée par ${personne} le ${jour}`
+    case 'DETACHEE':
+      return t`Détachée par ${personne} le ${jour}`
   }
 }
 
