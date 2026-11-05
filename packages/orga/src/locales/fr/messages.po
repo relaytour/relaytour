@@ -1891,6 +1891,10 @@ msgstr "Ajouter au {cible}"
 msgid "Ajouter des tâches"
 msgstr "Ajouter des tâches"
 
+#: src/composants/AjouterContactsPrincipaux.tsx
+msgid "Ajouter les contacts principaux ({nombre})"
+msgstr "Ajouter les contacts principaux ({nombre})"
+
 #: src/pages/FicheEditeur.tsx
 msgid "Ajouter les mentions à « Concerne aussi » ?"
 msgstr "Ajouter les mentions à « Concerne aussi » ?"
@@ -4294,6 +4298,10 @@ msgstr "Écrire à la sélection"
 #: src/pages/admin/Personnes.tsx
 msgid "Écrire à la sélection ({nbSelectionnees})"
 msgstr "Écrire à la sélection ({nbSelectionnees})"
+
+#: src/pages/admin/Equipe.tsx
+msgid "Écrire aux contacts principaux"
+msgstr "Écrire aux contacts principaux"
 
 #: src/pages/admin/Equipe.tsx
 msgid "Écrire aux référentes et aux référents"

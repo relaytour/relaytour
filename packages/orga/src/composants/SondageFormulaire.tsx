@@ -11,6 +11,8 @@ import { messageErreur } from '../lib/erreurs'
 
 import { CONVOCABLES } from '../lib/requetes'
 
+import AjouterContactsPrincipaux from './AjouterContactsPrincipaux'
+
 import type { AgendaEcrit } from './ReunionFormulaire'
 
 const CREER = graphql(`
@@ -353,29 +355,37 @@ export default function SondageFormulaire({
               />
             </Form.Item>
             {cible === 'CHOIX' && (
-              <Form.Item
-                name="personneIds"
-                rules={[
-                  {
-                    required: true,
-                    type: 'array',
-                    min: 1,
-                    message: t`Choisissez au moins une personne.`,
-                  },
-                ]}
-              >
-                <Select
-                  mode="multiple"
-                  optionFilterProp="label"
-                  placeholder={t`Choisir des personnes de l’équipe`}
-                  options={(convocables?.personnesConvocables ?? []).map(p => ({
-                    value: p.personneId,
-                    label: p.duPerimetre
-                      ? `${p.nom} · ${t`du périmètre`}`
-                      : p.nom,
-                  }))}
+              <>
+                <Form.Item
+                  name="personneIds"
+                  rules={[
+                    {
+                      required: true,
+                      type: 'array',
+                      min: 1,
+                      message: t`Choisissez au moins une personne.`,
+                    },
+                  ]}
+                >
+                  <Select
+                    mode="multiple"
+                    optionFilterProp="label"
+                    placeholder={t`Choisir des personnes de l’équipe`}
+                    options={(convocables?.personnesConvocables ?? []).map(
+                      p => ({
+                        value: p.personneId,
+                        label: p.duPerimetre
+                          ? `${p.nom} · ${t`du périmètre`}`
+                          : p.nom,
+                      })
+                    )}
+                  />
+                </Form.Item>
+                <AjouterContactsPrincipaux
+                  form={form}
+                  personnes={convocables?.personnesConvocables ?? []}
                 />
-              </Form.Item>
+              </>
             )}
           </>
         )}

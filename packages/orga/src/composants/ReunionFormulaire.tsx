@@ -10,6 +10,8 @@ import { lireConflit, relireApresConflit } from '../lib/conflit'
 import { messageErreur } from '../lib/erreurs'
 import { CONVOCABLES } from '../lib/requetes'
 
+import AjouterContactsPrincipaux from './AjouterContactsPrincipaux'
+
 // Sans boîte qui reçoit les réponses, l'agenda des personnes convoquées nomme
 // l'adresse d'envoi comme organisatrice, qui ne lit rien (ADR 0053).
 const REPONSES = graphql(`
@@ -550,27 +552,35 @@ export default function ReunionFormulaire({
           />
         </Form.Item>
         {cible === 'CHOIX' && (
-          <Form.Item
-            name="personneIds"
-            rules={[
-              {
-                required: true,
-                type: 'array',
-                min: 1,
-                message: t`Choisissez au moins une personne.`,
-              },
-            ]}
-          >
-            <Select
-              mode="multiple"
-              optionFilterProp="label"
-              placeholder={t`Choisir des personnes de l’équipe`}
-              options={(convocables?.personnesConvocables ?? []).map(p => ({
-                value: p.personneId,
-                label: p.duPerimetre ? `${p.nom} · ${t`du périmètre`}` : p.nom,
-              }))}
+          <>
+            <Form.Item
+              name="personneIds"
+              rules={[
+                {
+                  required: true,
+                  type: 'array',
+                  min: 1,
+                  message: t`Choisissez au moins une personne.`,
+                },
+              ]}
+            >
+              <Select
+                mode="multiple"
+                optionFilterProp="label"
+                placeholder={t`Choisir des personnes de l’équipe`}
+                options={(convocables?.personnesConvocables ?? []).map(p => ({
+                  value: p.personneId,
+                  label: p.duPerimetre
+                    ? `${p.nom} · ${t`du périmètre`}`
+                    : p.nom,
+                }))}
+              />
+            </Form.Item>
+            <AjouterContactsPrincipaux
+              form={form}
+              personnes={convocables?.personnesConvocables ?? []}
             />
-          </Form.Item>
+          </>
         )}
         {cible !== 'AUCUNE' && (
           <p className="rt-note" style={{ marginTop: -8 }}>

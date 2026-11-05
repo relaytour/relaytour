@@ -2828,6 +2828,11 @@ type PersonneAcces {
 }
 
 type PersonneConvocable {
+  """
+  Vrai pour le contact principal d’un périmètre de l’activité pour la période (ADR 0011).
+  """
+  contactPrincipal: Boolean!
+
   """Vrai pour une personne affectée au périmètre pour la période."""
   duPerimetre: Boolean!
   nom: String!
