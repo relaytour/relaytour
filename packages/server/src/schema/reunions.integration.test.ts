@@ -892,6 +892,7 @@ describe('mails et notifications', () => {
 
 describe('personnes convocables', () => {
   const CONVOCABLES = `query ($e: ID!, $p: ID) { personnesConvocables(editionId: $e, perimetreId: $p) { personneId duPerimetre } }`
+  const CONTACTS = `query ($e: ID!) { personnesConvocables(editionId: $e) { personneId contactPrincipal } }`
 
   it('liste l’équipe active pour une personne qui écrit dans le périmètre', async () => {
     const liste = donnees<{ personneId: string; duPerimetre: boolean }[]>(
@@ -911,6 +912,28 @@ describe('personnes convocables', () => {
     expect(liste.find(p => p.personneId === ids.basketteuse)?.duPerimetre).toBe(
       false
     )
+  })
+
+  it('signale les contacts principaux de la période, tous périmètres confondus', async () => {
+    await prisma.affectation.updateMany({
+      where: { userId: ids.basketteuse, editionId: ids.edition },
+      data: { contactPrincipal: true },
+    })
+    try {
+      const liste = donnees<{ personneId: string; contactPrincipal: boolean }[]>(
+        await executer(ids.adminActivite, CONTACTS, { e: ids.edition }),
+        'personnesConvocables'
+      )
+      const contacts = liste
+        .filter(p => p.contactPrincipal)
+        .map(p => p.personneId)
+      expect(contacts).toEqual([ids.basketteuse])
+    } finally {
+      await prisma.affectation.updateMany({
+        where: { userId: ids.basketteuse, editionId: ids.edition },
+        data: { contactPrincipal: false },
+      })
+    }
   })
 
   it('écarte une personne qui n’a qu’un souhait, qui ne voit pas l’activité', async () => {

@@ -302,6 +302,7 @@ interface PersonneConvocable {
   id: string
   nom: string
   duPerimetre: boolean
+  contactPrincipal: boolean
 }
 
 const PersonneConvocableRef = builder
@@ -314,6 +315,10 @@ const PersonneConvocableRef = builder
       duPerimetre: t.exposeBoolean('duPerimetre', {
         description:
           'Vrai pour une personne affectée au périmètre pour la période.',
+      }),
+      contactPrincipal: t.exposeBoolean('contactPrincipal', {
+        description:
+          'Vrai pour le contact principal d’un périmètre de l’activité pour la période (ADR 0011).',
       }),
     }),
   })
@@ -336,6 +341,15 @@ builder.queryFields(t => ({
         perimetreId: args.perimetreId ? String(args.perimetreId) : null,
       }
       const { activiteId } = await exigerEcritureReunion(ctx, lieu)
+      const contacts = await prisma.affectation.findMany({
+        where: {
+          editionId: lieu.editionId,
+          contactPrincipal: true,
+          perimetre: { archivedAt: null },
+        },
+        select: { userId: true },
+      })
+      const contactIds = new Set(contacts.map(c => c.userId))
       const personnes = await prisma.user.findMany({
         where: {
           AND: [
@@ -364,6 +378,7 @@ builder.queryFields(t => ({
         id: p.id,
         nom: p.name,
         duPerimetre: (p.affectations?.length ?? 0) > 0,
+        contactPrincipal: contactIds.has(p.id),
       }))
     },
   }),

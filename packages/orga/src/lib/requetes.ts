@@ -197,6 +197,7 @@ export const CONVOCABLES = graphql(`
       personneId
       nom
       duPerimetre
+      contactPrincipal
     }
   }
 `)

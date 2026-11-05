@@ -490,6 +490,18 @@ export default function Equipe() {
         >
           <Trans>Écrire à l’équipe</Trans>
         </Button>
+        <Button
+          icon={<SendOutlined />}
+          disabled={contactsPrincipaux.length === 0}
+          onClick={() =>
+            setCibleMessage({
+              personneIds: [...new Set(contactsPrincipaux)],
+              toutLeMonde: false,
+            })
+          }
+        >
+          <Trans>Écrire aux contacts principaux</Trans>
+        </Button>
         <Link to={lien('/admin/messages')}>
           <Trans>Historique des messages</Trans>
         </Link>
