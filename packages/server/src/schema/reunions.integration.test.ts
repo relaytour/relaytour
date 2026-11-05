@@ -914,13 +914,15 @@ describe('personnes convocables', () => {
     )
   })
 
-  it('signale les contacts principaux de la période, tous périmètres confondus', async () => {
+  it('signale les contacts principaux de la période, hors périmètre archivé', async () => {
     await prisma.affectation.updateMany({
       where: { userId: ids.basketteuse, editionId: ids.edition },
       data: { contactPrincipal: true },
     })
     try {
-      const liste = donnees<{ personneId: string; contactPrincipal: boolean }[]>(
+      const liste = donnees<
+        { personneId: string; contactPrincipal: boolean }[]
+      >(
         await executer(ids.adminActivite, CONTACTS, { e: ids.edition }),
         'personnesConvocables'
       )
@@ -928,7 +930,23 @@ describe('personnes convocables', () => {
         .filter(p => p.contactPrincipal)
         .map(p => p.personneId)
       expect(contacts).toEqual([ids.basketteuse])
+      // Un périmètre archivé ne compte plus ses contacts principaux.
+      await prisma.perimetre.update({
+        where: { id: ids.basket },
+        data: { archivedAt: new Date() },
+      })
+      const sansArchive = donnees<
+        { personneId: string; contactPrincipal: boolean }[]
+      >(
+        await executer(ids.adminActivite, CONTACTS, { e: ids.edition }),
+        'personnesConvocables'
+      )
+      expect(sansArchive.filter(p => p.contactPrincipal)).toEqual([])
     } finally {
+      await prisma.perimetre.update({
+        where: { id: ids.basket },
+        data: { archivedAt: null },
+      })
       await prisma.affectation.updateMany({
         where: { userId: ids.basketteuse, editionId: ids.edition },
         data: { contactPrincipal: false },
