@@ -1111,6 +1111,31 @@ msgid "Cette déclinaison a déjà été refusée. Un admin de l’activité peu
 msgstr "Cette déclinaison a déjà été refusée. Un admin de l’activité peut l’imposer."
 
 #. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Cette tâche porte ses propres déclinaisons : elle ne se rattache pas."
+msgstr "Cette tâche porte ses propres déclinaisons : elle ne se rattache pas."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Cette tâche est déjà la déclinaison d’une autre tâche."
+msgstr "Cette tâche est déjà la déclinaison d’une autre tâche."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Seule une déclinaison acceptée se détache. Refusez cette déclinaison si elle ne concerne pas votre périmètre."
+msgstr "Seule une déclinaison acceptée se détache. Refusez cette déclinaison si elle ne concerne pas votre périmètre."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Ce périmètre porte déjà une déclinaison de cette tâche."
+msgstr "Ce périmètre porte déjà une déclinaison de cette tâche."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Les deux tâches doivent appartenir à la même période."
+msgstr "Les deux tâches doivent appartenir à la même période."
+
+#. js-lingui-explicit-id
 #: src/orga/depot-contenu.ts
 msgid "L’archive ne contient pas le dossier activites/{slug}/."
 msgstr "L’archive ne contient pas le dossier activites/{slug}/."

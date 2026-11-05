@@ -1023,17 +1023,19 @@ type EspaceFichiers {
 }
 
 """
-Étape de l’accord d’une déclinaison. IMPOSEE : un admin de l’activité l’a ajoutée sans accord du périmètre.
+Étape de l’accord d’une déclinaison. IMPOSEE : un admin de l’activité l’a ajoutée sans accord du périmètre. RATTACHEE : une tâche existante est devenue la déclinaison (ADR 0061). DETACHEE : la déclinaison est redevenue une tâche ordinaire.
 """
 enum EtapeAccord {
   ACCEPTEE
+  DETACHEE
   IMPOSEE
   PROPOSEE
+  RATTACHEE
   REFUSEE
 }
 
 """
-Une étape de l’accord d’une déclinaison : qui l’a proposée, acceptée, refusée ou imposée, et quand.
+Une étape de l’accord d’une déclinaison : qui l’a proposée, acceptée, refusée, imposée, rattachée ou détachée, et quand.
 """
 type EtapeAccordDeclinaison {
   etape: EtapeAccord!
@@ -1998,6 +2000,11 @@ type Mutation {
   desabonnerPush(adresse: String!): Boolean!
 
   """
+  Détache une déclinaison acceptée de sa tâche partagée : elle redevient une tâche ordinaire de son périmètre, avec son statut, ses personnes assignées et son fil. Demande d’écrire dans les deux périmètres (ADR 0061). Rend la tâche détachée.
+  """
+  detacherDeclinaison(id: ID!): Tache!
+
+  """
   Écarte une proposition : rien ne change chez le fournisseur. Elle ne revient pas tant que la situation de la personne ne change pas.
   """
   ecarterPropositionAcces(id: ID!): Boolean!
@@ -2344,6 +2351,17 @@ type Mutation {
   """
   rappelerAdresses(courriel: String!): Boolean!
   rattacherALActivite(activiteId: ID!, userId: ID!): Boolean!
+
+  """
+  Rattache une tâche existante d’un autre périmètre de la période à une tâche partagée : elle en devient la déclinaison, acceptée d’office, sans rien perdre de son statut, de ses personnes assignées ni de son fil. Demande d’écrire dans les deux périmètres (ADR 0061). Rend la tâche partagée.
+  """
+  rattacherDeclinaison(
+    """La tâche partagée, ou la tâche qui le devient."""
+    id: ID!
+
+    """La tâche existante qui devient la déclinaison."""
+    tacheId: ID!
+  ): Tache!
 
   """
   Recrée dans la période cible les tâches choisies de la période source, avec le même écart en jours depuis le premier jour, et les effectifs souhaités. Une tâche déjà présente n’est pas recréée.

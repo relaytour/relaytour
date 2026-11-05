@@ -1,7 +1,7 @@
 import { DownOutlined, ShareAltOutlined, UpOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Button, Skeleton } from 'antd'
+import { App, Button, Skeleton } from 'antd'
 import { useId, useState } from 'react'
 
 import { useActivite } from '../lib/activite'
@@ -13,6 +13,7 @@ import {
 import { jourDeLInstant } from '../lib/erreurs'
 import {
   DECLINAISONS_TACHE,
+  DETACHER_DECLINAISON,
   IMPOSER_DECLINAISON,
   useActionTache,
   VUES_TACHES,
@@ -26,6 +27,8 @@ import { PastilleEtat, PastilleStatut } from './Etat'
  * et le détail par périmètre à la demande. Le détail se lit par une requête à part :
  * une liste de tâches ne le porte pas. Un admin de l'activité y ajoute une
  * déclinaison sans l'accord de son périmètre, et y lit l'historique de cet accord.
+ * Une personne qui écrit dans les deux périmètres y détache une déclinaison
+ * acceptée (ADR 0061).
  */
 export default function DeclinaisonsTache({
   tacheId,
@@ -33,6 +36,7 @@ export default function DeclinaisonsTache({
   resume,
   editionId,
   estAdmin,
+  peutModifier = false,
 }: {
   tacheId: string
   /** Le titre de la tâche partagée : une déclinaison ne répète pas le même. */
@@ -40,6 +44,8 @@ export default function DeclinaisonsTache({
   resume: ResumeDeclinaisons
   editionId?: string
   estAdmin: boolean
+  /** Vrai quand la personne écrit dans le périmètre de la tâche partagée. */
+  peutModifier?: boolean
 }) {
   const { t } = useLingui()
   const { lien } = useActivite()
@@ -53,6 +59,24 @@ export default function DeclinaisonsTache({
   const [imposer, imposition] = useMutation(IMPOSER_DECLINAISON, {
     refetchQueries: VUES_TACHES,
   })
+  const { modal } = App.useApp()
+  const [detacher, detachement] = useMutation(DETACHER_DECLINAISON, {
+    refetchQueries: [...VUES_TACHES, 'DeclinaisonsTache'],
+  })
+  // Détacher se confirme : la tâche reste dans son périmètre, sans lien.
+  const confirmerDetachement = async (id: string, nomPerimetre: string) => {
+    const ok = await modal.confirm({
+      title: t`Détacher la tâche du périmètre ${nomPerimetre} ?`,
+      content: t`Elle redevient une tâche ordinaire de ce périmètre. Elle garde son statut, ses personnes assignées et ses commentaires. Vous pourrez la rattacher de nouveau.`,
+      okText: t`Détacher`,
+      cancelText: t`Annuler`,
+    })
+    if (!ok) return
+    await executer(
+      () => detacher({ variables: { id } }),
+      t`La tâche du périmètre ${nomPerimetre} est détachée.`
+    )
+  }
   const succesImposition = (nomPerimetre: string) =>
     t`La tâche est ajoutée au périmètre ${nomPerimetre}.`
   const { titre, details } = libelleDeclinaisons(resume)
@@ -153,6 +177,19 @@ export default function DeclinaisonsTache({
                         <Trans>Ajouter sans accord</Trans>
                       </Button>
                     )}
+                    {peutModifier &&
+                      d.peutModifier &&
+                      d.accord === 'ACCEPTE' && (
+                        <Button
+                          size="small"
+                          loading={detachement.loading}
+                          onClick={() =>
+                            void confirmerDetachement(d.id, d.perimetre.nom)
+                          }
+                        >
+                          <Trans>Détacher</Trans>
+                        </Button>
+                      )}
                   </div>
                   {d.historiqueAccord.length > 0 && (
                     <p className="rt-note" style={{ margin: '4px 0 0' }}>

@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-11-05-orga-une-tache-existante-se-rattache-a-une-tache-partagee",
+          "date": "2026-11-05",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une tâche existante se rattache à une tâche partagée",
+            "texte": "Le menu « Autres actions » d'une tâche propose « Rattacher une tâche existante ». La tâche choisie, dans un autre périmètre, devient une déclinaison de la vôtre. Elle garde son titre, son statut, ses personnes assignées et ses commentaires. Le détail de la tâche partagée propose « Détacher » pour retirer ce lien. Ces deux gestes demandent d'écrire dans les deux périmètres.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An existing task can be linked to a shared task",
+            "texte": "The \"More actions\" menu of a task offers \"Link an existing task\". The chosen task, in another area, becomes a derived task of yours. It keeps its title, status, assignees and comments. The detail of the shared task offers \"Unlink\" to remove this link. Both actions require write access to both areas.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-11-05-orga-seul-un-point-d-equipe-fixe-la-periode-des-priorites",
           "date": "2026-11-05",
           "type": "fonctionnalite",

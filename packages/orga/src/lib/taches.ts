@@ -163,6 +163,7 @@ export const DECLINAISONS_TACHE = graphql(`
         statut
         enRetard
         accord
+        peutModifier
         perimetre {
           id
           slug
@@ -207,6 +208,46 @@ export const ACCORDER_DECLINAISON = graphql(`
     accorderDeclinaison(id: $id, accepter: $accepter) {
       id
       accord
+    }
+  }
+`)
+
+// Rattacher une tâche existante à une tâche partagée, ou détacher une déclinaison
+// (ADR 0061). Les deux gestes demandent d'écrire dans les deux périmètres.
+export const RATTACHER_DECLINAISON = graphql(`
+  mutation RattacherDeclinaison($id: ID!, $tacheId: ID!) {
+    rattacherDeclinaison(id: $id, tacheId: $tacheId) {
+      id
+    }
+  }
+`)
+
+export const DETACHER_DECLINAISON = graphql(`
+  mutation DetacherDeclinaison($id: ID!) {
+    detacherDeclinaison(id: $id) {
+      id
+    }
+  }
+`)
+
+// Les tâches d'un autre périmètre, pour en choisir une à rattacher (ADR 0061).
+export const TACHES_A_RATTACHER = graphql(`
+  query TachesARattacher($slug: String!, $editionId: ID!) {
+    perimetre(slug: $slug) {
+      id
+      taches(editionId: $editionId) {
+        id
+        titre
+        statut
+        echeance
+        peutModifier
+        origine {
+          id
+        }
+        resumeDeclinaisons {
+          total
+        }
+      }
     }
   }
 `)
