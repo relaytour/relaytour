@@ -73,5 +73,6 @@ Un lien libre demande ses propres écrans et ne profite ni du compte des déclin
 
 - `rattacherDeclinaison` vérifie l'écriture dans le périmètre de chaque tâche avec `exigerEcriture`, lue dans l'organisation active. Une tâche d'une autre organisation, d'une autre activité ou d'un périmètre où la personne n'écrit pas reçoit le même refus qu'avant.
 - `detacherDeclinaison` vérifie la même écriture dans les deux périmètres. Un refus de l'un suffit.
-- L'écriture porte l'état lu : un rattachement ne s'écrit que si la tâche n'a toujours pas d'origine, et un détachement que si elle a toujours la même. L'index unique sur `(origineId, perimetreId)` refuse deux rattachements simultanés dans un même périmètre.
+- Un rattachement verrouille ses deux tâches au début de sa transaction, puis relit les règles du lien. Une déclinaison verrouille aussi sa tâche partagée. Deux gestes simultanés ne créent donc jamais un second niveau de lien.
+- Un détachement ne s'écrit que si la tâche a toujours la même origine. L'index unique sur `(origineId, perimetreId)` refuse deux rattachements simultanés dans un même périmètre.
 - Les tests prouvent chaque refus : sans session, en consultation seule, sans écriture dans l'un des deux périmètres, depuis une autre organisation, sur une période archivée, et pour chaque règle du lien.

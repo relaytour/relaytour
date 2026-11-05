@@ -1,8 +1,8 @@
 import {
   AccordDeclinaison,
   prisma,
+  Prisma,
   StatutTache,
-  type Prisma,
   type TypeJournal,
   type User,
 } from '@relaytour/database'
@@ -1544,9 +1544,15 @@ builder.mutationFields(t => ({
       const cibles = voulues.filter(c => !servies.has(c.id))
       if (cibles.length === 0) return relire()
       const declinaisons = await prisma
-        .$transaction(tx =>
-          creerDeclinaisons(tx, tache, cibles, args, acteur.id)
-        )
+        .$transaction(async tx => {
+          // Une tâche rattachée entre-temps à une tâche partagée ne se décline
+          // plus (ADR 0061) : le verrou précède la relecture.
+          const lues = await verrouillerTaches(tx, [tache.id])
+          if (lues.get(tache.id) !== null) {
+            throw erreurSaisie(i18n._('Une déclinaison ne se décline pas.'))
+          }
+          return creerDeclinaisons(tx, tache, cibles, args, acteur.id)
+        })
         .catch((erreur: unknown) => {
           // P2002 : une autre requête vient de servir un de ces périmètres. Rien
           // n'est écrit ici : la personne relit la tâche et recommence au besoin.
@@ -1787,7 +1793,21 @@ builder.mutationFields(t => ({
       await exigerRattachable(origine, tache)
       const ecrite = await prisma
         .$transaction(async tx => {
-          // L'écriture porte l'état lu : une tâche liée entre-temps ne change pas.
+          // Les deux tâches se verrouillent avant toute autre lecture, puis les
+          // règles du lien se relisent : deux rattachements simultanés, ou un
+          // rattachement et une déclinaison, ne créent jamais un second niveau.
+          const lues = await verrouillerTaches(tx, [origine.id, tache.id])
+          if (lues.get(origine.id) !== null) {
+            throw erreurSaisie(i18n._('Une déclinaison ne se décline pas.'))
+          }
+          if (lues.get(tache.id) === origine.id) return true
+          if ((await tx.tache.count({ where: { origineId: tache.id } })) > 0) {
+            throw erreurSaisie(
+              i18n._(
+                'Cette tâche porte ses propres déclinaisons : elle ne se rattache pas.'
+              )
+            )
+          }
           const { count } = await tx.tache.updateMany({
             where: { id: tache.id, origineId: null },
             data: {
@@ -1887,6 +1907,22 @@ builder.mutationFields(t => ({
     },
   }),
 }))
+
+/**
+ * Verrouille des tâches dans un ordre fixe, pour éviter un interblocage, et rend
+ * leur origine lue sous le verrou. Sous MariaDB 11.8, le verrou se prend avant
+ * toute lecture ordinaire de la transaction.
+ */
+async function verrouillerTaches(
+  tx: Prisma.TransactionClient,
+  ids: readonly string[]
+): Promise<Map<string, string | null>> {
+  const tries = [...new Set(ids)].sort()
+  const lignes = await tx.$queryRaw<{ id: string; origineId: string | null }[]>`
+    SELECT id, origineId FROM Tache WHERE id IN (${Prisma.join(tries)})
+    ORDER BY id FOR UPDATE`
+  return new Map(lignes.map(l => [l.id, l.origineId]))
+}
 
 /** Le refus d'un périmètre qui porte déjà une déclinaison de la tâche partagée. */
 function dejaServi() {

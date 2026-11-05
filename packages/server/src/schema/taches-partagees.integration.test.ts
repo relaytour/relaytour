@@ -1125,6 +1125,31 @@ describe('rattacher et détacher une tâche existante', () => {
     }
   })
 
+  it('garde un seul niveau quand deux rattachements se croisent', async () => {
+    // A ← B et B ← C en même temps : l'un des deux doit échouer, sinon C serait
+    // la déclinaison d'une déclinaison. Le test se rejoue pour varier l'ordre.
+    for (let essai = 0; essai < 5; essai++) {
+      const a = await creerDans(ids.admin, ids.lieux, `Croisement A ${essai}`)
+      const b = await creerDans(ids.admin, ids.volley, `Croisement B ${essai}`)
+      const c = await creerDans(
+        ids.admin,
+        ids.natation,
+        `Croisement C ${essai}`
+      )
+      const reponses = await Promise.all([
+        executer(ids.admin, RATTACHER, { id: a.id, t: b.id }),
+        executer(ids.admin, RATTACHER, { id: b.id, t: c.id }),
+      ])
+      expect(reponses.filter(r => r.errors === undefined)).toHaveLength(1)
+      const liees = await prisma.tache.findMany({
+        where: { id: { in: [a.id, b.id, c.id] }, origineId: { not: null } },
+        select: { origine: { select: { origineId: true } } },
+      })
+      expect(liees).toHaveLength(1)
+      expect(liees[0]!.origine?.origineId).toBeNull()
+    }
+  })
+
   it('refuse de détacher à qui n’écrit pas dans les deux périmètres', async () => {
     for (const personne of [
       ids.victor,
