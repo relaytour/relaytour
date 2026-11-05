@@ -11,6 +11,7 @@ import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { publierPourPerimetre } from '../lib/flux.ts'
 import { heureLocale } from '../lib/heures.ts'
 import { moduleActif } from '../lib/modules.ts'
+import { filtreProchainPoint } from '../lib/reunions.ts'
 import {
   ajustementActif,
   classerPriorites,
@@ -229,7 +230,7 @@ const PrioritesRef = builder.objectRef<PrioritesLues>('Priorites').implement({
       type: ReunionRef,
       nullable: true,
       description:
-        'La prochaine réunion de l’agenda global, non annulée. Null sans réunion prévue ou sans module Agenda.',
+        'Le prochain point d’équipe : une réunion de l’agenda global marquée comme point d’équipe, non annulée. Null sans point d’équipe prévu ou sans module Agenda.',
       resolve: p => p.prochainPoint,
     }),
     perimetres: t.field({
@@ -279,12 +280,7 @@ builder.queryFields(t => ({
         }),
         agenda
           ? prisma.reunion.findFirst({
-              where: {
-                editionId: edition.id,
-                perimetreId: null,
-                statut: 'PREVUE',
-                debut: { gt: maintenant },
-              },
+              where: filtreProchainPoint(edition.id, maintenant),
               include: REUNION_CHARGEE,
               orderBy: { debut: 'asc' },
             })
@@ -391,12 +387,7 @@ builder.mutationFields(t => ({
         })
         const point = (await moduleActif(edition.activiteId, 'AGENDA'))
           ? await prisma.reunion.findFirst({
-              where: {
-                editionId: tache.editionId,
-                perimetreId: null,
-                statut: 'PREVUE',
-                debut: { gt: maintenant },
-              },
+              where: filtreProchainPoint(tache.editionId, maintenant),
               select: { debut: true },
               orderBy: { debut: 'asc' },
             })

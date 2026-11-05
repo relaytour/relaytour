@@ -2315,8 +2315,8 @@ msgid "Aucun périmètre pour l’instant"
 msgstr "No area yet"
 
 #: src/composants/Priorites.tsx
-msgid "Aucun point n’est prévu dans l’agenda global."
-msgstr "No check-in is planned in the shared calendar."
+msgid "Aucun point d’équipe n’est prévu : les priorités couvrent les 14 prochains jours."
+msgstr "No team check-in is planned: priorities cover the next 14 days."
 
 #: src/composants/Recherche.tsx
 msgid "Aucun résultat."
@@ -2970,6 +2970,10 @@ msgstr "This person already has an account: accepting does not create one. An em
 #: src/pages/admin/Personnes.tsx
 msgid "Cette personne s’est déjà connectée : elle modifie son nom dans ses préférences."
 msgstr "This person has already signed in: they edit their name in their preferences."
+
+#: src/composants/ReunionDetail.tsx
+msgid "Cette réunion fixe la fin de la période que couvrent les priorités de toute l’équipe."
+msgstr "This meeting sets the end of the period that the whole team’s priorities cover."
 
 #: src/composants/ReunionDetail.tsx
 msgid "Cette réunion n’existe pas ou ne vous est pas accessible."
@@ -6713,6 +6717,10 @@ msgstr "The phases, key dates, meetings and due dates {periodeDe}."
 msgid "Les phases, qui occupent chacune plusieurs semaines de l’agenda"
 msgstr "Phases, each of which fills several weeks of the calendar"
 
+#: src/composants/ReunionFormulaire.tsx
+msgid "Les priorités de toute l’équipe couvrent les jours jusqu’au prochain point d’équipe. Un rendez-vous à quelques personnes ne change pas cette période."
+msgstr "The whole team’s priorities cover the days until the next team check-in. A meeting with only a few people does not change this period."
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
 msgstr "The area’s coordinators accept or decline these tasks."
@@ -8227,6 +8235,11 @@ msgstr "Plural required."
 msgid "PNG carré de 512 pixels de côté. Elle s’affiche sur l’écran d’accueil d’un téléphone qui installe l’application."
 msgstr "Square PNG, 512 pixels per side. It appears on the home screen of a phone that installs the app."
 
+#: src/composants/ReunionDetail.tsx
+#: src/composants/ReunionFormulaire.tsx
+msgid "Point d’équipe"
+msgstr "Team check-in"
+
 #: src/composants/ReunionFormulaire.tsx
 msgid "Point d’étape du pôle"
 msgstr "Department check-in"
@@ -8442,8 +8455,8 @@ msgid "priorités des périmètres"
 msgstr "priorities of the areas"
 
 #: src/composants/Priorites.tsx
-msgid "Prochain point : {jourPoint} à {heurePoint}."
-msgstr "Next check-in: {jourPoint} at {heurePoint}."
+msgid "Prochain point d’équipe : {jourPoint} à {heurePoint}."
+msgstr "Next team check-in: {jourPoint} at {heurePoint}."
 
 #: src/pages/Charge.tsx
 msgid "Prochaine place au programme : {dateProchaine}."

@@ -303,7 +303,7 @@ export default function Priorites({
             {point ? (
               <>
                 <Trans>
-                  Prochain point : {jourPoint} à {heurePoint}.
+                  Prochain point d’équipe : {jourPoint} à {heurePoint}.
                 </Trans>{' '}
                 {point.lienVisio && (
                   <a href={point.lienVisio} target="_blank" rel="noreferrer">
@@ -312,7 +312,10 @@ export default function Priorites({
                 )}
               </>
             ) : (
-              <Trans>Aucun point n’est prévu dans l’agenda global.</Trans>
+              <Trans>
+                Aucun point d’équipe n’est prévu : les priorités couvrent les
+                14 prochains jours.
+              </Trans>
             )}
           </p>
           <div className="rt-priorites-filtres">

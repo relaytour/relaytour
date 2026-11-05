@@ -2366,6 +2366,11 @@ msgstr "Le lien de visio commence par https://."
 
 #. js-lingui-explicit-id
 #: src/lib/reunions.ts
+msgid "Seule une réunion de l’agenda global peut être un point d’équipe."
+msgstr "Seule une réunion de l’agenda global peut être un point d’équipe."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
 msgid "Une réunion lie {max} tâches au plus."
 msgstr "Une réunion lie {max} tâches au plus."
 

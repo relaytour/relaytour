@@ -1,6 +1,6 @@
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Alert, App, Form, Input, Modal, Radio, Select } from 'antd'
+import { Alert, App, Checkbox, Form, Input, Modal, Radio, Select } from 'antd'
 import { useEffect } from 'react'
 
 import { graphql } from '../gql'
@@ -37,6 +37,7 @@ const CREER = graphql(`
     $tacheIds: [ID!]
     $cible: CibleConvocation
     $personneIds: [ID!]
+    $pointEquipe: Boolean
   ) {
     creerReunion(
       editionId: $editionId
@@ -53,6 +54,7 @@ const CREER = graphql(`
       tacheIds: $tacheIds
       cible: $cible
       personneIds: $personneIds
+      pointEquipe: $pointEquipe
     ) {
       id
     }
@@ -73,6 +75,7 @@ const MODIFIER = graphql(`
     $tacheIds: [ID!]
     $cible: CibleConvocation
     $personneIds: [ID!]
+    $pointEquipe: Boolean
     $versionAttendue: Int!
   ) {
     modifierReunion(
@@ -88,6 +91,7 @@ const MODIFIER = graphql(`
       tacheIds: $tacheIds
       cible: $cible
       personneIds: $personneIds
+      pointEquipe: $pointEquipe
       versionAttendue: $versionAttendue
     ) {
       id
@@ -131,6 +135,8 @@ export interface ReunionSaisie {
   tacheIds: string[]
   cible?: CibleConvocation | null
   personneIds: string[]
+  /** Point d'équipe : la réunion fixe l'horizon des priorités (ADR 0059). */
+  pointEquipe: boolean
   version: number
 }
 
@@ -145,6 +151,8 @@ export interface NouvelleReunion {
   heureFin?: string | null
   cible?: CibleConvocation
   personneIds?: string[]
+  /** Depuis un sondage de toute l'équipe : la réunion est un point d'équipe. */
+  pointEquipe?: boolean
   sondageId?: string
 }
 
@@ -163,6 +171,7 @@ interface Valeurs {
   tacheIds: string[]
   cible: Cible
   personneIds: string[]
+  pointEquipe: boolean
 }
 
 export const TITRE_REUNION_MAX = 200
@@ -241,9 +250,15 @@ export default function ReunionFormulaire({
             tacheIds: reunion.tacheIds,
             cible: reunion.cible ?? 'AUCUNE',
             personneIds: reunion.personneIds,
+            pointEquipe: reunion.pointEquipe,
           }
         : {
             agenda: reunion.perimetreId ?? GLOBAL,
+            // Une réunion qui convoque toute l'équipe est d'office un point
+            // d'équipe ; la personne peut décocher la case.
+            pointEquipe:
+              reunion.perimetreId === null &&
+              (reunion.pointEquipe ?? (reunion.cible ?? 'EQUIPE') === 'EQUIPE'),
             titre: reunion.titre ?? '',
             jour: reunion.jour ?? '',
             jourFin: '',
@@ -284,6 +299,8 @@ export default function ReunionFormulaire({
       tacheIds: v.tacheIds,
       cible: v.cible === 'AUCUNE' ? null : v.cible,
       personneIds: v.cible === 'CHOIX' ? v.personneIds : [],
+      // Seule une réunion de l'agenda global est un point d'équipe.
+      pointEquipe: v.agenda === GLOBAL ? v.pointEquipe : false,
     }
     try {
       if (existante) {
@@ -348,6 +365,20 @@ export default function ReunionFormulaire({
         form={form}
         layout="vertical"
         onFinish={v => void enregistrer(v)}
+        onValuesChange={(change: Partial<Valeurs>, v: Valeurs) => {
+          // Tant que la personne n'a pas touché la case, une nouvelle réunion
+          // globale suit la cible : toute l'équipe en fait un point d'équipe.
+          if (
+            existante === null &&
+            ('cible' in change || 'agenda' in change) &&
+            !form.isFieldTouched('pointEquipe')
+          ) {
+            form.setFieldValue(
+              'pointEquipe',
+              v.agenda === GLOBAL && v.cible === 'EQUIPE'
+            )
+          }
+        }}
         requiredMark={false}
       >
         <Form.Item label={t`Agenda`} name="agenda">
@@ -554,6 +585,15 @@ export default function ReunionFormulaire({
                 : t`Leur agenda indiquera comme organisatrice l’adresse d’envoi de l’installation, qui ne reçoit pas de réponse. Un admin de l’activité peut déclarer une adresse de contact.`
             }
           />
+        )}
+        {perimetreId === null && (
+          <Form.Item
+            name="pointEquipe"
+            valuePropName="checked"
+            extra={t`Les priorités de toute l’équipe couvrent les jours jusqu’au prochain point d’équipe. Un rendez-vous à quelques personnes ne change pas cette période.`}
+          >
+            <Checkbox>{t`Point d’équipe`}</Checkbox>
+          </Form.Item>
         )}
       </Form>
     </Modal>

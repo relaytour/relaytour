@@ -5,6 +5,25 @@
   "version": "0.27.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-11-05-serveur-le-serveur-ne-retient-que-les-points-d-equipe-pour-l-horizon",
+          "date": "2026-11-05",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le serveur ne retient que les points d'équipe pour l'horizon des priorités",
+            "texte": "Le champ `pointEquipe` de `creerReunion`, `modifierReunion` et du type `Reunion` marque un point d'équipe (amendement de l'ADR 0059). La requête `priorites` et la mutation `ajusterPriorite` ne retiennent que ces réunions pour fixer l'horizon. Une migration additive ajoute le champ et marque les réunions globales à venir qui convoquent toute l'équipe.",
+            "migration": null
+          },
+          "en": null
+        }
+      ]
+    },
+    {
       "version": "0.27.0",
       "notes": [
         {

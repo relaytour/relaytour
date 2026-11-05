@@ -61,6 +61,51 @@ export function lienVisioValide(
 }
 
 /**
+ * Le marqueur « point d'équipe » d'une réunion (ADR 0059). Seule une réunion de
+ * l'agenda global le porte. Sans saisie, une modification garde la valeur
+ * actuelle, et une création le pose quand la réunion convoque toute l'équipe.
+ */
+export function pointEquipeValide(
+  saisi: boolean | null | undefined,
+  reunion: {
+    perimetreId: string | null
+    cible: CibleConvocation | null
+    actuel: boolean | null
+  }
+): boolean {
+  if (reunion.perimetreId !== null) {
+    if (saisi === true) {
+      throw erreurSaisie(
+        i18n._(
+          'Seule une réunion de l’agenda global peut être un point d’équipe.'
+        )
+      )
+    }
+    return false
+  }
+  if (saisi !== null && saisi !== undefined) return saisi
+  if (reunion.actuel !== null) return reunion.actuel
+  return reunion.cible === 'EQUIPE'
+}
+
+/**
+ * Le filtre du prochain point d'équipe d'une période : une réunion globale
+ * marquée, prévue et à venir. Une autre réunion ne fixe pas l'horizon (ADR 0059).
+ */
+export function filtreProchainPoint(
+  editionId: string,
+  maintenant: Date
+): Prisma.ReunionWhereInput {
+  return {
+    editionId,
+    perimetreId: null,
+    pointEquipe: true,
+    statut: 'PREVUE',
+    debut: { gt: maintenant },
+  }
+}
+
+/**
  * Refuse l'écriture d'une réunion : l'agenda global aux admins de l'activité,
  * l'agenda d'un périmètre aux personnes qui y écrivent. Une période archivée est
  * en lecture seule.

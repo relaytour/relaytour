@@ -2315,8 +2315,8 @@ msgid "Aucun périmètre pour l’instant"
 msgstr "Aucun périmètre pour l’instant"
 
 #: src/composants/Priorites.tsx
-msgid "Aucun point n’est prévu dans l’agenda global."
-msgstr "Aucun point n’est prévu dans l’agenda global."
+msgid "Aucun point d’équipe n’est prévu : les priorités couvrent les 14 prochains jours."
+msgstr "Aucun point d’équipe n’est prévu : les priorités couvrent les 14 prochains jours."
 
 #: src/composants/Recherche.tsx
 msgid "Aucun résultat."
@@ -2970,6 +2970,10 @@ msgstr "Cette personne a déjà un compte : l’acceptation n’en crée aucun. 
 #: src/pages/admin/Personnes.tsx
 msgid "Cette personne s’est déjà connectée : elle modifie son nom dans ses préférences."
 msgstr "Cette personne s’est déjà connectée : elle modifie son nom dans ses préférences."
+
+#: src/composants/ReunionDetail.tsx
+msgid "Cette réunion fixe la fin de la période que couvrent les priorités de toute l’équipe."
+msgstr "Cette réunion fixe la fin de la période que couvrent les priorités de toute l’équipe."
 
 #: src/composants/ReunionDetail.tsx
 msgid "Cette réunion n’existe pas ou ne vous est pas accessible."
@@ -6713,6 +6717,10 @@ msgstr "Les phases, les dates clés, les réunions et les échéances {periodeDe
 msgid "Les phases, qui occupent chacune plusieurs semaines de l’agenda"
 msgstr "Les phases, qui occupent chacune plusieurs semaines de l’agenda"
 
+#: src/composants/ReunionFormulaire.tsx
+msgid "Les priorités de toute l’équipe couvrent les jours jusqu’au prochain point d’équipe. Un rendez-vous à quelques personnes ne change pas cette période."
+msgstr "Les priorités de toute l’équipe couvrent les jours jusqu’au prochain point d’équipe. Un rendez-vous à quelques personnes ne change pas cette période."
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
 msgstr "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
@@ -8227,6 +8235,11 @@ msgstr "Pluriel requis."
 msgid "PNG carré de 512 pixels de côté. Elle s’affiche sur l’écran d’accueil d’un téléphone qui installe l’application."
 msgstr "PNG carré de 512 pixels de côté. Elle s’affiche sur l’écran d’accueil d’un téléphone qui installe l’application."
 
+#: src/composants/ReunionDetail.tsx
+#: src/composants/ReunionFormulaire.tsx
+msgid "Point d’équipe"
+msgstr "Point d’équipe"
+
 #: src/composants/ReunionFormulaire.tsx
 msgid "Point d’étape du pôle"
 msgstr "Point d’étape du pôle"
@@ -8442,8 +8455,8 @@ msgid "priorités des périmètres"
 msgstr "priorités des périmètres"
 
 #: src/composants/Priorites.tsx
-msgid "Prochain point : {jourPoint} à {heurePoint}."
-msgstr "Prochain point : {jourPoint} à {heurePoint}."
+msgid "Prochain point d’équipe : {jourPoint} à {heurePoint}."
+msgstr "Prochain point d’équipe : {jourPoint} à {heurePoint}."
 
 #: src/pages/Charge.tsx
 msgid "Prochaine place au programme : {dateProchaine}."

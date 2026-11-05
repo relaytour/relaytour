@@ -1902,6 +1902,11 @@ type Mutation {
     """Les personnes convoquées, pour la cible CHOIX."""
     personneIds: [ID!]
 
+    """
+    Point d’équipe : la réunion fixe l’horizon des priorités (ADR 0059). Réservé à l’agenda global. Sans valeur : la valeur actuelle, ou à la création vrai pour la cible EQUIPE.
+    """
+    pointEquipe: Boolean
+
     """Le sondage clos dont la réunion découle, du même agenda (ADR 0037)."""
     sondageId: ID
     tacheIds: [ID!]
@@ -2249,6 +2254,11 @@ type Mutation {
 
     """Les personnes convoquées, pour la cible CHOIX."""
     personneIds: [ID!]
+
+    """
+    Point d’équipe : la réunion fixe l’horizon des priorités (ADR 0059). Réservé à l’agenda global. Sans valeur : la valeur actuelle, ou à la création vrai pour la cible EQUIPE.
+    """
+    pointEquipe: Boolean
     tacheIds: [ID!]
     titre: String!
 
@@ -3042,7 +3052,7 @@ type Priorites {
   perimetres: [PrioritesDuPerimetre!]!
 
   """
-  La prochaine réunion de l’agenda global, non annulée. Null sans réunion prévue ou sans module Agenda.
+  Le prochain point d’équipe : une réunion de l’agenda global marquée comme point d’équipe, non annulée. Null sans point d’équipe prévu ou sans module Agenda.
   """
   prochainPoint: Reunion
 }
@@ -3671,6 +3681,11 @@ type Reunion {
   """Le périmètre de la réunion ; nul pour l’agenda global."""
   perimetre: Perimetre
   peutModifier: Boolean!
+
+  """
+  Point d’équipe : la réunion fixe l’horizon des priorités de la période (ADR 0059).
+  """
+  pointEquipe: Boolean!
 
   """Les réponses des personnes convoquées, en nombre."""
   reponses: ReponsesReunion
