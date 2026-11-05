@@ -150,7 +150,7 @@ La première version retenait comme prochain point la prochaine réunion de l'ag
 - À la création, la case est cochée quand la réunion convoque toute l'équipe. La personne peut la décocher, ou la cocher pour une réunion qui convoque des personnes choisies, comme les contacts principaux.
 - Une réunion créée depuis un sondage de toute l'équipe est cochée d'office.
 - Une modification qui ne transmet pas le marqueur garde sa valeur.
-- La migration marque les réunions globales à venir qui convoquent toute l'équipe. Les points d'équipe déjà saisis gardent ainsi leur effet.
+- La migration marque les réunions globales à venir qui convoquent toute l'équipe. Ces réunions gardent ainsi leur effet sur l'horizon. Une réunion globale à venir sans convocation, ou qui convoque des personnes choisies, le perd : un admin de l'activité la marque s'il s'agit d'un point d'équipe.
 - Le détail de la réunion affiche le repère « Point d'équipe ».
 - Sans point d'équipe à venir, l'horizon dure 14 jours. Aucune autre réunion ne le remplace.
 

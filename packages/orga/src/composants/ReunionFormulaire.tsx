@@ -368,9 +368,10 @@ export default function ReunionFormulaire({
         onValuesChange={(change: Partial<Valeurs>, v: Valeurs) => {
           // Tant que la personne n'a pas touché la case, une nouvelle réunion
           // globale suit la cible : toute l'équipe en fait un point d'équipe.
+          // Le changement d'agenda règle la case dans l'onChange du sélecteur.
           if (
             existante === null &&
-            ('cible' in change || 'agenda' in change) &&
+            'cible' in change &&
             !form.isFieldTouched('pointEquipe')
           ) {
             form.setFieldValue(
@@ -400,6 +401,11 @@ export default function ReunionFormulaire({
                 tacheIds: [],
                 personneIds: [],
                 cible: valeur === GLOBAL ? 'EQUIPE' : 'PERIMETRE',
+                // La cible passe à toute l'équipe dans l'agenda global : la
+                // case la suit tant que la personne ne l'a pas touchée.
+                ...(form.isFieldTouched('pointEquipe')
+                  ? {}
+                  : { pointEquipe: valeur === GLOBAL }),
               })
             }
           />

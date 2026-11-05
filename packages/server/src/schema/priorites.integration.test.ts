@@ -272,7 +272,8 @@ beforeAll(async () => {
     })
   ).id
   // Un rendez-vous global plus proche, qui n'est pas un point d'équipe : il ne
-  // fixe pas l'horizon (ADR 0059).
+  // fixe pas l'horizon (ADR 0059). La requête `priorites` et la fin de validité
+  // d'un ajustement (`ajusterPriorite`, J+21 et non J+16) le prouvent.
   await prisma.reunion.create({
     data: {
       organisationId: ORGANISATION,
