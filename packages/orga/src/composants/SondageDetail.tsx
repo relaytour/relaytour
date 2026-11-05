@@ -262,6 +262,8 @@ export default function SondageDetail({
       // affectation changée pendant le sondage n'ajoute ni ne retire personne.
       cible: 'CHOIX',
       personneIds: sondage.participantIds ?? [],
+      // Un sondage de toute l'équipe prépare un point d'équipe (ADR 0059).
+      pointEquipe: sondage.perimetre === null && sondage.cible === 'EQUIPE',
     })
   }
 

@@ -2391,6 +2391,11 @@ msgstr "The video call link starts with https://."
 
 #. js-lingui-explicit-id
 #: src/lib/reunions.ts
+msgid "Seule une réunion de l’agenda global peut être un point d’équipe."
+msgstr "Only a meeting in the shared calendar can be a team check-in."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
 msgid "Une réunion lie {max} tâches au plus."
 msgstr "A meeting links at most {max} tasks."
 

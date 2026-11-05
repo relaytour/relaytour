@@ -984,6 +984,9 @@ model Reunion {
   statut         StatutReunion     @default(PREVUE)
   // Les personnes convoquées ; null sans convocation.
   cible          CibleConvocation?
+  // Point d'équipe : seule une réunion globale ainsi marquée fixe l'horizon des
+  // priorités (ADR 0059). Une réunion de périmètre ne l'est jamais.
+  pointEquipe    Boolean           @default(false)
   // Version iCalendar (SEQUENCE) : elle monte à chaque changement du titre, de
   // l'horaire, du lieu ou du lien, et à l'annulation.
   sequence       Int               @default(0)

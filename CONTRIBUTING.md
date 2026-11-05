@@ -151,6 +151,7 @@ Un seul mot par notion. La colonne « Anglais » fixe le terme du catalogue angl
 | agenda | calendar | Calendrier d'une activité pour une période : ses phases, ses dates clés, ses réunions et, en option, les échéances. L'agenda global appartient à l'activité ; chaque périmètre a aussi le sien (ADR 0037). |
 | date clé | key date | Jour, ou suite de jours, qu'un admin de l'activité place dans l'agenda d'une période (ADR 0037). |
 | réunion | meeting | Rendez-vous de l'agenda global ou de l'agenda d'un périmètre, avec un horaire, un lieu et un lien de visio facultatifs. Elle ne se supprime pas, elle s'annule (ADR 0037). |
+| point d'équipe | team check-in | Réunion de l'agenda global marquée comme telle par la personne qui l'écrit. Le prochain point d'équipe fixe la fin de l'horizon des priorités (ADR 0059). |
 | convocation | meeting notice | Appel d'une personne de l'équipe à une réunion. L'application l'envoie par mail avec un fichier iCalendar ; la personne répond dans l'application. Ne pas confondre avec une invitation en attente (ADR 0037). |
 | abonnement | calendar subscription | Adresse secrète qui sert un agenda au format iCalendar, en lecture seule, à un agenda externe. Une personne a son abonnement personnel ; une activité peut avoir le sien (ADR 0037). Ne pas confondre avec l'abonnement d'un appareil aux notifications push. |
 | sondage | poll | Choix d'un créneau pour une réunion : les personnes visées répondent oui, si besoin ou non à chaque créneau proposé (ADR 0037). |
