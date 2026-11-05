@@ -2,10 +2,10 @@
   "schemaVersion": 5,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.28.0",
       "notes": [
         {
           "id": "2026-11-05-serveur-le-serveur-ne-retient-que-les-points-d-equipe-pour-l-horizon",

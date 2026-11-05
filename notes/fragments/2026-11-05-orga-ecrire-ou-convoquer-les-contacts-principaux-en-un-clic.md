@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.28.0
 fr:
   titre: >-
     Écrire ou convoquer les contacts principaux en un clic

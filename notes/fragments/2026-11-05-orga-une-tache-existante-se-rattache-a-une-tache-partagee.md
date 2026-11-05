@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.28.0
 fr:
   titre: >-
     Une tâche existante se rattache à une tâche partagée
