@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.28.0
 fr:
   titre: >-
     Le serveur ne retient que les points d'équipe pour l'horizon des priorités

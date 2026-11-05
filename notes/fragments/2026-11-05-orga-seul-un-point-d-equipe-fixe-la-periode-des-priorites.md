@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.28.0
 fr:
   titre: >-
     Seul un point d'équipe fixe la période des priorités
