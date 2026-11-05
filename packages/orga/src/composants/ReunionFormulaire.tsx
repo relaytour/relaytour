@@ -1,7 +1,7 @@
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, App, Checkbox, Form, Input, Modal, Radio, Select } from 'antd'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { graphql } from '../gql'
 import type { CibleConvocation } from '../gql/graphql'
@@ -200,6 +200,10 @@ export default function ReunionFormulaire({
   const { message } = App.useApp()
   const client = useApolloClient()
   const [form] = Form.useForm<Valeurs>()
+  // Vrai quand la personne a coché ou décoché la case « Point d'équipe » depuis
+  // l'ouverture. Le formulaire est réutilisé d'une ouverture à l'autre :
+  // `isFieldTouched` garderait l'état d'une saisie précédente.
+  const caseTouchee = useRef(false)
   const relire = {
     refetchQueries: [
       'Agenda',
@@ -232,6 +236,7 @@ export default function ReunionFormulaire({
 
   useEffect(() => {
     if (reunion === null) return
+    caseTouchee.current = false
     form.setFieldsValue(
       'id' in reunion
         ? {
@@ -369,15 +374,10 @@ export default function ReunionFormulaire({
           // Tant que la personne n'a pas touché la case, une nouvelle réunion
           // globale suit la cible : toute l'équipe en fait un point d'équipe.
           // Le changement d'agenda règle la case dans l'onChange du sélecteur.
-          if (
-            existante === null &&
-            'cible' in change &&
-            !form.isFieldTouched('pointEquipe')
-          ) {
-            form.setFieldValue(
-              'pointEquipe',
-              v.agenda === GLOBAL && v.cible === 'EQUIPE'
-            )
+          if (existante === null && 'cible' in change && !caseTouchee.current) {
+            form.setFieldsValue({
+              pointEquipe: v.agenda === GLOBAL && v.cible === 'EQUIPE',
+            })
           }
         }}
         requiredMark={false}
@@ -403,7 +403,7 @@ export default function ReunionFormulaire({
                 cible: valeur === GLOBAL ? 'EQUIPE' : 'PERIMETRE',
                 // La cible passe à toute l'équipe dans l'agenda global : la
                 // case la suit tant que la personne ne l'a pas touchée.
-                ...(form.isFieldTouched('pointEquipe')
+                ...(caseTouchee.current
                   ? {}
                   : { pointEquipe: valeur === GLOBAL }),
               })
@@ -598,7 +598,13 @@ export default function ReunionFormulaire({
             valuePropName="checked"
             extra={t`Les priorités de toute l’équipe couvrent les jours jusqu’au prochain point d’équipe. Un rendez-vous à quelques personnes ne change pas cette période.`}
           >
-            <Checkbox>{t`Point d’équipe`}</Checkbox>
+            <Checkbox
+              onChange={() => {
+                caseTouchee.current = true
+              }}
+            >
+              {t`Point d’équipe`}
+            </Checkbox>
           </Form.Item>
         )}
       </Form>
