@@ -1111,6 +1111,31 @@ msgid "Cette déclinaison a déjà été refusée. Un admin de l’activité peu
 msgstr "This derived task was already declined. An activity admin can enforce it."
 
 #. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Cette tâche est déjà la déclinaison d’une autre tâche."
+msgstr "This task is already derived from another task."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Seule une déclinaison acceptée se détache. Refusez cette déclinaison si elle ne concerne pas votre périmètre."
+msgstr "Only an accepted derived task can be unlinked. Decline this derived task if it does not concern your area."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Ce périmètre porte déjà une déclinaison de cette tâche."
+msgstr "This area already has a derived task of this task."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Les deux tâches doivent appartenir à la même période."
+msgstr "Both tasks must belong to the same edition."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Cette tâche porte ses propres déclinaisons : elle ne se rattache pas."
+msgstr "This task has its own derived tasks, so it cannot be linked."
+
+#. js-lingui-explicit-id
 #: src/orga/depot-contenu.ts
 msgid "L’archive ne contient pas le dossier activites/{slug}/."
 msgstr "The archive does not contain the activites/{slug}/ folder."

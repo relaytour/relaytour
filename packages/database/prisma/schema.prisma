@@ -1561,6 +1561,9 @@ enum TypeJournal {
   DECLINAISON_ACCEPTEE
   DECLINAISON_REFUSEE
   DECLINAISON_IMPOSEE
+  // Une tâche existante rattachée à une tâche partagée, puis détachée (ADR 0061).
+  DECLINAISON_RATTACHEE
+  DECLINAISON_DETACHEE
   // Une fiche connexe masquée, puis affichée de nouveau, par un périmètre cible
   // (ADR 0039) : le périmètre de la ligne est le périmètre cible.
   FICHE_CONNEXE_MASQUEE

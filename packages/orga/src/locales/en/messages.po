@@ -48,6 +48,7 @@ msgid "« {titreSequence} » quitte le programme, avec ses personnes placées."
 msgstr "“{titreSequence}” leaves the schedule, along with the people placed in it."
 
 #: src/composants/DeclinerTache.tsx
+#: src/composants/RattacherTache.tsx
 #: src/composants/TacheCarte.tsx
 msgid "« {titreTache} »"
 msgstr "“{titreTache}”"
@@ -1963,6 +1964,7 @@ msgstr "Canceled"
 #: src/composants/ConnexionEspace.tsx
 #: src/composants/DateCleFormulaire.tsx
 #: src/composants/DeclinaisonsProposees.tsx
+#: src/composants/DeclinaisonsTache.tsx
 #: src/composants/DeclinerTache.tsx
 #: src/composants/Demandes.tsx
 #: src/composants/DepotContenu.tsx
@@ -1979,6 +1981,7 @@ msgstr "Canceled"
 #: src/composants/ModeleDeDepart.tsx
 #: src/composants/NouvelleEdition.tsx
 #: src/composants/ProposerPersonne.tsx
+#: src/composants/RattacherTache.tsx
 #: src/composants/ReconductionEdition.tsx
 #: src/composants/ReglagePerimetre.tsx
 #: src/composants/Repartition.tsx
@@ -2513,6 +2516,10 @@ msgstr "No tasks in {cette}."
 #: src/pages/Perimetre.tsx
 msgid "Aucune tâche dans cette catégorie."
 msgstr "No tasks in this category."
+
+#: src/composants/RattacherTache.tsx
+msgid "Aucune tâche de ce périmètre ne peut être rattachée. Une déclinaison et une tâche partagée ne se rattachent pas."
+msgstr "No task in this area can be linked. A derived task or a shared task cannot be linked."
 
 #: src/pages/Fiche.tsx
 msgid "Aucune tâche de l’édition en cours ne renvoie à cette fiche."
@@ -3148,6 +3155,10 @@ msgstr "Choose a {format} file"
 msgid "Choisir un lieu"
 msgstr "Choose a venue"
 
+#: src/composants/RattacherTache.tsx
+msgid "Choisir un périmètre"
+msgstr "Choose an area"
+
 #: src/composants/DepotContenu.tsx
 msgid "Choisir une autre archive"
 msgstr "Choose another archive"
@@ -3159,6 +3170,10 @@ msgstr "Choose an organization"
 #: src/composants/TacheCarte.tsx
 msgid "Choisir une ou plusieurs personnes"
 msgstr "Choose one or more people"
+
+#: src/composants/RattacherTache.tsx
+msgid "Choisir une tâche"
+msgstr "Choose a task"
 
 #: src/pages/AppelBenevoles.tsx
 msgid "Choisissez au moins un moment, ou proposez votre aide là où il manque du monde."
@@ -3222,6 +3237,7 @@ msgid "Choisissez un jour."
 msgstr "Choose a day."
 
 #: src/composants/AppelsBenevoles.tsx
+#: src/composants/RattacherTache.tsx
 #: src/pages/admin/Redaction.tsx
 msgid "Choisissez un périmètre."
 msgstr "Choose an area."
@@ -3260,6 +3276,10 @@ msgstr "Choose a slot to rank people by their availability."
 #: src/composants/AppelsBenevoles.tsx
 msgid "Choisissez une séquence."
 msgstr "Choose a slot."
+
+#: src/composants/RattacherTache.tsx
+msgid "Choisissez une tâche."
+msgstr "Choose a task."
 
 #: src/composants/ChampsActivite.tsx
 #: src/composants/Coquille.tsx
@@ -4043,6 +4063,18 @@ msgstr "Destination"
 msgid "Destination des fiches"
 msgstr "Destination of the sheets"
 
+#: src/lib/declinaisons.ts
+msgid "Détachée par {personne} le {jour}"
+msgstr "Unlinked by {personne} on {jour}"
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "Détacher"
+msgstr "Unlink"
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "Détacher la tâche du périmètre {nomPerimetre} ?"
+msgstr "Unlink the task of the {nomPerimetre} area?"
+
 #: src/composants/AssistantTableur.tsx
 #: src/composants/Repartition.tsx
 msgid "Détail"
@@ -4318,6 +4350,10 @@ msgstr "It cannot be pushed back to the Git repository. Replace the contact deta
 #: src/pages/admin/Personnes.tsx
 msgid "Elle quitte l’équipe de l’activité, et ses souhaits des périodes en cours sont retirés. Son compte reste dans l’organisation."
 msgstr "They leave the activity’s team, and their interests for current periods are removed. Their account stays in the organization."
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "Elle redevient une tâche ordinaire de ce périmètre. Elle garde son statut, ses personnes assignées et ses commentaires. Vous pourrez la rattacher de nouveau."
+msgstr "It becomes an ordinary task of this area again. It keeps its status, its assignees and its comments. You can link it again later."
 
 #. Colonne : nombre de candidatures qui attendent une revue
 #. Statut du choix de séquence d’une candidature de bénévole
@@ -4668,6 +4704,7 @@ msgid "Fermeture"
 msgstr "Closing"
 
 #: src/composants/DeclinerTache.tsx
+#: src/composants/RattacherTache.tsx
 msgid "Fermez cette fenêtre et réessayez dans un instant."
 msgstr "Close this window and try again in a moment."
 
@@ -5909,6 +5946,18 @@ msgstr "The slot will leave its current area. A volunteer call opened on this sl
 msgid "La suppression est définitive."
 msgstr "Deletion is permanent."
 
+#: src/composants/RattacherTache.tsx
+msgid "La tâche choisie devient une déclinaison de cette tâche. Elle garde son titre, son statut, ses personnes assignées et ses commentaires. Vous suivez son avancement depuis cette tâche, et vous pouvez la détacher plus tard."
+msgstr "The chosen task becomes a derived task of this task. It keeps its title, its status, its assignees and its comments. You follow its progress from this task, and you can unlink it later."
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "La tâche du périmètre {nomPerimetre} est détachée."
+msgstr "The task of the {nomPerimetre} area is unlinked."
+
+#: src/composants/RattacherTache.tsx
+msgid "La tâche du périmètre {nomPerimetre} est rattachée."
+msgstr "The task of the {nomPerimetre} area is linked."
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "La tâche est ajoutée à votre périmètre."
 msgstr "The task is added to your area."
@@ -6674,6 +6723,7 @@ msgid "Les périmètres de l’activité n’ont aucune tâche type."
 msgstr "The activity’s areas have no task templates."
 
 #: src/composants/DeclinerTache.tsx
+#: src/composants/RattacherTache.tsx
 msgid "Les périmètres qui portent déjà cette tâche n’ont pas pu être chargés."
 msgstr "The areas that already carry this task couldn’t be loaded."
 
@@ -6744,6 +6794,10 @@ msgstr "The tasks of a spreadsheet join a period. A task that is already present
 #: src/composants/NouvelleEdition.tsx
 msgid "Les tâches de"
 msgstr "The tasks of"
+
+#: src/composants/RattacherTache.tsx
+msgid "Les tâches de ce périmètre n’ont pas pu être chargées."
+msgstr "The tasks of this area could not be loaded."
 
 #: src/pages/Charge.tsx
 msgid "Les tâches ouvertes et les places à venir de chaque personne {dePeriode}."
@@ -7957,6 +8011,7 @@ msgstr "Performance"
 #. Portée d’un appel à bénévoles dont le périmètre est inconnu
 #: src/composants/AppelsBenevoles.tsx
 #: src/composants/EcrireMessage.tsx
+#: src/composants/RattacherTache.tsx
 #: src/composants/ReconductionEdition.tsx
 #: src/composants/SequenceFormulaire.tsx
 #: src/pages/admin/ImportTaches.tsx
@@ -8551,6 +8606,19 @@ msgstr "Reminder: overdue tasks"
 #: src/pages/ImportBenevoles.tsx
 msgid "Rapport"
 msgstr "Report"
+
+#: src/lib/declinaisons.ts
+msgid "Rattachée par {personne} le {jour}"
+msgstr "Linked by {personne} on {jour}"
+
+#: src/composants/RattacherTache.tsx
+msgid "Rattacher"
+msgstr "Link"
+
+#: src/composants/RattacherTache.tsx
+#: src/composants/TacheCarte.tsx
+msgid "Rattacher une tâche existante"
+msgstr "Link an existing task"
 
 #: src/composants/TacheCarte.tsx
 msgid "Réalisée par (facultatif)"
@@ -9750,6 +9818,7 @@ msgstr "Table"
 msgid "Tableaux"
 msgstr "Tables"
 
+#: src/composants/RattacherTache.tsx
 #: src/composants/ReconductionEdition.tsx
 #: src/pages/admin/ImportTaches.tsx
 msgid "Tâche"
@@ -10060,6 +10129,7 @@ msgid "Tous les périmètres"
 msgstr "All areas"
 
 #: src/composants/DeclinerTache.tsx
+#: src/composants/RattacherTache.tsx
 msgid "Tous les périmètres de l’activité portent déjà cette tâche."
 msgstr "All areas in the activity already have this task."
 

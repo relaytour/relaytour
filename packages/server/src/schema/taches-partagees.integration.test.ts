@@ -905,3 +905,289 @@ describe('score et tâches partagées', () => {
     expect(scores.get(ids.nina)?.tachesRealisees).toBe(1)
   })
 })
+
+// Rattacher une tâche existante à une tâche partagée, puis la détacher (ADR 0061).
+// Les deux gestes demandent d'écrire dans les deux périmètres.
+describe('rattacher et détacher une tâche existante', () => {
+  const RATTACHER = `mutation ($id: ID!, $t: ID!) {
+    rattacherDeclinaison(id: $id, tacheId: $t) { ${CHAMPS} }
+  }`
+  const DETACHER = `mutation ($id: ID!) {
+    detacherDeclinaison(id: $id) { ${CHAMPS} }
+  }`
+  const COMMENTER = `mutation ($id: ID!, $t: String!) {
+    commenterTache(id: $id, texte: $t) { __typename }
+  }`
+  let suivi: TacheLue
+  let gymnase: TacheLue
+
+  /** Crée une tâche ordinaire dans un périmètre, assignée à son autrice. */
+  async function creerDans(userId: string, perimetreId: string, titre: string) {
+    const r = await executer(userId, CREER, {
+      p: perimetreId,
+      e: ids.edition,
+      t: titre,
+      m: true,
+    })
+    expect(r.errors).toBeUndefined()
+    return (r.data as { creerTache: TacheLue }).creerTache
+  }
+
+  const lienDe = (tacheId: string) =>
+    prisma.tache.findUniqueOrThrow({
+      where: { id: tacheId },
+      select: { origineId: true, accord: true, accordParId: true },
+    })
+
+  it('refuse qui n’écrit pas dans les deux périmètres, sans rien écrire', async () => {
+    suivi = await creerDans(ids.pauline, ids.lieux, 'Suivre les réservations')
+    gymnase = await creerDans(ids.victor, ids.volley, 'Réserver le gymnase')
+    await executer(ids.victor, STATUT, { id: gymnase.id, s: 'EN_COURS' })
+    await executer(ids.victor, COMMENTER, {
+      id: gymnase.id,
+      t: 'Le gymnase répond la semaine prochaine.',
+    })
+    // La référente du pôle n'écrit pas dans le volley, le référent du volley
+    // n'écrit pas dans le pôle.
+    for (const personne of [
+      ids.pauline,
+      ids.victor,
+      ids.consult,
+      ids.etrangere,
+      null,
+    ]) {
+      expect(
+        code(
+          await executer(personne, RATTACHER, { id: suivi.id, t: gymnase.id })
+        )
+      ).toBe('FORBIDDEN')
+    }
+    expect(await lienDe(gymnase.id)).toEqual({
+      origineId: null,
+      accord: null,
+      accordParId: null,
+    })
+  })
+
+  it('fait de la tâche une déclinaison acceptée, sans rien lui retirer', async () => {
+    const avant = await prisma.tache.findUniqueOrThrow({
+      where: { id: gymnase.id },
+      select: { version: true },
+    })
+    const r = await executer(ids.mixte, RATTACHER, {
+      id: suivi.id,
+      t: gymnase.id,
+    })
+    expect(r.errors).toBeUndefined()
+    const partagee = (r.data as { rattacherDeclinaison: TacheLue })
+      .rattacherDeclinaison
+    expect(partagee.id).toBe(suivi.id)
+    expect(
+      partagee.declinaisons.map(d => [d.id, d.titre, d.statut, d.accord])
+    ).toEqual([[gymnase.id, 'Réserver le gymnase', 'EN_COURS', 'ACCEPTE']])
+    const apres = await prisma.tache.findUniqueOrThrow({
+      where: { id: gymnase.id },
+      include: {
+        assignations: { select: { userId: true } },
+        _count: { select: { commentaires: true } },
+      },
+    })
+    expect(apres.origineId).toBe(suivi.id)
+    expect(apres.accordParId).toBe(ids.mixte)
+    expect(apres.version).toBe(avant.version)
+    expect(apres.assignations).toEqual([{ userId: ids.victor }])
+    expect(apres._count.commentaires).toBe(1)
+    // La tâche reste dans les tâches de son périmètre.
+    const volley = await lirePerimetre(ids.victor, 'volley')
+    expect(volley.taches.find(t => t.id === gymnase.id)).toEqual({
+      id: gymnase.id,
+      accord: 'ACCEPTE',
+      origine: { id: suivi.id },
+    })
+  })
+
+  it('montre le rattachement dans l’historique de l’accord, aux admins seulement', async () => {
+    const lire = async (userId: string) => {
+      const r = await executer(userId, TACHE, { id: suivi.id })
+      expect(r.errors).toBeUndefined()
+      return (
+        r.data as {
+          tache: {
+            declinaisons: { historiqueAccord: { etape: string }[] }[]
+          }
+        }
+      ).tache.declinaisons[0]!.historiqueAccord.map(e => e.etape)
+    }
+    expect(await lire(ids.admin)).toEqual(['RATTACHEE'])
+    expect(await lire(ids.mixte)).toEqual([])
+  })
+
+  it('ne change rien quand la tâche est déjà rattachée à cette tâche partagée', async () => {
+    const r = await executer(ids.mixte, RATTACHER, {
+      id: suivi.id,
+      t: gymnase.id,
+    })
+    expect(r.errors).toBeUndefined()
+    expect(
+      await prisma.journal.count({
+        where: { tacheId: gymnase.id, type: 'DECLINAISON_RATTACHEE' },
+      })
+    ).toBe(1)
+  })
+
+  it('refuse chaque tâche qui contredit les règles du lien', async () => {
+    const seconde = await creerDans(ids.victor, ids.volley, 'Réserver la salle')
+    const duPole = await creerDans(ids.pauline, ids.lieux, 'Plan des accès')
+    const autreSuivi = await creerDans(ids.pauline, ids.lieux, 'Autre suivi')
+    // Une tâche du volley qui porte ses propres déclinaisons.
+    const partageeDuVolley = await creerDans(
+      ids.victor,
+      ids.volley,
+      'Recenser les arbitres'
+    )
+    await executer(ids.admin, DECLINER, {
+      id: partageeDuVolley.id,
+      p: [ids.natation],
+    })
+    const archivee = await prisma.tache.create({
+      data: {
+        editionId: ids.edition,
+        perimetreId: ids.escrime,
+        titre: 'Tâche d’un périmètre archivé',
+      },
+    })
+    const cas: [string, string, string][] = [
+      // Le volley porte déjà une déclinaison de cette tâche partagée.
+      [suivi.id, seconde.id, 'déjà une déclinaison'],
+      // Une tâche ne se rattache pas dans son propre périmètre.
+      [suivi.id, duPole.id, 'son propre périmètre'],
+      // Le lien garde un seul niveau, dans les deux sens.
+      [autreSuivi.id, gymnase.id, 'déjà la déclinaison'],
+      [gymnase.id, duPole.id, 'ne se décline pas'],
+      [autreSuivi.id, partageeDuVolley.id, 'ses propres déclinaisons'],
+      [autreSuivi.id, archivee.id, 'archivé'],
+    ]
+    for (const [origine, tache, message] of cas) {
+      const r = await executer(ids.admin, RATTACHER, { id: origine, t: tache })
+      expect(code(r)).toBe('SAISIE_INVALIDE')
+      expect(r.errors?.[0]?.message).toContain(message)
+    }
+    expect((await lienDe(seconde.id)).origineId).toBeNull()
+    expect((await lienDe(duPole.id)).origineId).toBeNull()
+    expect((await lienDe(archivee.id)).origineId).toBeNull()
+  })
+
+  it('refuse une tâche d’une autre période, d’une autre activité ou d’une autre organisation', async () => {
+    const ailleurs = await prisma.tache.create({
+      data: {
+        editionId: ids.autreEdition,
+        perimetreId: ids.ailleurs,
+        titre: 'Tâche d’une autre activité',
+      },
+    })
+    const ancienne = await prisma.tache.create({
+      data: {
+        editionId: ids.archivee,
+        perimetreId: ids.volley,
+        titre: 'Tâche d’une période archivée',
+      },
+    })
+    const etrangere = await prisma.tache.create({
+      data: {
+        editionId: ids.edition,
+        perimetreId: ids.etranger,
+        titre: 'Tâche d’une autre organisation',
+      },
+    })
+    // L'admin de l'organisation écrit dans l'autre activité : la période diffère.
+    let r = await executer(ids.admin, RATTACHER, {
+      id: suivi.id,
+      t: ailleurs.id,
+    })
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(r.errors?.[0]?.message).toContain('même période')
+    // Une période archivée reste en lecture seule.
+    r = await executer(ids.admin, RATTACHER, { id: suivi.id, t: ancienne.id })
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(r.errors?.[0]?.message).toMatch(/archivée/)
+    // Une autre organisation vaut une tâche inconnue.
+    for (const [origine, tache] of [
+      [suivi.id, etrangere.id],
+      [etrangere.id, gymnase.id],
+      [suivi.id, 'inconnue'],
+    ] as const) {
+      expect(
+        code(await executer(ids.admin, RATTACHER, { id: origine, t: tache }))
+      ).toBe('FORBIDDEN')
+    }
+    for (const tache of [ailleurs, ancienne, etrangere]) {
+      expect((await lienDe(tache.id)).origineId).toBeNull()
+    }
+  })
+
+  it('refuse de détacher à qui n’écrit pas dans les deux périmètres', async () => {
+    for (const personne of [
+      ids.victor,
+      ids.pauline,
+      ids.consult,
+      ids.etrangere,
+      null,
+    ]) {
+      expect(code(await executer(personne, DETACHER, { id: gymnase.id }))).toBe(
+        'FORBIDDEN'
+      )
+    }
+    expect((await lienDe(gymnase.id)).origineId).toBe(suivi.id)
+  })
+
+  it('refuse de détacher une déclinaison qui attend un accord', async () => {
+    const proposee = await partager(ids.pauline, 'Compter les vestiaires', [
+      ids.natation,
+    ])
+    const enAttente = declinaisonDe(proposee, ids.natation).id
+    const r = await executer(ids.admin, DETACHER, { id: enAttente })
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(await lienDe(enAttente)).toMatchObject({
+      origineId: proposee.id,
+      accord: 'EN_ATTENTE',
+    })
+  })
+
+  it('rend une tâche ordinaire, avec tout ce qu’elle porte', async () => {
+    const r = await executer(ids.mixte, DETACHER, { id: gymnase.id })
+    expect(r.errors).toBeUndefined()
+    const lue = (r.data as { detacherDeclinaison: TacheLue })
+      .detacherDeclinaison
+    expect(lue).toMatchObject({
+      id: gymnase.id,
+      origine: null,
+      accord: null,
+      statut: 'EN_COURS',
+      assignes: [{ id: ids.victor }],
+    })
+    expect(await lienDe(gymnase.id)).toEqual({
+      origineId: null,
+      accord: null,
+      accordParId: null,
+    })
+    expect(
+      await prisma.journal.count({
+        where: { tacheId: gymnase.id, type: 'DECLINAISON_DETACHEE' },
+      })
+    ).toBe(1)
+    // Une tâche ordinaire se détache sans erreur ni écriture.
+    const encore = await executer(ids.mixte, DETACHER, { id: gymnase.id })
+    expect(encore.errors).toBeUndefined()
+    expect(
+      await prisma.journal.count({
+        where: { tacheId: gymnase.id, type: 'DECLINAISON_DETACHEE' },
+      })
+    ).toBe(1)
+    // Détachée, la tâche se rattache de nouveau.
+    const rattachee = await executer(ids.admin, RATTACHER, {
+      id: suivi.id,
+      t: gymnase.id,
+    })
+    expect(rattachee.errors).toBeUndefined()
+  })
+})

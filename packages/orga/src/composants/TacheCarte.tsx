@@ -3,6 +3,7 @@ import {
   CalendarOutlined,
   CheckOutlined,
   EditOutlined,
+  LinkOutlined,
   MessageOutlined,
   MoreOutlined,
   PushpinFilled,
@@ -37,6 +38,7 @@ import {
 import type { PerimetreCible } from './ChoixPerimetresCibles'
 import DeclinaisonsTache from './DeclinaisonsTache'
 import DeclinerTache from './DeclinerTache'
+import RattacherTache from './RattacherTache'
 import EtiquettePerimetre from './EtiquettePerimetre'
 import FilTache from './FilTache'
 import { PastilleEtat, PastilleStatut } from './Etat'
@@ -122,6 +124,7 @@ export default function TacheCarte({
   const [realisateurs, setRealisateurs] = useState<string[]>([])
   const [choixAssignation, setChoixAssignation] = useState(false)
   const [aDecliner, setADecliner] = useState(false)
+  const [aRattacher, setARattacher] = useState(false)
   // Le fil s'ouvre quand la personne lit le périmètre de la tâche (ADR 0029).
   const commentaires = useCommentairesDeLaPeriode(editionId)
   const filLisible = commentaires.lus.has(tache.perimetre.id)
@@ -191,6 +194,17 @@ export default function TacheCarte({
             icon: <ShareAltOutlined />,
             label: t`Décliner dans d’autres périmètres`,
           },
+          // Une tâche existante d'un autre périmètre devient une déclinaison
+          // (ADR 0061).
+          ...(editionId !== undefined
+            ? [
+                {
+                  key: 'rattacher',
+                  icon: <LinkOutlined />,
+                  label: t`Rattacher une tâche existante`,
+                },
+              ]
+            : []),
         ]
       : []),
     // L'ajustement de la tâche dans les priorités (ADR 0059).
@@ -467,6 +481,7 @@ export default function TacheCarte({
             resume={resume}
             editionId={editionId}
             estAdmin={estAdmin}
+            peutModifier={peutModifier}
           />
         )}
       </div>
@@ -558,6 +573,7 @@ export default function TacheCarte({
                 onClick: ({ key }) => {
                   if (key === 'modifier') onModifier?.(tache)
                   if (key === 'decliner') setADecliner(true)
+                  if (key === 'rattacher') setARattacher(true)
                   if (key === 'reunion') onPlanifierReunion?.(tache)
                   if (key === 'EN_COURS')
                     void statut('EN_COURS', t`Tâche marquée en cours.`)
@@ -632,6 +648,15 @@ export default function TacheCarte({
           perimetres={perimetresCibles}
           estAdmin={estAdmin}
           onFermer={() => setADecliner(false)}
+        />
+      )}
+      {declinable && editionId !== undefined && (
+        <RattacherTache
+          tache={aRattacher ? tache : null}
+          dejaPartagee={(resume?.total ?? 0) > 0}
+          perimetres={perimetresCibles}
+          editionId={editionId}
+          onFermer={() => setARattacher(false)}
         />
       )}
     </article>
