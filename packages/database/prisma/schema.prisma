@@ -984,6 +984,9 @@ model Reunion {
   statut         StatutReunion     @default(PREVUE)
   // Les personnes convoquées ; null sans convocation.
   cible          CibleConvocation?
+  // Point d'équipe : seule une réunion globale ainsi marquée fixe l'horizon des
+  // priorités (ADR 0059). Une réunion de périmètre ne l'est jamais.
+  pointEquipe    Boolean           @default(false)
   // Version iCalendar (SEQUENCE) : elle monte à chaque changement du titre, de
   // l'horaire, du lieu ou du lien, et à l'annulation.
   sequence       Int               @default(0)
@@ -1561,6 +1564,9 @@ enum TypeJournal {
   DECLINAISON_ACCEPTEE
   DECLINAISON_REFUSEE
   DECLINAISON_IMPOSEE
+  // Une tâche existante rattachée à une tâche partagée, puis détachée (ADR 0061).
+  DECLINAISON_RATTACHEE
+  DECLINAISON_DETACHEE
   // Une fiche connexe masquée, puis affichée de nouveau, par un périmètre cible
   // (ADR 0039) : le périmètre de la ligne est le périmètre cible.
   FICHE_CONNEXE_MASQUEE

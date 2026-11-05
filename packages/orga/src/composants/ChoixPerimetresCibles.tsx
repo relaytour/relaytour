@@ -10,6 +10,8 @@ import PastillePerimetre from './PastillePerimetre'
 /** Un périmètre où décliner une tâche partagée (ADR 0026). */
 export interface PerimetreCible {
   id: string
+  /** Pour lire ses tâches, quand une tâche existante s'y rattache (ADR 0061). */
+  slug: string
   nom: string
   groupe: string
   couleur?: string | null

@@ -62,15 +62,15 @@ async function executer(
 const code = (r: Awaited<ReturnType<typeof executer>>) =>
   r.errors?.[0]?.extensions?.code
 
-const CHAMPS = `id titre jour heureDebut heureFin debut fin statut cible version
+const CHAMPS = `id titre jour heureDebut heureFin debut fin statut cible pointEquipe version
   lieu lienVisio description detailMasque peutModifier estConvoquee maReponse
   taches { id } reponses { presentes absentes peutEtre sansReponse }
   convocations { personneId reponse }`
-const CREER = `mutation ($e: ID!, $p: ID, $t: String!, $j: Date!, $d: String!, $f: String!, $l: String, $v: String, $desc: String, $taches: [ID!], $c: CibleConvocation, $u: [ID!]) {
-  creerReunion(editionId: $e, perimetreId: $p, titre: $t, jour: $j, heureDebut: $d, heureFin: $f, lieu: $l, lienVisio: $v, description: $desc, tacheIds: $taches, cible: $c, personneIds: $u) { ${CHAMPS} }
+const CREER = `mutation ($e: ID!, $p: ID, $t: String!, $j: Date!, $d: String!, $f: String!, $l: String, $v: String, $desc: String, $taches: [ID!], $c: CibleConvocation, $u: [ID!], $pe: Boolean) {
+  creerReunion(editionId: $e, perimetreId: $p, titre: $t, jour: $j, heureDebut: $d, heureFin: $f, lieu: $l, lienVisio: $v, description: $desc, tacheIds: $taches, cible: $c, personneIds: $u, pointEquipe: $pe) { ${CHAMPS} }
 }`
-const MODIFIER = `mutation ($id: ID!, $t: String!, $j: Date!, $d: String!, $f: String!, $l: String, $v: String, $desc: String, $c: CibleConvocation, $u: [ID!], $version: Int!) {
-  modifierReunion(id: $id, titre: $t, jour: $j, heureDebut: $d, heureFin: $f, lieu: $l, lienVisio: $v, description: $desc, cible: $c, personneIds: $u, versionAttendue: $version) { ${CHAMPS} }
+const MODIFIER = `mutation ($id: ID!, $t: String!, $j: Date!, $d: String!, $f: String!, $l: String, $v: String, $desc: String, $c: CibleConvocation, $u: [ID!], $pe: Boolean, $version: Int!) {
+  modifierReunion(id: $id, titre: $t, jour: $j, heureDebut: $d, heureFin: $f, lieu: $l, lienVisio: $v, description: $desc, cible: $c, personneIds: $u, pointEquipe: $pe, versionAttendue: $version) { ${CHAMPS} }
 }`
 const ANNULER = `mutation ($id: ID!) { annulerReunion(id: $id) { ${CHAMPS} } }`
 const REPONDRE = `mutation ($id: ID!, $r: ReponseConvocation!) { repondreConvocation(reunionId: $id, reponse: $r) { ${CHAMPS} } }`
@@ -85,6 +85,7 @@ interface Reunion {
   heureFin: string
   debut: string
   statut: string
+  pointEquipe: boolean
   version: number
   lieu: string | null
   lienVisio: string | null
@@ -633,6 +634,75 @@ describe('agenda global', () => {
         )
       ).toBe('FORBIDDEN')
     }
+  })
+})
+
+describe('point d’équipe (ADR 0059)', () => {
+  const commun = {
+    t: 'Point d’équipe',
+    j: '2027-02-06',
+    d: '10:00',
+    f: '12:00',
+  }
+
+  it('marque une réunion globale qui convoque toute l’équipe, et garde le choix', async () => {
+    const vars = { ...commun, e: ids.edition }
+    const reunion = donnees<Reunion>(
+      await executer(ids.adminActivite, CREER, { ...vars, c: 'EQUIPE' }),
+      'creerReunion'
+    )
+    expect(reunion.pointEquipe).toBe(true)
+    const base = {
+      id: reunion.id,
+      t: vars.t,
+      j: vars.j,
+      d: vars.d,
+      f: vars.f,
+      c: 'EQUIPE',
+    }
+    const gardee = donnees<Reunion>(
+      await executer(ids.adminActivite, MODIFIER, { ...base, version: 0 }),
+      'modifierReunion'
+    )
+    expect(gardee.pointEquipe).toBe(true)
+    const retiree = donnees<Reunion>(
+      await executer(ids.adminActivite, MODIFIER, {
+        ...base,
+        pe: false,
+        version: 1,
+      }),
+      'modifierReunion'
+    )
+    expect(retiree.pointEquipe).toBe(false)
+  })
+
+  it('ne marque pas d’office un rendez-vous, et le marque sur demande', async () => {
+    const vars = { ...commun, e: ids.edition, c: 'CHOIX', u: [ids.referent] }
+    const rdv = donnees<Reunion>(
+      await executer(ids.adminActivite, CREER, vars),
+      'creerReunion'
+    )
+    expect(rdv.pointEquipe).toBe(false)
+    const comite = donnees<Reunion>(
+      await executer(ids.adminActivite, CREER, { ...vars, pe: true }),
+      'creerReunion'
+    )
+    expect(comite.pointEquipe).toBe(true)
+  })
+
+  it('refuse le marqueur sur une réunion de périmètre', async () => {
+    expect(
+      code(
+        await executer(ids.referent, CREER, {
+          ...commun,
+          e: ids.edition,
+          p: ids.natation,
+          c: 'PERIMETRE',
+          pe: true,
+        })
+      )
+    ).toBe('SAISIE_INVALIDE')
+    expect((await reunionNatation()).pointEquipe).toBe(false)
   })
 })
 

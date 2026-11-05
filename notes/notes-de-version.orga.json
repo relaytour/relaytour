@@ -8,6 +8,42 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-11-05-orga-une-tache-existante-se-rattache-a-une-tache-partagee",
+          "date": "2026-11-05",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une tâche existante se rattache à une tâche partagée",
+            "texte": "Le menu « Autres actions » d'une tâche propose « Rattacher une tâche existante ». La tâche choisie, dans un autre périmètre, devient une déclinaison de la vôtre. Elle garde son titre, son statut, ses personnes assignées et ses commentaires. Le détail de la tâche partagée propose « Détacher » pour retirer ce lien. Ces deux gestes demandent d'écrire dans les deux périmètres.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An existing task can be linked to a shared task",
+            "texte": "The \"More actions\" menu of a task offers \"Link an existing task\". The chosen task, in another area, becomes a derived task of yours. It keeps its title, status, assignees and comments. The detail of the shared task offers \"Unlink\" to remove this link. Both actions require write access to both areas.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-11-05-orga-seul-un-point-d-equipe-fixe-la-periode-des-priorites",
+          "date": "2026-11-05",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Seul un point d'équipe fixe la période des priorités",
+            "texte": "Le panneau « Priorités » couvre les jours jusqu'au prochain point d'équipe. Un rendez-vous de l'agenda global à quelques personnes ne raccourcit plus cette période. Les admins de l'activité marquent une réunion comme point d'équipe dans son formulaire. La case est cochée d'office quand la réunion convoque toute l'équipe. Sans point d'équipe prévu, les priorités couvrent les 14 prochains jours.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Only a team check-in sets the priorities period",
+            "texte": "The \"Priorities\" panel covers the days until the next team check-in. A meeting of the shared calendar with only a few people no longer shortens this period. Activity admins mark a meeting as a team check-in in its form. The box is checked by default when the meeting notifies the whole team. Without a planned team check-in, priorities cover the next 14 days.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-11-05-orga-ecrire-ou-convoquer-les-contacts-principaux-en-un-clic",
           "date": "2026-11-05",
           "type": "fonctionnalite",

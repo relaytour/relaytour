@@ -764,6 +764,7 @@ export async function construireExport(organisationId: string) {
       description: r.description,
       statut: r.statut,
       cible: r.cible,
+      pointEquipe: r.pointEquipe,
       annuleeLe: r.annuleeLe?.toISOString() ?? null,
       creePar: r.creePar?.email ?? null,
       creeLe: r.createdAt.toISOString(),

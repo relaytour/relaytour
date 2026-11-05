@@ -265,10 +265,26 @@ beforeAll(async () => {
         titre: 'Point',
         debut: new Date(dans(21).getTime() + 18 * 3_600_000),
         fin: new Date(dans(21).getTime() + 19 * 3_600_000),
+        cible: 'EQUIPE',
+        pointEquipe: true,
         taches: { create: [{ tacheId: ids.loin }] },
       },
     })
   ).id
+  // Un rendez-vous global plus proche, qui n'est pas un point d'équipe : il ne
+  // fixe pas l'horizon (ADR 0059). La requête `priorites` et la fin de validité
+  // d'un ajustement (`ajusterPriorite`, J+21 et non J+16) le prouvent.
+  await prisma.reunion.create({
+    data: {
+      organisationId: ORGANISATION,
+      activiteId: ACTIVITE,
+      editionId: ids.edition,
+      titre: 'Rendez-vous',
+      debut: new Date(dans(16).getTime() + 18 * 3_600_000),
+      fin: new Date(dans(16).getTime() + 19 * 3_600_000),
+      cible: 'CHOIX',
+    },
+  })
 })
 
 afterAll(async () => {
