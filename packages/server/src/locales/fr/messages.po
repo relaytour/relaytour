@@ -1112,6 +1112,11 @@ msgstr "Cette déclinaison a déjà été refusée. Un admin de l’activité pe
 
 #. js-lingui-explicit-id
 #: src/schema/taches.ts
+msgid "Cette tâche porte ses propres déclinaisons : elle ne se rattache pas."
+msgstr "Cette tâche porte ses propres déclinaisons : elle ne se rattache pas."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
 msgid "Cette tâche est déjà la déclinaison d’une autre tâche."
 msgstr "Cette tâche est déjà la déclinaison d’une autre tâche."
 
@@ -1129,11 +1134,6 @@ msgstr "Ce périmètre porte déjà une déclinaison de cette tâche."
 #: src/schema/taches.ts
 msgid "Les deux tâches doivent appartenir à la même période."
 msgstr "Les deux tâches doivent appartenir à la même période."
-
-#. js-lingui-explicit-id
-#: src/schema/taches.ts
-msgid "Cette tâche porte ses propres déclinaisons : elle ne se rattache pas."
-msgstr "Cette tâche porte ses propres déclinaisons : elle ne se rattache pas."
 
 #. js-lingui-explicit-id
 #: src/orga/depot-contenu.ts
