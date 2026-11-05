@@ -1863,6 +1863,21 @@ button.rt-ligne-declinaisons {
   }
 }
 
+/* Sur une carte étroite, même sur un grand écran, les actions passent sous le
+   texte : la colonne des boutons ne réduit plus le titre. */
+@container carte-tache (max-width: 560px) {
+  .rt-carte-tache-actions {
+    grid-column: 2 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .rt-carte-tache-actions > .ant-btn-icon-only {
+    align-self: auto;
+  }
+}
+
 @media (max-width: 767px) {
   .rt-carte-tache {
     grid-template-columns: 6px minmax(0, 1fr);
@@ -1894,10 +1909,18 @@ button.rt-ligne-declinaisons {
   filter: brightness(0.94);
 }
 
-/* Ligne de rétroplanning (LigneTache) : toute la ligne mène au périmètre. */
+/* Ligne de rétroplanning (LigneTache) : toute la ligne mène au périmètre. La
+   mise en page suit la largeur de la ligne, et non celle de l'écran : un panneau
+   étroit, comme celui des priorités, empile la ligne même sur un grand écran. */
+.rt-ligne-tache-conteneur {
+  container: ligne-tache / inline-size;
+}
+
+/* La dernière colonne (personnes et statuts) prend 40 % au plus : des noms
+   longs passent à la ligne au lieu de réduire le titre à une lettre. */
 .rt-ligne-tache {
   display: grid;
-  grid-template-columns: 6px 118px minmax(0, 1fr) auto;
+  grid-template-columns: 6px 118px minmax(0, 1fr) fit-content(40%);
   gap: 14px;
   align-items: center;
   padding: 12px 18px 12px 16px;
@@ -1948,7 +1971,7 @@ button.rt-ligne-declinaisons {
   text-decoration: line-through;
 }
 
-@media (max-width: 767px) {
+@container ligne-tache (max-width: 640px) {
   .rt-ligne-tache {
     grid-template-columns: 6px minmax(0, 1fr);
   }

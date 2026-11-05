@@ -46,7 +46,7 @@ export default function LigneTache({
     .map(p => (p.id === moiId ? t`Vous` : p.nom))
     .join(', ')
   return (
-    <li>
+    <li className="rt-ligne-tache-conteneur">
       <Link
         to={lien(`/perimetres/${tache.perimetre.slug}?edition=${editionId}`)}
         className={`rt-verre rt-ligne-tache${tache.statut === 'ABANDONNEE' ? ' rt-abandonnee' : ''}`}
@@ -135,7 +135,7 @@ export function LigneDeclinaisons({
       ? 'proche'
       : 'normale'
   return (
-    <li>
+    <li className="rt-ligne-tache-conteneur">
       <button
         type="button"
         className="rt-verre rt-ligne-tache rt-ligne-declinaisons"
