@@ -63,7 +63,7 @@
         <div class="grille-2">
           <article class="verre panneau">
             <h3>Le menu de gauche</h3>
-            <p>Il donne accès à Mon espace, au Rétroplanning, au Programme, aux Ressources et aux Préférences. L'Agenda et les Bénévoles y figurent quand l'activité a activé ces modules. La section « Périmètres » commence par « Tous les périmètres » et « Organigramme », puis liste chaque périmètre où vous êtes affecté·e.</p>
+            <p>Il donne accès à Mon espace, au Rétroplanning, à la Charge, au Programme, aux Ressources et aux Préférences. L'Agenda, les Bénévoles et le Classement y figurent quand l'activité a activé ces modules. La section « Périmètres » commence par « Tous les périmètres » et « Organigramme », puis liste chaque périmètre où vous êtes affecté·e.</p>
           </article>
           <article class="verre panneau">
             <h3>La barre du haut</h3>
@@ -116,6 +116,20 @@
             <figcaption>Le rétroplanning regroupé par phase, sur l'organisation d'exemple.</figcaption>
           </figure>
           <p class="note">Aucune action ne se fait ici : une ligne mène à son périmètre. Vous y modifiez la tâche si vous êtes affecté·e à ce périmètre. Le panneau de droite signale les tâches de vos périmètres qui attendent encore une personne.</p>
+        </article>
+
+        <article class="verre ecran" id="e-charge">
+          <div class="ecran-tete"><h3>Charge</h3><span class="route">/&lt;activité&gt;/charge</span></div>
+          <p>La page « Charge » montre ce que porte chaque personne de l'équipe pendant la période : ses tâches assignées, ses places au programme et ses périmètres. Elle aide l'équipe à repérer une personne surchargée et à répartir le travail avant qu'il ne prenne du retard.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Maintenant</span></span><span>Compter les tâches ouvertes et les places à venir. La barre de chaque personne sépare les tâches en retard, celles dont l'échéance tombe sous sept jours, les échéances plus lointaines et les tâches sans échéance.</span></li>
+            <li><span><span class="libelle">Toute la période</span></span><span>Compter toutes les tâches assignées sur la période, par statut, et toutes les places au programme.</span></li>
+            <li><span><span class="libelle">Groupe de périmètres</span></span><span>Ne garder que les personnes affectées aux périmètres d'un groupe.</span></li>
+            <li><span><span class="libelle">Par charge</span><span class="libelle">Par nom</span></span><span>Ranger les personnes de la plus chargée à la moins chargée, ou par ordre alphabétique.</span></li>
+            <li><span><span class="libelle">Rechercher</span></span><span>Retrouver une personne par son nom, ou par un de ses périmètres.</span></li>
+          </ul>
+          <p>Un clic sur une personne ouvre son détail : ses tâches par phase, sa prochaine place au programme et sa charge dans les autres activités que vous voyez. Une tâche assignée à plusieurs personnes compte pour chacune d'elles.</p>
+          <p class="note">La page ne mesure aucun effort et ne fixe aucun seuil : elle compte des tâches et des places. Le nombre de tâches réalisées par une personne n'y apparaît que pour elle-même et pour les admins, sauf quand l'activité a activé le module « Classement ».</p>
         </article>
 
         <article class="verre ecran" id="e-agenda">
@@ -334,6 +348,13 @@
           <p class="note">Écrivez les contacts sous forme de rôles, sans adresse ni numéro personnels : une fiche qui en contient ne peut pas être reversée dans le dépôt de l'organisation. L'historique des versions est réservé aux admins.</p>
         </article>
 
+        <article class="verre ecran" id="e-classement">
+          <div class="ecran-tete"><h3>Classement</h3><span class="route">/&lt;activité&gt;/classement</span></div>
+          <p>Le classement range les personnes de la période selon leurs points de participation. Il n'apparaît dans le menu que si les admins de l'activité ont activé le module « Classement ». Sans ce module, votre score reste visible par vous seul·e et par les admins, dans « Mon espace ».</p>
+          <p>Une tâche réalisée rapporte 3 points, et 1 point de plus quand elle est faite à temps. Chaque personne réalisatrice indiquée reçoit ces points. Une tâche créée rapporte 1 point, une fiche créée 3 points et une fiche modifiée 2 points, une fois par jour. Une tâche rouverte perd ses points.</p>
+          <p class="note">Les admins lisent le même tableau dans le groupe « Gérer l'activité », décrit dans le <a href="admin-activite.html#e-classement">mode d'emploi des admins d'activité</a>.</p>
+        </article>
+
         <article class="verre ecran" id="e-preferences">
           <div class="ecran-tete"><h3>Préférences</h3><span class="route">/&lt;activité&gt;/preferences</span></div>
           <p>Vous choisissez les mails que vous recevez, et les notifications de vos périmètres. Les notifications de vos tâches restent visibles dans l'espace, quel que soit votre choix pour les mails.</p>
@@ -491,7 +512,7 @@
       </section>
 
       <footer>
-        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.20.0.
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.29.0.
       </footer>
     </main>
     <script src="../bascule.js"></script>

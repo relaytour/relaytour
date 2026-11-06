@@ -129,6 +129,7 @@
             <figcaption>Écran Équipe, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
           </figure>
           <p id="e-avancement">La vue <strong>Avancement</strong> affiche les tâches faites, en retard et sans personne de chaque périmètre, avec ses personnes affectées et son effectif. Quatre compteurs résument la période choisie : <strong>Tâches faites</strong>, <strong>En retard</strong>, <strong>Sans personne</strong> et <strong>Périmètres</strong>. Les filtres « Tâches en retard » et « Tâches sans personne » ne gardent que les périmètres concernés. L'icône d'une carte vous ramène à la vue « Équipe », sur ce périmètre.</p>
+          <p>La vue « Avancement » suit les périmètres. Pour suivre les personnes, ouvrez la page <a href="referent.html#e-charge">« Charge »</a> du menu : elle montre les tâches et les places au programme de chaque personne de l'équipe.</p>
           <figure>
             <img src="../captures/avancement.webp" data-mobile="../captures/mobile/avancement.webp" width="1440" height="900" loading="lazy" alt="Écran Équipe, vue Avancement : quatre compteurs et une carte par périmètre avec sa barre d'avancement." />
             <figcaption>Vue Avancement de l'écran Équipe, sur l'organisation d'exemple. Les personnes et les périmètres sont fictifs.</figcaption>
@@ -251,6 +252,7 @@
           <p>Les imports de tâches et d'équipe suivent les mêmes étapes : le fichier, l'association des colonnes, la vérification ligne par ligne, puis l'import. Le fichier se lit dans votre navigateur, et seules les colonnes associées partent vers le serveur. Une tâche ou une affectation déjà présente n'est jamais créée une deuxième fois. Le bouton « Télécharger le modèle » donne un fichier d'exemple, et les lignes écartées se téléchargent avec leur motif.</p>
           <p>Les dates clés d'une période se placent depuis l'écran <strong>Agenda</strong>, dans la colonne de droite. Une date clé porte un titre, un jour ou une suite de jours, et une description facultative. Toute l'équipe de l'activité la voit dans son agenda.</p>
           <p>Vous tenez aussi l'<strong>agenda global</strong> de l'activité : ses réunions et ses sondages de dates visent toute l'équipe ou des personnes choisies, tous périmètres confondus. Vous écrivez de même dans l'agenda de chaque périmètre. Une réunion globale peut lier des tâches de plusieurs périmètres, vingt au plus.</p>
+          <p>Une réunion globale peut être un <strong>point d'équipe</strong>. Le prochain point d'équipe fixe la période que couvrent les priorités de toute l'équipe, et le mail des priorités part la veille. La case « Point d'équipe » se coche d'elle-même quand une nouvelle réunion convoque toute l'équipe. Vous la cochez ou la décochez à la main.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Ajouter</span></span><span>Placer une date clé dans l'agenda de la période affichée.</span></li>
             <li><span><span class="libelle">Créer l'adresse</span></span><span>Publier l'agenda global de l'activité par une adresse secrète, à laquelle un agenda partagé de l'association s'abonne. Vous choisissez les types d'événements : réunions globales, dates clés, phases. Les phases sont décochées par défaut. Les réunions des périmètres n'y figurent pas.</span></li>
@@ -394,7 +396,7 @@
       </section>
 
       <footer>
-        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.20.0.
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.29.0.
       </footer>
     </main>
     <script src="../bascule.js"></script>
