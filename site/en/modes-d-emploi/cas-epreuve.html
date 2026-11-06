@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Run a one-day race · User guides · Relaytour</title>
+    <meta
+      name="description"
+      content="A Relaytour use case: run a one-day sports race with a small team, a schedule of time slots and volunteers recruited through a public call."
+    />
+    <link rel="alternate" hreflang="fr" href="https://relaytour.org/modes-d-emploi/cas-epreuve.html" />
+    <link rel="alternate" hreflang="en" href="https://relaytour.org/en/modes-d-emploi/cas-epreuve.html" />
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../../jetons.css" />
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Site navigation">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none" stroke-width="8" stroke-linecap="round" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" stroke="var(--rt-accent)" />
+            <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+          </svg>
+          <span class="logotype">Relay<span>tour</span></span>
+        </a>
+        <ul class="liens">
+          <li><a href="../">Overview</a></li>
+          <li><a href="../hebergement.html">Hosting</a></li>
+          <li><a href="../../design-system.html" hreflang="fr">Design system</a></li>
+          <li><a href="./" aria-current="true">User guides</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Source code</a></li>
+          <li><a href="../../modes-d-emploi/cas-epreuve.html" hreflang="fr" lang="fr" class="langue">Français</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Use case · The whole team</span>
+        <h1>Run a one-day race</h1>
+        <p class="chapo">
+          A small team prepares a relay race that lasts one day. This use case shows that a small team uses only part of Relaytour.
+        </p>
+        <p class="renvoi">
+          This use case shows one path among others. Each step points to the user guide that describes the screen in detail.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-cas">
+        <div class="entete">
+          <span class="etiquette">The case</span>
+          <h2 id="t-cas">One day, one venue and volunteers for each time slot</h2>
+          <p class="texte">
+            The running club of the sample organization holds a six-hour relay race every autumn, on a single course. Four club members prepare it.
+          </p>
+          <p class="texte">
+            On race day, about thirty volunteers take turns at the welcome desk, the timing, the refreshment stand and the clean-up. Most of them have no account in Relaytour.
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-mise-en-place">
+        <div class="entete">
+          <span class="etiquette">Before you start</span>
+          <h2 id="t-mise-en-place">What you set up</h2>
+          <p class="texte">
+            The race gets its own activity, separate from the club season. It has its own team, its schedule and its volunteers. An organization admin creates it, then appoints one person as activity admin.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-activite">
+          <div class="ecran-tete"><h3>A light activity</h3><span class="route">/&lt;activity&gt;/admin/activites</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">“Event” kind</span></span><span>Each yearly race becomes an edition. The next edition carries over its tasks.</span></li>
+            <li><span><span class="libelle">Two areas</span></span><span>“Organization” covers the course, the permits and the timing. “Welcome and refreshments” covers the welcome of teams and volunteers.</span></li>
+            <li><span><span class="libelle">Volunteers module</span></span><span>It opens volunteer calls and the “Placement” view of the schedule.</span></li>
+            <li><span><span class="libelle">Default phases</span></span><span>The four phases offered are enough for a race of this format.</span></li>
+          </ul>
+          <p class="note">The <a href="admin-activite.html#e-activite">activity admin guide</a> describes these settings in its “Activities” section.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-fil">
+        <div class="entete">
+          <span class="etiquette">The race step by step</span>
+          <h2 id="t-fil">Five steps, from creation to clean-up</h2>
+          <p class="texte">
+            The timings below are indicative. They count back from race day.
+          </p>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>1. Three months before: create the edition</h3>
+            <p>The activity admin creates a one-day edition. If the team already keeps its tasks in a spreadsheet, it imports them from the timeline. The next year, it carries over the tasks of this edition.</p>
+            <p><a href="admin-activite.html#e-editions">Editions, seasons, or terms</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>2. Six weeks before: set the schedule</h3>
+            <p>The admin creates the race venue. The team then creates one slot per shift: welcome, timing, refreshments, clean-up. Each slot states the helpers wanted and the public instructions.</p>
+            <p><a href="benevoles.html#e-sequences">Prepare the slots</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>3. One month before: open the call</h3>
+            <p>The admin opens a call on the whole edition and shares its address: club poster, social networks, newsletter. The public form of the team also shows this address.</p>
+            <p><a href="benevoles.html#e-appels">Open a call</a> · <a href="benevoles.html#e-page">The call page</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>4. The last week: fill the slots</h3>
+            <p>The team accepts the applications, then places available people in the slots that are not full. A list of volunteers kept elsewhere, such as an online form, imports into the same schedule.</p>
+            <p><a href="benevoles.html#e-repartition">Placement</a> · <a href="benevoles.html#e-import">Import a list</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>5. Race day and after: run and take notes</h3>
+            <p>The team follows the schedule and checks off its tasks from the app installed on their phones. After the race, it writes down in a sheet what changes for next year.</p>
+            <p><a href="installer.html">Install the app</a> · <a href="referent.html#e-fiche">A sheet</a></p>
+          </div>
+        </div>
+
+        <article class="verre ecran" id="e-repartition">
+          <div class="ecran-tete"><h3>See the slots that need more people</h3><span class="route">/&lt;activity&gt;/programme</span></div>
+          <p>The “Placement” view of the schedule shows, for each 30-minute period, the helpers wanted and the places already filled. For the chosen slot, it ranks volunteers by their availability. The “Place” button creates an unconfirmed place for them.</p>
+          <figure>
+            <img src="../captures/programme-repartition.webp" data-mobile="../captures/mobile/programme-repartition.webp" width="1440" height="900" loading="lazy" alt="Placement view: the coverage bar, two slots of the Volunteers department, and on the right the unplaced volunteers ranked for the Information desk slot." />
+            <figcaption>The “Placement” view of the schedule, in the sample organization.</figcaption>
+          </figure>
+          <p class="note">A person who gave an address and agreed to be notified receives a personal link at their first place. They then confirm with a button on their volunteer page.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-pratiques">
+        <div class="entete">
+          <span class="etiquette">Good practices</span>
+          <h2 id="t-pratiques">Three habits for a small team</h2>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Instructions without personal contact details</h3>
+            <p>The instructions of a slot are public. Write the meeting point and the outfit there, with a role address of the club rather than a personal number.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Realistic helper numbers</h3>
+            <p>State the number of volunteers each slot really needs. Extra applications join the waiting list, and the team accepts them if needed.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>A single admin</h3>
+            <p>One activity admin is enough. The other team members write in their area: they create slots, open calls and place volunteers.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-sans">
+        <div class="entete">
+          <span class="etiquette">Keep it simple</span>
+          <h2 id="t-sans">What you do not need</h2>
+        </div>
+        <div class="verre panneau">
+          <p>The “Calendar”, “Documents” and “Ranking” modules stay off. A team of four people does not need a shared calendar.</p>
+          <p>The org chart, shared tasks and custom phases serve large teams. Your race does without them.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Other guides</span>
+          <h2 id="t-autres">Keep going</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="benevoles.html">
+            <span class="role">Admins and coordinators</span>
+            <h3>Recruit and place volunteers</h3>
+            <p>Calls, applications, placement and list import.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+          <a class="verre panneau lien-guide" href="cas-rassemblement.html">
+            <span class="role">Use case</span>
+            <h3>Prepare a multi-sport gathering</h3>
+            <p>The same path for a larger team, with several sports and shared departments.</p>
+            <span class="suite">Read the use case</span>
+          </a>
+          <a class="verre panneau lien-guide" href="./">
+            <span class="role">All roles</span>
+            <h3>See the other use cases</h3>
+            <p>The list of user guides and use cases of the organizer workspace.</p>
+            <span class="suite">See the list</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. This use case is up to date with version 0.29.0.
+      </footer>
+    </main>
+    <script src="../../bascule.js"></script>
+    <script src="../../sommaire.js"></script>
+  </body>
+</html>

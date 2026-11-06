@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Organiser une épreuve d'une journée · Modes d'emploi · Relaytour</title>
+    <meta
+      name="description"
+      content="Un cas pratique de Relaytour : organiser une épreuve sportive d'une journée avec une petite équipe, un programme découpé en séquences et des bénévoles recrutés par un appel public."
+    />
+    <link rel="alternate" hreflang="fr" href="https://relaytour.org/modes-d-emploi/cas-epreuve.html" />
+    <link rel="alternate" hreflang="en" href="https://relaytour.org/en/modes-d-emploi/cas-epreuve.html" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../jetons.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Navigation du site">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none" stroke-width="8" stroke-linecap="round" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" stroke="var(--rt-accent)" />
+            <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+          </svg>
+          <span class="logotype">Relay<span>tour</span></span>
+        </a>
+        <ul class="liens">
+          <li><a href="../">Présentation</a></li>
+          <li><a href="../hebergement.html">Hébergement</a></li>
+          <li><a href="../design-system.html">Design system</a></li>
+          <li><a href="./" aria-current="true">Modes d'emploi</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
+          <li><a href="../en/modes-d-emploi/cas-epreuve.html" hreflang="en" lang="en" class="langue">English</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Cas pratique · Toute l'équipe</span>
+        <h1>Organiser une épreuve d'une journée</h1>
+        <p class="chapo">
+          Une petite équipe prépare une course en relais qui dure une journée. Ce cas pratique montre qu'une équipe réduite utilise seulement une partie de Relaytour.
+        </p>
+        <p class="renvoi">
+          Ce cas pratique propose un chemin parmi d'autres. Chaque étape renvoie au mode d'emploi qui décrit l'écran en détail.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-cas">
+        <div class="entete">
+          <span class="etiquette">Le cas</span>
+          <h2 id="t-cas">Une journée, un lieu et des bénévoles par séquence</h2>
+          <p class="texte">
+            Le club de course de l'organisation d'exemple organise chaque automne une course en relais de six heures, sur un parcours unique. Quatre personnes du club la préparent.
+          </p>
+          <p class="texte">
+            Le jour de la course, une trentaine de bénévoles se relaient à l'accueil, au chronométrage, au ravitaillement et au rangement. La plupart n'ont pas de compte dans Relaytour.
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-mise-en-place">
+        <div class="entete">
+          <span class="etiquette">Avant de commencer</span>
+          <h2 id="t-mise-en-place">Ce que vous mettez en place</h2>
+          <p class="texte">
+            La course reçoit sa propre activité, distincte de la saison du club. Elle a sa propre équipe, son programme et ses bénévoles. Un admin de l'organisation la crée, puis nomme une personne admin de l'activité.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-activite">
+          <div class="ecran-tete"><h3>Une activité légère</h3><span class="route">/&lt;activité&gt;/admin/activites</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nature « Événement »</span></span><span>Chaque course annuelle devient une édition. L'édition suivante reprend ses tâches.</span></li>
+            <li><span><span class="libelle">Deux périmètres</span></span><span>« Organisation » porte le parcours, les autorisations et le chronométrage. « Accueil et ravitaillement » porte l'accueil des équipes et des bénévoles.</span></li>
+            <li><span><span class="libelle">Module Bénévoles</span></span><span>Il ouvre les appels à bénévoles et la vue « Répartition » du programme.</span></li>
+            <li><span><span class="libelle">Phases par défaut</span></span><span>Les quatre phases proposées suffisent pour une épreuve de ce format.</span></li>
+          </ul>
+          <p class="note">Le détail de ces réglages se trouve dans le <a href="admin-activite.html#e-activite">mode d'emploi des admins d'activité</a>, section « Activités ».</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-fil">
+        <div class="entete">
+          <span class="etiquette">Le fil de l'épreuve</span>
+          <h2 id="t-fil">Cinq étapes, de la création au rangement</h2>
+          <p class="texte">
+            Les délais ci-dessous sont indicatifs. Ils se comptent depuis le jour de la course.
+          </p>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>1. Trois mois avant&nbsp;: créer l'édition</h3>
+            <p>L'admin de l'activité crée l'édition sur un seul jour. Si l'équipe tient déjà ses tâches dans un tableur, elle les importe depuis le rétroplanning. L'année suivante, elle reprend les tâches de cette édition.</p>
+            <p><a href="admin-activite.html#e-editions">Éditions, saisons ou mandats</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>2. Six semaines avant&nbsp;: poser le programme</h3>
+            <p>L'admin crée le lieu de la course. L'équipe crée ensuite une séquence par poste : l'accueil, le chronométrage, le ravitaillement, le rangement. Chaque séquence indique les renforts recherchés et les consignes publiques.</p>
+            <p><a href="benevoles.html#e-sequences">Préparer les séquences</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>3. Un mois avant&nbsp;: ouvrir l'appel</h3>
+            <p>L'admin ouvre un appel sur toute l'édition et diffuse son adresse : affiche du club, réseaux sociaux, lettre d'information. Le formulaire public de l'équipe affiche aussi cette adresse.</p>
+            <p><a href="benevoles.html#e-appels">Ouvrir un appel</a> · <a href="benevoles.html#e-page">La page de l'appel</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>4. La dernière semaine&nbsp;: compléter les séquences</h3>
+            <p>L'équipe accepte les candidatures, puis place les personnes disponibles dans les séquences incomplètes. Une liste de bénévoles tenue ailleurs, comme un formulaire en ligne, s'importe dans le même programme.</p>
+            <p><a href="benevoles.html#e-repartition">Répartir</a> · <a href="benevoles.html#e-import">Importer une liste</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>5. Le jour J et après&nbsp;: tenir et noter</h3>
+            <p>L'équipe suit le programme et coche ses tâches depuis l'application installée sur son téléphone. Après la course, elle note dans une fiche méthode ce qui change pour l'année suivante.</p>
+            <p><a href="installer.html">Installer l'application</a> · <a href="referent.html#e-fiche">Une fiche méthode</a></p>
+          </div>
+        </div>
+
+        <article class="verre ecran" id="e-repartition">
+          <div class="ecran-tete"><h3>Voir les séquences qui manquent de monde</h3><span class="route">/&lt;activité&gt;/programme</span></div>
+          <p>La vue « Répartition » du programme montre, par tranche de 30 minutes, les renforts recherchés et les places déjà pourvues. Pour la séquence choisie, elle classe les bénévoles selon leurs disponibilités. Le bouton « Placer » leur crée une place à confirmer.</p>
+          <figure>
+            <img src="../captures/programme-repartition.webp" data-mobile="../captures/mobile/programme-repartition.webp" width="1440" height="900" loading="lazy" alt="Vue Répartition : le bandeau de couverture, deux séquences du pôle Bénévoles, et à droite les bénévoles à répartir classés pour la séquence Point information." />
+            <figcaption>La vue « Répartition » du programme, sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <p class="note">Une personne qui a donné son adresse et accepté d'être prévenue reçoit son lien personnel à sa première place. Elle confirme ensuite par un bouton de son espace bénévole.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-pratiques">
+        <div class="entete">
+          <span class="etiquette">Bonnes pratiques</span>
+          <h2 id="t-pratiques">Trois habitudes pour une petite équipe</h2>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Des consignes sans coordonnée personnelle</h3>
+            <p>Les consignes d'une séquence sont publiques. Écrivez-y le point de rendez-vous et la tenue, avec une adresse de rôle du club plutôt qu'un numéro personnel.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Des renforts réalistes</h3>
+            <p>Indiquez le nombre de bénévoles réellement utile à chaque séquence. Les candidatures en trop rejoignent la liste d'attente, et l'équipe les accepte au besoin.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Une seule personne admin</h3>
+            <p>Une personne admin de l'activité suffit. Les autres membres de l'équipe écrivent dans leur périmètre : ils créent les séquences, ouvrent des appels et répartissent.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-sans">
+        <div class="entete">
+          <span class="etiquette">Pour rester simple</span>
+          <h2 id="t-sans">Ce dont vous n'avez pas besoin</h2>
+        </div>
+        <div class="verre panneau">
+          <p>Les modules « Agenda », « Documents » et « Classement » restent inactifs. Une équipe de quatre personnes n'a pas besoin d'un calendrier partagé.</p>
+          <p>L'organigramme, les tâches partagées et les phases personnalisées servent les grandes équipes. Votre épreuve s'en passe.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Autres guides</span>
+          <h2 id="t-autres">Poursuivre</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="benevoles.html">
+            <span class="role">Admins, référentes et référents</span>
+            <h3>Recruter et répartir les bénévoles</h3>
+            <p>Les appels, les candidatures, la répartition et l'import d'une liste.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="cas-rassemblement.html">
+            <span class="role">Cas pratique</span>
+            <h3>Préparer un rassemblement multisports</h3>
+            <p>Le même chemin pour une équipe plus grande, avec plusieurs sports et des pôles communs.</p>
+            <span class="suite">Lire le cas pratique</span>
+          </a>
+          <a class="verre panneau lien-guide" href="./">
+            <span class="role">Tous les rôles</span>
+            <h3>Voir les autres cas pratiques</h3>
+            <p>La liste des modes d'emploi et des cas pratiques de l'espace organisateur.</p>
+            <span class="suite">Voir la liste</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Cas pratique à jour de la version 0.29.0.
+      </footer>
+    </main>
+    <script src="../bascule.js"></script>
+    <script src="../sommaire.js"></script>
+  </body>
+</html>
