@@ -391,8 +391,8 @@ export default function Priorites({
               </>
             ) : (
               <Trans>
-                Aucun point d’équipe n’est prévu : les priorités couvrent les 14
-                prochains jours.
+                Aucun point d’équipe n’est prévu : les priorités couvrent les
+                14 prochains jours.
               </Trans>
             )}
           </p>

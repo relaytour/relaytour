@@ -420,6 +420,65 @@ describe('priorites', () => {
     }
   })
 
+  it('ne fait mener à aucun jalon archivé, en attente d’accord ou fait', async () => {
+    const archive = await prisma.perimetre.create({
+      data: {
+        organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
+        groupe: 'sport',
+        slug: `archive-priorites-${suffixe}`,
+        nom: 'Archivé',
+        type: 'SPORT',
+        ordre: 3,
+        archivedAt: new Date(),
+      },
+    })
+    const jalon = (donnees: {
+      titre: string
+      perimetreId?: string
+      statut?: 'FAITE'
+      origineId?: string
+      accord?: 'EN_ATTENTE'
+    }) =>
+      prisma.tache.create({
+        data: {
+          editionId: ids.edition,
+          perimetreId: donnees.perimetreId ?? ids.basket,
+          titre: donnees.titre,
+          echeance: dans(10),
+          statut: donnees.statut ?? 'A_FAIRE',
+          origineId: donnees.origineId ?? null,
+          accord: donnees.accord ?? null,
+          jalonLe: new Date(),
+          liensJalon: { create: [{ tacheId: ids.declinaison }] },
+        },
+      })
+    const exclus = [
+      await jalon({ titre: 'Archivé', perimetreId: archive.id }),
+      await jalon({ titre: 'Fait', statut: 'FAITE' }),
+      await jalon({
+        titre: 'En attente',
+        origineId: ids.retard,
+        accord: 'EN_ATTENTE',
+      }),
+    ]
+    try {
+      const lues = await lire(ids.chloe)
+      expect(lues.jalons).toEqual([])
+      const raisons = lues
+        .de(ids.basket)
+        .priorites.find(p => p.tache.id === ids.declinaison)!.raisons
+      expect(raisons.map(r => r.code)).not.toContain('MENE_A_UN_JALON')
+    } finally {
+      const jalonIds = exclus.map(j => j.id)
+      await prisma.lienJalon.deleteMany({
+        where: { jalonId: { in: jalonIds } },
+      })
+      await prisma.tache.deleteMany({ where: { id: { in: jalonIds } } })
+      await prisma.perimetre.delete({ where: { id: archive.id } })
+    }
+  })
+
   it('refuse une personne en découverte, sans lien ou sans session', async () => {
     for (const userId of [ids.noa, ids.emma, null]) {
       const r = await executer(userId, PRIORITES, { e: ids.edition })
