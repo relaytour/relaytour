@@ -135,6 +135,10 @@ msgstr "{acteur} vous a retiré·e de la tâche."
 msgid "{action} pour {personne} ?"
 msgstr "{action} pour {personne} ?"
 
+#: src/composants/Notifications.tsx
+msgid "{adminIci, plural, one {# notification d’admin non lue} other {# notifications d’admin non lues}}"
+msgstr "{adminIci, plural, one {# notification d’admin non lue} other {# notifications d’admin non lues}}"
+
 #: src/composants/ComptesFournisseur.tsx
 msgid "{adresseSaisie} (saisie par un admin)"
 msgstr "{adresseSaisie} (saisie par un admin)"
@@ -202,6 +206,10 @@ msgstr "{auteur} a modifié cette tâche. « Écraser » enregistre votre versio
 #: src/composants/Priorites.tsx
 msgid "{autres, plural, one {# autre tâche au-delà des cinq priorités} other {# autres tâches au-delà des cinq priorités}}"
 msgstr "{autres, plural, one {# autre tâche au-delà des cinq priorités} other {# autres tâches au-delà des cinq priorités}}"
+
+#: src/composants/Notifications.tsx
+msgid "{autresActivites, plural, one {# autre activité avec des notifications} other {# autres activités avec des notifications}}"
+msgstr "{autresActivites, plural, one {# autre activité avec des notifications} other {# autres activités avec des notifications}}"
 
 #: src/composants/VerificationAcces.tsx
 msgid "{avecAcces} sur {total} a accès"
@@ -795,6 +803,18 @@ msgstr "{nomPersonne}, contact principal de {nomPerimetre}"
 #: src/composants/ListeNotifications.tsx
 msgid "{nonLues, plural, one {# non lue} other {# non lues}}"
 msgstr "{nonLues, plural, one {# non lue} other {# non lues}}"
+
+#: src/composants/Notifications.tsx
+msgid "{nonLuesAdmin, plural, one {# en attente} other {# en attente}}"
+msgstr "{nonLuesAdmin, plural, one {# en attente} other {# en attente}}"
+
+#: src/composants/Notifications.tsx
+msgid "{nonLuesIci, plural, one {# notification non lue dans cette activité} other {# notifications non lues dans cette activité}}"
+msgstr "{nonLuesIci, plural, one {# notification non lue dans cette activité} other {# notifications non lues dans cette activité}}"
+
+#: src/composants/Notifications.tsx
+msgid "{nonLuesOrganisation, plural, one {# notification non lue de l’organisation} other {# notifications non lues de l’organisation}}"
+msgstr "{nonLuesOrganisation, plural, one {# notification non lue de l’organisation} other {# notifications non lues de l’organisation}}"
 
 #: src/lib/espace-fichiers.ts
 msgid "{octets} o"
@@ -2479,9 +2499,13 @@ msgstr "Aucune note de version ne concerne votre rôle pour le moment."
 msgid "Aucune notification d’admin."
 msgstr "Aucune notification d’admin."
 
+#: src/composants/ListeNotifications.tsx
+msgid "Aucune notification dans cette activité."
+msgstr "Aucune notification dans cette activité."
+
 #: src/composants/Notifications.tsx
-msgid "Aucune notification."
-msgstr "Aucune notification."
+msgid "Aucune notification non lue dans cette activité"
+msgstr "Aucune notification non lue dans cette activité"
 
 #: src/pages/Organigramme.tsx
 msgid "Aucune période n’est en préparation. Les référentes et référents s’affichent quand une période s’ouvre."
@@ -7736,6 +7760,7 @@ msgid "Notifications"
 msgstr "Notifications"
 
 #: src/composants/Coquille.tsx
+#: src/composants/Notifications.tsx
 #: src/pages/admin/NotificationsAdmin.tsx
 msgid "Notifications d’admin"
 msgstr "Notifications d’admin"
@@ -7743,10 +7768,6 @@ msgstr "Notifications d’admin"
 #: src/composants/PreferencePush.tsx
 msgid "Notifications sur cet appareil"
 msgstr "Notifications sur cet appareil"
-
-#: src/composants/Notifications.tsx
-msgid "Notifications, {nonLues, plural, one {# non lue} other {# non lues}}"
-msgstr "Notifications, {nonLues, plural, one {# non lue} other {# non lues}}"
 
 #. Bouton : créer un sondage de dates
 #: src/pages/Agenda.tsx
@@ -11296,10 +11317,6 @@ msgstr "Vous"
 #: src/lib/messages.ts
 msgid "Vous annoncez à l’équipe le début de la préparation."
 msgstr "Vous annoncez à l’équipe le début de la préparation."
-
-#: src/composants/Notifications.tsx
-msgid "Vous avez {nonLuesAdmin, plural, one {# notification d’admin non lue} other {# notifications d’admin non lues}}."
-msgstr "Vous avez {nonLuesAdmin, plural, one {# notification d’admin non lue} other {# notifications d’admin non lues}}."
 
 #: src/lib/commentaires.ts
 msgid "Vous avez abandonné la tâche."

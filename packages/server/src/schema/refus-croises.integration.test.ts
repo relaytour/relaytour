@@ -1162,6 +1162,15 @@ const CAS: Cas[] = [
     variables: () => ({ ids: [a.notification] }),
     attente: { sansEffet: d => expect(d.marquerNotificationsLues).toBe(0) },
   },
+  // Les notifications d'une activité d'une autre organisation : la liste reste
+  // celle de la personne, dans son organisation, donc vide.
+  {
+    operation: 'notifications',
+    query:
+      'query ($a: ID) { notifications(activiteId: $a, limite: 100) { id } }',
+    variables: () => ({ a: a.activite }),
+    attente: { sansEffet: d => expect(d.notifications).toEqual([]) },
+  },
   {
     operation: 'modifierActivite',
     query:

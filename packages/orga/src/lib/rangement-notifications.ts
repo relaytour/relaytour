@@ -73,6 +73,27 @@ export function grouperParActivite<T extends NotificationRangee>(
 }
 
 /**
+ * Place l'activité affichée en tête de la cloche, même sans notification, puis
+ * le groupe sans activité et les autres activités. Le groupe de l'activité
+ * affichée reçoit son titre quand il est vide.
+ */
+export function placerActiviteCourante<T>(
+  groupes: Groupe<T>[],
+  courante: { id: string; nom: string }
+): Groupe<T>[] {
+  const sienne = groupes.find(g => g.activiteId === courante.id) ?? {
+    cle: courante.id,
+    titre: courante.nom,
+    activiteId: courante.id,
+    perimetreId: null,
+    couleur: null,
+    nonLues: 0,
+    elements: [],
+  }
+  return [sienne, ...groupes.filter(g => g !== sienne)]
+}
+
+/**
  * Range les notifications d'une activité par périmètre ; celles sans périmètre
  * forment `sansPerimetre`.
  */

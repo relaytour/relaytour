@@ -184,7 +184,9 @@ describe('relecture après un signal du flux', () => {
     // Une requête hors de la liste ne se relit pas, même nommée.
     await observer('MesPreferencesNotification')
     etat.lectures.length = 0
-    expect(await relireLesRequetes(client, ['MesPreferencesNotification'])).toBe(0)
+    expect(
+      await relireLesRequetes(client, ['MesPreferencesNotification'])
+    ).toBe(0)
     expect(etat.lectures).toEqual([])
 
     // La relecture complète suivante, sans refus, retire l'avis.
