@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Faire vivre une commission · Modes d'emploi · Relaytour</title>
+    <meta
+      name="description"
+      content="Un cas pratique de Relaytour : faire vivre une commission pendant son mandat, avec des réunions régulières, des tâches datées entre deux réunions et des fiches qui gardent la mémoire du travail."
+    />
+    <link rel="alternate" hreflang="fr" href="https://relaytour.org/modes-d-emploi/cas-mandat.html" />
+    <link rel="alternate" hreflang="en" href="https://relaytour.org/en/modes-d-emploi/cas-mandat.html" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../jetons.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Navigation du site">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none" stroke-width="8" stroke-linecap="round" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" stroke="var(--rt-accent)" />
+            <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+          </svg>
+          <span class="logotype">Relay<span>tour</span></span>
+        </a>
+        <ul class="liens">
+          <li><a href="../">Présentation</a></li>
+          <li><a href="../hebergement.html">Hébergement</a></li>
+          <li><a href="../design-system.html">Design system</a></li>
+          <li><a href="./" aria-current="true">Modes d'emploi</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
+          <li><a href="../en/modes-d-emploi/cas-mandat.html" hreflang="en" lang="en" class="langue">English</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Cas pratique · Toute l'équipe</span>
+        <h1>Faire vivre une commission</h1>
+        <p class="chapo">
+          Une commission travaille sans jour J, au rythme de ses réunions. Ce cas pratique montre comment Relaytour garde le fil entre deux réunions et d'un mandat à l'autre.
+        </p>
+        <p class="renvoi">
+          Ce cas pratique propose un chemin parmi d'autres. Chaque étape renvoie au mode d'emploi qui décrit l'écran en détail.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-cas">
+        <div class="entete">
+          <span class="etiquette">Le cas</span>
+          <h2 id="t-cas">Six personnes, trois chantiers et deux ans</h2>
+          <p class="texte">
+            Le bureau d'une association confie l'accueil des nouveaux membres à une commission de six personnes, pour un mandat de deux ans. La commission se réunit une fois par mois.
+          </p>
+          <p class="texte">
+            Elle mène trois chantiers : un guide d'accueil, un système de parrainage et une journée découverte. Le travail avance surtout entre les réunions.
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-mise-en-place">
+        <div class="entete">
+          <span class="etiquette">Avant de commencer</span>
+          <h2 id="t-mise-en-place">Ce que vous mettez en place</h2>
+          <p class="texte">
+            Un admin de l'organisation crée l'activité de la commission. Un admin de l'activité règle ensuite sa nature, ses groupes, ses phases et ses modules.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-activite">
+          <div class="ecran-tete"><h3>Une activité de nature « Instance »</h3><span class="route">/&lt;activité&gt;/admin/activites</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nature « Instance »</span></span><span>Une instance regroupe un bureau, un conseil ou une commission. Sa période se nomme « mandat » dans tous les écrans.</span></li>
+            <li><span><span class="libelle">Un périmètre par chantier</span></span><span>Le guide d'accueil, le parrainage et la journée découverte deviennent trois périmètres d'un groupe « Chantiers ». Une petite commission peut commencer avec un seul périmètre.</span></li>
+            <li><span><span class="libelle">Module Agenda</span></span><span>Il porte les réunions, les convocations et les sondages de dates.</span></li>
+            <li><span><span class="libelle">Phases</span></span><span>Les phases peuvent suivre les étapes du mandat : diagnostic, propositions, mise en œuvre, bilan.</span></li>
+            <li><span><span class="libelle">Ouverte aux souhaits</span></span><span>Les membres choisissent les chantiers qui les intéressent dans « Tous les périmètres ».</span></li>
+          </ul>
+          <p class="note">Le détail de ces réglages se trouve dans le <a href="admin-activite.html#e-activite">mode d'emploi des admins d'activité</a>, section « Activités ».</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-fil">
+        <div class="entete">
+          <span class="etiquette">Le fil du mandat</span>
+          <h2 id="t-fil">Cinq temps, du lancement à la passation</h2>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>1. Le lancement</h3>
+            <p>L'admin de l'activité crée le mandat sur deux ans, puis fait entrer chaque membre par son adresse. L'admin affecte ensuite les membres aux chantiers de leur choix.</p>
+            <p><a href="admin-activite.html#e-personnes">Personnes</a> · <a href="admin-activite.html#e-equipe">Équipe</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>2. Le rythme des réunions</h3>
+            <p>L'admin place une réunion par mois dans l'agenda global et convoque toute l'équipe. Chaque réunion devient un point d'équipe. Un sondage de dates départage les créneaux quand l'horaire change.</p>
+            <p><a href="admin-activite.html#e-editions">Agenda global</a> · <a href="referent.html#e-agenda">Agenda</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>3. Entre deux réunions</h3>
+            <p>Chaque décision devient une tâche du chantier concerné, avec une échéance et une personne assignée. Mon espace classe ces tâches par priorité jusqu'au prochain point d'équipe.</p>
+            <p><a href="referent.html#e-mon-espace">Mon espace</a> · <a href="referent.html#e-perimetre">Un périmètre</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>4. La mémoire du travail</h3>
+            <p>Chaque dossier instruit reçoit une fiche méthode : les constats, les décisions, les contacts de rôle. La liste « Concerne aussi » rend une fiche lisible depuis les autres chantiers.</p>
+            <p><a href="referent.html#e-fiche">Une fiche méthode</a> · <a href="markdown.html#m-concerne">Concerne aussi</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>5. La fin du mandat</h3>
+            <p>L'admin archive le mandat et en ouvre un nouveau, qui reprend les tâches qui reviennent. La nouvelle équipe reçoit ensuite ses affectations. Les fiches restent et accueillent les personnes qui arrivent.</p>
+            <p><a href="admin-activite.html#e-editions">Éditions, saisons ou mandats</a></p>
+          </div>
+        </div>
+
+        <article class="verre ecran" id="e-reunion">
+          <div class="ecran-tete"><h3>Une réunion qui prépare la suivante</h3><span class="route">/&lt;activité&gt;/agenda</span></div>
+          <p>Une réunion lie jusqu'à vingt tâches de la période. Ces tâches forment l'ordre du jour : chaque personne voit avant la réunion où en est chaque point. La veille du point d'équipe, le mail des priorités rappelle à chacun ses tâches à venir.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Point d'équipe</span></span><span>Cocher cette case dans la fenêtre d'une réunion globale. Elle se coche d'elle-même quand la réunion convoque toute l'équipe.</span></li>
+            <li><span><span class="libelle">Commenter</span></span><span>Noter dans le fil d'une tâche le compte rendu de ce qui a été décidé à son sujet.</span></li>
+            <li><span><span class="libelle">Planifier une réunion</span></span><span>Créer une réunion depuis une tâche, avec la tâche déjà liée.</span></li>
+          </ul>
+          <p class="note">Chaque personne règle le mail des priorités dans ses <a href="referent.html#e-preferences">préférences</a> : ses périmètres, toute l'activité, ou aucun mail.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-pratiques">
+        <div class="entete">
+          <span class="etiquette">Bonnes pratiques</span>
+          <h2 id="t-pratiques">Trois habitudes pour un travail au long cours</h2>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Chaque réunion produit des tâches datées</h3>
+            <p>Une décision sans échéance n'entre pas dans les priorités. Avant de clore une réunion, l'équipe donne à chaque décision une tâche, une échéance et une personne.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>La fiche plutôt que le mail</h3>
+            <p>Un compte rendu par mail se perd dans les boîtes. Une fiche se relit, garde ses versions et reste disponible pour l'équipe du mandat suivant.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Un point d'équipe à chaque réunion</h3>
+            <p>Les priorités couvrent les jours jusqu'au prochain point d'équipe. Une réunion mensuelle marquée comme point d'équipe aligne ces priorités sur le rythme réel de la commission.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-sans">
+        <div class="entete">
+          <span class="etiquette">Pour rester simple</span>
+          <h2 id="t-sans">Ce dont vous n'avez pas besoin</h2>
+        </div>
+        <div class="verre panneau">
+          <p>Le programme reste vide, car une commission n'a pas de jour J. Les modules « Bénévoles » et « Classement » restent inactifs.</p>
+          <p>Une commission tient dans trois écrans : Mon espace, l'Agenda et les Ressources.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Autres guides</span>
+          <h2 id="t-autres">Poursuivre</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="referent.html">
+            <span class="role">Référent·e</span>
+            <h3>Suivre vos tâches et vos fiches</h3>
+            <p>Mon espace, l'agenda, les fiches, les préférences et le travail à plusieurs.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="markdown.html">
+            <span class="role">Tous les rôles</span>
+            <h3>Écrire une fiche en Markdown</h3>
+            <p>La barre de mise en forme, les titres, les listes, les liens et les tableaux.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="./">
+            <span class="role">Tous les rôles</span>
+            <h3>Voir les autres cas pratiques</h3>
+            <p>La liste des modes d'emploi et des cas pratiques de l'espace organisateur.</p>
+            <span class="suite">Voir la liste</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, espace organisateur. Cas pratique à jour de la version 0.28.0.
+      </footer>
+    </main>
+    <script src="../sommaire.js"></script>
+  </body>
+</html>

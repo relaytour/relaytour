@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Support a committee through its term · User guides · Relaytour</title>
+    <meta
+      name="description"
+      content="A Relaytour use case: support a committee through its term, with regular meetings, dated tasks between meetings and sheets that keep a record of the work."
+    />
+    <link rel="alternate" hreflang="fr" href="https://relaytour.org/modes-d-emploi/cas-mandat.html" />
+    <link rel="alternate" hreflang="en" href="https://relaytour.org/en/modes-d-emploi/cas-mandat.html" />
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../../jetons.css" />
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Site navigation">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none" stroke-width="8" stroke-linecap="round" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" stroke="var(--rt-accent)" />
+            <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+          </svg>
+          <span class="logotype">Relay<span>tour</span></span>
+        </a>
+        <ul class="liens">
+          <li><a href="../">Overview</a></li>
+          <li><a href="../hebergement.html">Hosting</a></li>
+          <li><a href="../../design-system.html" hreflang="fr">Design system</a></li>
+          <li><a href="./" aria-current="true">User guides</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Source code</a></li>
+          <li><a href="../../modes-d-emploi/cas-mandat.html" hreflang="fr" lang="fr" class="langue">Français</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Use case · The whole team</span>
+        <h1>Support a committee through its term</h1>
+        <p class="chapo">
+          A committee works without an event day, at the pace of its meetings. This use case shows how Relaytour keeps track of the work between meetings and from one term to the next.
+        </p>
+        <p class="renvoi">
+          This use case shows one path among others. Each step points to the user guide that describes the screen in detail.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-cas">
+        <div class="entete">
+          <span class="etiquette">The case</span>
+          <h2 id="t-cas">Six people, three projects and two years</h2>
+          <p class="texte">
+            The board of an association entrusts the welcome of new members to a committee of six people, for a two-year term. The committee meets once a month.
+          </p>
+          <p class="texte">
+            It runs three projects: a welcome guide, a mentoring scheme and an open day. Most of the work moves forward between meetings.
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-mise-en-place">
+        <div class="entete">
+          <span class="etiquette">Before you start</span>
+          <h2 id="t-mise-en-place">What you set up</h2>
+          <p class="texte">
+            An organization admin creates the committee’s activity. An activity admin then sets its kind, its groups, its phases and its modules.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-activite">
+          <div class="ecran-tete"><h3>An activity of the “Instance” kind</h3><span class="route">/&lt;activity&gt;/admin/activites</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">“Instance” kind</span></span><span>An instance gathers a board, a council or a committee. Its period is called a “term” on every screen.</span></li>
+            <li><span><span class="libelle">One area per project</span></span><span>The welcome guide, the mentoring scheme and the open day become three areas of a “Projects” group. A small committee can start with a single area.</span></li>
+            <li><span><span class="libelle">Calendar module</span></span><span>It holds the meetings, the meeting notices and the date polls.</span></li>
+            <li><span><span class="libelle">Phases</span></span><span>The phases can follow the stages of the term: assessment, proposals, implementation, review.</span></li>
+            <li><span><span class="libelle">Open to interests</span></span><span>Members choose the projects they are interested in from “All areas”.</span></li>
+          </ul>
+          <p class="note">The <a href="admin-activite.html#e-activite">activity admin guide</a> describes these settings in its “Activities” section.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-fil">
+        <div class="entete">
+          <span class="etiquette">The term step by step</span>
+          <h2 id="t-fil">Five stages, from launch to handover</h2>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>1. The launch</h3>
+            <p>The activity admin creates the two-year term, then adds each member by their address. The admin then appoints the members to the projects of their choice.</p>
+            <p><a href="admin-activite.html#e-personnes">People</a> · <a href="admin-activite.html#e-equipe">Team</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>2. The meeting rhythm</h3>
+            <p>The admin places one meeting per month in the global calendar and calls the whole team. Each meeting becomes a team check-in. A date poll settles the slot when the time changes.</p>
+            <p><a href="admin-activite.html#e-editions">Global calendar</a> · <a href="referent.html#e-agenda">Calendar</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>3. Between two meetings</h3>
+            <p>Each decision becomes a task of the project concerned, with a due date and an assigned person. My space ranks these tasks by priority until the next team check-in.</p>
+            <p><a href="referent.html#e-mon-espace">My space</a> · <a href="referent.html#e-perimetre">An area</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>4. The record of the work</h3>
+            <p>Each file the committee studies gets a sheet: the findings, the decisions, the role contacts. The “Also concerns” list makes a sheet readable from the other projects.</p>
+            <p><a href="referent.html#e-fiche">A sheet</a> · <a href="markdown.html#m-concerne">Also concerns</a></p>
+          </div>
+          <div class="verre panneau">
+            <h3>5. The end of the term</h3>
+            <p>The admin archives the term and opens a new one, which carries over the recurring tasks. The new team then receives its appointments. The sheets remain and welcome the people who arrive.</p>
+            <p><a href="admin-activite.html#e-editions">Editions, seasons, or terms</a></p>
+          </div>
+        </div>
+
+        <article class="verre ecran" id="e-reunion">
+          <div class="ecran-tete"><h3>A meeting that prepares the next one</h3><span class="route">/&lt;activity&gt;/agenda</span></div>
+          <p>A meeting links up to twenty tasks of the period. These tasks form the agenda: each person sees before the meeting where each item stands. The day before the team check-in, the priorities email reminds everyone of their upcoming tasks.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Team check-in</span></span><span>Check this box in the window of a global meeting. It is checked automatically when the meeting calls the whole team.</span></li>
+            <li><span><span class="libelle">Comment</span></span><span>Write in the thread of a task the minutes of what was decided about it.</span></li>
+            <li><span><span class="libelle">Schedule a meeting</span></span><span>Create a meeting from a task, with the task already linked.</span></li>
+          </ul>
+          <p class="note">Each person sets the priorities email in their <a href="referent.html#e-preferences">preferences</a>: their areas, the whole activity, or no email.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-pratiques">
+        <div class="entete">
+          <span class="etiquette">Good practices</span>
+          <h2 id="t-pratiques">Three habits for long-term work</h2>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Each meeting produces dated tasks</h3>
+            <p>A decision without a due date does not enter the priorities. Before closing a meeting, the team gives each decision a task, a due date and a person.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>The sheet rather than the email</h3>
+            <p>Minutes sent by email get lost in inboxes. A sheet can be reread, keeps its versions and remains available to the team of the next term.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>A team check-in at each meeting</h3>
+            <p>The priorities cover the days until the next team check-in. A monthly meeting marked as a team check-in aligns these priorities with the real pace of the committee.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-sans">
+        <div class="entete">
+          <span class="etiquette">Keep it simple</span>
+          <h2 id="t-sans">What you do not need</h2>
+        </div>
+        <div class="verre panneau">
+          <p>The schedule stays empty, because a committee has no event day. The “Volunteers” and “Ranking” modules stay off.</p>
+          <p>A committee fits in three screens: My space, Calendar and Resources.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Other guides</span>
+          <h2 id="t-autres">Keep going</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="referent.html">
+            <span class="role">Coordinator</span>
+            <h3>Follow your tasks and your sheets</h3>
+            <p>My space, the calendar, the sheets, the preferences and working together.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+          <a class="verre panneau lien-guide" href="markdown.html">
+            <span class="role">All roles</span>
+            <h3>Write a sheet in Markdown</h3>
+            <p>The formatting bar, headings, lists, links and tables.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+          <a class="verre panneau lien-guide" href="./">
+            <span class="role">All roles</span>
+            <h3>See the other use cases</h3>
+            <p>The list of user guides and use cases of the organizer workspace.</p>
+            <span class="suite">See the list</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, organizer workspace. This use case is up to date with version 0.28.0.
+      </footer>
+    </main>
+    <script src="../../sommaire.js"></script>
+  </body>
+</html>
