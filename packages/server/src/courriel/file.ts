@@ -39,6 +39,7 @@ export async function mettreEnFile(
     reunionId?: string
     convocationId?: string
     sequenceReunion?: number
+    editionId?: string
     // Regroupement glissant : un mail de même identifiant, ajouté pendant son
     // délai, remplace le mail en attente et repousse son départ (ADR 0041).
     regroupement?: string
@@ -73,6 +74,9 @@ export async function mettreEnFile(
       ...(options.sequenceReunion === undefined
         ? {}
         : { sequenceReunion: options.sequenceReunion }),
+      ...(options.editionId === undefined
+        ? {}
+        : { editionId: options.editionId }),
     }
     await avecDelai(
       courrielQueue.add(sorte, data, {

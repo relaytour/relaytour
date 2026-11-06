@@ -7,7 +7,9 @@ import type {
 import { membreActif } from '../lib/appartenances.ts'
 import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { aujourdhui } from '../lib/droits.ts'
+import { heureLocale } from '../lib/heures.ts'
 import { journal } from '../lib/journal.ts'
+import { moduleActif } from '../lib/modules.ts'
 import { publierNotification } from '../lib/flux.ts'
 import { pousser } from '../lib/push-file.ts'
 
@@ -49,6 +51,9 @@ export interface RappelsParPersonne {
  *
  * Les destinataires sont les personnes assignées ; sans personne assignée, ce sont
  * les référent·es du périmètre, pour que rien ne passe inaperçu.
+ *
+ * Une déclinaison en retard prévient en plus les personnes assignées à sa tâche
+ * partagée, sauf celles qui sont aussi assignées à la déclinaison (ADR 0063).
  */
 export async function genererRappels(
   prisma: PrismaClient,
@@ -137,6 +142,65 @@ export async function genererRappels(
     }
   }
 
+  // Le retard d'une déclinaison prévient aussi les personnes assignées à sa tâche
+  // partagée, quand celle-ci reste ouverte (ADR 0063). La notification porte le
+  // périmètre de la tâche partagée. Elle n'envoie aucun push.
+  const declinaisons = await prisma.tache.findMany({
+    where: {
+      ...filtre,
+      accord: 'ACCEPTE',
+      statut: { in: ['A_FAIRE', 'EN_COURS'] },
+      echeance: { not: null, lt: jour },
+      edition: { statut: { not: 'ARCHIVEE' } },
+      perimetre: { organisationId: organisation.id },
+      origine: { is: { statut: { in: ['A_FAIRE', 'EN_COURS'] } } },
+    },
+    select: {
+      id: true,
+      echeance: true,
+      assignations: { select: { userId: true } },
+      origine: {
+        select: {
+          perimetreId: true,
+          assignations: {
+            where: { user: membreActif(organisation.id) },
+            select: { userId: true },
+          },
+        },
+      },
+    },
+  })
+  for (const declinaison of declinaisons) {
+    const origine = declinaison.origine
+    if (origine === null) continue
+    // Une personne assignée à la déclinaison reçoit déjà son propre rappel.
+    const dejaPrevenues = new Set(declinaison.assignations.map(a => a.userId))
+    const echeance = declinaison.echeance!.toISOString().slice(0, 10)
+    for (const { userId } of origine.assignations) {
+      if (dejaPrevenues.has(userId)) continue
+      try {
+        const notification = await prisma.notification.create({
+          data: {
+            organisationId: organisation.id,
+            userId,
+            type: 'DECLINAISON_EN_RETARD',
+            tacheId: declinaison.id,
+            perimetreId: origine.perimetreId,
+            cle: `DECLINAISON_EN_RETARD-${declinaison.id}-${userId}-${echeance}`,
+          },
+          select: { id: true },
+        })
+        publierNotification(organisation.id, userId)
+        parPersonne.set(userId, [
+          ...(parPersonne.get(userId) ?? []),
+          notification.id,
+        ])
+      } catch (erreur) {
+        if ((erreur as { code?: string }).code !== 'P2002') throw erreur
+      }
+    }
+  }
+
   const resultat = [...parPersonne].map(([userId, notificationIds]) => ({
     userId,
     notificationIds,
@@ -194,4 +258,135 @@ export async function personnesAResumer(
       )
     })
     .map(p => p.id)
+}
+
+export interface PrioritesAEnvoyer {
+  userId: string
+  editionId: string
+  activiteId: string
+}
+
+/** « 2027-01-13 » + n jours, en AAAA-MM-JJ. */
+function jourPlus(iso: string, jours: number): string {
+  return new Date(dateUtc(iso).getTime() + jours * JOUR)
+    .toISOString()
+    .slice(0, 10)
+}
+
+/**
+ * Les mails des priorités du jour (ADR 0063), par personne et par période :
+ * - la veille d'un point d'équipe de la période ;
+ * - le lundi, quand aucun point d'équipe ne tombe du lundi au dimanche.
+ *
+ * Seules les personnes qui ont choisi « Mes périmètres » ou « Toute l'activité »
+ * reçoivent le mail. « Mes périmètres » demande une affectation dans la période.
+ * « Toute l'activité » demande une affectation dans la période ou un rôle d'admin
+ * de l'activité : une personne en découverte ou seulement rattachée ne reçoit rien.
+ * Le jour et le lundi se lisent dans le fuseau de l'organisation.
+ */
+export async function prioritesAEnvoyer(
+  prisma: PrismaClient,
+  organisation: OrganisationPlanifiee,
+  maintenant = new Date()
+): Promise<PrioritesAEnvoyer[]> {
+  const jour = aujourdhui(maintenant, organisation.fuseauHoraire)
+  const lundi =
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: organisation.fuseauHoraire,
+      weekday: 'short',
+    }).format(maintenant) === 'Mon'
+  const preferences = await prisma.preferenceOrganisation.findMany({
+    where: {
+      organisationId: organisation.id,
+      mailPriorites: { not: 'AUCUN' },
+      user: membreActif(organisation.id),
+    },
+    select: { userId: true, mailPriorites: true },
+  })
+  if (preferences.length === 0) return []
+  const userIds = preferences.map(p => p.userId)
+  const editions = await prisma.edition.findMany({
+    where: {
+      statut: { not: 'ARCHIVEE' },
+      activite: { organisationId: organisation.id, archivedAt: null },
+    },
+    select: {
+      id: true,
+      activiteId: true,
+      // Les points d'équipe d'aujourd'hui aux huit prochains jours suffisent à
+      // décider. Un point d'aujourd'hui, même passé à l'heure du job, compte pour
+      // la semaine.
+      reunions: {
+        where: {
+          perimetreId: null,
+          pointEquipe: true,
+          statut: 'PREVUE',
+          debut: {
+            gt: new Date(maintenant.getTime() - JOUR),
+            lt: new Date(maintenant.getTime() + 9 * JOUR),
+          },
+        },
+        select: { debut: true },
+      },
+      affectations: {
+        where: { userId: { in: userIds } },
+        select: { userId: true },
+      },
+      activite: {
+        select: {
+          admins: {
+            where: { userId: { in: userIds } },
+            select: { userId: true },
+          },
+        },
+      },
+    },
+  })
+  const adminsOrganisation = new Set(
+    (
+      await prisma.appartenance.findMany({
+        where: {
+          organisationId: organisation.id,
+          role: 'ADMIN',
+          archiveLe: null,
+          userId: { in: userIds },
+        },
+        select: { userId: true },
+      })
+    ).map(a => a.userId)
+  )
+  const demain = jourPlus(jour, 1)
+  const finDeSemaine = jourPlus(jour, 6)
+  const resultat: PrioritesAEnvoyer[] = []
+  for (const edition of editions) {
+    // Sans module Agenda, aucune réunion ne compte comme point d'équipe, comme
+    // dans le calcul des priorités (ADR 0059) : le mail part alors le lundi.
+    const agenda = await moduleActif(edition.activiteId, 'AGENDA', prisma)
+    const jours = agenda
+      ? edition.reunions.map(
+          r => heureLocale(r.debut, organisation.fuseauHoraire).jour
+        )
+      : []
+    const veille = jours.includes(demain)
+    const lundiSansPoint =
+      lundi && !jours.some(j => j >= jour && j <= finDeSemaine)
+    if (!veille && !lundiSansPoint) continue
+    const affectees = new Set(edition.affectations.map(a => a.userId))
+    const admins = new Set(edition.activite.admins.map(a => a.userId))
+    for (const p of preferences) {
+      const place =
+        p.mailPriorites === 'MES_PERIMETRES'
+          ? affectees.has(p.userId)
+          : affectees.has(p.userId) ||
+            admins.has(p.userId) ||
+            adminsOrganisation.has(p.userId)
+      if (place)
+        resultat.push({
+          userId: p.userId,
+          editionId: edition.id,
+          activiteId: edition.activiteId,
+        })
+    }
+  }
+  return resultat
 }

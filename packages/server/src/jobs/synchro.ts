@@ -6,7 +6,8 @@ import { planificationQueue, type TachePlanifiee } from './queues.ts'
 
 // Planifications par organisation (ADR 0008).
 //
-// Chaque organisation active reçoit ses rappels à 6 h 30 et ses résumés à 7 h, à
+// Chaque organisation active reçoit ses rappels à 6 h 30, ses résumés et ses mails
+// des priorités à 7 h, à
 // l'heure de son fuseau. Le worker ajuste les planifications à son démarrage, puis
 // chaque heure : une organisation créée, suspendue ou qui change de fuseau est prise
 // en compte dans l'heure. `upsertJobScheduler` est idempotent.
@@ -14,6 +15,8 @@ import { planificationQueue, type TachePlanifiee } from './queues.ts'
 export const HEURES = {
   rappels: '30 6 * * *',
   resumes: '0 7 * * *',
+  // Le mail des priorités part avec les résumés (ADR 0063).
+  priorites: '0 7 * * *',
 } as const
 
 /**
@@ -49,7 +52,7 @@ export async function synchroniserPlanification(
   })
   const attendues = new Set<string>()
   for (const organisation of organisations) {
-    for (const tache of ['rappels', 'resumes'] as const) {
+    for (const tache of ['rappels', 'resumes', 'priorites'] as const) {
       const nom = nomPlanification(tache, organisation.id)
       attendues.add(nom)
       await file.upsertJobScheduler(

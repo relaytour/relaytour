@@ -26,6 +26,7 @@ export const PREFERENCES_PAR_DEFAUT = {
   pushEquipe: false,
   pushAgenda: true,
   resumeAdmin: true,
+  mailPriorites: 'AUCUN',
   dernierResumeLe: null,
 } as const
 

@@ -13,7 +13,7 @@ import PreferencePush from '../composants/PreferencePush'
 import { Avatar } from '../composants/Personne'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
-import type { FrequenceResume } from '../gql/graphql'
+import type { FrequenceResume, MailPriorites } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
 import { useOrganisation } from '../lib/organisation'
@@ -35,6 +35,7 @@ const PREFERENCES = graphql(`
       pushAgenda
       applicationEquipe
       resumeAdmin
+      mailPriorites
     }
   }
 `)
@@ -48,6 +49,7 @@ const MODIFIER = graphql(`
     $applicationPerimetre: Boolean
     $applicationEquipe: Boolean
     $resumeAdmin: Boolean
+    $mailPriorites: MailPriorites
   ) {
     modifierPreferencesNotification(
       frequenceResume: $frequenceResume
@@ -57,6 +59,7 @@ const MODIFIER = graphql(`
       applicationPerimetre: $applicationPerimetre
       applicationEquipe: $applicationEquipe
       resumeAdmin: $resumeAdmin
+      mailPriorites: $mailPriorites
     ) {
       frequenceResume
       mailModification
@@ -65,6 +68,7 @@ const MODIFIER = graphql(`
       applicationPerimetre
       applicationEquipe
       resumeAdmin
+      mailPriorites
     }
   }
 `)
@@ -82,6 +86,7 @@ const MODIFIER_MON_NOM = graphql(`
 
 interface Valeurs {
   frequenceResume: FrequenceResume
+  mailPriorites: MailPriorites
   mailModification: boolean
   mailEcheance: boolean
   applicationPerimetre: boolean
@@ -293,6 +298,46 @@ export default function Preferences() {
               </Radio.Group>
             </Form.Item>
 
+            <Form.Item
+              className="rt-choix"
+              label={
+                <span style={{ fontSize: 16, fontWeight: 600 }}>
+                  <Trans>Mail des priorités</Trans>
+                </span>
+              }
+              name="mailPriorites"
+              extra={t`Le mail reprend les priorités du panneau Priorités. Il part à 7 h la veille de chaque point d’équipe, ou le lundi quand aucun point n’est prévu dans la semaine.`}
+            >
+              <Radio.Group>
+                <Radio value="MES_PERIMETRES">
+                  <span className="rt-choix-titre">
+                    <Trans>Mes périmètres</Trans>
+                  </span>
+                  <span className="rt-choix-detail">
+                    <Trans>
+                      Les priorités des périmètres où vous êtes affecté.
+                    </Trans>
+                  </span>
+                </Radio>
+                <Radio value="ACTIVITE">
+                  <span className="rt-choix-titre">
+                    <Trans>Toute l’activité</Trans>
+                  </span>
+                  <span className="rt-choix-detail">
+                    <Trans>Les priorités de tous les périmètres.</Trans>
+                  </span>
+                </Radio>
+                <Radio value="AUCUN">
+                  <span className="rt-choix-titre">
+                    <Trans>Jamais</Trans>
+                  </span>
+                  <span className="rt-choix-detail">
+                    <Trans>Vous lisez les priorités dans l’espace.</Trans>
+                  </span>
+                </Radio>
+              </Radio.Group>
+            </Form.Item>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <span style={{ fontSize: 16, fontWeight: 600 }}>
                 <Trans>Mails immédiats</Trans>
@@ -325,7 +370,9 @@ export default function Preferences() {
                   <span className="rt-choix-detail">
                     <Trans>
                       Un mail le matin quand une de vos tâches arrive à échéance
-                      dans 7 jours ou le lendemain, ou qu’elle est en retard.
+                      dans 7 jours ou le lendemain, ou qu’elle est en retard. Il
+                      signale aussi les déclinaisons en retard de vos tâches
+                      partagées.
                     </Trans>
                   </span>
                 </label>

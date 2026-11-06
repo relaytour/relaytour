@@ -63,5 +63,6 @@
 | [0059](0059-priorites-d-une-periode.md) | Priorités d'une période | Proposée |
 | [0061](0061-rattacher-une-tache-existante-a-une-tache-partagee.md) | Rattacher une tâche existante à une tâche partagée | Proposée |
 | [0062](0062-jalons.md) | Jalons | Proposée |
+| [0063](0063-mails-de-suivi-hierarchises.md) | Mails de suivi hiérarchisés | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

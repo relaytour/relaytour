@@ -17,6 +17,7 @@ import { journal } from '../../lib/journal.ts'
 import { purgerDonneesTechniques, purgerMedias } from '../../lib/purge.ts'
 import {
   genererRappels,
+  prioritesAEnvoyer,
   personnesAResumer,
   type OrganisationPlanifiee,
 } from '../planification.ts'
@@ -133,6 +134,31 @@ export async function planificationProcessor(
           { notificationIds, organisationId: organisation.id }
         )
       }
+    }
+
+    if (job.name === 'priorites') {
+      const envois = await prioritesAEnvoyer(prisma, organisation)
+      for (const { userId, editionId, activiteId } of envois) {
+        // Un seul mail par personne, par période et par jour (ADR 0063).
+        await mettreEnFile(
+          'priorites',
+          { userId },
+          {
+            jobId: `priorites-${editionId}-${userId}-${jour}`,
+            organisationId: organisation.id,
+            activiteId,
+            editionId,
+          }
+        )
+      }
+      journal.info(
+        {
+          evenement: 'priorites-planifiees',
+          organisationId: organisation.id,
+          mails: envois.length,
+        },
+        'Mails des priorités mis en file.'
+      )
     }
 
     if (job.name === 'resumes') {

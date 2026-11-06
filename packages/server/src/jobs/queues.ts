@@ -31,6 +31,8 @@ export type SorteCourriel =
   // la commande `envoyer-lien-export`, jamais mis en file : le worker ne tourne pas
   // pendant le réveil.
   | 'lien-export'
+  // Priorités d'une période, la veille d'un point d'équipe ou le lundi (ADR 0063).
+  | 'priorites'
 
 // La charge utile ne contient ni corps de mail ni jeton. Le processeur relit l'adresse
 // en base au moment de l'envoi. `destinataire` sert seulement quand aucun compte n'existe.
@@ -73,6 +75,9 @@ export interface CourrielJobData {
   // Pour `lien-export` (ADR 0057) : le jeton du lien de téléchargement, et le dernier
   // export envoyé à tous les admins. Cette sorte ne passe jamais par la file.
   exportPourAdmin?: { jeton: string; dernier: boolean }
+  // Pour `priorites` (ADR 0063) : la période, dont les priorités se calculent à
+  // l'envoi.
+  editionId?: string
 }
 
 export const courrielQueue = new Queue<CourrielJobData>(COURRIEL_QUEUE, {
@@ -101,6 +106,7 @@ export const PLANIFICATION_QUEUE = 'planification'
 export type TachePlanifiee =
   | 'rappels'
   | 'resumes'
+  | 'priorites'
   | 'synchro'
   | 'purge'
   | 'espace-fichiers'
