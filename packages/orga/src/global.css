@@ -1420,6 +1420,25 @@ button.rt-ligne-lien {
   gap: 8px;
 }
 
+/* Un panneau repliable (Panneau, `repliable`) : l'en-tête bascule le panneau.
+   Le contenu garde l'espacement du panneau entre ses enfants. */
+.rt-panneau-titre-repliable {
+  cursor: pointer;
+}
+
+.rt-panneau-titre-repliable h2 {
+  gap: 6px;
+  margin-inline-start: -6px;
+}
+
+.rt-panneau-contenu {
+  display: contents;
+}
+
+.rt-panneau-contenu[hidden] {
+  display: none;
+}
+
 .rt-panneau p {
   margin: 0;
 }
