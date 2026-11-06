@@ -26,6 +26,7 @@ import {
 } from '../lib/declinaisons.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourPerimetre } from '../lib/flux.ts'
+import { publierJalonsDe } from '../lib/jalons.ts'
 import {
   notifier,
   notifierLePerimetre,
@@ -880,6 +881,10 @@ const DeclinaisonInput = builder.inputType('DeclinaisonInput', {
     titre: t.string(),
     description: t.string(),
     echeance: t.field({ type: 'Date' }),
+    jalons: t.boolean({
+      description:
+        'Vrai : chaque déclinaison devient un jalon (ADR 0062). Le jalon lie ses tâches une fois la déclinaison acceptée.',
+    }),
   }),
 })
 
@@ -887,6 +892,8 @@ interface TextesDeclinaison {
   titre?: string | null
   description?: string | null
   echeance?: Date | null
+  /** Vrai : chaque déclinaison porte le marqueur de jalon (ADR 0062). */
+  jalons?: boolean | null
 }
 
 interface CibleValide {
@@ -1004,6 +1011,9 @@ async function creerDeclinaisons(
         ...(cible.acceptee
           ? { accordParId: acteurId, accordLe: new Date() }
           : {}),
+        ...(textes.jalons === true
+          ? { jalonLe: new Date(), jalonParId: acteurId }
+          : {}),
       },
       select: { id: true },
     })
@@ -1067,6 +1077,8 @@ builder.mutationFields(t => ({
       echeance: t.arg({ type: 'Date' }),
       ficheId: t.arg.id(),
       mAssigner: t.arg.boolean({ defaultValue: false }),
+      // Vrai : la tâche créée est un jalon (ADR 0062).
+      jalon: t.arg.boolean({ defaultValue: false }),
       // Avec une déclinaison, la tâche créée est une tâche partagée (ADR 0026).
       declinaison: t.arg({ type: DeclinaisonInput }),
     },
@@ -1099,6 +1111,9 @@ builder.mutationFields(t => ({
             ...(args.mAssigner
               ? { assignations: { create: { userId: acteur.id } } }
               : {}),
+            ...(args.jalon === true
+              ? { jalonLe: new Date(), jalonParId: acteur.id }
+              : {}),
           },
         })
         await tx.journal.create({
@@ -1110,6 +1125,17 @@ builder.mutationFields(t => ({
             tacheId: tache.id,
           },
         })
+        if (args.jalon === true) {
+          await tx.journal.create({
+            data: {
+              type: 'JALON_MARQUE',
+              acteurId: acteur.id,
+              editionId,
+              perimetreId,
+              tacheId: tache.id,
+            },
+          })
+        }
         if (cibles.length > 0) {
           declinaisons = await creerDeclinaisons(
             tx,
@@ -1235,6 +1261,8 @@ builder.mutationFields(t => ({
         id: tache.id,
         editionId: tache.editionId,
       })
+      // L'échéance compte dans le décompte des jalons de la tâche (ADR 0062).
+      await publierJalonsDe(tache)
       // Règle n° 2 : les personnes assignées sont prévenues tout de suite, par mail.
       await notifier(
         prisma,
@@ -1369,6 +1397,8 @@ builder.mutationFields(t => ({
         id: tache.id,
         editionId: tache.editionId,
       })
+      // Les jalons de la tâche suivent son statut (ADR 0062).
+      await publierJalonsDe(tache)
       // Les personnes assignées sont prévenues tout de suite, par mail. Un passage à
       // « faite » ne leur nomme personne, ni dans l'application ni dans le mail.
       await notifier(
@@ -1480,6 +1510,7 @@ builder.mutationFields(t => ({
           id: tache.id,
           editionId: tache.editionId,
         })
+        await publierJalonsDe(tache)
         // Règle n° 3 : les autres référent·es voient qui fait quoi dans leur résumé.
         // La personne assignée par un admin l'apprend aussi.
         await notifier(prisma, {
@@ -1519,6 +1550,8 @@ builder.mutationFields(t => ({
       titre: t.arg.string(),
       description: t.arg.string(),
       echeance: t.arg({ type: 'Date' }),
+      // Vrai : chaque déclinaison devient un jalon (ADR 0062).
+      jalons: t.arg.boolean(),
     },
     resolve: async (query, _root, args, ctx) => {
       const tache = await chargerTache(String(args.id))

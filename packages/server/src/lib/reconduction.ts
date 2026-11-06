@@ -137,17 +137,20 @@ export async function reconduire(
       statut: true,
       modeleSlug: true,
       perimetreId: true,
+      jalonLe: true,
       perimetre: { select: { nom: true, archivedAt: true, activiteId: true } },
       fiche: { select: FICHE },
       declinaisons: {
         where: { accord: { not: 'REFUSE' } },
         orderBy: { perimetreId: 'asc' },
         select: {
+          id: true,
           titre: true,
           description: true,
           echeance: true,
           modeleSlug: true,
           perimetreId: true,
+          jalonLe: true,
           perimetre: { select: { archivedAt: true } },
           fiche: { select: FICHE },
         },
@@ -177,6 +180,12 @@ export async function reconduire(
   const dejaLa = new Set(
     presentes.map(t => cle(t.perimetreId, t.modeleSlug, t.titre))
   )
+
+  // Les tâches reprises, par tâche source : un lien de jalon se recrée quand le
+  // jalon et la tâche liée sont repris tous les deux (ADR 0062).
+  const reprises = new Map<string, string>()
+  const marque = (jalonLe: Date | null) =>
+    jalonLe === null ? {} : { jalonLe: new Date(), jalonParId: auteurId }
 
   for (const tache of taches) {
     const parDefaut = tache.statut !== 'ABANDONNEE'
@@ -222,12 +231,14 @@ export async function reconduire(
         echeance: ligne.echeance,
         modeleSlug: tache.modeleSlug,
         ficheId,
+        ...marque(tache.jalonLe),
       },
       select: { id: true },
     })
+    reprises.set(tache.id, creee.id)
     const maintenant = new Date()
     for (const declinaison of declinaisons) {
-      await tx.tache.create({
+      const reprise = await tx.tache.create({
         data: {
           editionId: cible.id,
           perimetreId: declinaison.perimetreId,
@@ -245,8 +256,28 @@ export async function reconduire(
           accord: 'ACCEPTE',
           accordParId: auteurId,
           accordLe: maintenant,
+          ...marque(declinaison.jalonLe),
         },
+        select: { id: true },
       })
+      reprises.set(declinaison.id, reprise.id)
+    }
+  }
+
+  if (reprises.size > 0) {
+    const liens = await tx.lienJalon.findMany({
+      where: { jalonId: { in: [...reprises.keys()] } },
+      select: { jalonId: true, tacheId: true },
+    })
+    const repris = liens.flatMap(l => {
+      const jalonId = reprises.get(l.jalonId)
+      const tacheId = reprises.get(l.tacheId)
+      return jalonId === undefined || tacheId === undefined
+        ? []
+        : [{ jalonId, tacheId, creeParId: auteurId }]
+    })
+    if (repris.length > 0) {
+      await tx.lienJalon.createMany({ data: repris, skipDuplicates: true })
     }
   }
 

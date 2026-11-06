@@ -776,6 +776,35 @@ const MELES: Cas[] = [
     variables: () => ({ id: b.tache, t: a.tache }),
     attente: REFUSE,
   },
+  // Jalons (ADR 0062) : la tâche de B, comme jalon ou comme tâche liée.
+  {
+    operation: 'lierTaches',
+    query:
+      'mutation ($id: ID!, $t: [ID!]!) { lierTaches(id: $id, tacheIds: $t) { id } }',
+    variables: () => ({ id: a.tache, t: [b.tache] }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'lierTaches',
+    query:
+      'mutation ($id: ID!, $t: [ID!]!) { lierTaches(id: $id, tacheIds: $t) { id } }',
+    variables: () => ({ id: b.tache, t: [a.tache] }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'delierTache',
+    query:
+      'mutation ($id: ID!, $t: ID!) { delierTache(id: $id, tacheId: $t) { id } }',
+    variables: () => ({ id: a.tache, t: b.tache }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'delierTache',
+    query:
+      'mutation ($id: ID!, $t: ID!) { delierTache(id: $id, tacheId: $t) { id } }',
+    variables: () => ({ id: b.tache, t: a.tache }),
+    attente: REFUSE,
+  },
   {
     operation: 'accorderDroitRedaction',
     query:
@@ -899,6 +928,27 @@ const CAS: Cas[] = [
     operation: 'detacherDeclinaison',
     query: 'mutation ($id: ID!) { detacherDeclinaison(id: $id) { id } }',
     variables: () => ({ id: a.tache }),
+    attente: INTERDIT,
+  },
+  // Jalons (ADR 0062) : marquer, lier et délier une tâche de l'activité principale.
+  {
+    operation: 'marquerJalon',
+    query: 'mutation ($id: ID!) { marquerJalon(id: $id, jalon: true) { id } }',
+    variables: () => ({ id: a.tache }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'lierTaches',
+    query:
+      'mutation ($id: ID!, $t: [ID!]!) { lierTaches(id: $id, tacheIds: $t) { id } }',
+    variables: () => ({ id: a.tache, t: [a.tache] }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'delierTache',
+    query:
+      'mutation ($id: ID!, $t: ID!) { delierTache(id: $id, tacheId: $t) { id } }',
+    variables: () => ({ id: a.tache, t: a.tache }),
     attente: INTERDIT,
   },
   {
