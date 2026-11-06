@@ -249,11 +249,15 @@ export default function Priorites({
   editionId,
   moiId,
   mesPerimetres,
+  replie,
+  onBasculer,
 }: {
   editionId: string
   moiId: string
   /** Les périmètres où la personne est affectée pour la période. */
   mesPerimetres: ReadonlySet<string>
+  replie: boolean
+  onBasculer: () => void
 }) {
   const { t } = useLingui()
   const { activite, libelleGroupe } = useActivite()
@@ -293,6 +297,7 @@ export default function Priorites({
   return (
     <Panneau
       titre={t`Priorités`}
+      repliable={{ replie, onBasculer, nom: t`Priorités` }}
       extra={lues && <span className="rt-compte">{t`jusqu’au ${fin}`}</span>}
     >
       {loading && !data ? (
@@ -313,8 +318,8 @@ export default function Priorites({
               </>
             ) : (
               <Trans>
-                Aucun point d’équipe n’est prévu : les priorités couvrent les
-                14 prochains jours.
+                Aucun point d’équipe n’est prévu : les priorités couvrent les 14
+                prochains jours.
               </Trans>
             )}
           </p>

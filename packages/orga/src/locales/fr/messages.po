@@ -3914,6 +3914,10 @@ msgid "Déplier le menu"
 msgstr "Déplier le menu"
 
 #: src/composants/Panneau.tsx
+msgid "Déplier le panneau {nom}"
+msgstr "Déplier le panneau {nom}"
+
+#: src/composants/Panneau.tsx
 msgid "Déplier le volet latéral"
 msgstr "Déplier le volet latéral"
 
@@ -8974,6 +8978,10 @@ msgstr "Replier le groupe {nom}"
 #: src/composants/Coquille.tsx
 msgid "Replier le menu"
 msgstr "Replier le menu"
+
+#: src/composants/Panneau.tsx
+msgid "Replier le panneau {nom}"
+msgstr "Replier le panneau {nom}"
 
 #: src/composants/Panneau.tsx
 msgid "Replier le volet latéral"
