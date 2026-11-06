@@ -1,4 +1,4 @@
-import { AjustementPriorite, prisma } from '@relaytour/database'
+import { AjustementPriorite, prisma, type Tache } from '@relaytour/database'
 
 import { aujourdhui, exigerEcriture } from '../lib/droits.ts'
 import { publierPourPerimetre } from '../lib/flux.ts'
