@@ -48,6 +48,10 @@ export const VUES_TACHES = [
   // des déclinaisons d'une tâche quand il est ouvert.
   'DeclinaisonsProposees',
   'DeclinaisonsTache',
+  // Jalons (ADR 0062) : le décompte de la page d'un périmètre, et les tâches liées
+  // d'un jalon quand son détail est ouvert.
+  'JalonsDuPerimetre',
+  'TachesDuJalon',
   // Commentaires (ADR 0029) : le nombre par tâche, et le fil quand il est ouvert.
   'CommentairesDeLaPeriode',
   'FilTache',

@@ -39,6 +39,10 @@ msgstr "« {nomPremiereFiche} » et « {nomSecondeFiche} » sont deux personnes 
 msgid "« {titreDateCle} » disparaît de l’agenda de chaque personne."
 msgstr "« {titreDateCle} » disparaît de l’agenda de chaque personne."
 
+#: src/composants/LierTaches.tsx
+msgid "« {titreJalon} »"
+msgstr "« {titreJalon} »"
+
 #: src/pages/AppelBenevoles.tsx
 msgid "« {titrePremier} » et « {titreSecond} »"
 msgstr "« {titrePremier} » et « {titreSecond} »"
@@ -71,6 +75,7 @@ msgid "{0, plural, one {Une séquence utilise ce lieu.} other {# séquences util
 msgstr "{0, plural, one {Une séquence utilise ce lieu.} other {# séquences utilisent ce lieu.}} Choisissez un autre lieu pour ces séquences avant de le supprimer."
 
 #: src/lib/declinaisons.ts
+#: src/lib/jalons.ts
 msgid "{abandonnees, plural, one {# abandonnée} other {# abandonnées}}"
 msgstr "{abandonnees, plural, one {# abandonnée} other {# abandonnées}}"
 
@@ -274,6 +279,10 @@ msgstr "{ecrites, plural, one {# fiche écrite} other {# fiches écrites}}"
 msgid "{enAttente} en attente d’accord"
 msgstr "{enAttente} en attente d’accord"
 
+#: src/lib/jalons.ts
+msgid "{enRetard, plural, one {# en retard} other {# en retard}}"
+msgstr "{enRetard, plural, one {# en retard} other {# en retard}}"
+
 #: src/pages/Charge.tsx
 msgid "{enRetard} en retard"
 msgstr "{enRetard} en retard"
@@ -410,6 +419,10 @@ msgstr "{libelleACreer} à créer, {presentes, plural, one {# déjà présente} 
 msgid "{libelleGroupe} (tout le groupe)"
 msgstr "{libelleGroupe} (tout le groupe)"
 
+#: src/composants/TacheCarte.tsx
+msgid "{liens, plural, one {Le lien vers # tâche sera retiré. La tâche liée ne change pas.} other {Les liens vers # tâches seront retirés. Les tâches liées ne changent pas.}}"
+msgstr "{liens, plural, one {Le lien vers # tâche sera retiré. La tâche liée ne change pas.} other {Les liens vers # tâches seront retirés. Les tâches liées ne changent pas.}}"
+
 #: src/composants/AssistantTableur.tsx
 msgid "{lues, plural, one {# ligne lue} other {# lignes lues}}."
 msgstr "{lues, plural, one {# ligne lue} other {# lignes lues}}."
@@ -425,6 +438,10 @@ msgstr "{manques} n’a pas d’accès certain."
 #: src/composants/VerificationAcces.tsx
 msgid "{manques} n’ont pas d’accès certain."
 msgstr "{manques} n’ont pas d’accès certain."
+
+#: src/lib/jalons.ts
+msgid "{miennes, plural, one {dont # vous est assignée} other {dont # vous sont assignées}}"
+msgstr "{miennes, plural, one {dont # vous est assignée} other {dont # vous sont assignées}}"
 
 #: src/composants/NouvelleEdition.tsx
 msgid "{Mot} {creee}."
@@ -811,6 +828,10 @@ msgstr "{organisation} : votre accès à l’espace organisateur"
 msgid "{oui} oui · {siBesoin} si besoin · {non} non"
 msgstr "{oui} oui · {siBesoin} si besoin · {non} non"
 
+#: src/composants/TacheCarte.tsx
+msgid "{ouvertes, plural, one {# tâche liée à ce jalon reste ouverte. Voulez-vous quand même marquer le jalon comme fait ?} other {# tâches liées à ce jalon restent ouvertes. Voulez-vous quand même marquer le jalon comme fait ?}}"
+msgstr "{ouvertes, plural, one {# tâche liée à ce jalon reste ouverte. Voulez-vous quand même marquer le jalon comme fait ?} other {# tâches liées à ce jalon restent ouvertes. Voulez-vous quand même marquer le jalon comme fait ?}}"
+
 #: src/composants/Priorites.tsx
 #: src/lib/messages.ts
 msgid "{ouvertes, plural, one {# tâche ouverte sur {gardees}} other {# tâches ouvertes sur {gardees}}}"
@@ -819,6 +840,18 @@ msgstr "{ouvertes, plural, one {# tâche ouverte sur {gardees}} other {# tâches
 #: src/pages/Charge.tsx
 msgid "{ouvertes, plural, one {# tâche ouverte} other {# tâches ouvertes}}"
 msgstr "{ouvertes, plural, one {# tâche ouverte} other {# tâches ouvertes}}"
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "{ouvertes, plural, one {Jalon : # ouverte sur {gardees}} other {Jalon : # ouvertes sur {gardees}}}"
+msgstr "{ouvertes, plural, one {Jalon : # ouverte sur {gardees}} other {Jalon : # ouvertes sur {gardees}}}"
+
+#: src/lib/jalons.ts
+msgid "{ouvertes, plural, one {Jalon : # tâche ouverte sur {gardees}} other {Jalon : # tâches ouvertes sur {gardees}}}"
+msgstr "{ouvertes, plural, one {Jalon : # tâche ouverte sur {gardees}} other {Jalon : # tâches ouvertes sur {gardees}}}"
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "{ouvertesJalons, plural, one {# tâche ouverte sur {gardeesJalons} dans les jalons des déclinaisons} other {# tâches ouvertes sur {gardeesJalons} dans les jalons des déclinaisons}}"
+msgstr "{ouvertesJalons, plural, one {# tâche ouverte sur {gardeesJalons} dans les jalons des déclinaisons} other {# tâches ouvertes sur {gardeesJalons} dans les jalons des déclinaisons}}"
 
 #: src/pages/Charge.tsx
 msgid "{partagees, plural, one {# partagée} other {# partagées}}"
@@ -2012,7 +2045,9 @@ msgstr "Annulée"
 #: src/composants/FilTache.tsx
 #: src/composants/GestionAcces.tsx
 #: src/composants/InvitationsEnAttente.tsx
+#: src/composants/JalonTache.tsx
 #: src/composants/LienBenevole.tsx
+#: src/composants/LierTaches.tsx
 #: src/composants/LieuxFenetre.tsx
 #: src/composants/MesInvitations.tsx
 #: src/composants/ModeleDeDepart.tsx
@@ -2798,6 +2833,10 @@ msgstr "Ce fournisseur ne publie pas d’annuaire des comptes."
 msgid "Ce groupe ne compte aucun périmètre."
 msgstr "Ce groupe ne compte aucun périmètre."
 
+#: src/composants/JalonTache.tsx
+msgid "Ce jalon ne lie encore aucune tâche."
+msgstr "Ce jalon ne lie encore aucune tâche."
+
 #: src/pages/EspaceBenevole.tsx
 msgid "Ce lien n’est plus valable."
 msgstr "Ce lien n’est plus valable."
@@ -3133,6 +3172,11 @@ msgstr "Chaque périmètre choisi reçoit sa propre tâche, avec son statut et s
 msgid "Chaque périmètre choisi reçoit sa propre tâche, avec son statut et ses personnes assignées. Vous suivez leur avancement depuis cette tâche. Les référentes et référents de chaque périmètre acceptent ou refusent la tâche. Elle entre sans attendre dans un périmètre où vous êtes vous-même affecté·e."
 msgstr "Chaque périmètre choisi reçoit sa propre tâche, avec son statut et ses personnes assignées. Vous suivez leur avancement depuis cette tâche. Les référentes et référents de chaque périmètre acceptent ou refusent la tâche. Elle entre sans attendre dans un périmètre où vous êtes vous-même affecté·e."
 
+#: src/composants/DeclinerTache.tsx
+#: src/composants/TacheFormulaire.tsx
+msgid "Chaque périmètre lie ensuite ses propres tâches à son jalon. Vous suivez leur avancement depuis cette tâche."
+msgstr "Chaque périmètre lie ensuite ses propres tâches à son jalon. Vous suivez leur avancement depuis cette tâche."
+
 #: src/composants/ImportFiches.tsx
 msgid "Chaque périmètre reçoit les fiches Markdown, texte et Word de son dossier. Les sous-dossiers ne sont pas lus."
 msgstr "Chaque périmètre reçoit les fiches Markdown, texte et Word de son dossier. Les sous-dossiers ne sont pas lus."
@@ -3184,6 +3228,10 @@ msgstr "Choisir des périmètres"
 msgid "Choisir des personnes de l’équipe"
 msgstr "Choisir des personnes de l’équipe"
 
+#: src/composants/LierTaches.tsx
+msgid "Choisir des tâches"
+msgstr "Choisir des tâches"
+
 #: src/composants/ReunionFormulaire.tsx
 msgid "Choisir des tâches de la période"
 msgstr "Choisir des tâches de la période"
@@ -3208,6 +3256,7 @@ msgstr "Choisir un fichier {format}"
 msgid "Choisir un lieu"
 msgstr "Choisir un lieu"
 
+#: src/composants/LierTaches.tsx
 #: src/composants/RattacherTache.tsx
 msgid "Choisir un périmètre"
 msgstr "Choisir un périmètre"
@@ -3244,6 +3293,10 @@ msgstr "Choisissez au moins un périmètre."
 #: src/composants/SondageFormulaire.tsx
 msgid "Choisissez au moins une personne."
 msgstr "Choisissez au moins une personne."
+
+#: src/composants/LierTaches.tsx
+msgid "Choisissez au moins une tâche."
+msgstr "Choisissez au moins une tâche."
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Choisissez le point-virgule si votre messagerie par défaut est Outlook : il ne découpe pas des adresses collées avec des virgules. Vous pouvez changer ce signe à côté des boutons de copie de chaque message."
@@ -3290,6 +3343,7 @@ msgid "Choisissez un jour."
 msgstr "Choisissez un jour."
 
 #: src/composants/AppelsBenevoles.tsx
+#: src/composants/LierTaches.tsx
 #: src/composants/RattacherTache.tsx
 #: src/pages/admin/Redaction.tsx
 msgid "Choisissez un périmètre."
@@ -3642,6 +3696,7 @@ msgid "Contenu de la fiche"
 msgstr "Contenu de la fiche"
 
 #: src/composants/AssistantTableur.tsx
+#: src/composants/TacheCarte.tsx
 msgid "Continuer"
 msgstr "Continuer"
 
@@ -4071,6 +4126,10 @@ msgstr "Des séquences dépassent leurs renforts recherchés."
 msgid "des tâches faites"
 msgstr "des tâches faites"
 
+#: src/composants/TacheCarte.tsx
+msgid "Des tâches liées restent ouvertes"
+msgstr "Des tâches liées restent ouvertes"
+
 #: src/composants/PreferencePush.tsx
 msgid "Désactiver"
 msgstr "Désactiver"
@@ -4470,6 +4529,7 @@ msgid "en renfort"
 msgstr "en renfort"
 
 #: src/composants/DeclinaisonsTache.tsx
+#: src/composants/JalonTache.tsx
 #: src/composants/LigneTache.tsx
 #: src/pages/admin/Equipe.tsx
 #: src/pages/Charge.tsx
@@ -5422,10 +5482,31 @@ msgstr "J’accepte que {nomOrganisation} enregistre ces informations pour organ
 msgid "J’accepte que l’import remplace ces modifications. Les fiches modifiées dans Relaytour restent telles quelles."
 msgstr "J’accepte que l’import remplace ces modifications. Les fiches modifiées dans Relaytour restent telles quelles."
 
+#: src/composants/LigneTache.tsx
+#: src/composants/TacheFormulaire.tsx
+msgid "Jalon"
+msgstr "Jalon"
+
+#: src/lib/jalons.ts
+msgid "Jalon : aucune tâche liée"
+msgstr "Jalon : aucune tâche liée"
+
+#: src/lib/jalons.ts
+msgid "Jalon : toutes les tâches liées sont faites"
+msgstr "Jalon : toutes les tâches liées sont faites"
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "Jalon sans tâche liée"
+msgstr "Jalon sans tâche liée"
+
 #: src/composants/Priorites.tsx
 #: src/lib/messages.ts
 msgid "Jalons avant le prochain point"
 msgstr "Jalons avant le prochain point"
+
+#: src/pages/Retroplanning.tsx
+msgid "Jalons seuls"
+msgstr "Jalons seuls"
 
 #: src/pages/Preferences.tsx
 msgid "Jamais"
@@ -6048,9 +6129,30 @@ msgstr "La tâche est partagée avec les périmètres choisis."
 msgid "La tâche est refusée."
 msgstr "La tâche est refusée."
 
+#: src/composants/JalonTache.tsx
+#: src/composants/TacheCarte.tsx
+msgid "La tâche est retirée du jalon."
+msgstr "La tâche est retirée du jalon."
+
+#: src/composants/TacheCarte.tsx
+msgid "La tâche est un jalon. Liez-y les tâches qui y mènent."
+msgstr "La tâche est un jalon. Liez-y les tâches qui y mènent."
+
 #: src/lib/taches.ts
 msgid "La tâche n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
 msgstr "La tâche n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
+
+#: src/composants/TacheCarte.tsx
+msgid "La tâche n’est plus un jalon."
+msgstr "La tâche n’est plus un jalon."
+
+#: src/composants/JalonTache.tsx
+msgid "La tâche ne change pas. Elle sort du décompte du jalon « {titre} » et perd la place que ce jalon lui donne dans les priorités. Le jalon garde la trace du retrait."
+msgstr "La tâche ne change pas. Elle sort du décompte du jalon « {titre} » et perd la place que ce jalon lui donne dans les priorités. Le jalon garde la trace du retrait."
+
+#: src/composants/TacheCarte.tsx
+msgid "La tâche ne change pas. Elle sort du décompte du jalon, que le périmètre du jalon ne suit plus pour elle. Elle perd aussi la place que le jalon lui donne dans les priorités. Le jalon garde la trace du retrait."
+msgstr "La tâche ne change pas. Elle sort du décompte du jalon, que le périmètre du jalon ne suit plus pour elle. Elle perd aussi la place que le jalon lui donne dans les priorités. Le jalon garde la trace du retrait."
 
 #: src/composants/TacheCarte.tsx
 msgid "La tâche vous est assignée."
@@ -6869,6 +6971,10 @@ msgstr "Les tâches {dePeriode} sont rangées par phase, puis par périmètre."
 msgid "Les tâches {dePeriode} sont regroupées par mois, de la plus proche à la plus lointaine."
 msgstr "Les tâches {dePeriode} sont regroupées par mois, de la plus proche à la plus lointaine."
 
+#: src/composants/LierTaches.tsx
+msgid "Les tâches choisies comptent dans le décompte du jalon. Elles ne changent pas, et leur périmètre voit le jalon qu’elles servent. Choisissez un périmètre, puis une ou plusieurs tâches."
+msgstr "Les tâches choisies comptent dans le décompte du jalon. Elles ne changent pas, et leur périmètre voit le jalon qu’elles servent. Choisissez un périmètre, puis une ou plusieurs tâches."
+
 #: src/pages/admin/ImportTaches.tsx
 msgid "Les tâches d’un tableur rejoignent une période. Une tâche déjà présente n’est pas recréée."
 msgstr "Les tâches d’un tableur rejoignent une période. Une tâche déjà présente n’est pas recréée."
@@ -6877,9 +6983,14 @@ msgstr "Les tâches d’un tableur rejoignent une période. Une tâche déjà pr
 msgid "Les tâches de"
 msgstr "Les tâches de"
 
+#: src/composants/LierTaches.tsx
 #: src/composants/RattacherTache.tsx
 msgid "Les tâches de ce périmètre n’ont pas pu être chargées."
 msgstr "Les tâches de ce périmètre n’ont pas pu être chargées."
+
+#: src/composants/JalonTache.tsx
+msgid "Les tâches liées n’ont pas pu être chargées. Rechargez la page dans un instant."
+msgstr "Les tâches liées n’ont pas pu être chargées. Rechargez la page dans un instant."
 
 #: src/pages/Charge.tsx
 msgid "Les tâches ouvertes et les places à venir de chaque personne {dePeriode}."
@@ -6888,6 +6999,10 @@ msgstr "Les tâches ouvertes et les places à venir de chaque personne {dePeriod
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Les tâches proposées à ce périmètre n’ont pas pu être chargées. Rechargez la page dans un instant."
 msgstr "Les tâches proposées à ce périmètre n’ont pas pu être chargées. Rechargez la page dans un instant."
+
+#: src/composants/LierTaches.tsx
+msgid "Les tâches sont liées au jalon."
+msgstr "Les tâches sont liées au jalon."
 
 #: src/pages/Perimetre.tsx
 msgid "Les tâches sont rangées par fiche méthode, puis par échéance. Une tâche ne se supprime pas : elle s’abandonne."
@@ -6998,10 +7113,23 @@ msgstr "Lien personnel de {nomLien}"
 msgid "Liens"
 msgstr "Liens"
 
+#: src/composants/LierTaches.tsx
+msgid "Lier"
+msgstr "Lier"
+
 #: src/composants/ExplorateurDossier.tsx
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Lier ce dossier"
 msgstr "Lier ce dossier"
+
+#: src/composants/JalonTache.tsx
+#: src/composants/TacheCarte.tsx
+msgid "Lier des tâches"
+msgstr "Lier des tâches"
+
+#: src/composants/LierTaches.tsx
+msgid "Lier des tâches au jalon"
+msgstr "Lier des tâches au jalon"
 
 #: src/composants/ExplorateurDossier.tsx
 msgid "Lier le dossier {nomElement}"
@@ -7177,6 +7305,11 @@ msgstr "Marquer en cours"
 msgid "Marquer la tâche comme faite"
 msgstr "Marquer la tâche comme faite"
 
+#: src/composants/DeclinerTache.tsx
+#: src/composants/TacheFormulaire.tsx
+msgid "Marquer les déclinaisons comme jalons"
+msgstr "Marquer les déclinaisons comme jalons"
+
 #: src/composants/ConnexionsFiche.tsx
 msgid "Masquée par"
 msgstr "Masquée par"
@@ -7231,6 +7364,10 @@ msgstr "Même adresse"
 #: src/pages/ImportBenevoles.tsx
 msgid "Même téléphone"
 msgstr "Même téléphone"
+
+#: src/composants/TacheCarte.tsx
+msgid "Mène au jalon"
+msgstr "Mène au jalon"
 
 #: src/composants/Priorites.tsx
 msgid "Mène au jalon « {titre} »"
@@ -8099,6 +8236,7 @@ msgstr "Performance"
 #. Portée d’un appel à bénévoles dont le périmètre est inconnu
 #: src/composants/AppelsBenevoles.tsx
 #: src/composants/EcrireMessage.tsx
+#: src/composants/LierTaches.tsx
 #: src/composants/RattacherTache.tsx
 #: src/composants/ReconductionEdition.tsx
 #: src/composants/SequenceFormulaire.tsx
@@ -9182,6 +9320,7 @@ msgid "Retirées"
 msgstr "Retirées"
 
 #: src/composants/InvitationsEnAttente.tsx
+#: src/composants/JalonTache.tsx
 #: src/composants/ProposerPersonne.tsx
 #: src/composants/Repartition.tsx
 #: src/composants/RessourcesFiche.tsx
@@ -9197,6 +9336,10 @@ msgstr "Retirer"
 #: src/composants/ChampImage.tsx
 msgid "Retirer : {libelle}"
 msgstr "Retirer : {libelle}"
+
+#: src/composants/JalonTache.tsx
+msgid "Retirer « {titreLiee} » de ce jalon ?"
+msgstr "Retirer « {titreLiee} » de ce jalon ?"
 
 #: src/composants/PastillePerimetre.tsx
 #: src/composants/Personne.tsx
@@ -9267,6 +9410,10 @@ msgstr "Retirer cette plage"
 msgid "Retirer cette proposition ?"
 msgstr "Retirer cette proposition ?"
 
+#: src/composants/TacheCarte.tsx
+msgid "Retirer cette tâche du jalon « {titreJalon} » ?"
+msgstr "Retirer cette tâche du jalon « {titreJalon} » ?"
+
 #: src/pages/admin/Personnes.tsx
 msgid "Retirer de l’activité"
 msgstr "Retirer de l’activité"
@@ -9274,6 +9421,10 @@ msgstr "Retirer de l’activité"
 #: src/composants/GestionAcces.tsx
 msgid "Retirer du {cible}"
 msgstr "Retirer du {cible}"
+
+#: src/composants/TacheCarte.tsx
+msgid "Retirer du jalon {titreJalon}"
+msgstr "Retirer du jalon {titreJalon}"
 
 #: src/composants/TacheCarte.tsx
 msgid "Retirer l’ajustement"
@@ -9294,6 +9445,14 @@ msgstr "Retirer le dossier {nomDossierLie}"
 #: src/composants/ChampsActivite.tsx
 msgid "Retirer le groupe"
 msgstr "Retirer le groupe"
+
+#: src/composants/TacheCarte.tsx
+msgid "Retirer le jalon"
+msgstr "Retirer le jalon"
+
+#: src/composants/TacheCarte.tsx
+msgid "Retirer le jalon ?"
+msgstr "Retirer le jalon ?"
 
 #: src/composants/EditeurVisuel.tsx
 msgid "Retirer le lien"
@@ -9973,6 +10132,7 @@ msgstr "Tâche remise à faire."
 msgid "Tâche rouverte."
 msgstr "Tâche rouverte."
 
+#: src/composants/LierTaches.tsx
 #: src/composants/Recherche.tsx
 msgid "Tâches"
 msgstr "Tâches"
@@ -10330,6 +10490,10 @@ msgstr "Toutes les fiches, communes comprises"
 msgid "Toutes les tâches assignées et les places de chaque personne sur {laPeriode}."
 msgstr "Toutes les tâches assignées et les places de chaque personne sur {laPeriode}."
 
+#: src/composants/LierTaches.tsx
+msgid "Toutes les tâches de ce périmètre sont déjà liées à ce jalon."
+msgstr "Toutes les tâches de ce périmètre sont déjà liées à ce jalon."
+
 #: src/composants/VerificationAcces.tsx
 msgid "Toutes ont accès chez le fournisseur."
 msgstr "Toutes ont accès chez le fournisseur."
@@ -10338,6 +10502,10 @@ msgstr "Toutes ont accès chez le fournisseur."
 #: src/composants/Demandes.tsx
 msgid "Traitées"
 msgstr "Traitées"
+
+#: src/composants/TacheCarte.tsx
+msgid "Transformer en jalon"
+msgstr "Transformer en jalon"
 
 #: src/pages/Connexion.tsx
 msgid "Transmettez le savoir-faire de votre organisation d’une période à l’autre."
@@ -10462,6 +10630,10 @@ msgstr "Un fichier compte {LIGNES_MAX} lignes au plus."
 #: src/lib/import-tableur.ts
 msgid "Un fichier pèse 2 Mo au plus."
 msgstr "Un fichier pèse 2 Mo au plus."
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Un jalon est un objectif à atteindre. Vous y liez ensuite les tâches qui y mènent, dans ce périmètre ou dans un autre."
+msgstr "Un jalon est un objectif à atteindre. Vous y liez ensuite les tâches qui y mènent, dans ce périmètre ou dans un autre."
 
 #: src/lib/guide-markdown.ts
 msgid "Un lien de fiche s’ouvre dans un nouvel onglet."

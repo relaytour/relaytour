@@ -4667,3 +4667,16 @@ button.rt-carte-fiche {
   margin: 6px 0 0;
   font-size: 13px;
 }
+
+/* Jalons (ADR 0062) : le drapeau d'un jalon dans une ligne de tâche. */
+.rt-drapeau-jalon {
+  margin-inline-end: 6px;
+  color: var(--rt-primaire);
+}
+
+/* Les jalons qu'une tâche sert, chacun avec son bouton de retrait. */
+.rt-jalon-servi {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}

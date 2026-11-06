@@ -1,4 +1,4 @@
-import { DownOutlined, UpOutlined } from '@ant-design/icons'
+import { DownOutlined, FlagOutlined, UpOutlined } from '@ant-design/icons'
 import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { useId, useState } from 'react'
@@ -21,6 +21,8 @@ export interface TacheLigne {
   enRetard: boolean
   perimetre: { slug: string; nom: string; couleur?: string | null }
   assignes: { id: string; nom: string }[]
+  /** Vrai pour un jalon (ADR 0062) : la ligne porte un drapeau. */
+  jalon?: boolean
 }
 
 /**
@@ -65,7 +67,15 @@ export default function LigneTache({
           {tache.echeance ? dateCourte(tache.echeance) : t`Sans échéance`}
         </span>
         <span className="rt-ligne-tache-titre">
-          <span>{tache.titre}</span>
+          <span>
+            {tache.jalon && (
+              <FlagOutlined
+                className="rt-drapeau-jalon"
+                aria-label={t`Jalon`}
+              />
+            )}
+            {tache.titre}
+          </span>
           {!sansPerimetre && (
             <EtiquettePerimetre
               nom={tache.perimetre.nom}

@@ -170,6 +170,12 @@ export const DECLINAISONS_TACHE = graphql(`
           nom
           couleur
         }
+        jalon
+        resumeJalon {
+          total
+          ouvertes
+          abandonnees
+        }
         historiqueAccord {
           etape
           le
@@ -190,6 +196,7 @@ export const DECLINER_TACHE = graphql(`
     $titre: String
     $description: String
     $echeance: Date
+    $jalons: Boolean
   ) {
     declinerTache(
       id: $id
@@ -197,6 +204,7 @@ export const DECLINER_TACHE = graphql(`
       titre: $titre
       description: $description
       echeance: $echeance
+      jalons: $jalons
     ) {
       ...TacheChamps
     }
@@ -252,6 +260,72 @@ export const TACHES_A_RATTACHER = graphql(`
   }
 `)
 
+// Jalons (ADR 0062) : marquer une tâche, lier et délier ses tâches. Lier demande
+// d'écrire dans le périmètre du jalon ; délier, dans l'un des deux périmètres.
+export const MARQUER_JALON = graphql(`
+  mutation MarquerJalon($id: ID!, $jalon: Boolean!) {
+    marquerJalon(id: $id, jalon: $jalon) {
+      id
+      jalon
+    }
+  }
+`)
+
+export const LIER_TACHES = graphql(`
+  mutation LierTaches($id: ID!, $tacheIds: [ID!]!) {
+    lierTaches(id: $id, tacheIds: $tacheIds) {
+      id
+    }
+  }
+`)
+
+export const DELIER_TACHE = graphql(`
+  mutation DelierTache($id: ID!, $tacheId: ID!) {
+    delierTache(id: $id, tacheId: $tacheId) {
+      id
+    }
+  }
+`)
+
+// Les tâches liées d'un jalon, lues sur une seule tâche : dans une liste, le
+// plafond de complexité le refuserait.
+export const TACHES_DU_JALON = graphql(`
+  query TachesDuJalon($id: ID!) {
+    tache(id: $id) {
+      id
+      tachesLiees {
+        id
+        titre
+        echeance
+        statut
+        enRetard
+        peutModifier
+        perimetre {
+          id
+          slug
+          nom
+          couleur
+        }
+      }
+    }
+  }
+`)
+
+// Les tâches d'un périmètre, pour en choisir à lier à un jalon.
+export const TACHES_A_LIER = graphql(`
+  query TachesALier($slug: String!, $editionId: ID!) {
+    perimetre(slug: $slug) {
+      id
+      taches(editionId: $editionId) {
+        id
+        titre
+        statut
+        echeance
+      }
+    }
+  }
+`)
+
 export const IMPOSER_DECLINAISON = graphql(`
   mutation ImposerDeclinaison($id: ID!) {
     imposerDeclinaison(id: $id) {
@@ -270,6 +344,7 @@ export const CREER_TACHE = graphql(`
     $echeance: Date
     $ficheId: ID
     $mAssigner: Boolean
+    $jalon: Boolean
     $declinaison: DeclinaisonInput
   ) {
     creerTache(
@@ -280,6 +355,7 @@ export const CREER_TACHE = graphql(`
       echeance: $echeance
       ficheId: $ficheId
       mAssigner: $mAssigner
+      jalon: $jalon
       declinaison: $declinaison
     ) {
       ...TacheChamps

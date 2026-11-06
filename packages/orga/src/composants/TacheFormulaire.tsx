@@ -28,6 +28,10 @@ interface Valeurs {
   description?: string
   echeance?: string
   mAssigner?: boolean
+  /** Vrai : la tâche créée est un jalon (ADR 0062). */
+  jalon?: boolean
+  /** Vrai : chaque déclinaison est un jalon. */
+  jalonsDeclinaisons?: boolean
   // Tâche partagée (ADR 0026) : les périmètres où la décliner, et ce qu'ils
   // reçoivent quand il diffère de la tâche.
   cibles?: string[]
@@ -80,6 +84,8 @@ export default function TacheFormulaire({
             echeance: '',
             ficheId: null,
             mAssigner: true,
+            jalon: false,
+            jalonsDeclinaisons: false,
             cibles: [],
             titreDeclinaison: '',
             descriptionDeclinaison: '',
@@ -111,6 +117,7 @@ export default function TacheFormulaire({
                   perimetreId,
                   editionId,
                   mAssigner: v.mAssigner ?? false,
+                  jalon: v.jalon ?? false,
                   declinaison:
                     (v.cibles ?? []).length === 0
                       ? null
@@ -119,6 +126,7 @@ export default function TacheFormulaire({
                           titre: v.titreDeclinaison?.trim() || null,
                           description: v.descriptionDeclinaison?.trim() || null,
                           echeance: v.echeanceDeclinaison || null,
+                          jalons: v.jalonsDeclinaisons ?? false,
                         },
                 },
               }),
@@ -201,6 +209,15 @@ export default function TacheFormulaire({
             <Checkbox>{t`Je m’en occupe`}</Checkbox>
           </Form.Item>
         )}
+        {tache === 'nouvelle' && (
+          <Form.Item
+            name="jalon"
+            valuePropName="checked"
+            extra={t`Un jalon est un objectif à atteindre. Vous y liez ensuite les tâches qui y mènent, dans ce périmètre ou dans un autre.`}
+          >
+            <Checkbox>{t`Jalon`}</Checkbox>
+          </Form.Item>
+        )}
         {tache === 'nouvelle' && perimetresCibles.length > 0 && (
           <>
             <Form.Item
@@ -237,6 +254,15 @@ export default function TacheFormulaire({
                   name="echeanceDeclinaison"
                 >
                   <Input type="date" style={{ maxWidth: 200 }} />
+                </Form.Item>
+                <Form.Item
+                  name="jalonsDeclinaisons"
+                  valuePropName="checked"
+                  extra={t`Chaque périmètre lie ensuite ses propres tâches à son jalon. Vous suivez leur avancement depuis cette tâche.`}
+                >
+                  <Checkbox>
+                    {t`Marquer les déclinaisons comme jalons`}
+                  </Checkbox>
                 </Form.Item>
               </>
             )}

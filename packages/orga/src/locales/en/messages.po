@@ -39,6 +39,10 @@ msgstr "Are “{nomPremiereFiche}” and “{nomSecondeFiche}” two different p
 msgid "« {titreDateCle} » disparaît de l’agenda de chaque personne."
 msgstr "“{titreDateCle}” disappears from everyone’s calendar."
 
+#: src/composants/LierTaches.tsx
+msgid "« {titreJalon} »"
+msgstr "“{titreJalon}”"
+
 #: src/pages/AppelBenevoles.tsx
 msgid "« {titrePremier} » et « {titreSecond} »"
 msgstr "“{titrePremier}” and “{titreSecond}”"
@@ -71,6 +75,7 @@ msgid "{0, plural, one {Une séquence utilise ce lieu.} other {# séquences util
 msgstr "{0, plural, one {One slot uses this venue.} other {# slots use this venue.}} Choose another venue for these slots before deleting it."
 
 #: src/lib/declinaisons.ts
+#: src/lib/jalons.ts
 msgid "{abandonnees, plural, one {# abandonnée} other {# abandonnées}}"
 msgstr "{abandonnees, plural, one {# abandoned} other {# abandoned}}"
 
@@ -274,6 +279,10 @@ msgstr "{ecrites, plural, one {# sheet written} other {# sheets written}}"
 msgid "{enAttente} en attente d’accord"
 msgstr "{enAttente} awaiting approval"
 
+#: src/lib/jalons.ts
+msgid "{enRetard, plural, one {# en retard} other {# en retard}}"
+msgstr "{enRetard, plural, one {# overdue} other {# overdue}}"
+
 #: src/pages/Charge.tsx
 msgid "{enRetard} en retard"
 msgstr "{enRetard} overdue"
@@ -410,6 +419,10 @@ msgstr "{libelleACreer} to create, {presentes, plural, one {# already present} o
 msgid "{libelleGroupe} (tout le groupe)"
 msgstr "{libelleGroupe} (whole group)"
 
+#: src/composants/TacheCarte.tsx
+msgid "{liens, plural, one {Le lien vers # tâche sera retiré. La tâche liée ne change pas.} other {Les liens vers # tâches seront retirés. Les tâches liées ne changent pas.}}"
+msgstr "{liens, plural, one {The link to # task will be removed. The linked task does not change.} other {The links to # tasks will be removed. The linked tasks do not change.}}"
+
 #: src/composants/AssistantTableur.tsx
 msgid "{lues, plural, one {# ligne lue} other {# lignes lues}}."
 msgstr "{lues, plural, one {# row read} other {# rows read}}."
@@ -425,6 +438,10 @@ msgstr "{manques} does not have confirmed access."
 #: src/composants/VerificationAcces.tsx
 msgid "{manques} n’ont pas d’accès certain."
 msgstr "{manques} do not have confirmed access."
+
+#: src/lib/jalons.ts
+msgid "{miennes, plural, one {dont # vous est assignée} other {dont # vous sont assignées}}"
+msgstr "{miennes, plural, one {# of them assigned to you} other {# of them assigned to you}}"
 
 #: src/composants/NouvelleEdition.tsx
 msgid "{Mot} {creee}."
@@ -811,6 +828,10 @@ msgstr "{organisation}: your access to the organizer workspace"
 msgid "{oui} oui · {siBesoin} si besoin · {non} non"
 msgstr "{oui} yes · {siBesoin} if needed · {non} no"
 
+#: src/composants/TacheCarte.tsx
+msgid "{ouvertes, plural, one {# tâche liée à ce jalon reste ouverte. Voulez-vous quand même marquer le jalon comme fait ?} other {# tâches liées à ce jalon restent ouvertes. Voulez-vous quand même marquer le jalon comme fait ?}}"
+msgstr "{ouvertes, plural, one {# task linked to this milestone is still open. Do you still want to mark the milestone as done?} other {# tasks linked to this milestone are still open. Do you still want to mark the milestone as done?}}"
+
 #: src/composants/Priorites.tsx
 #: src/lib/messages.ts
 msgid "{ouvertes, plural, one {# tâche ouverte sur {gardees}} other {# tâches ouvertes sur {gardees}}}"
@@ -819,6 +840,18 @@ msgstr "{ouvertes, plural, one {# open task out of {gardees}} other {# open task
 #: src/pages/Charge.tsx
 msgid "{ouvertes, plural, one {# tâche ouverte} other {# tâches ouvertes}}"
 msgstr "{ouvertes, plural, one {# open task} other {# open tasks}}"
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "{ouvertes, plural, one {Jalon : # ouverte sur {gardees}} other {Jalon : # ouvertes sur {gardees}}}"
+msgstr "{ouvertes, plural, one {Milestone: # open out of {gardees}} other {Milestone: # open out of {gardees}}}"
+
+#: src/lib/jalons.ts
+msgid "{ouvertes, plural, one {Jalon : # tâche ouverte sur {gardees}} other {Jalon : # tâches ouvertes sur {gardees}}}"
+msgstr "{ouvertes, plural, one {Milestone: # open task out of {gardees}} other {Milestone: # open tasks out of {gardees}}}"
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "{ouvertesJalons, plural, one {# tâche ouverte sur {gardeesJalons} dans les jalons des déclinaisons} other {# tâches ouvertes sur {gardeesJalons} dans les jalons des déclinaisons}}"
+msgstr "{ouvertesJalons, plural, one {# open task out of {gardeesJalons} in the milestones of the derived tasks} other {# open tasks out of {gardeesJalons} in the milestones of the derived tasks}}"
 
 #: src/pages/Charge.tsx
 msgid "{partagees, plural, one {# partagée} other {# partagées}}"
@@ -2012,7 +2045,9 @@ msgstr "Canceled"
 #: src/composants/FilTache.tsx
 #: src/composants/GestionAcces.tsx
 #: src/composants/InvitationsEnAttente.tsx
+#: src/composants/JalonTache.tsx
 #: src/composants/LienBenevole.tsx
+#: src/composants/LierTaches.tsx
 #: src/composants/LieuxFenetre.tsx
 #: src/composants/MesInvitations.tsx
 #: src/composants/ModeleDeDepart.tsx
@@ -2798,6 +2833,10 @@ msgstr "This provider does not publish a directory of accounts."
 msgid "Ce groupe ne compte aucun périmètre."
 msgstr "This group has no areas."
 
+#: src/composants/JalonTache.tsx
+msgid "Ce jalon ne lie encore aucune tâche."
+msgstr "This milestone does not link any task yet."
+
 #: src/pages/EspaceBenevole.tsx
 msgid "Ce lien n’est plus valable."
 msgstr "This link is no longer valid."
@@ -3133,6 +3172,11 @@ msgstr "Each selected area receives its own task, with its own status and assign
 msgid "Chaque périmètre choisi reçoit sa propre tâche, avec son statut et ses personnes assignées. Vous suivez leur avancement depuis cette tâche. Les référentes et référents de chaque périmètre acceptent ou refusent la tâche. Elle entre sans attendre dans un périmètre où vous êtes vous-même affecté·e."
 msgstr "Each selected area receives its own task, with its own status and assignees. You track their progress from this task. The coordinators of each area accept or decline the task. It enters immediately in an area where you are yourself appointed."
 
+#: src/composants/DeclinerTache.tsx
+#: src/composants/TacheFormulaire.tsx
+msgid "Chaque périmètre lie ensuite ses propres tâches à son jalon. Vous suivez leur avancement depuis cette tâche."
+msgstr "Each area then links its own tasks to its milestone. You follow their progress from this task."
+
 #: src/composants/ImportFiches.tsx
 msgid "Chaque périmètre reçoit les fiches Markdown, texte et Word de son dossier. Les sous-dossiers ne sont pas lus."
 msgstr "Each area receives the Markdown, text, and Word sheets from its folder. Subfolders are not read."
@@ -3184,6 +3228,10 @@ msgstr "Choose areas"
 msgid "Choisir des personnes de l’équipe"
 msgstr "Choose team members"
 
+#: src/composants/LierTaches.tsx
+msgid "Choisir des tâches"
+msgstr "Choose tasks"
+
 #: src/composants/ReunionFormulaire.tsx
 msgid "Choisir des tâches de la période"
 msgstr "Choose tasks from the period"
@@ -3208,6 +3256,7 @@ msgstr "Choose a {format} file"
 msgid "Choisir un lieu"
 msgstr "Choose a venue"
 
+#: src/composants/LierTaches.tsx
 #: src/composants/RattacherTache.tsx
 msgid "Choisir un périmètre"
 msgstr "Choose an area"
@@ -3244,6 +3293,10 @@ msgstr "Choose at least one area."
 #: src/composants/SondageFormulaire.tsx
 msgid "Choisissez au moins une personne."
 msgstr "Choose at least one person."
+
+#: src/composants/LierTaches.tsx
+msgid "Choisissez au moins une tâche."
+msgstr "Choose at least one task."
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Choisissez le point-virgule si votre messagerie par défaut est Outlook : il ne découpe pas des adresses collées avec des virgules. Vous pouvez changer ce signe à côté des boutons de copie de chaque message."
@@ -3290,6 +3343,7 @@ msgid "Choisissez un jour."
 msgstr "Choose a day."
 
 #: src/composants/AppelsBenevoles.tsx
+#: src/composants/LierTaches.tsx
 #: src/composants/RattacherTache.tsx
 #: src/pages/admin/Redaction.tsx
 msgid "Choisissez un périmètre."
@@ -3642,6 +3696,7 @@ msgid "Contenu de la fiche"
 msgstr "Sheet content"
 
 #: src/composants/AssistantTableur.tsx
+#: src/composants/TacheCarte.tsx
 msgid "Continuer"
 msgstr "Continue"
 
@@ -4071,6 +4126,10 @@ msgstr "Some slots exceed the number of helpers they need."
 msgid "des tâches faites"
 msgstr "of tasks done"
 
+#: src/composants/TacheCarte.tsx
+msgid "Des tâches liées restent ouvertes"
+msgstr "Linked tasks are still open"
+
 #: src/composants/PreferencePush.tsx
 msgid "Désactiver"
 msgstr "Disable"
@@ -4470,6 +4529,7 @@ msgid "en renfort"
 msgstr "as helper"
 
 #: src/composants/DeclinaisonsTache.tsx
+#: src/composants/JalonTache.tsx
 #: src/composants/LigneTache.tsx
 #: src/pages/admin/Equipe.tsx
 #: src/pages/Charge.tsx
@@ -5422,10 +5482,31 @@ msgstr "I agree that {nomOrganisation} stores this information to organize the a
 msgid "J’accepte que l’import remplace ces modifications. Les fiches modifiées dans Relaytour restent telles quelles."
 msgstr "I accept that the import replaces these changes. Sheets changed in Relaytour stay as they are."
 
+#: src/composants/LigneTache.tsx
+#: src/composants/TacheFormulaire.tsx
+msgid "Jalon"
+msgstr "Milestone"
+
+#: src/lib/jalons.ts
+msgid "Jalon : aucune tâche liée"
+msgstr "Milestone: no linked task"
+
+#: src/lib/jalons.ts
+msgid "Jalon : toutes les tâches liées sont faites"
+msgstr "Milestone: all linked tasks are done"
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "Jalon sans tâche liée"
+msgstr "Milestone without linked tasks"
+
 #: src/composants/Priorites.tsx
 #: src/lib/messages.ts
 msgid "Jalons avant le prochain point"
 msgstr "Milestones before the next team check-in"
+
+#: src/pages/Retroplanning.tsx
+msgid "Jalons seuls"
+msgstr "Milestones only"
 
 #: src/pages/Preferences.tsx
 msgid "Jamais"
@@ -6048,9 +6129,30 @@ msgstr "The task is shared with the chosen areas."
 msgid "La tâche est refusée."
 msgstr "The task is declined."
 
+#: src/composants/JalonTache.tsx
+#: src/composants/TacheCarte.tsx
+msgid "La tâche est retirée du jalon."
+msgstr "The task is removed from the milestone."
+
+#: src/composants/TacheCarte.tsx
+msgid "La tâche est un jalon. Liez-y les tâches qui y mènent."
+msgstr "The task is a milestone. Link the tasks that lead to it."
+
 #: src/lib/taches.ts
 msgid "La tâche n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
 msgstr "The task could not be reloaded. Your entry stays on screen: try again in a moment."
+
+#: src/composants/TacheCarte.tsx
+msgid "La tâche n’est plus un jalon."
+msgstr "The task is no longer a milestone."
+
+#: src/composants/JalonTache.tsx
+msgid "La tâche ne change pas. Elle sort du décompte du jalon « {titre} » et perd la place que ce jalon lui donne dans les priorités. Le jalon garde la trace du retrait."
+msgstr "The task does not change. It leaves the count of the milestone “{titre}” and loses the place this milestone gives it in the priorities. The milestone keeps a record of the removal."
+
+#: src/composants/TacheCarte.tsx
+msgid "La tâche ne change pas. Elle sort du décompte du jalon, que le périmètre du jalon ne suit plus pour elle. Elle perd aussi la place que le jalon lui donne dans les priorités. Le jalon garde la trace du retrait."
+msgstr "The task does not change. It leaves the count of the milestone, whose area no longer follows it. It also loses the place the milestone gives it in the priorities. The milestone keeps a record of the removal."
 
 #: src/composants/TacheCarte.tsx
 msgid "La tâche vous est assignée."
@@ -6869,6 +6971,10 @@ msgstr "Tasks {dePeriode} are sorted by phase, then by area."
 msgid "Les tâches {dePeriode} sont regroupées par mois, de la plus proche à la plus lointaine."
 msgstr "Tasks {dePeriode} are grouped by month, from the nearest to the furthest."
 
+#: src/composants/LierTaches.tsx
+msgid "Les tâches choisies comptent dans le décompte du jalon. Elles ne changent pas, et leur périmètre voit le jalon qu’elles servent. Choisissez un périmètre, puis une ou plusieurs tâches."
+msgstr "The chosen tasks count towards the milestone. They do not change, and their area sees the milestone they serve. Choose an area, then one or more tasks."
+
 #: src/pages/admin/ImportTaches.tsx
 msgid "Les tâches d’un tableur rejoignent une période. Une tâche déjà présente n’est pas recréée."
 msgstr "The tasks of a spreadsheet join a period. A task that is already present is not created again."
@@ -6877,9 +6983,14 @@ msgstr "The tasks of a spreadsheet join a period. A task that is already present
 msgid "Les tâches de"
 msgstr "The tasks of"
 
+#: src/composants/LierTaches.tsx
 #: src/composants/RattacherTache.tsx
 msgid "Les tâches de ce périmètre n’ont pas pu être chargées."
 msgstr "The tasks of this area could not be loaded."
+
+#: src/composants/JalonTache.tsx
+msgid "Les tâches liées n’ont pas pu être chargées. Rechargez la page dans un instant."
+msgstr "The linked tasks could not be loaded. Reload the page in a moment."
 
 #: src/pages/Charge.tsx
 msgid "Les tâches ouvertes et les places à venir de chaque personne {dePeriode}."
@@ -6888,6 +6999,10 @@ msgstr "The open tasks and upcoming places of each person {dePeriode}."
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Les tâches proposées à ce périmètre n’ont pas pu être chargées. Rechargez la page dans un instant."
 msgstr "The tasks proposed to this area couldn’t be loaded. Reload the page in a moment."
+
+#: src/composants/LierTaches.tsx
+msgid "Les tâches sont liées au jalon."
+msgstr "The tasks are linked to the milestone."
 
 #: src/pages/Perimetre.tsx
 msgid "Les tâches sont rangées par fiche méthode, puis par échéance. Une tâche ne se supprime pas : elle s’abandonne."
@@ -6998,10 +7113,23 @@ msgstr "Personal link of {nomLien}"
 msgid "Liens"
 msgstr "Links"
 
+#: src/composants/LierTaches.tsx
+msgid "Lier"
+msgstr "Link"
+
 #: src/composants/ExplorateurDossier.tsx
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Lier ce dossier"
 msgstr "Link this folder"
+
+#: src/composants/JalonTache.tsx
+#: src/composants/TacheCarte.tsx
+msgid "Lier des tâches"
+msgstr "Link tasks"
+
+#: src/composants/LierTaches.tsx
+msgid "Lier des tâches au jalon"
+msgstr "Link tasks to the milestone"
 
 #: src/composants/ExplorateurDossier.tsx
 msgid "Lier le dossier {nomElement}"
@@ -7177,6 +7305,11 @@ msgstr "Mark as in progress"
 msgid "Marquer la tâche comme faite"
 msgstr "Mark the task as done"
 
+#: src/composants/DeclinerTache.tsx
+#: src/composants/TacheFormulaire.tsx
+msgid "Marquer les déclinaisons comme jalons"
+msgstr "Mark the derived tasks as milestones"
+
 #: src/composants/ConnexionsFiche.tsx
 msgid "Masquée par"
 msgstr "Hidden by"
@@ -7231,6 +7364,10 @@ msgstr "Same email address"
 #: src/pages/ImportBenevoles.tsx
 msgid "Même téléphone"
 msgstr "Same phone number"
+
+#: src/composants/TacheCarte.tsx
+msgid "Mène au jalon"
+msgstr "Leads to the milestone"
 
 #: src/composants/Priorites.tsx
 msgid "Mène au jalon « {titre} »"
@@ -8099,6 +8236,7 @@ msgstr "Performance"
 #. Portée d’un appel à bénévoles dont le périmètre est inconnu
 #: src/composants/AppelsBenevoles.tsx
 #: src/composants/EcrireMessage.tsx
+#: src/composants/LierTaches.tsx
 #: src/composants/RattacherTache.tsx
 #: src/composants/ReconductionEdition.tsx
 #: src/composants/SequenceFormulaire.tsx
@@ -9182,6 +9320,7 @@ msgid "Retirées"
 msgstr "Withdrawn"
 
 #: src/composants/InvitationsEnAttente.tsx
+#: src/composants/JalonTache.tsx
 #: src/composants/ProposerPersonne.tsx
 #: src/composants/Repartition.tsx
 #: src/composants/RessourcesFiche.tsx
@@ -9197,6 +9336,10 @@ msgstr "Remove"
 #: src/composants/ChampImage.tsx
 msgid "Retirer : {libelle}"
 msgstr "Remove: {libelle}"
+
+#: src/composants/JalonTache.tsx
+msgid "Retirer « {titreLiee} » de ce jalon ?"
+msgstr "Remove “{titreLiee}” from this milestone?"
 
 #: src/composants/PastillePerimetre.tsx
 #: src/composants/Personne.tsx
@@ -9267,6 +9410,10 @@ msgstr "Remove this window"
 msgid "Retirer cette proposition ?"
 msgstr "Remove this referral?"
 
+#: src/composants/TacheCarte.tsx
+msgid "Retirer cette tâche du jalon « {titreJalon} » ?"
+msgstr "Remove this task from the milestone “{titreJalon}”?"
+
 #: src/pages/admin/Personnes.tsx
 msgid "Retirer de l’activité"
 msgstr "Remove from the activity"
@@ -9274,6 +9421,10 @@ msgstr "Remove from the activity"
 #: src/composants/GestionAcces.tsx
 msgid "Retirer du {cible}"
 msgstr "Remove from {cible}"
+
+#: src/composants/TacheCarte.tsx
+msgid "Retirer du jalon {titreJalon}"
+msgstr "Remove from the milestone {titreJalon}"
 
 #: src/composants/TacheCarte.tsx
 msgid "Retirer l’ajustement"
@@ -9294,6 +9445,14 @@ msgstr "Remove the folder {nomDossierLie}"
 #: src/composants/ChampsActivite.tsx
 msgid "Retirer le groupe"
 msgstr "Remove the group"
+
+#: src/composants/TacheCarte.tsx
+msgid "Retirer le jalon"
+msgstr "Remove the milestone"
+
+#: src/composants/TacheCarte.tsx
+msgid "Retirer le jalon ?"
+msgstr "Remove the milestone?"
 
 #: src/composants/EditeurVisuel.tsx
 msgid "Retirer le lien"
@@ -9973,6 +10132,7 @@ msgstr "Task set back to To do."
 msgid "Tâche rouverte."
 msgstr "Task reopened."
 
+#: src/composants/LierTaches.tsx
 #: src/composants/Recherche.tsx
 msgid "Tâches"
 msgstr "Tasks"
@@ -10330,6 +10490,10 @@ msgstr "All sheets, including shared ones"
 msgid "Toutes les tâches assignées et les places de chaque personne sur {laPeriode}."
 msgstr "All assigned tasks and places of each person over {laPeriode}."
 
+#: src/composants/LierTaches.tsx
+msgid "Toutes les tâches de ce périmètre sont déjà liées à ce jalon."
+msgstr "All the tasks of this area are already linked to this milestone."
+
 #: src/composants/VerificationAcces.tsx
 msgid "Toutes ont accès chez le fournisseur."
 msgstr "All have access with the provider."
@@ -10338,6 +10502,10 @@ msgstr "All have access with the provider."
 #: src/composants/Demandes.tsx
 msgid "Traitées"
 msgstr "Handled"
+
+#: src/composants/TacheCarte.tsx
+msgid "Transformer en jalon"
+msgstr "Turn into a milestone"
 
 #: src/pages/Connexion.tsx
 msgid "Transmettez le savoir-faire de votre organisation d’une période à l’autre."
@@ -10462,6 +10630,10 @@ msgstr "A file can have up to {LIGNES_MAX} rows."
 #: src/lib/import-tableur.ts
 msgid "Un fichier pèse 2 Mo au plus."
 msgstr "A file can be up to 2 MB."
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Un jalon est un objectif à atteindre. Vous y liez ensuite les tâches qui y mènent, dans ce périmètre ou dans un autre."
+msgstr "A milestone is a goal to reach. You then link the tasks that lead to it, in this area or another one."
 
 #: src/lib/guide-markdown.ts
 msgid "Un lien de fiche s’ouvre dans un nouvel onglet."
