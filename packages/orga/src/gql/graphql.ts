@@ -101,6 +101,8 @@ export type CreneauSondageInput = {
 export type DeclinaisonInput = {
   description?: string | null | undefined;
   echeance?: string | null | undefined;
+  /** Vrai : chaque déclinaison devient un jalon (ADR 0062). Le jalon lie ses tâches une fois la déclinaison acceptée. */
+  jalons?: boolean | null | undefined;
   perimetreIds: Array<string | number>;
   titre?: string | null | undefined;
 };

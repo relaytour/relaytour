@@ -375,6 +375,15 @@ export async function construireExport(organisationId: string) {
       origine: {
         select: { titre: true, perimetre: { select: { slug: true } } },
       },
+      // Les tâches liées d'un jalon (ADR 0062), désignées comme l'origine.
+      liensJalon: {
+        orderBy: { createdAt: 'asc' },
+        select: {
+          tache: {
+            select: { titre: true, perimetre: { select: { slug: true } } },
+          },
+        },
+      },
       creePar: { select: { email: true } },
       clotureePar: { select: { email: true } },
       realisations: {
@@ -535,6 +544,11 @@ export async function construireExport(organisationId: string) {
               ? null
               : { perimetre: t.origine.perimetre.slug, titre: t.origine.titre },
           accord: t.accord,
+          jalon: t.jalonLe !== null,
+          tachesLiees: t.liensJalon.map(l => ({
+            perimetre: l.tache.perimetre.slug,
+            titre: l.tache.titre,
+          })),
           creePar: t.creePar?.email ?? null,
           clotureePar: t.clotureePar?.email ?? null,
           // Les personnes réalisatrices (ADR 0055). `realiseePar` reste pour un

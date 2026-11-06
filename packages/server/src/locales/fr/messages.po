@@ -703,6 +703,42 @@ msgid "Cette personne a déjà reçu un mail d’invitation il y a moins d’une
 msgstr "Cette personne a déjà reçu un mail d’invitation il y a moins d’une heure."
 
 #. js-lingui-explicit-id
+#: src/schema/jalons.ts
+msgid "Choisissez au moins une tâche."
+msgstr "Choisissez au moins une tâche."
+
+#. js-lingui-explicit-id
+#: src/schema/jalons.ts
+msgid "Un jalon lie {max} tâches au plus."
+msgstr "Un jalon lie {max} tâches au plus."
+
+#. js-lingui-explicit-id
+#: src/schema/jalons.ts
+msgid "Cette tâche n’est pas un jalon : transformez-la d’abord."
+msgstr "Cette tâche n’est pas un jalon : transformez-la d’abord."
+
+#. js-lingui-explicit-id
+#: src/schema/jalons.ts
+msgid "Un jalon ne se lie pas à lui-même."
+msgstr "Un jalon ne se lie pas à lui-même."
+
+#. js-lingui-explicit-id
+#: src/schema/jalons.ts
+msgid "La tâche « {titre} » attend l’accord de son périmètre : elle ne se lie pas encore."
+msgstr "La tâche « {titre} » attend l’accord de son périmètre : elle ne se lie pas encore."
+
+#. js-lingui-explicit-id
+#: src/schema/jalons.ts
+#: src/schema/taches.ts
+msgid "Le périmètre « {nom} » est archivé."
+msgstr "Le périmètre « {nom} » est archivé."
+
+#. js-lingui-explicit-id
+#: src/schema/jalons.ts
+msgid "Cette tâche n’est plus un jalon : transformez-la d’abord."
+msgstr "Cette tâche n’est plus un jalon : transformez-la d’abord."
+
+#. js-lingui-explicit-id
 #: src/schema/messages.ts
 msgid "L’objet"
 msgstr "L’objet"
@@ -1074,11 +1110,6 @@ msgstr "Une tâche se décline dans {max} périmètres au plus."
 #: src/schema/taches.ts
 msgid "Une tâche ne se décline pas dans son propre périmètre."
 msgstr "Une tâche ne se décline pas dans son propre périmètre."
-
-#. js-lingui-explicit-id
-#: src/schema/taches.ts
-msgid "Le périmètre « {nom} » est archivé."
-msgstr "Le périmètre « {nom} » est archivé."
 
 #. js-lingui-explicit-id
 #: src/schema/taches.ts

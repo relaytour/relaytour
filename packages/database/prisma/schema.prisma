@@ -358,6 +358,8 @@ model User {
   tachesRealisees         Tache[]                  @relation("TacheRealisation")
   tachesAccordees         Tache[]                  @relation("TacheAccord")
   tachesAjustees          Tache[]                  @relation("TacheAjustement")
+  jalonsMarques           Tache[]                  @relation("TacheJalon")
+  liensJalonCrees         LienJalon[]
   versionsFiches          FicheVersion[]
   fichesConnexesAjoutees  FicheConnexe[]           @relation("FicheConnexeAuteur")
   groupesConnexesAjoutes  FicheGroupeConnexe[]     @relation("FicheGroupeConnexeAuteur")
@@ -840,6 +842,10 @@ model Tache {
   ajustementParId    String?
   ajustementLe       DateTime?
   ajustementJusquAu  DateTime?           @db.Date
+  // Marqueur facultatif de jalon (ADR 0062) : qui l'a posé, et quand. Null : tâche
+  // ordinaire. Un jalon lie d'autres tâches de la période (`LienJalon`).
+  jalonLe            DateTime?
+  jalonParId         String?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
@@ -853,6 +859,12 @@ model Tache {
   declinaisons  Tache[]            @relation("Declinaisons")
   accordPar     User?              @relation("TacheAccord", fields: [accordParId], references: [id], onDelete: SetNull)
   ajustementPar User?              @relation("TacheAjustement", fields: [ajustementParId], references: [id], onDelete: SetNull)
+  jalonPar      User?              @relation("TacheJalon", fields: [jalonParId], references: [id], onDelete: SetNull)
+  // Pour un jalon : les liens vers ses tâches liées. Pour toute tâche : les liens
+  // des jalons qu'elle sert.
+  liensJalon    LienJalon[]        @relation("LienJalonJalon")
+  liensTache    LienJalon[]        @relation("LienJalonTache")
+  journalLiee   Journal[]          @relation("JournalTacheLiee")
   assignations  TacheAssignation[]
   realisations  TacheRealisation[]
   commentaires  CommentaireTache[]
@@ -865,6 +877,24 @@ model Tache {
   @@unique([origineId, perimetreId])
   @@index([editionId, perimetreId])
   @@index([editionId, echeance])
+}
+
+// Lien entre un jalon et une tâche liée de la même période (ADR 0062). Le lien ne
+// change pas la tâche liée. La clé est bornée par le jalon, lui-même rangé dans une
+// période (invariant 18).
+model LienJalon {
+  id        String   @id @default(cuid())
+  jalonId   String
+  tacheId   String
+  creeParId String?
+  createdAt DateTime @default(now())
+
+  jalon   Tache @relation("LienJalonJalon", fields: [jalonId], references: [id], onDelete: Restrict)
+  tache   Tache @relation("LienJalonTache", fields: [tacheId], references: [id], onDelete: Restrict)
+  creePar User? @relation(fields: [creeParId], references: [id], onDelete: SetNull)
+
+  @@unique([jalonId, tacheId])
+  @@index([tacheId])
 }
 
 model TacheAssignation {
@@ -1567,6 +1597,12 @@ enum TypeJournal {
   // Une tâche existante rattachée à une tâche partagée, puis détachée (ADR 0061).
   DECLINAISON_RATTACHEE
   DECLINAISON_DETACHEE
+  // Jalons (ADR 0062) : la tâche de la ligne est le jalon. Pour TACHE_LIEE et
+  // TACHE_DELIEE, `tacheLieeId` désigne la tâche liée.
+  JALON_MARQUE
+  JALON_RETIRE
+  TACHE_LIEE
+  TACHE_DELIEE
   // Une fiche connexe masquée, puis affichée de nouveau, par un périmètre cible
   // (ADR 0039) : le périmètre de la ligne est le périmètre cible.
   FICHE_CONNEXE_MASQUEE
@@ -1593,6 +1629,8 @@ model Journal {
   realiseeParId String?
   // Pour TACHE_PRIORITE : le niveau posé, null quand l'ajustement est retiré.
   ajustement    AjustementPriorite?
+  // Pour TACHE_LIEE et TACHE_DELIEE : la tâche liée (ADR 0062).
+  tacheLieeId   String?
   createdAt     DateTime            @default(now())
 
   acteur    User       @relation("JournalActeur", fields: [acteurId], references: [id], onDelete: Restrict)
@@ -1600,6 +1638,7 @@ model Journal {
   perimetre Perimetre? @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
   tache     Tache?     @relation(fields: [tacheId], references: [id], onDelete: SetNull)
   fiche     Fiche?     @relation(fields: [ficheId], references: [id], onDelete: SetNull)
+  tacheLiee Tache?     @relation("JournalTacheLiee", fields: [tacheLieeId], references: [id], onDelete: SetNull)
 
   @@index([acteurId, createdAt])
   @@index([editionId, perimetreId, createdAt])

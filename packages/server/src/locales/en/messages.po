@@ -703,6 +703,42 @@ msgid "Cette personne a déjà reçu un mail d’invitation il y a moins d’une
 msgstr "This person already received an invitation email less than an hour ago."
 
 #. js-lingui-explicit-id
+#: src/schema/jalons.ts
+msgid "Choisissez au moins une tâche."
+msgstr "Choose at least one task."
+
+#. js-lingui-explicit-id
+#: src/schema/jalons.ts
+msgid "Un jalon lie {max} tâches au plus."
+msgstr "A milestone links at most {max} tasks."
+
+#. js-lingui-explicit-id
+#: src/schema/jalons.ts
+msgid "Cette tâche n’est pas un jalon : transformez-la d’abord."
+msgstr "This task is not a milestone. Turn it into one first."
+
+#. js-lingui-explicit-id
+#: src/schema/jalons.ts
+msgid "Un jalon ne se lie pas à lui-même."
+msgstr "A milestone cannot be linked to itself."
+
+#. js-lingui-explicit-id
+#: src/schema/jalons.ts
+msgid "La tâche « {titre} » attend l’accord de son périmètre : elle ne se lie pas encore."
+msgstr "The task “{titre}” is awaiting approval from its area, so it cannot be linked yet."
+
+#. js-lingui-explicit-id
+#: src/schema/jalons.ts
+#: src/schema/taches.ts
+msgid "Le périmètre « {nom} » est archivé."
+msgstr "The area “{nom}” is archived."
+
+#. js-lingui-explicit-id
+#: src/schema/jalons.ts
+msgid "Cette tâche n’est plus un jalon : transformez-la d’abord."
+msgstr "This task is no longer a milestone. Turn it into one first."
+
+#. js-lingui-explicit-id
 #: src/schema/messages.ts
 msgid "L’objet"
 msgstr "The subject"
@@ -1074,11 +1110,6 @@ msgstr "A task can have derived tasks in {max} areas at most."
 #: src/schema/taches.ts
 msgid "Une tâche ne se décline pas dans son propre périmètre."
 msgstr "A task cannot have a derived task in its own area."
-
-#. js-lingui-explicit-id
-#: src/schema/taches.ts
-msgid "Le périmètre « {nom} » est archivé."
-msgstr "The area “{nom}” is archived."
 
 #. js-lingui-explicit-id
 #: src/schema/taches.ts

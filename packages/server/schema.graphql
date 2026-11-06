@@ -798,6 +798,11 @@ Les périmètres où décliner une tâche partagée. Un texte ou une échéance 
 input DeclinaisonInput {
   description: String
   echeance: Date
+
+  """
+  Vrai : chaque déclinaison devient un jalon (ADR 0062). Le jalon lie ses tâches une fois la déclinaison acceptée.
+  """
+  jalons: Boolean
   perimetreIds: [ID!]!
   titre: String
 }
@@ -1041,6 +1046,28 @@ type EtapeAccordDeclinaison {
   etape: EtapeAccord!
   le: DateTime!
   par: Personne!
+}
+
+"""
+Une étape d’un jalon : qui l’a marqué, qui a lié ou délié une tâche, et quand.
+"""
+type EtapeDeJalon {
+  etape: EtapeJalon!
+  le: DateTime!
+  par: Personne!
+
+  """Pour une tâche liée ou déliée : cette tâche."""
+  tache: Tache
+}
+
+"""
+Étape d’un jalon : marqué, marque retirée, tâche liée, tâche déliée (ADR 0062).
+"""
+enum EtapeJalon {
+  DELIEE
+  LIEE
+  MARQUE
+  RETIRE
 }
 
 enum EtapePremiersPas {
@@ -1944,12 +1971,12 @@ type Mutation {
     personneIds: [ID!]
     titre: String!
   ): Sondage!
-  creerTache(declinaison: DeclinaisonInput, description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
+  creerTache(declinaison: DeclinaisonInput, description: String, echeance: Date, editionId: ID!, ficheId: ID, jalon: Boolean = false, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
 
   """
   Décline une tâche dans d’autres périmètres de son activité : elle devient une tâche partagée. Chaque déclinaison attend l’accord de son périmètre, sauf quand un admin de l’activité l’ajoute. Un périmètre déjà servi est ignoré.
   """
-  declinerTache(description: String, echeance: Date, id: ID!, perimetreIds: [ID!]!, titre: String): Tache!
+  declinerTache(description: String, echeance: Date, id: ID!, jalons: Boolean, perimetreIds: [ID!]!, titre: String): Tache!
 
   """
   Efface le jeton de l’espace de fichiers. Les dossiers liés restent, indisponibles jusqu’à une nouvelle connexion.
@@ -1968,6 +1995,17 @@ type Mutation {
   """
   delierDossier(id: ID!, oublierAcces: Boolean): Boolean!
   delierRessourceFiche(id: ID!): Boolean!
+
+  """
+  Retire une tâche liée d’un jalon (ADR 0062). La tâche liée ne change pas. Demande d’écrire dans le périmètre du jalon ou dans celui de la tâche liée. Rend le jalon.
+  """
+  delierTache(
+    """Le jalon."""
+    id: ID!
+
+    """La tâche liée."""
+    tacheId: ID!
+  ): Tache!
 
   """
   Écrit l’export complet d’une organisation dans le dossier EXPORTS_DIR du serveur et renvoie le nom du fichier. Le contenu ne transite jamais par l’API.
@@ -2099,9 +2137,23 @@ type Mutation {
   lierRessourceFiche(chemin: [String!]!, dossierLieId: ID!, ficheId: ID!): RessourceFiche!
 
   """
+  Lie des tâches de la même période à un jalon (ADR 0062). Demande d’écrire dans le périmètre du jalon et de consulter celui de chaque tâche liée. Une tâche déjà liée est ignorée. Un jalon lie au plus 100 tâches. Rend le jalon.
+  """
+  lierTaches(
+    """Le jalon."""
+    id: ID!
+    tacheIds: [ID!]!
+  ): Tache!
+
+  """
   Déclare deux fiches distinctes : leur fusion ne se propose plus. Réservé aux admins de l’activité.
   """
   marquerBenevolesDistincts(aId: ID!, bId: ID!): Boolean!
+
+  """
+  Pose ou retire le marqueur de jalon d’une tâche (ADR 0062). Le retrait retire aussi tous les liens du jalon. Demande d’écrire dans le périmètre de la tâche.
+  """
+  marquerJalon(id: ID!, jalon: Boolean!): Tache!
 
   """
   Sans identifiants, marque comme lues toutes les notifications du niveau choisi, ou celles d’une activité ou d’un périmètre. Reste possible dans une organisation en lecture seule.
@@ -3661,6 +3713,18 @@ type ResumeDeclinaisons {
 }
 
 """
+L’état des tâches liées d’un jalon, en nombres. `enRetard` et `assigneesAMoi` se comptent parmi les tâches ouvertes.
+"""
+type ResumeJalon {
+  abandonnees: Int!
+  assigneesAMoi: Int!
+  enRetard: Int!
+  faites: Int!
+  ouvertes: Int!
+  total: Int!
+}
+
+"""
 Une réunion de l’agenda global d’une activité, ou de l’agenda d’un périmètre.
 """
 type Reunion {
@@ -3982,7 +4046,18 @@ type Tache {
   enRetard: Boolean!
   fiche: Fiche
   historiqueAccord: [EtapeAccordDeclinaison!]!
+
+  """
+  Les étapes de ce jalon, de la plus ancienne à la plus récente. Lisible par toute personne qui consulte le jalon.
+  """
+  historiqueJalon: [EtapeDeJalon!]!
   id: ID!
+
+  """Vrai quand la tâche est un jalon (ADR 0062)."""
+  jalon: Boolean!
+
+  """Les jalons que cette tâche sert, par échéance."""
+  jalons: [Tache!]!
   modifieeLe: DateTime!
 
   """La tâche partagée dont cette tâche est la déclinaison, ou null."""
@@ -3996,7 +4071,17 @@ type Tache {
   L’état des déclinaisons de cette tâche partagée, en nombres. Tous à zéro pour une tâche ordinaire et pour une déclinaison.
   """
   resumeDeclinaisons: ResumeDeclinaisons!
+
+  """
+  L’état des tâches liées de ce jalon, en nombres. Tous à zéro pour une tâche qui ne lie aucune tâche.
+  """
+  resumeJalon: ResumeJalon!
   statut: StatutTache!
+
+  """
+  Les tâches liées de ce jalon, par échéance. Vide pour une tâche qui n’est pas un jalon.
+  """
+  tachesLiees: [Tache!]!
   termineeLe: DateTime
   titre: String!
 
