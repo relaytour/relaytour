@@ -38,7 +38,11 @@ export const SELECTION_NOTIFICATION = {
       perimetre: { select: { activiteId: true } },
       // Pour une déclinaison : sa tâche partagée et son périmètre (ADR 0026).
       origine: {
-        select: { id: true, perimetre: { select: { nom: true, slug: true } } },
+        select: {
+          id: true,
+          titre: true,
+          perimetre: { select: { nom: true, slug: true } },
+        },
       },
     },
   },
@@ -81,7 +85,11 @@ export interface NotificationLue {
     perimetreId: string
     edition: { nom: string }
     perimetre: { activiteId: string }
-    origine?: { id: string; perimetre: { nom: string; slug: string } } | null
+    origine?: {
+      id: string
+      titre: string
+      perimetre: { nom: string; slug: string }
+    } | null
   } | null
   fiche: {
     id: string
@@ -557,6 +565,26 @@ function phrase(
             date: dateLongue(tache.echeance),
           })
         : i18n._('La tâche « {titre} »{lieu} est en retard', { titre, lieu })
+    // La notification porte le périmètre de la tâche partagée, que `lieu` nomme ;
+    // la phrase nomme aussi celui de la déclinaison (ADR 0063).
+    case 'DECLINAISON_EN_RETARD': {
+      const valeurs = {
+        titre,
+        origine: tache.origine?.titre ?? '',
+        cible: c.perimetres.get(tache.perimetreId)?.nom ?? perimetre,
+        lieu,
+        date: tache.echeance ? dateLongue(tache.echeance) : '',
+      }
+      return tache.echeance
+        ? i18n._(
+            'La déclinaison « {titre} » ({cible}) de votre tâche « {origine} »{lieu} est en retard depuis le {date}',
+            valeurs
+          )
+        : i18n._(
+            'La déclinaison « {titre} » ({cible}) de votre tâche « {origine} »{lieu} est en retard',
+            valeurs
+          )
+    }
     case 'TACHE_STATUT':
       switch (n.statut) {
         // Qui a coché reste réservé : la phrase ne nomme personne.

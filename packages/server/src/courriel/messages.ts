@@ -11,7 +11,7 @@ import {
   activitesADecouvrir,
   perimetresDeLaPersonne,
 } from '../lib/equipe.ts'
-import { horaireEnClair } from '../lib/heures.ts'
+import { heureLocale, horaireEnClair } from '../lib/heures.ts'
 import { calendrier } from '../lib/ics.ts'
 import {
   jetonEspace,
@@ -38,6 +38,7 @@ import {
   type MailDesabonnable,
 } from '../lib/desabonnement.ts'
 import { preferencesDe } from '../lib/notifications.ts'
+import { lirePrioritesDeLaPeriode } from '../lib/priorites-periode.ts'
 import { filtreNotificationsAdmin } from '../lib/notifications-admin.ts'
 import {
   configurationActivite,
@@ -46,6 +47,15 @@ import {
   type ConfigurationOrganisation,
   variablesOrganisation,
 } from '../lib/organisation.ts'
+
+import {
+  activitesAPlusieursPeriodes,
+  avecDeclinaisons,
+  compterDeclinaisons,
+  dateLongue,
+  ranger,
+  rangerRappels,
+} from '../lib/suivi-courriel.ts'
 
 import { rendre, type Variables } from './rendu.ts'
 
@@ -87,6 +97,9 @@ export function sujets(
       tete,
     }),
     'rappels-echeance': i18n._('{tete} : échéances de vos tâches', { tete }),
+    priorites: i18n._('{tete} : les priorités avant le prochain point', {
+      tete,
+    }),
     resume: i18n._('{nomCourt} : votre résumé', { nomCourt }),
     equipe: i18n._('{tete} : votre place dans l’équipe a changé', { tete }),
     demandes: i18n._('{tete} : demandes pour rejoindre l’équipe', { tete }),
@@ -622,9 +635,19 @@ export async function composer(
     })
     if (notifications.length === 0) return null
     const composees = await composerNotifications(prisma, notifications, userId)
-    // Les rappels se rangent par activité (ADR 0032). Un seul rappel d'activité
-    // nomme son activité dans le sujet.
-    variables.rappels = grouperParActivite(composees, configuration.nomCourt)
+    // Les rappels se rangent par activité (ADR 0032), puis par périmètre et par
+    // rubrique (ADR 0063). Un seul rappel d'activité nomme son activité dans le
+    // sujet.
+    const jourRappels = new Date(
+      `${aujourdhui(new Date(), configuration.fuseauHoraire)}T00:00:00Z`
+    )
+    variables.rappels = await rangerRappels(
+      prisma,
+      notifications,
+      composees,
+      configuration.nomCourt,
+      jourRappels
+    )
     const activites = new Set(composees.map(n => n.activite?.nom ?? null))
     const seule = activites.size === 1 ? [...activites][0] : null
     if (seule) sujet = sujets(configuration.nomCourt, seule)['rappels-echeance']
@@ -698,11 +721,16 @@ export async function composer(
             AND: [TACHES_ACTIVES],
           },
           select: {
+            id: true,
             titre: true,
             echeance: true,
+            editionId: true,
+            edition: { select: { nom: true } },
             perimetre: {
               select: {
+                id: true,
                 nom: true,
+                ordre: true,
                 activite: { select: { id: true, nom: true } },
               },
             },
@@ -737,30 +765,54 @@ export async function composer(
     ]
     variables.nouvelles =
       groupes.length > 0 ? groupes : [i18n._('Aucune nouvelle.')]
-    // Les échéances se rangent aussi par activité.
-    const parActivite = new Map<string, { titre: string; elements: string[] }>()
-    for (const t of taches) {
-      const date = t.echeance!.toLocaleDateString(langueCourante(), {
-        day: 'numeric',
-        month: 'long',
-        timeZone: 'UTC',
+    // Les échéances se rangent par activité, par périmètre, puis en retard et à
+    // venir (ADR 0063). Une tâche partagée résume ses déclinaisons.
+    const [comptes, plusieurs] = await Promise.all([
+      compterDeclinaisons(
+        prisma,
+        taches.map(t => t.id),
+        jour
+      ),
+      activitesAPlusieursPeriodes(
+        prisma,
+        taches.map(t => t.perimetre.activite.id)
+      ),
+    ])
+    const echeances = ranger(
+      taches.map(t => {
+        const date = dateLongue(t.echeance!)
+        const activite = t.perimetre.activite
+        const periode = plusieurs.has(activite.id) ? t.edition.nom : null
+        const enRetard = t.echeance! < jour
+        return {
+          groupe: {
+            cle: periode === null ? activite.id : t.editionId,
+            titre: periode ?? activite.nom,
+          },
+          perimetre: {
+            id: t.perimetre.id,
+            nom: t.perimetre.nom,
+            ordre: t.perimetre.ordre,
+          },
+          rubrique: enRetard ? ('RETARD' as const) : ('A_VENIR' as const),
+          element: avecDeclinaisons(
+            enRetard
+              ? i18n._('« {titre} », en retard depuis le {date}', {
+                  titre: t.titre,
+                  date,
+                })
+              : i18n._('« {titre} », pour le {date}', {
+                  titre: t.titre,
+                  date,
+                }),
+            comptes.get(t.id)
+          ),
+          tri: t.echeance!.getTime(),
+        }
       })
-      const valeurs = { date, titre: t.titre, perimetre: t.perimetre.nom }
-      const groupe = parActivite.get(t.perimetre.activite.id) ?? {
-        titre: t.perimetre.activite.nom,
-        elements: [],
-      }
-      groupe.elements.push(
-        t.echeance! < jour
-          ? i18n._('{date} : {titre} ({perimetre}) (en retard)', valeurs)
-          : i18n._('{date} : {titre} ({perimetre})', valeurs)
-      )
-      parActivite.set(t.perimetre.activite.id, groupe)
-    }
+    )
     variables.echeances =
-      parActivite.size > 0
-        ? [...parActivite.values()]
-        : [i18n._('Aucune échéance.')]
+      echeances.length > 0 ? echeances : [i18n._('Aucune échéance.')]
     variables.lienConnexion = lienVers('/')
     variables.lienPreferences = lienPreferences
     desabonnement = await lienDesabonnement('resume', userId, idOrganisation)
@@ -785,6 +837,176 @@ export async function composer(
         },
       })
     }
+  }
+
+  if (job.sorte === 'priorites') {
+    if (!job.userId || job.editionId === undefined) return null
+    const userId = job.userId
+    const idOrganisation = configuration.id
+    if (idOrganisation === null) return null
+    const preferences = await preferencesDe(prisma, userId, idOrganisation)
+    const mode = preferences.mailPriorites
+    if (mode === 'AUCUN') return null
+    const [edition, appartenance] = await Promise.all([
+      prisma.edition.findUnique({
+        where: { id: job.editionId },
+        select: {
+          id: true,
+          nom: true,
+          statut: true,
+          activiteId: true,
+          activite: {
+            select: {
+              slug: true,
+              nom: true,
+              organisationId: true,
+              archivedAt: true,
+            },
+          },
+        },
+      }),
+      prisma.appartenance.findFirst({
+        where: { userId, organisationId: idOrganisation, archiveLe: null },
+        select: { role: true },
+      }),
+    ])
+    // Une période archivée, une autre organisation ou une personne archivée
+    // n'envoient rien (ADR 0031 et 0063).
+    if (
+      edition === null ||
+      appartenance === null ||
+      edition.statut === 'ARCHIVEE' ||
+      edition.activite.archivedAt !== null ||
+      edition.activite.organisationId !== idOrganisation
+    )
+      return null
+    const [affectations, adminActivite] = await Promise.all([
+      prisma.affectation.findMany({
+        where: { userId, editionId: edition.id },
+        select: { perimetreId: true },
+      }),
+      prisma.adminActivite.findFirst({
+        where: { userId, activiteId: edition.activiteId },
+        select: { id: true },
+      }),
+    ])
+    const mesPerimetres = new Set(affectations.map(a => a.perimetreId))
+    // « Mes périmètres » demande une affectation ; « Toute l'activité », une
+    // affectation ou un rôle d'admin (ADR 0063).
+    const place =
+      mesPerimetres.size > 0 ||
+      (mode === 'ACTIVITE' &&
+        (adminActivite !== null || appartenance.role === 'ADMIN'))
+    if (!place) return null
+    const maintenant = new Date()
+    const lues = await lirePrioritesDeLaPeriode(
+      edition,
+      configuration.fuseauHoraire,
+      maintenant
+    )
+    const retenus = lues.perimetres.filter(
+      p =>
+        p.priorites.length > 0 &&
+        (mode === 'ACTIVITE' || mesPerimetres.has(p.perimetre.id))
+    )
+    if (retenus.length === 0) return null
+    const jourPriorites = new Date(
+      `${aujourdhui(maintenant, configuration.fuseauHoraire)}T00:00:00Z`
+    )
+    const tacheIds = retenus.flatMap(p => p.priorites.map(x => x.tache.id))
+    const [assignations, comptes, plusieurs] = await Promise.all([
+      prisma.tacheAssignation.findMany({
+        where: { tacheId: { in: tacheIds } },
+        select: { tacheId: true, user: { select: { name: true } } },
+        orderBy: { createdAt: 'asc' },
+      }),
+      compterDeclinaisons(prisma, tacheIds, jourPriorites),
+      activitesAPlusieursPeriodes(prisma, [edition.activiteId]),
+    ])
+    const assignes = new Map<string, string[]>()
+    for (const a of assignations) {
+      assignes.set(a.tacheId, [...(assignes.get(a.tacheId) ?? []), a.user.name])
+    }
+    const groupe = {
+      cle: edition.id,
+      titre: plusieurs.has(edition.activiteId)
+        ? `${edition.activite.nom} · ${edition.nom}`
+        : edition.activite.nom,
+    }
+    const lignes = retenus.flatMap(p => {
+      const perimetre = {
+        id: p.perimetre.id,
+        nom: p.perimetre.nom,
+        ordre: p.perimetre.ordre,
+      }
+      const taches = p.priorites.map((priorite, rang) => {
+        const t = priorite.tache
+        const noms = assignes.get(t.id) ?? []
+        const qui = noms.length > 0 ? noms.join(', ') : i18n._('à prendre')
+        const enRetard = t.echeance !== null && t.echeance < jourPriorites
+        const texte =
+          t.echeance === null
+            ? i18n._('« {titre} » · {qui}', { titre: t.titre, qui })
+            : enRetard
+              ? i18n._('« {titre} », en retard depuis le {date} · {qui}', {
+                  titre: t.titre,
+                  date: dateLongue(t.echeance),
+                  qui,
+                })
+              : i18n._('« {titre} », pour le {date} · {qui}', {
+                  titre: t.titre,
+                  date: dateLongue(t.echeance),
+                  qui,
+                })
+        return {
+          groupe,
+          perimetre,
+          rubrique: enRetard ? ('RETARD' as const) : ('PRIORITES' as const),
+          element: avecDeclinaisons(texte, comptes.get(t.id)),
+          tri: rang,
+        }
+      })
+      return p.autres > 0
+        ? [
+            ...taches,
+            {
+              groupe,
+              perimetre,
+              rubrique: 'PRIORITES' as const,
+              element: i18n._(
+                '{n, plural, one {et # autre priorité} other {et # autres priorités}}',
+                { n: p.autres }
+              ),
+              tri: Number.MAX_SAFE_INTEGER,
+            },
+          ]
+        : taches
+    })
+    variables.priorites = ranger(lignes)
+    variables.introduction =
+      lues.pointDebut === null
+        ? i18n._(
+            'Voici les priorités de {periode} jusqu’au {fin}. Aucun point d’équipe n’est prévu d’ici là.',
+            {
+              periode: edition.nom,
+              fin: dateLongue(new Date(`${lues.fin}T00:00:00Z`)),
+            }
+          )
+        : i18n._(
+            'Voici les priorités de {periode} avant le point d’équipe du {date}.',
+            {
+              periode: edition.nom,
+              date: dateLongue(
+                new Date(
+                  `${heureLocale(lues.pointDebut, configuration.fuseauHoraire).jour}T00:00:00Z`
+                )
+              ),
+            }
+          )
+    sujet = sujets(configuration.nomCourt, edition.activite.nom).priorites
+    variables.lienPriorites = lienVers(`/${edition.activite.slug}`)
+    variables.lienPreferences = lienPreferences
+    desabonnement = await lienDesabonnement('priorites', userId, idOrganisation)
   }
 
   let icalEvent: MessageCompose['icalEvent']

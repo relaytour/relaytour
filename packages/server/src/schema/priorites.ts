@@ -1,25 +1,18 @@
-import {
-  AjustementPriorite,
-  prisma,
-  type Perimetre,
-  type Tache,
-} from '@relaytour/database'
+import { AjustementPriorite, prisma } from '@relaytour/database'
 
-import { jourISO } from '../lib/agenda.ts'
 import { aujourdhui, exigerEcriture } from '../lib/droits.ts'
-import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { publierPourPerimetre } from '../lib/flux.ts'
 import { heureLocale } from '../lib/heures.ts'
 import { moduleActif } from '../lib/modules.ts'
-import { filtreProchainPoint } from '../lib/reunions.ts'
 import {
-  ajustementActif,
-  classerPriorites,
-  horizon,
-  type CodeRaison,
-  type Raison,
-  type TacheAClasser,
-} from '../lib/priorites.ts'
+  ajustementLu,
+  lirePrioritesDeLaPeriode,
+  type AjustementLu,
+  type PrioriteLue,
+  type PrioritesDuPerimetreLues,
+} from '../lib/priorites-periode.ts'
+import { filtreProchainPoint } from '../lib/reunions.ts'
+import { horizon, type CodeRaison, type Raison } from '../lib/priorites.ts'
 
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
@@ -32,8 +25,6 @@ import { chargerTache, exigerDeclinaisonAcceptee, TacheRef } from './taches.ts'
 // refuse l'édition d'une activité invisible, donc à une personne en découverte. Le
 // score est le même pour tout le monde. Ajuster une tâche demande d'écrire dans son
 // périmètre.
-
-const OUVERTES = ['A_FAIRE', 'EN_COURS'] as const
 
 const AjustementPrioriteEnum = builder.enumType(AjustementPriorite, {
   name: 'AjustementPriorite',
@@ -91,13 +82,6 @@ const RaisonRef = builder.objectRef<Raison>('RaisonPriorite').implement({
   }),
 })
 
-interface AjustementLu {
-  niveau: AjustementPriorite
-  parId: string | null
-  le: Date
-  jusquAu: Date
-}
-
 const AjustementRef = builder
   .objectRef<AjustementLu>('AjustementTache')
   .implement({
@@ -121,41 +105,6 @@ const AjustementRef = builder
     }),
   })
 
-/** L'ajustement d'une tâche, s'il compte encore aujourd'hui. */
-function ajustementLu(
-  tache: Pick<
-    Tache,
-    | 'ajustementPriorite'
-    | 'ajustementParId'
-    | 'ajustementLe'
-    | 'ajustementJusquAu'
-  >,
-  jour: string
-): AjustementLu | null {
-  if (
-    tache.ajustementPriorite === null ||
-    tache.ajustementLe === null ||
-    tache.ajustementJusquAu === null
-  ) {
-    return null
-  }
-  const actif = ajustementActif(
-    {
-      niveau: tache.ajustementPriorite,
-      jusquAu: jourISO(tache.ajustementJusquAu),
-    },
-    jour
-  )
-  return actif === null
-    ? null
-    : {
-        niveau: tache.ajustementPriorite,
-        parId: tache.ajustementParId,
-        le: tache.ajustementLe,
-        jusquAu: tache.ajustementJusquAu,
-      }
-}
-
 builder.prismaObjectFields(TacheRef, t => ({
   ajustement: t.field({
     type: AjustementRef,
@@ -169,12 +118,6 @@ builder.prismaObjectFields(TacheRef, t => ({
       ),
   }),
 }))
-
-interface PrioriteLue {
-  tache: Tache
-  score: number
-  raisons: Raison[]
-}
 
 const PrioriteRef = builder.objectRef<PrioriteLue>('Priorite').implement({
   fields: t => ({
@@ -191,13 +134,6 @@ const PrioriteRef = builder.objectRef<PrioriteLue>('Priorite').implement({
     }),
   }),
 })
-
-interface PrioritesDuPerimetreLues {
-  perimetre: Perimetre
-  priorites: PrioriteLue[]
-  autres: number
-  ensuite: Tache | null
-}
 
 const PrioritesDuPerimetreRef = builder
   .objectRef<PrioritesDuPerimetreLues>('PrioritesDuPerimetre')
@@ -263,8 +199,6 @@ const PrioritesRef = builder.objectRef<PrioritesLues>('Priorites').implement({
   }),
 })
 
-type TacheLue = TacheAClasser & { ligne: Tache }
-
 builder.queryFields(t => ({
   priorites: t.field({
     type: PrioritesRef,
@@ -274,148 +208,23 @@ builder.queryFields(t => ({
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, { editionId }, ctx) => {
       const edition = await ctx.exigerEdition(editionId)
-      const fuseau = ctx.organisation!.fuseauHoraire
-      const maintenant = new Date()
-      const jour = aujourdhui(maintenant, fuseau)
-      const agenda = await moduleActif(edition.activiteId, 'AGENDA')
-      const [perimetres, taches, point, liens] = await Promise.all([
-        prisma.perimetre.findMany({
-          where: { activiteId: edition.activiteId, archivedAt: null },
-          orderBy: [{ ordre: 'asc' }, { nom: 'asc' }],
-        }),
-        // Une déclinaison qui n'est pas acceptée n'entre pas (ADR 0026).
-        prisma.tache.findMany({
-          where: {
-            editionId: edition.id,
-            perimetre: { archivedAt: null },
-            statut: { in: [...OUVERTES] },
-            AND: [TACHES_ACTIVES],
-          },
-          include: {
-            _count: { select: { assignations: true } },
-            declinaisons: {
-              select: { statut: true, accord: true, echeance: true },
-            },
-            // Jalons (ADR 0062) : les tâches liées d'un jalon, et les jalons
-            // qu'une tâche sert.
-            liensJalon: { select: { tache: { select: { statut: true } } } },
-            liensTache: {
-              select: {
-                jalon: {
-                  select: {
-                    titre: true,
-                    echeance: true,
-                    statut: true,
-                    accord: true,
-                    jalonLe: true,
-                    perimetre: { select: { archivedAt: true } },
-                  },
-                },
-              },
-            },
-          },
-        }),
-        agenda
-          ? prisma.reunion.findFirst({
-              where: filtreProchainPoint(edition.id, maintenant),
+      const lues = await lirePrioritesDeLaPeriode(
+        edition,
+        ctx.organisation!.fuseauHoraire,
+        new Date()
+      )
+      const point =
+        lues.pointId === null
+          ? null
+          : await prisma.reunion.findUnique({
+              where: { id: lues.pointId },
               include: REUNION_CHARGEE,
-              orderBy: { debut: 'asc' },
             })
-          : null,
-        agenda
-          ? prisma.reunionTache.findMany({
-              where: {
-                tache: { editionId: edition.id },
-                reunion: { statut: 'PREVUE', debut: { gt: maintenant } },
-              },
-              select: { tacheId: true },
-            })
-          : [],
-      ])
-      const reunions = new Map<string, number>()
-      for (const l of liens) {
-        reunions.set(l.tacheId, (reunions.get(l.tacheId) ?? 0) + 1)
-      }
-      const h = horizon(
-        jour,
-        point === null ? null : heureLocale(point.debut, fuseau).jour
-      )
-      const aClasser: TacheLue[] = taches.map(tache => {
-        const ouvertes = tache.declinaisons.filter(
-          d => d.statut === 'A_FAIRE' || d.statut === 'EN_COURS'
-        )
-        const actives = ouvertes.filter(d => d.accord === 'ACCEPTE')
-        const ajustement = ajustementLu(tache, jour)
-        return {
-          id: tache.id,
-          perimetreId: tache.perimetreId,
-          statut: tache.statut as TacheAClasser['statut'],
-          echeance: tache.echeance ? jourISO(tache.echeance) : null,
-          assignes: tache._count.assignations,
-          declinaisonsActives: actives.length,
-          declinaisonsEnAttente: tache.declinaisons.filter(
-            d => d.accord === 'EN_ATTENTE'
-          ).length,
-          echeancesDeclinaisons: actives.flatMap(d =>
-            d.echeance ? [jourISO(d.echeance)] : []
-          ),
-          reunionsAVenir: reunions.get(tache.id) ?? 0,
-          ...(tache.jalonLe === null
-            ? {}
-            : {
-                jalonOuvertes: tache.liensJalon.filter(
-                  l =>
-                    l.tache.statut === 'A_FAIRE' ||
-                    l.tache.statut === 'EN_COURS'
-                ).length,
-              }),
-          jalonsServis: tache.liensTache.flatMap(({ jalon }) =>
-            jalon.jalonLe !== null &&
-            jalon.echeance !== null &&
-            (jalon.statut === 'A_FAIRE' || jalon.statut === 'EN_COURS') &&
-            (jalon.accord === null || jalon.accord === 'ACCEPTE') &&
-            jalon.perimetre.archivedAt === null
-              ? [{ titre: jalon.titre, echeance: jourISO(jalon.echeance) }]
-              : []
-          ),
-          ajustement:
-            ajustement === null
-              ? null
-              : {
-                  niveau: ajustement.niveau,
-                  jusquAu: jourISO(ajustement.jusquAu),
-                },
-          ligne: tache,
-        }
-      })
-      const parId = new Map(perimetres.map(p => [p.id, p]))
-      const classes = classerPriorites(
-        aClasser,
-        perimetres.map(p => p.id),
-        h
-      )
-      const jalons = taches
-        .filter(
-          t =>
-            t.jalonLe !== null &&
-            t.echeance !== null &&
-            jourISO(t.echeance) <= h.fin
-        )
-        .sort((a, b) => a.echeance!.getTime() - b.echeance!.getTime())
       return {
-        fin: h.fin,
-        jalons,
+        fin: lues.fin,
         prochainPoint: point === null ? null : await lireReunion(ctx, point),
-        perimetres: classes.map(c => ({
-          perimetre: parId.get(c.perimetreId)!,
-          priorites: c.priorites.map(n => ({
-            tache: n.tache.ligne,
-            score: n.score,
-            raisons: n.raisons,
-          })),
-          autres: c.autres,
-          ensuite: c.ensuite?.ligne ?? null,
-        })),
+        perimetres: lues.perimetres,
+        jalons: lues.jalons,
       }
     },
   }),

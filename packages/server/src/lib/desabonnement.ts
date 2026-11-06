@@ -25,6 +25,7 @@ export const MAILS_DESABONNABLES = {
   'rappels-echeance': { mailEcheance: false },
   resume: { frequenceResume: 'AUCUN' },
   demandes: { mailDemandes: false },
+  priorites: { mailPriorites: 'AUCUN' },
 } as const
 
 export type MailDesabonnable = keyof typeof MAILS_DESABONNABLES
@@ -40,6 +41,8 @@ function libelleDuMail(sorte: MailDesabonnable): string {
       return i18n._('Résumé par mail')
     case 'demandes':
       return i18n._('Demandes pour rejoindre l’équipe')
+    case 'priorites':
+      return i18n._('Mail des priorités')
   }
 }
 

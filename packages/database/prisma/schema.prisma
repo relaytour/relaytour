@@ -1849,6 +1849,10 @@ enum TypeNotification {
   // Des propositions d'accès chez le fournisseur attendent un admin de
   // l'organisation (ADR 0044), une fois par jour au plus.
   ACCES_FOURNISSEUR_A_VALIDER
+  // Une déclinaison acceptée est en retard : les personnes assignées à sa tâche
+  // partagée sont prévenues, sans push (ADR 0063). La notification porte le
+  // périmètre de la tâche partagée et désigne la déclinaison.
+  DECLINAISON_EN_RETARD
 }
 
 // À quel titre une personne reçoit une notification (ADR 0033). Le niveau
@@ -1921,6 +1925,14 @@ model Notification {
   @@index([userId, organisationId, niveau, lueLe])
 }
 
+// Mail des priorités d'une période (ADR 0063) : aucun, celles des périmètres où la
+// personne est affectée, ou celles de toute l'activité.
+enum MailPriorites {
+  AUCUN
+  MES_PERIMETRES
+  ACTIVITE
+}
+
 enum FrequenceResume {
   QUOTIDIEN
   HEBDOMADAIRE
@@ -1983,6 +1995,9 @@ model PreferenceOrganisation {
   resumeAdmin          Boolean         @default(true)
   // Vos réunions : convocation, modification, annulation (ADR 0037).
   pushAgenda           Boolean         @default(true)
+  // Mail des priorités, la veille de chaque point d'équipe, ou le lundi sans point
+  // dans la semaine (ADR 0063).
+  mailPriorites        MailPriorites   @default(AUCUN)
   dernierResumeLe      DateTime?
   updatedAt            DateTime        @updatedAt
 

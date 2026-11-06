@@ -10,13 +10,46 @@ export interface Rendu {
   texte: string
 }
 
-/** Une liste sous un intertitre : les rappels et le résumé, par activité (ADR 0032). */
-export interface GroupeDeListe {
-  titre: string
-  elements: string[]
+/** Une ligne de liste suivie de lignes en retrait : le résumé d'une tâche partagée (ADR 0063). */
+export interface LigneDeListe {
+  texte: string
+  retrait: string[]
 }
 
-export type Variables = Record<string, string | string[] | GroupeDeListe[]>
+export type ElementDeListe = string | LigneDeListe
+
+/** Une rubrique d'un périmètre : « En retard », « Échéance proche »… (ADR 0063). */
+export interface RubriqueDeListe {
+  titre: string
+  /** Une rubrique d'alerte (les retards) prend la couleur d'erreur. */
+  alerte?: boolean
+  elements: ElementDeListe[]
+}
+
+/** Un périmètre sous l'intertitre de son activité (ADR 0063). */
+export interface SousGroupeDeListe {
+  titre: string
+  rubriques: RubriqueDeListe[]
+}
+
+/**
+ * Une liste sous un intertitre : les rappels et le résumé, par activité (ADR 0032).
+ * Les sous-groupes rangent ensuite les lignes par périmètre et par rubrique
+ * (ADR 0063).
+ */
+export interface GroupeDeListe {
+  titre: string
+  elements: ElementDeListe[]
+  sousGroupes?: SousGroupeDeListe[]
+}
+
+export type Variables = Record<
+  string,
+  string | ElementDeListe[] | GroupeDeListe[]
+>
+
+const GRIS = '#5B6670'
+const ERREUR = '#B0283F'
 
 /**
  * Ce que l'organisation apporte à chaque mail : son nom court, son logo, ses
@@ -95,12 +128,17 @@ export function rendre(
     )
   )
   const textes = gabarit.textes(valeursTexte)
-  const estGroupee = (v: string[] | GroupeDeListe[]): v is GroupeDeListe[] =>
-    v.length > 0 && typeof v[0] !== 'string'
+  const estGroupee = (
+    v: ElementDeListe[] | GroupeDeListe[]
+  ): v is GroupeDeListe[] =>
+    v.length > 0 &&
+    typeof v[0] !== 'string' &&
+    v[0] !== undefined &&
+    'titre' in v[0]
   const poser = (
     source: string,
     texte: (v: string) => string,
-    liste: (v: string[]) => string,
+    liste: (v: ElementDeListe[]) => string,
     groupes: (v: GroupeDeListe[]) => string
   ): string =>
     source.replaceAll(/\{\{(\w+|§\d+)\}\}/g, (_m, cle: string) => {
@@ -111,29 +149,90 @@ export function rendre(
       if (typeof valeur === 'string') return texte(valeur)
       return estGroupee(valeur) ? groupes(valeur) : liste(valeur)
     })
-  const listeHtml = (elements: string[]) =>
-    `<ul style="margin:0;padding-left:20px">${elements
-      .map(e => `<li style="margin:0 0 8px">${echapperHtml(e)}</li>`)
-      .join('')}</ul>`
-  const listeTexte = (elements: string[]) =>
-    elements.map(e => `- ${e}`).join('\n')
   return {
-    html: poser(gabarit.html, echapperHtml, listeHtml, groupes =>
-      groupes
-        .map(
-          g =>
-            `<p style="margin:12px 0 6px;font-weight:700">${echapperHtml(g.titre)}</p>${listeHtml(g.elements)}`
-        )
-        .join('')
-    ),
+    html: poser(gabarit.html, echapperHtml, listeHtml, groupesHtml),
     texte: poser(
       gabarit.texte,
       v => v,
-      listeTexte,
-      groupes =>
-        groupes.map(g => `${g.titre}\n${listeTexte(g.elements)}`).join('\n\n')
+      e => listeTexte(e, ''),
+      groupesTexte
     ),
   }
+}
+
+// Chaque texte s'échappe séparément ; les styles sont fixes et ne viennent jamais
+// d'une valeur saisie.
+function elementHtml(e: ElementDeListe): string {
+  if (typeof e === 'string')
+    return `<li style="margin:0 0 8px">${echapperHtml(e)}</li>`
+  const retrait =
+    e.retrait.length === 0
+      ? ''
+      : `<ul style="margin:4px 0 0;padding-left:16px;list-style-type:circle">${e.retrait
+          .map(
+            r =>
+              `<li style="margin:0 0 2px;font-size:14px;line-height:20px;color:${GRIS}">${echapperHtml(r)}</li>`
+          )
+          .join('')}</ul>`
+  return `<li style="margin:0 0 8px">${echapperHtml(e.texte)}${retrait}</li>`
+}
+
+function listeHtml(elements: ElementDeListe[]): string {
+  return `<ul style="margin:0;padding-left:20px">${elements.map(elementHtml).join('')}</ul>`
+}
+
+function groupesHtml(groupes: GroupeDeListe[]): string {
+  return groupes
+    .map(g => {
+      const titre = `<p style="margin:16px 0 6px;font-size:16px;font-weight:700">${echapperHtml(g.titre)}</p>`
+      const elements = g.elements.length > 0 ? listeHtml(g.elements) : ''
+      const sousGroupes = (g.sousGroupes ?? [])
+        .map(
+          sg =>
+            `<p style="margin:12px 0 4px;padding-left:8px;border-left:3px solid #010101;font-weight:700">${echapperHtml(sg.titre)}</p>${sg.rubriques
+              .map(
+                r =>
+                  `<p style="margin:6px 0 4px;font-size:12px;line-height:18px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:${r.alerte ? ERREUR : GRIS}">${echapperHtml(r.titre)}</p>${listeHtml(r.elements)}`
+              )
+              .join('')}`
+        )
+        .join('')
+      return `${titre}${elements}${sousGroupes}`
+    })
+    .join('')
+}
+
+// La partie texte suit la même hiérarchie, avec deux espaces de retrait par niveau.
+function listeTexte(elements: ElementDeListe[], marge: string): string {
+  return elements
+    .map(e =>
+      typeof e === 'string'
+        ? `${marge}- ${e}`
+        : [
+            `${marge}- ${e.texte}`,
+            ...e.retrait.map(r => `${marge}    · ${r}`),
+          ].join('\n')
+    )
+    .join('\n')
+}
+
+function groupesTexte(groupes: GroupeDeListe[]): string {
+  return groupes
+    .map(g =>
+      [
+        g.titre,
+        ...(g.elements.length > 0 ? [listeTexte(g.elements, '')] : []),
+        ...(g.sousGroupes ?? []).map(sg =>
+          [
+            `  ${sg.titre}`,
+            ...sg.rubriques.map(
+              r => `    ${r.titre}\n${listeTexte(r.elements, '    ')}`
+            ),
+          ].join('\n')
+        ),
+      ].join('\n')
+    )
+    .join('\n\n')
 }
 
 export type { NomGabarit }
