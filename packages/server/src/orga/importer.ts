@@ -87,7 +87,14 @@ function rapportActiviteVide(
     fiches: { creees: [], nouvellesVersions: [], inchangees: [], conflits: [] },
     periode: null,
     effectifs: { crees: [], dejaPresents: [] },
-    taches: { creees: [], dejaPresentes: [], rattachees: [], conflits: [] },
+    taches: {
+      creees: [],
+      dejaPresentes: [],
+      rattachees: [],
+      conflits: [],
+      jalons: [],
+      liens: [],
+    },
   }
 }
 

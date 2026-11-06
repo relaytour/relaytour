@@ -622,6 +622,82 @@ ${declinaison}
       /le modèle besoins-de-lieux est déjà décliné dans volley depuis/
     )
   })
+
+  // Jalons (ADR 0062) : une tâche type lie des modèles « perimetre/modele ».
+  const jalon = (lies: string) =>
+    `taches:
+  - modele: lieux-prets
+    titre: Lieux prêts
+    jalon: ${lies}
+  - modele: visite
+    titre: Visiter les lieux
+`
+
+  it('accepte un jalon qui lie une tâche type et une déclinaison reçue', () => {
+    const dossierLu = contenu({
+      'activites/tournoi/taches/lieux.yaml': partagee('      groupe: sport'),
+      'activites/tournoi/taches/natation.yaml': jalon(
+        '[lieux/besoins-de-lieux, natation/besoins-de-lieux, natation/visite]'
+      ),
+    })
+    expect(erreurs(dossierLu)).toEqual([])
+    const modeles = lireModeles(dossierLu)
+    const tache = modeles.activites[0]!.taches.get('natation')![0]!
+    expect(tache.jalon).toEqual([
+      'lieux/besoins-de-lieux',
+      'natation/besoins-de-lieux',
+      'natation/visite',
+    ])
+  })
+
+  it('accepte un jalon sans tâche liée et des déclinaisons marquées', () => {
+    const lues = erreurs(
+      contenu({
+        'activites/tournoi/taches/lieux.yaml': partagee(
+          '      groupe: sport\n      jalon: true'
+        ),
+        'activites/tournoi/taches/natation.yaml': jalon('[]'),
+      })
+    )
+    expect(lues).toEqual([])
+  })
+
+  it.each([
+    [
+      'lui-même',
+      '[natation/lieux-prets]',
+      /le jalon lieux-prets se lie à lui-même/,
+    ],
+    [
+      'un périmètre inconnu',
+      '[escrime/visite]',
+      /lie escrime\/visite, dont le périmètre n'existe pas/,
+    ],
+    [
+      'un modèle que le périmètre ne porte pas',
+      '[volley/visite]',
+      /lie volley\/visite, un modèle que ce périmètre ne porte pas/,
+    ],
+    [
+      'deux fois le même modèle',
+      '[natation/visite, natation/visite]',
+      /cite deux fois le même modèle lié/,
+    ],
+    ['un modèle mal formé', '[visite]', /perimetre\/modele/],
+  ])('refuse un jalon qui lie %s', (_cas, lies, attendu) => {
+    const lues = erreurs(
+      contenu({ 'activites/tournoi/taches/natation.yaml': jalon(lies) })
+    )
+    expect(lues.join('\n')).toMatch(attendu)
+  })
+
+  it('refuse un jalon qui lie plus de 100 modèles', () => {
+    const lies = `[${Array.from({ length: 101 }, (_, i) => `natation/m${i}`).join(', ')}]`
+    const lues = erreurs(
+      contenu({ 'activites/tournoi/taches/natation.yaml': jalon(lies) })
+    )
+    expect(lues.join('\n')).toMatch(/jalon/)
+  })
 })
 
 describe('fiches connexes (ADR 0039)', () => {

@@ -20,6 +20,20 @@
             "migration": null
           },
           "en": null
+        },
+        {
+          "id": "2026-11-06-serveur-le-contenu-declare-les-jalons",
+          "date": "2026-11-06",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le contenu d'une organisation déclare les jalons",
+            "texte": "Une tâche type porte la clé facultative `jalon`, une liste de modèles liés de la forme `perimetre/modele` (ADR 0062). La clé `declinaison.jalon` marque les déclinaisons d'une tâche partagée. `orga:valider` refuse un modèle lié inconnu, un jalon qui se lie à lui-même et une liste de plus de 100 modèles. L'import marque les tâches et crée les liens manquants, sans jamais en retirer. L'export réécrit la clé telle que le contenu la déclare.",
+            "migration": null
+          },
+          "en": null
         }
       ]
     },

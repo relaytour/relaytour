@@ -17,7 +17,7 @@ import {
   type MediaValide,
 } from '../lib/medias.ts'
 import { ECHEANCE_RELATIVE, PhasesSchema } from '../lib/phases.ts'
-import { TITRE_MAX } from '../lib/saisie.ts'
+import { LIENS_JALON_MAX, TITRE_MAX } from '../lib/saisie.ts'
 import {
   DeclarationOrganisationSchema,
   IdentiteActiviteSchema,
@@ -141,11 +141,20 @@ const Declinaison = z
     echeance: EcheanceRelative.optional(),
     // Une fiche commune seulement : les périmètres cibles la lisent tous.
     fiche: Slug.optional(),
+    // Vrai : chaque déclinaison devient un jalon (ADR 0062).
+    jalon: z.boolean().optional(),
   })
   .refine(d => (d.groupe === undefined) !== (d.perimetres === undefined), {
     message: 'groupe ou perimetres attendu, l’un des deux',
     path: ['groupe'],
   })
+
+// Jalon (ADR 0062) : la tâche type marque sa tâche comme jalon et lie les tâches
+// des modèles cités, chacun sous la forme « perimetre/modele ». Une liste vide marque
+// la tâche sans lier aucune tâche.
+const ModeleLie = z
+  .string()
+  .regex(/^[a-z0-9-]+\/[a-z0-9-]+$/, 'modèle lié de la forme perimetre/modele')
 
 const TacheModele = z.strictObject({
   modele: Slug,
@@ -154,6 +163,7 @@ const TacheModele = z.strictObject({
   echeance: EcheanceRelative.optional(),
   fiche: Slug.optional(),
   declinaison: Declinaison.optional(),
+  jalon: z.array(ModeleLie).max(LIENS_JALON_MAX).optional(),
 })
 
 export const FichierTaches = z.strictObject({
@@ -724,6 +734,37 @@ function lireActivite(
         }
         recus.set(tache.modele, nom)
         declinees.set(cible, recus)
+      }
+    }
+  }
+
+  // Jalons (ADR 0062). Un modèle lié se vérifie après les déclinaisons : il peut
+  // désigner la déclinaison d'une tâche partagée dans un périmètre cible.
+  for (const [origine, liste] of taches) {
+    const nom = fichierTaches(origine)
+    for (const tache of liste) {
+      if (tache.jalon === undefined) continue
+      if (new Set(tache.jalon).size !== tache.jalon.length) {
+        erreurs.push(
+          `${nom} : ${tache.modele} cite deux fois le même modèle lié`
+        )
+      }
+      for (const lie of tache.jalon) {
+        const [perimetre, modele] = lie.split('/') as [string, string]
+        if (perimetre === origine && modele === tache.modele) {
+          erreurs.push(`${nom} : le jalon ${tache.modele} se lie à lui-même`)
+        } else if (!slugsPerimetres.has(perimetre)) {
+          erreurs.push(
+            `${nom} : le jalon ${tache.modele} lie ${lie}, dont le périmètre n'existe pas dans ${nomPerimetres}`
+          )
+        } else if (
+          !(taches.get(perimetre) ?? []).some(t => t.modele === modele) &&
+          !declinees.get(perimetre)?.has(modele)
+        ) {
+          erreurs.push(
+            `${nom} : le jalon ${tache.modele} lie ${lie}, un modèle que ce périmètre ne porte pas`
+          )
+        }
       }
     }
   }

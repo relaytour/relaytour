@@ -119,3 +119,6 @@ export async function rejouerSurDoublon<T>(
     return operation()
   }
 }
+
+/** Le nombre de tâches qu'un jalon lie au plus (ADR 0062). */
+export const LIENS_JALON_MAX = 100
