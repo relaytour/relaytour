@@ -1292,6 +1292,21 @@ msgid "la tâche du périmètre porte déjà ses propres déclinaisons"
 msgstr "la tâche du périmètre porte déjà ses propres déclinaisons"
 
 #. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "la tâche liée est absente de la période"
+msgstr "la tâche liée est absente de la période"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "le jalon lie déjà {max} tâches"
+msgstr "le jalon lie déjà {max} tâches"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "la tâche liée attend l’accord de son périmètre"
+msgstr "la tâche liée attend l’accord de son périmètre"
+
+#. js-lingui-explicit-id
 #: src/lib/abonnements.ts
 msgid "Cet appareil est en cours d’abonnement. Réessayez dans un instant."
 msgstr "Cet appareil est en cours d’abonnement. Réessayez dans un instant."

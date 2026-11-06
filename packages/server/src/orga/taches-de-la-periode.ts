@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@relaytour/database'
 
 import { i18n } from '../lib/langue.ts'
+import { LIENS_JALON_MAX } from '../lib/saisie.ts'
 
 import {
   ciblesDeLaDeclinaison,
@@ -30,13 +31,17 @@ export interface RapportTachesDeLaPeriode {
   /**
    * `rattachees` : des tâches déjà présentes dans un périmètre cible, liées à leur
    * tâche partagée sans autre changement. `conflits` : des déclinaisons que l'import
-   * ne crée ni ne lie, avec la raison (ADR 0026).
+   * ne crée ni ne lie, et des liens de jalon qu'il ne crée pas, avec la raison
+   * (ADR 0026, 0062). `jalons` : des tâches qui reçoivent le marqueur de jalon.
+   * `liens` : des liens de jalon créés, « jalon → tâche liée ».
    */
   taches: {
     creees: string[]
     dejaPresentes: string[]
     rattachees: string[]
     conflits: string[]
+    jalons: string[]
+    liens: string[]
   }
 }
 
@@ -61,7 +66,14 @@ export interface OptionsTachesDeLaPeriode {
 export function rapportTachesVide(): RapportTachesDeLaPeriode {
   return {
     effectifs: { crees: [], dejaPresents: [] },
-    taches: { creees: [], dejaPresentes: [], rattachees: [], conflits: [] },
+    taches: {
+      creees: [],
+      dejaPresentes: [],
+      rattachees: [],
+      conflits: [],
+      jalons: [],
+      liens: [],
+    },
   }
 }
 
@@ -132,6 +144,10 @@ export async function creerTachesDeLaPeriode(
     })
   }
 
+  // Les tâches que la période portera, « perimetre/modele » : celles qui existent
+  // et celles que l'import crée. Les jalons ne lient que ces tâches.
+  const prevues = new Set<string>()
+
   // Tâches types. Une tâche se retrouve par sa période, son périmètre et son
   // modèle : déjà présente, elle n'est jamais modifiée.
   for (const [slugPerimetre, taches] of options.taches) {
@@ -153,6 +169,7 @@ export async function creerTachesDeLaPeriode(
       // L'identifiant de la tâche, pour y lier ses déclinaisons. Une simulation
       // qui la crée ne le connaît pas.
       let tacheId = existante?.id ?? null
+      prevues.add(cle)
       if (existante !== null) {
         rapport.taches.dejaPresentes.push(cle)
       } else {
@@ -199,8 +216,11 @@ export async function creerTachesDeLaPeriode(
           cible: `${cible}/${tache.modele}`,
           cle,
         })
-        const conflit = (raison: string) =>
+        const conflit = (raison: string) => {
+          prevues.delete(`${cible}/${tache.modele}`)
           rapport.taches.conflits.push(`${cleCible} : ${raison}`)
+        }
+        prevues.add(`${cible}/${tache.modele}`)
         // Le lien garde un seul niveau : une tâche qui est déjà la déclinaison
         // d'une autre ne se décline pas. Le contenu a pu changer de sens depuis
         // un import précédent.
@@ -279,6 +299,128 @@ export async function creerTachesDeLaPeriode(
           data: { origineId: tacheId, accord: 'ACCEPTE', accordLe: new Date() },
         })
       }
+    }
+  }
+
+  await creerJalonsDeLaPeriode(tx, options, prevues, rapport)
+}
+
+/**
+ * Jalons (ADR 0062) : marque les tâches que le contenu déclare comme jalons, puis
+ * crée les liens manquants. L'import ne retire jamais un marqueur ni un lien, comme
+ * il ne déplace jamais une déclinaison. Une tâche liée se retrouve, comme toute
+ * tâche, par sa période, son périmètre et son modèle.
+ */
+async function creerJalonsDeLaPeriode(
+  tx: Transaction,
+  options: OptionsTachesDeLaPeriode,
+  prevues: ReadonlySet<string>,
+  rapport: RapportTachesDeLaPeriode
+): Promise<void> {
+  const { periode, perimetres, origines, ecrire } = options
+  const retenu = (slug: string) => origines === undefined || origines.has(slug)
+  const parSlug = new Map(perimetres.map(p => [p.slug, p]))
+  const parId = new Map(
+    perimetres.flatMap(p => (p.id === undefined ? [] : [[p.id, p.slug]]))
+  )
+  // Les jalons voulus : une tâche type marquée, et chaque déclinaison d'une tâche
+  // type dont la déclinaison est marquée.
+  const voulus: { cle: string; origine: string | null; lies: string[] }[] = []
+  for (const [slugPerimetre, taches] of options.taches) {
+    if (!retenu(slugPerimetre)) continue
+    for (const tache of taches) {
+      const cle = `${slugPerimetre}/${tache.modele}`
+      if (tache.jalon !== undefined) {
+        voulus.push({ cle, origine: null, lies: tache.jalon })
+      }
+      if (tache.declinaison?.jalon !== true) continue
+      for (const cible of ciblesDeLaDeclinaison(
+        tache,
+        slugPerimetre,
+        perimetres
+      )) {
+        voulus.push({ cle: `${cible}/${tache.modele}`, origine: cle, lies: [] })
+      }
+    }
+  }
+  if (voulus.length === 0) return
+
+  // Les tâches de la période qui portent un modèle, lues après leur création.
+  const lues = await tx.tache.findMany({
+    where: { editionId: periode.id, modeleSlug: { not: null } },
+    select: {
+      id: true,
+      perimetreId: true,
+      modeleSlug: true,
+      origineId: true,
+      accord: true,
+      jalonLe: true,
+      liensJalon: { select: { tacheId: true } },
+    },
+  })
+  const enBase = new Map<string, (typeof lues)[number]>()
+  for (const tache of lues) {
+    const slug = parId.get(tache.perimetreId)
+    if (slug !== undefined) enBase.set(`${slug}/${tache.modeleSlug}`, tache)
+  }
+
+  for (const voulu of voulus) {
+    if (!prevues.has(voulu.cle)) continue
+    const jalon = enBase.get(voulu.cle)
+    // Une déclinaison ne devient un jalon que si elle déclinait bien sa tâche
+    // partagée : un conflit de l'import l'a laissée à part.
+    if (
+      jalon !== undefined &&
+      voulu.origine !== null &&
+      jalon.origineId !== enBase.get(voulu.origine)?.id
+    ) {
+      continue
+    }
+    if (jalon === undefined || jalon.jalonLe === null) {
+      rapport.taches.jalons.push(voulu.cle)
+      if (ecrire && jalon !== undefined) {
+        await tx.tache.update({
+          where: { id: jalon.id },
+          data: { jalonLe: new Date() },
+        })
+      }
+    }
+    const presents = new Set(jalon?.liensJalon.map(l => l.tacheId) ?? [])
+    for (const lie of voulu.lies) {
+      const libelle = `${voulu.cle} → ${lie}`
+      const conflit = (raison: string) =>
+        rapport.taches.conflits.push(`${libelle} : ${raison}`)
+      if (!prevues.has(lie) && !enBase.has(lie)) {
+        conflit(i18n._('la tâche liée est absente de la période'))
+        continue
+      }
+      if (parSlug.get(lie.split('/')[0]!)?.archive === true) {
+        conflit(i18n._('le périmètre est archivé'))
+        continue
+      }
+      const tache = enBase.get(lie)
+      if (tache !== undefined && presents.has(tache.id)) continue
+      if (presents.size >= LIENS_JALON_MAX) {
+        conflit(
+          i18n._('le jalon lie déjà {max} tâches', { max: LIENS_JALON_MAX })
+        )
+        continue
+      }
+      if (
+        tache !== undefined &&
+        tache.accord !== null &&
+        tache.accord !== 'ACCEPTE'
+      ) {
+        conflit(i18n._('la tâche liée attend l’accord de son périmètre'))
+        continue
+      }
+      rapport.taches.liens.push(libelle)
+      if (tache !== undefined) presents.add(tache.id)
+      if (!ecrire || jalon === undefined || tache === undefined) continue
+      await tx.lienJalon.createMany({
+        data: [{ jalonId: jalon.id, tacheId: tache.id }],
+        skipDuplicates: true,
+      })
     }
   }
 }

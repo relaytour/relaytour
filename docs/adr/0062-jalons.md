@@ -130,10 +130,11 @@ La consultation (ADR 0014) ouvre déjà la lecture des tâches de tous les péri
 - La reprise des tâches (ADR 0048) reprend le marqueur. Elle recrée un lien quand le jalon et la tâche liée sont repris tous les deux.
 - L'export complet d'une organisation écrit le marqueur et la liste des tâches liées, désignées par leur périmètre et leur titre, comme `origine`.
 - Une tâche type porte une clé facultative `jalon`, avec la liste des modèles liés (`perimetre/modele`). Une liste vide marque la tâche sans lier aucune tâche.
+- Un modèle lié désigne une tâche type d'un périmètre, ou la déclinaison qu'un périmètre cible reçoit d'une tâche partagée.
 - La clé `declinaison.jalon`, un booléen, marque les déclinaisons de la tâche type.
 - La validation du contenu refuse un modèle lié inconnu, un modèle qui se cite lui-même et une liste de plus de 100 modèles.
 - L'import marque la tâche et crée les liens manquants. Il ne retire jamais un lien ni un marqueur, comme il ne déplace jamais une déclinaison (ADR 0026). Il signale un modèle lié absent de la période.
-- L'export réécrit les tâches types telles que le contenu les déclare. Un lien créé dans l'application entre deux tâches issues de modèles s'y ajoute. Un lien vers une tâche créée dans l'application reste en base seulement, puisqu'aucun modèle ne la désigne.
+- L'export réécrit les tâches types telles que le contenu les déclare, clé `jalon` comprise. Un lien créé dans l'application reste en base, et l'export complet de l'organisation l'écrit. Une tâche type décrit un modèle commun à toutes les périodes. Un lien relie au contraire deux tâches d'une seule période. Cette règle a été précisée le 2026-11-06, avec le lot 3.
 
 ## Conséquences
 

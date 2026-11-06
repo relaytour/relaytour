@@ -1292,6 +1292,21 @@ msgid "la tâche du périmètre porte déjà ses propres déclinaisons"
 msgstr "the area’s task already has its own derived tasks"
 
 #. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "la tâche liée est absente de la période"
+msgstr "the linked task is not in the period"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "le jalon lie déjà {max} tâches"
+msgstr "the milestone already links {max} tasks"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "la tâche liée attend l’accord de son périmètre"
+msgstr "the linked task is awaiting approval from its area"
+
+#. js-lingui-explicit-id
 #: src/lib/abonnements.ts
 msgid "Cet appareil est en cours d’abonnement. Réessayez dans un instant."
 msgstr "This device is being subscribed. Try again in a moment."

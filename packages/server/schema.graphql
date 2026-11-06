@@ -3617,6 +3617,10 @@ type RapportTachesTypes {
   effectifsCrees: [String!]!
   effectifsDejaPresents: [String!]!
   illisibles: [String!]!
+  jalonsMarques: [String!]!
+
+  """Les liens de jalon créés, « jalon → tâche liée »."""
+  liensDeJalon: [String!]!
   tachesCreees: [String!]!
   tachesDejaPresentes: [String!]!
   tachesRattachees: [String!]!

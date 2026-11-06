@@ -38,6 +38,12 @@ const RapportTachesTypesRef = builder
         resolve: r => r.taches.dejaPresentes,
       }),
       tachesRattachees: t.stringList({ resolve: r => r.taches.rattachees }),
+      // Jalons (ADR 0062) : les tâches marquées et les liens créés.
+      jalonsMarques: t.stringList({ resolve: r => r.taches.jalons }),
+      liensDeJalon: t.stringList({
+        description: 'Les liens de jalon créés, « jalon → tâche liée ».',
+        resolve: r => r.taches.liens,
+      }),
       conflits: t.stringList({ resolve: r => r.taches.conflits }),
       illisibles: t.exposeStringList('illisibles'),
     }),
@@ -126,7 +132,11 @@ async function appliquer(
   )
   if (
     ecrire &&
-    rapport.taches.creees.length + rapport.taches.rattachees.length > 0
+    rapport.taches.creees.length +
+      rapport.taches.rattachees.length +
+      rapport.taches.jalons.length +
+      rapport.taches.liens.length >
+      0
   ) {
     publierPourActivite('TACHE', ctx.organisation!.id, activiteId, {
       editionId: edition.id,

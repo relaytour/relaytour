@@ -14,8 +14,7 @@ import { publierPourPerimetre } from './flux.ts'
 // de l'activité. Le lien ne change pas la tâche liée. Le décompte ne se propage
 // jamais : un jalon lié compte avec son seul statut.
 
-/** Le nombre de tâches qu'un jalon lie au plus. */
-export const LIENS_JALON_MAX = 100
+export { LIENS_JALON_MAX } from './saisie.ts'
 
 /** L'état des tâches liées d'un jalon, en nombres. */
 export interface ResumeJalon {
