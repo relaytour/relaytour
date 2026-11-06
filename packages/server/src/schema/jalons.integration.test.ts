@@ -594,7 +594,13 @@ describe('jalons et tâches partagées', () => {
       .id
     const r = await executer(ids.paula, LIER, { id: declinaison, t: [tache] })
     expect(r.errors).toBeUndefined()
-    expect((await lire(ids.coralie, declinaison)).resumeJalon.total).toBe(1)
+    const lue = await lire(ids.coralie, declinaison)
+    expect(lue.resumeJalon.total).toBe(1)
+    // Le journal garde le marquage de chaque déclinaison, avec son auteur.
+    expect(lue.historiqueJalon.map(e => [e.etape, e.par.nom])).toEqual([
+      ['MARQUE', `admin ${s}`],
+      ['LIEE', `paula ${s}`],
+    ])
   })
 })
 

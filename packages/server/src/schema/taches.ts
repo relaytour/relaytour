@@ -1030,6 +1030,17 @@ async function creerDeclinaisons(
         tacheId: declinaison.id,
       },
     })
+    if (textes.jalons === true) {
+      await tx.journal.create({
+        data: {
+          type: 'JALON_MARQUE',
+          acteurId,
+          editionId: origine.editionId,
+          perimetreId: cible.id,
+          tacheId: declinaison.id,
+        },
+      })
+    }
     creees.push({ ...cible, tacheId: declinaison.id })
   }
   return creees
