@@ -264,6 +264,7 @@ Relaytour accueille les contributions : correctifs, évolutions, documentation, 
 - Une note d'audience `organisateurs` s'affiche dans l'espace organisateur (ADR 0021). Son champ `role` désigne le rôle le moins étendu qu'elle concerne : `referent` (valeur par défaut, lue par tous), `admin-activite` ou `admin-organisation`. L'option `--role` de `noter` l'écrit. Les audiences `interne` et `public` ne s'affichent pas dans l'application.
 - Un changement d'interface joint une capture de l'écran, faite avec le contenu d'exemple (`content/exemple`) et des comptes fictifs.
 - Un changement d'interface respecte les règles de la section « Mobile » de `docs/design-system.md`. Quand l'écran figure dans les modes d'emploi, la PR met à jour ses deux captures du site, `site/captures/` et `site/captures/mobile/`, et les cite dans sa description. Les captures anglaises de `site/en/captures/` se reprennent avec `--langue en`.
+- Une PR qui modifie une page des modes d'emploi met à jour sa jumelle anglaise dans le même commit. Elle relève aussi le pied de page des deux pages (« Mode d'emploi à jour de la version x.y.z ») à la dernière version publiée.
 - Un changement de contrôle d'accès joint un test qui prouve le refus (invariant 11).
 - Les contrats générés sont à jour (`yarn codegen`, invariant 9).
 - Aucun contenu d'organisation, aucune donnée personnelle, aucun secret (invariants 1 et 2).

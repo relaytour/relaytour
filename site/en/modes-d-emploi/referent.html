@@ -63,7 +63,7 @@
         <div class="grille-2">
           <article class="verre panneau">
             <h3>The left menu</h3>
-            <p>It gives access to My space, Timeline, Schedule, Resources and Preferences. Calendar and Volunteers appear when the activity has turned on these modules. The “Areas” section starts with “All areas” and “Org chart”, then lists each area where you have an appointment.</p>
+            <p>It gives access to My space, Timeline, Workload, Schedule, Resources and Preferences. Calendar, Volunteers and Ranking appear when the activity has turned on these modules. The “Areas” section starts with “All areas” and “Org chart”, then lists each area where you have an appointment.</p>
           </article>
           <article class="verre panneau">
             <h3>The top bar</h3>
@@ -116,6 +116,20 @@
             <figcaption>The timeline grouped by phase, on the sample organization.</figcaption>
           </figure>
           <p class="note">No action is taken here: a line leads to its area. You edit the task there if you have an appointment in that area. The right-hand panel flags the tasks of your areas that are still waiting for a person.</p>
+        </article>
+
+        <article class="verre ecran" id="e-charge">
+          <div class="ecran-tete"><h3>Workload</h3><span class="route">/&lt;activity&gt;/charge</span></div>
+          <p>The “Workload” page shows what each person of the team carries during the period: their assigned tasks, their places in the schedule and their areas. It helps the team spot an overloaded person and share the work before it falls behind.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Now</span></span><span>Count the open tasks and the upcoming places. Each person’s bar separates overdue tasks, tasks due within seven days, tasks due later and tasks without a due date.</span></li>
+            <li><span><span class="libelle">Whole period</span></span><span>Count all the tasks assigned over the period, by status, and all the places in the schedule.</span></li>
+            <li><span><span class="libelle">Area group</span></span><span>Keep only the people appointed to the areas of one group.</span></li>
+            <li><span><span class="libelle">By workload</span><span class="libelle">By name</span></span><span>Sort people from the most loaded to the least loaded, or alphabetically.</span></li>
+            <li><span><span class="libelle">Search</span></span><span>Find a person by name, or by one of their areas.</span></li>
+          </ul>
+          <p>Clicking a person opens their details: their tasks by phase, their next place in the schedule and their workload in the other activities you can see. A task assigned to several people counts for each of them.</p>
+          <p class="note">The page measures no effort and sets no threshold: it counts tasks and places. The number of tasks a person completed appears only to that person and to the admins, unless the activity has turned on the “Ranking” module.</p>
         </article>
 
         <article class="verre ecran" id="e-agenda">
@@ -334,6 +348,13 @@
           <p class="note">Write contacts as roles, without personal addresses or numbers: a sheet that contains some cannot be exported to the organization’s repository. The version history is reserved for admins.</p>
         </article>
 
+        <article class="verre ecran" id="e-classement">
+          <div class="ecran-tete"><h3>Ranking</h3><span class="route">/&lt;activity&gt;/classement</span></div>
+          <p>The ranking lists the people of the period by their participation points. It appears in the menu only when the activity admins have turned on the “Ranking” module. Without this module, your score stays visible only to you and to the admins, in “My space”.</p>
+          <p>A completed task earns 3 points, plus 1 point when it is done on time. Each person indicated as having completed it receives these points. A created task earns 1 point, a created sheet 3 points and an edited sheet 2 points, once a day. A reopened task loses its points.</p>
+          <p class="note">Admins read the same table in the “Manage the activity” group, described in the <a href="admin-activite.html#e-classement">activity admin guide</a>.</p>
+        </article>
+
         <article class="verre ecran" id="e-preferences">
           <div class="ecran-tete"><h3>Preferences</h3><span class="route">/&lt;activity&gt;/preferences</span></div>
           <p>You choose the emails you receive, and the notifications for your areas. The notifications for your tasks stay visible in the workspace, whatever you choose for emails.</p>
@@ -491,7 +512,7 @@
       </section>
 
       <footer>
-        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.20.0.
+        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.28.0.
       </footer>
     </main>
     <script src="../../bascule.js"></script>
