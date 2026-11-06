@@ -47,7 +47,7 @@
     "graphql": "^16.14.0",
     "graphql-scalars": "^2.0.1",
     "graphql-sse": "^2.6.3",
-    "ioredis": "^5.11.0",
+    "ioredis": "^6.0.0",
     "mammoth": "^1.13.0",
     "nodemailer": "^10.1.7",
     "pino": "^10.4.0",
