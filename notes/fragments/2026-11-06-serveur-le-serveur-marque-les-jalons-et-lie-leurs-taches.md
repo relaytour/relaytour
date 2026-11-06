@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.29.0
 fr:
   titre: >-
     Le serveur marque les jalons et lie leurs tâches
