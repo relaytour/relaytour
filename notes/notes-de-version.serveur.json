@@ -5,6 +5,25 @@
   "version": "0.28.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-11-06-serveur-le-serveur-marque-les-jalons-et-lie-leurs-taches",
+          "date": "2026-11-06",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le serveur marque les jalons et lie leurs tâches",
+            "texte": "Les mutations `marquerJalon`, `lierTaches` et `delierTache` portent les jalons de l'ADR 0062. Le type `Tache` gagne `jalon`, `resumeJalon`, `tachesLiees`, `jalons` et `historiqueJalon`. `creerTache` reçoit l'argument `jalon`, et les déclinaisons reçoivent `jalons`. Une migration additive ajoute deux colonnes nulles à `Tache`, une colonne nulle à `Journal`, quatre étapes de journal et la table `LienJalon`.",
+            "migration": null
+          },
+          "en": null
+        }
+      ]
+    },
+    {
       "version": "0.28.0",
       "notes": [
         {
