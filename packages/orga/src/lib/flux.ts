@@ -111,6 +111,7 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
   ],
   NOTIFICATION: [
     'NombreNotificationsNonLues',
+    'NombreNotificationsParActivite',
     'ListeNotifications',
     'NombreNotificationsAdmin',
     'ListeNotificationsAdmin',

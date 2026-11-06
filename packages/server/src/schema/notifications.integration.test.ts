@@ -264,6 +264,26 @@ describe('notifications de collaboration', () => {
     expect(data.notifications).toEqual([])
     expect(data.nombreNotificationsNonLues).toBe(0)
   })
+
+  it('compte les non-lues par activité, sans celles d’une autre personne', async () => {
+    const requete = `{ nombreNotificationsNonLues nombreNotificationsNonLuesParActivite { activiteId nonLues } }`
+    const chloe = await executer(ids.chloe, requete)
+    const comptes = chloe.nombreNotificationsNonLuesParActivite as {
+      activiteId: string | null
+      nonLues: number
+    }[]
+    // Les notifications d'une tâche se rangent sous l'activité de son périmètre.
+    expect(comptes.find(c => c.activiteId === ACTIVITE)?.nonLues).toBe(
+      await prisma.notification.count({
+        where: { userId: ids.chloe, tacheId, lueLe: null },
+      })
+    )
+    expect(comptes.reduce((total, c) => total + c.nonLues, 0)).toBe(
+      chloe.nombreNotificationsNonLues
+    )
+    const david = await executer(ids.david, requete)
+    expect(david.nombreNotificationsNonLuesParActivite).toEqual([])
+  })
 })
 
 describe('rappels d’échéance', () => {

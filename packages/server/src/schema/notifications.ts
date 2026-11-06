@@ -116,6 +116,19 @@ const AutreOrganisationRef = builder
     }),
   })
 
+const NonLuesActiviteRef = builder
+  .objectRef<{ activiteId: string | null; nonLues: number }>(
+    'NotificationsNonLuesActivite'
+  )
+  .implement({
+    description:
+      'Le nombre de notifications non lues de la cloche pour une activité, ou pour l’organisation quand elles ne concernent aucune activité.',
+    fields: t => ({
+      activiteId: t.exposeID('activiteId', { nullable: true }),
+      nonLues: t.exposeInt('nonLues'),
+    }),
+  })
+
 interface Preferences {
   frequenceResume: FrequenceResume
   mailModification: boolean
@@ -284,6 +297,42 @@ builder.queryFields(t => ({
       // Le menu demande ce nombre à toute personne : sans rôle d'admin, il vaut zéro.
       if (where === null) return 0
       return prisma.notification.count({ where: { ...where, lueLe: null } })
+    },
+  }),
+
+  nombreNotificationsNonLuesParActivite: t.field({
+    type: [NonLuesActiviteRef],
+    authScopes: { connecte: true },
+    description:
+      'Les notifications non lues de la cloche, comptées par activité. La cloche affiche celles de l’activité ouverte et signale les autres activités.',
+    resolve: async (_root, _args, ctx) => {
+      const where = await filtreDuNiveau(
+        ctx.personne!.id,
+        ctx.organisation!.id,
+        false
+      )
+      const lignes = await prisma.notification.findMany({
+        where: { ...where, lueLe: null },
+        select: {
+          activiteId: true,
+          tache: { select: { perimetre: { select: { activiteId: true } } } },
+          fiche: { select: { activiteId: true } },
+        },
+      })
+      const comptes = new Map<string | null, number>()
+      for (const l of lignes) {
+        // La même règle que le rangement du tiroir (activiteIdDe).
+        const activiteId =
+          l.activiteId ??
+          l.tache?.perimetre.activiteId ??
+          l.fiche?.activiteId ??
+          null
+        comptes.set(activiteId, (comptes.get(activiteId) ?? 0) + 1)
+      }
+      return [...comptes].map(([activiteId, nonLues]) => ({
+        activiteId,
+        nonLues,
+      }))
     },
   }),
 

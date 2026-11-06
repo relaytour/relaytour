@@ -2641,6 +2641,14 @@ type NotificationsAutreOrganisation {
   slug: String!
 }
 
+"""
+Le nombre de notifications non lues de la cloche pour une activité, ou pour l’organisation quand elles ne concernent aucune activité.
+"""
+type NotificationsNonLuesActivite {
+  activiteId: ID
+  nonLues: Int!
+}
+
 type Organigramme {
   admins: [MembreOrganigramme!]!
   adresses: AdressesOrganigramme!
@@ -3356,6 +3364,11 @@ type Query {
     """
     admin: Boolean = false
   ): Int!
+
+  """
+  Les notifications non lues de la cloche, comptées par activité. La cloche affiche celles de l’activité ouverte et signale les autres activités.
+  """
+  nombreNotificationsNonLuesParActivite: [NotificationsNonLuesActivite!]!
 
   """
   Notes des versions publiées, de la plus récente à la plus ancienne, limitées au rôle de la personne dans l’organisation active.

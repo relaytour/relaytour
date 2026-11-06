@@ -63,6 +63,7 @@ describe('requetesPour', () => {
   it('réunit les requêtes d’un lot sans doublon, et ignore une entité inconnue', () => {
     expect(requetesPour(['NOTIFICATION'])).toEqual([
       'NombreNotificationsNonLues',
+      'NombreNotificationsParActivite',
       'ListeNotifications',
       'NombreNotificationsAdmin',
       'ListeNotificationsAdmin',
@@ -111,7 +112,7 @@ describe('requetesPour', () => {
     )
     // Une tâche ou une notification ne relit pas tout.
     expect(requetesPour(['TACHE'])).not.toContain('ListeFiches')
-    expect(requetesPour(['NOTIFICATION'])).toHaveLength(4)
+    expect(requetesPour(['NOTIFICATION'])).toHaveLength(5)
   })
 })
 

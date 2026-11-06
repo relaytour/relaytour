@@ -116,6 +116,7 @@ export const REQUETES_RAFRAICHIES: ReadonlySet<string> = new Set([
   'MesInvitations',
   // Cloche et notifications d'admin (ADR 0032 et 0033).
   'NombreNotificationsNonLues',
+  'NombreNotificationsParActivite',
   'ListeNotifications',
   'NombreNotificationsAdmin',
   'ListeNotificationsAdmin',
