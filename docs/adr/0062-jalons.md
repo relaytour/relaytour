@@ -1,6 +1,6 @@
 # ADR 0062 — Jalons
 
-- **Statut** : proposée
+- **Statut** : acceptée, réalisée
 - **Date** : 2026-11-06
 - Complète l'ADR 0014 (consultation), l'ADR 0025 (phases), l'ADR 0026 (tâches partagées), l'ADR 0059 (priorités) et l'ADR 0061 (rattachement).
 - Ne modifie aucune règle de l'ADR 0026. Une tâche partagée garde au plus une déclinaison par périmètre.

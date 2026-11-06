@@ -95,12 +95,13 @@
             <li><span><span class="libelle">Done</span></span><span>Mark a task as done. You can state who completed it, which only you and the admins can see.</span></li>
             <li><span><span class="libelle">More actions</span></span><span>Mark as in progress, set back to to do, or abandon. A task is never deleted: it is abandoned.</span></li>
           </ul>
+          <p>The “Priorities” panel opens the page. Its “Milestones before the next team check-in” section lists the milestones of the whole activity whose due date is near. Each milestone shows how many of its linked tasks are still open.</p>
           <p class="note">Only you and the admins can see your score. It counts the tasks you completed, those completed on time, the tasks you created and the sheets you wrote.</p>
         </article>
 
         <article class="verre ecran" id="e-retroplanning">
           <div class="ecran-tete"><h3>Timeline</h3><span class="route">/&lt;activity&gt;/retroplanning</span></div>
-          <p>The timeline covers all areas of the activity. It groups the period’s tasks by month, from the nearest to the furthest. The filters limit the display to a group of areas, to open or overdue tasks, to your areas or to the tasks assigned to you.</p>
+          <p>The timeline covers all areas of the activity. It groups the period’s tasks by month, from the nearest to the furthest. The filters limit the display to a group of areas, to open or overdue tasks, to your areas or to the tasks assigned to you. The “Milestones only” filter shows only milestones, which carry a flag.</p>
           <figure>
             <img src="../captures/retroplanning.webp" data-mobile="../captures/mobile/retroplanning.webp" width="1440" height="900" loading="lazy" alt="Timeline screen: tasks grouped by month, with the filters and the summary of the selection." />
             <figcaption>Timeline screen, on the sample organization. The due dates are fictional.</figcaption>
@@ -266,6 +267,15 @@
             <figcaption>A task proposed to an area, on the sample organization.</figcaption>
           </figure>
           <p class="note">Until you accept it, a proposed task does not count in your tasks, in the progress of your area or in your reminders. Each task then keeps its own status: abandoning or editing one does not change the others. An activity admin can add a task to your area without your approval, even after a refusal.</p>
+          <p>A task becomes a <strong>milestone</strong> when it marks a goal to reach. The milestone links the tasks that lead to it, in your area or in another one. Its card shows how many of these tasks are still open, for example “3 open tasks out of 8”. A milestone remains a task: it can be a simple check, or an action that completes the linked tasks, such as “Send the final route”.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Milestone</span><span class="libelle">Turn into a milestone</span></span><span>Mark a task as a milestone, with the “Milestone” box when you create it or from the “More actions” menu. “Remove the milestone” undoes this choice and removes its links, after a confirmation.</span></li>
+            <li><span><span class="libelle">Link tasks</span></span><span>Choose an area, then one or more of its tasks. The link does not change these tasks. Read-only access to their area is enough to link them.</span></li>
+            <li><span><span class="libelle">Milestone: 3 open tasks out of 8</span></span><span>Expand the detail: one linked task per line, with its area and its status. The “Remove” button takes a task out of the milestone, after a confirmation.</span></li>
+            <li><span><span class="libelle">Leads to the milestone</span></span><span>Read, on a linked task, the milestone it serves and its area. The cross removes the link, so your team stays in charge of its tasks.</span></li>
+            <li><span><span class="libelle">Mark the derived tasks as milestones</span></span><span>Turn each derived task into a milestone. Each area links its own tasks to it, and your task shows their count. Your area follows the progress of the others without being appointed to them.</span></li>
+          </ul>
+          <p class="note">A milestone is ticked like any task. If linked tasks are still open, a reminder says so first. A milestone that still waits for tasks moves up in the priorities, and so do the tasks that lead to a nearby milestone.</p>
           <p class="note">The “Refer a person” panel lists your referrals and their state: pending, accepted or declined. You can withdraw a referral while it is pending.</p>
           <p>You can also view the other areas of your activity. Their page shows the tasks, the progress and the appointed people. It shows no sheet and offers no action, and a banner says so. To join an area, express an interest in “All areas”.</p>
           <figure>
