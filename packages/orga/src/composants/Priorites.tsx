@@ -1,4 +1,4 @@
-import { PushpinFilled } from '@ant-design/icons'
+import { FlagOutlined, PushpinFilled } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
 import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
@@ -56,6 +56,7 @@ const PRIORITES = graphql(`
             points
             jours
             nombre
+            titre
             niveau
           }
           tache {
@@ -86,6 +87,27 @@ const PRIORITES = graphql(`
           id
           titre
           echeance
+        }
+      }
+      jalons {
+        id
+        titre
+        echeance
+        statut
+        enRetard
+        perimetre {
+          slug
+          nom
+          couleur
+        }
+        assignes {
+          id
+          nom
+        }
+        resumeJalon {
+          total
+          ouvertes
+          abandonnees
         }
       }
     }
@@ -126,6 +148,13 @@ function useTexteRaison() {
         return t`Déjà en cours`
       case 'AJUSTEMENT':
         return r.niveau ? libelleAjustement(r.niveau) : ''
+      // Jalons (ADR 0062).
+      case 'JALON':
+        return t`${plural(nombre, { one: 'Jalon : # tâche liée reste ouverte', other: 'Jalon : # tâches liées restent ouvertes' })}`
+      case 'MENE_A_UN_JALON': {
+        const titre = r.titre ?? ''
+        return t`Mène au jalon « ${titre} »`
+      }
     }
   }
 }
@@ -244,6 +273,50 @@ function BlocPerimetre({
   )
 }
 
+type JalonLu = NonNullable<PrioritesQuery['priorites']>['jalons'][number]
+
+/**
+ * Les jalons ouverts de l'horizon, tous périmètres confondus (ADR 0062). Chaque
+ * jalon indique combien de ses tâches liées restent ouvertes.
+ */
+function JalonsDeLHorizon({
+  jalons,
+  moiId,
+  editionId,
+}: {
+  jalons: readonly JalonLu[]
+  moiId: string
+  editionId: string
+}) {
+  const { t } = useLingui()
+  return (
+    <section className="rt-priorites-perimetre rt-priorites-jalons">
+      <h3 className="rt-priorites-titre">
+        <FlagOutlined aria-hidden />
+        <Trans>Jalons avant le prochain point</Trans>
+      </h3>
+      <div className="rt-priorites-liste">
+        {jalons.map(jalon => {
+          const { total, ouvertes, abandonnees } = jalon.resumeJalon
+          const gardees = total - abandonnees
+          return (
+            <div key={jalon.id} className="rt-priorite">
+              <ul className="rt-liste-liens">
+                <LigneTache tache={jalon} moiId={moiId} editionId={editionId} />
+              </ul>
+              <p className="rt-priorite-raisons">
+                {gardees === 0
+                  ? t`Aucune tâche liée`
+                  : t`${plural(ouvertes, { one: `# tâche ouverte sur ${gardees}`, other: `# tâches ouvertes sur ${gardees}` })}`}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 /** Le panneau « Priorités » d'une période. */
 export default function Priorites({
   editionId,
@@ -313,8 +386,8 @@ export default function Priorites({
               </>
             ) : (
               <Trans>
-                Aucun point d’équipe n’est prévu : les priorités couvrent les
-                14 prochains jours.
+                Aucun point d’équipe n’est prévu : les priorités couvrent les 14
+                prochains jours.
               </Trans>
             )}
           </p>
@@ -368,6 +441,13 @@ export default function Priorites({
             </p>
           ) : (
             <div className="rt-priorites">
+              {lues.jalons.length > 0 && (
+                <JalonsDeLHorizon
+                  jalons={lues.jalons}
+                  moiId={moiId}
+                  editionId={editionId}
+                />
+              )}
               {nombre === 0 && (
                 <p className="rt-texte-secondaire">
                   <Trans>Aucune priorité jusqu’au {fin}.</Trans>

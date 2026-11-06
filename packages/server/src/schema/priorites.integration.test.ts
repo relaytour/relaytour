@@ -66,10 +66,11 @@ const PRIORITES = `query ($e: ID!) {
     prochainPoint { id }
     perimetres {
       perimetre { id }
-      priorites { tache { id ajustement { niveau } } score raisons { code points } }
+      priorites { tache { id ajustement { niveau } } score raisons { code points nombre titre } }
       autres
       ensuite { id }
     }
+    jalons { id }
   }
 }`
 
@@ -85,11 +86,17 @@ interface Lues {
     priorites: {
       tache: { id: string; ajustement: { niveau: string } | null }
       score: number
-      raisons: { code: string; points: number }[]
+      raisons: {
+        code: string
+        points: number
+        nombre: number | null
+        titre: string | null
+      }[]
     }[]
     autres: number
     ensuite: { id: string } | null
   }[]
+  jalons: { id: string }[]
 }
 
 async function lire(userId: string) {
@@ -288,6 +295,9 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  await prisma.lienJalon.deleteMany({
+    where: { jalon: { editionId: ids.edition } },
+  })
   await prisma.journal.deleteMany({ where: { editionId: ids.edition } })
   await prisma.reunion.deleteMany({ where: { editionId: ids.edition } })
   await prisma.tache.deleteMany({
@@ -356,6 +366,56 @@ describe('priorites', () => {
       await prisma.tache.update({
         where: { id: ids.declinaison },
         data: { statut: 'A_FAIRE' },
+      })
+    }
+  })
+
+  // Jalons (ADR 0062) : un jalon du basket, dans l'horizon, lie la déclinaison.
+  it('compte les jalons et liste ceux de l’horizon', async () => {
+    const jalon = await prisma.tache.create({
+      data: {
+        editionId: ids.edition,
+        perimetreId: ids.basket,
+        titre: 'Basket prêt',
+        echeance: dans(10),
+        jalonLe: new Date(),
+        liensJalon: {
+          create: [{ tacheId: ids.declinaison }, { tacheId: ids.basketLoin }],
+        },
+      },
+    })
+    // Un jalon au-delà de l'horizon n'entre pas dans la liste.
+    const lointain = await prisma.tache.create({
+      data: {
+        editionId: ids.edition,
+        perimetreId: ids.natation,
+        titre: 'Saison prête',
+        echeance: dans(80),
+        jalonLe: new Date(),
+      },
+    })
+    try {
+      const lues = await lire(ids.chloe)
+      expect(lues.jalons.map(j => j.id)).toEqual([jalon.id])
+      const basket = lues.de(ids.basket)
+      const raisons = (id: string) =>
+        basket.priorites.find(p => p.tache.id === id)!.raisons
+      expect(raisons(jalon.id)).toContainEqual({
+        code: 'JALON',
+        points: 5,
+        nombre: 2,
+        titre: null,
+      })
+      expect(raisons(ids.declinaison)).toContainEqual({
+        code: 'MENE_A_UN_JALON',
+        points: 10,
+        nombre: null,
+        titre: 'Basket prêt',
+      })
+    } finally {
+      await prisma.lienJalon.deleteMany({ where: { jalonId: jalon.id } })
+      await prisma.tache.deleteMany({
+        where: { id: { in: [jalon.id, lointain.id] } },
       })
     }
   })

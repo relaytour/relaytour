@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-11-06-orga-les-jalons-entrent-dans-les-priorites",
+          "date": "2026-11-06",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les jalons entrent dans les priorités",
+            "texte": "Le panneau « Priorités » de « Mon espace » liste les jalons avant le prochain point d'équipe. Chaque jalon indique combien de ses tâches liées restent ouvertes. Un jalon qui attend encore des tâches gagne une place dans les priorités, et une tâche qui mène à un jalon proche aussi. Le message « Priorités » reprend la liste des jalons.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Milestones enter the priorities",
+            "texte": "The \"Priorities\" panel of \"My space\" lists the milestones before the next team check-in. Each milestone shows how many of its linked tasks are still open. A milestone that still waits for tasks moves up in the priorities, and so does a task that leads to a nearby milestone. The \"Priorities\" message includes the list of milestones.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-11-05-orga-les-priorites-et-les-taches-restent-lisibles-dans-un-panneau",
           "date": "2026-11-05",
           "type": "correctif",

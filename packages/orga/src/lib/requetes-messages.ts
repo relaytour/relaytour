@@ -106,6 +106,19 @@ export const PRIORITES_MESSAGE = graphql(`
           }
         }
       }
+      jalons {
+        titre
+        echeance
+        perimetre {
+          id
+          nom
+        }
+        resumeJalon {
+          total
+          ouvertes
+          abandonnees
+        }
+      }
     }
   }
 `)

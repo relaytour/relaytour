@@ -627,6 +627,10 @@ msgid "{nombre, plural, one {# séquence} other {# séquences}}"
 msgstr "{nombre, plural, one {# slot} other {# slots}}"
 
 #: src/composants/Priorites.tsx
+msgid "{nombre, plural, one {Jalon : # tâche liée reste ouverte} other {Jalon : # tâches liées restent ouvertes}}"
+msgstr "{nombre, plural, one {Milestone: # linked task is still open} other {Milestone: # linked tasks are still open}}"
+
+#: src/composants/Priorites.tsx
 msgid "{nombre, plural, one {Reprise dans # autre périmètre} other {Reprise dans # autres périmètres}}"
 msgstr "{nombre, plural, one {Taken up in # other area} other {Taken up in # other areas}}"
 
@@ -787,6 +791,11 @@ msgstr "{organisation}: your access to the organizer workspace"
 msgid "{oui} oui · {siBesoin} si besoin · {non} non"
 msgstr "{oui} yes · {siBesoin} if needed · {non} no"
 
+#: src/composants/Priorites.tsx
+#: src/lib/messages.ts
+msgid "{ouvertes, plural, one {# tâche ouverte sur {gardees}} other {# tâches ouvertes sur {gardees}}}"
+msgstr "{ouvertes, plural, one {# open task out of {gardees}} other {# open tasks out of {gardees}}}"
+
 #: src/pages/Charge.tsx
 msgid "{ouvertes, plural, one {# tâche ouverte} other {# tâches ouvertes}}"
 msgstr "{ouvertes, plural, one {# open task} other {# open tasks}}"
@@ -802,6 +811,10 @@ msgstr "{participants, plural, one {{repondants} of # person has responded.} oth
 #: src/lib/messages.ts
 msgid "{perimetre} : {titreTache}"
 msgstr "{perimetre}: {titreTache}"
+
+#: src/lib/messages.ts
+msgid "{perimetre}, pour le {echeance}"
+msgstr "{perimetre}, due {echeance}"
 
 #: src/composants/ModeleDeDepart.tsx
 msgid "{perimetres, plural, one {# périmètre créé.} other {# périmètres créés.}}"
@@ -2528,6 +2541,14 @@ msgstr "No task in this area can be linked. A derived task or a shared task cann
 #: src/pages/Fiche.tsx
 msgid "Aucune tâche de l’édition en cours ne renvoie à cette fiche."
 msgstr "No task in the current edition points to this sheet."
+
+#: src/lib/messages.ts
+msgid "aucune tâche liée"
+msgstr "no linked task"
+
+#: src/composants/Priorites.tsx
+msgid "Aucune tâche liée"
+msgstr "No linked task"
 
 #: src/composants/EcrireMessage.tsx
 msgid "Aucune tâche n’a dépassé son échéance."
@@ -5373,6 +5394,11 @@ msgstr "I agree that {nomOrganisation} stores this information to organize the a
 msgid "J’accepte que l’import remplace ces modifications. Les fiches modifiées dans Relaytour restent telles quelles."
 msgstr "I accept that the import replaces these changes. Sheets changed in Relaytour stay as they are."
 
+#: src/composants/Priorites.tsx
+#: src/lib/messages.ts
+msgid "Jalons avant le prochain point"
+msgstr "Milestones before the next team check-in"
+
 #: src/pages/Preferences.tsx
 msgid "Jamais"
 msgstr "Never"
@@ -7161,6 +7187,10 @@ msgstr "Same email address"
 #: src/pages/ImportBenevoles.tsx
 msgid "Même téléphone"
 msgstr "Same phone number"
+
+#: src/composants/Priorites.tsx
+msgid "Mène au jalon « {titre} »"
+msgstr "Leads to the milestone “{titre}”"
 
 #: src/composants/EditeurMarkdown.tsx
 msgid "Mentionner"

@@ -35,6 +35,7 @@ import {
   OBJET_MAX,
   champParDefaut,
   composer,
+  listerJalons,
   listerPriorites,
   listerTaches,
   passagesACompleter,
@@ -269,22 +270,44 @@ function Redaction({
                 )
                 .join('\n\n'),
       priorites: priorites
-        ? listerPriorites(
-            priorites.perimetres
-              .filter(
-                p => perimetreId === undefined || p.perimetre.id === perimetreId
-              )
-              .map(p => ({
-                perimetre: p.perimetre.nom,
-                referents: p.perimetre.referents.map(r => r.nom),
-                taches: p.priorites.map(({ tache }) => ({
-                  titre: tache.titre,
-                  echeance: tache.echeance ? dateCourte(tache.echeance) : null,
-                  assignes: tache.assignes.map(a => a.nom),
+        ? [
+            // Les jalons de l'horizon précèdent les priorités (ADR 0062).
+            listerJalons(
+              priorites.jalons
+                .filter(
+                  j =>
+                    perimetreId === undefined || j.perimetre.id === perimetreId
+                )
+                .map(j => ({
+                  titre: j.titre,
+                  perimetre: j.perimetre.nom,
+                  echeance: j.echeance ? dateCourte(j.echeance) : null,
+                  ouvertes: j.resumeJalon.ouvertes,
+                  gardees: j.resumeJalon.total - j.resumeJalon.abandonnees,
+                }))
+            ),
+            listerPriorites(
+              priorites.perimetres
+                .filter(
+                  p =>
+                    perimetreId === undefined || p.perimetre.id === perimetreId
+                )
+                .map(p => ({
+                  perimetre: p.perimetre.nom,
+                  referents: p.perimetre.referents.map(r => r.nom),
+                  taches: p.priorites.map(({ tache }) => ({
+                    titre: tache.titre,
+                    echeance: tache.echeance
+                      ? dateCourte(tache.echeance)
+                      : null,
+                    assignes: tache.assignes.map(a => a.nom),
+                  })),
                 })),
-              })),
-            t`Aucune priorité n’est prévue avant le prochain point.`
-          )
+              t`Aucune priorité n’est prévue avant le prochain point.`
+            ),
+          ]
+            .filter(Boolean)
+            .join('\n\n')
         : null,
       prochainPoint,
       invitationFormulaire: activite.formulaireOuvert
