@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.29.0
 fr:
   titre: >-
     Une tâche devient un jalon qui suit les tâches qui y mènent

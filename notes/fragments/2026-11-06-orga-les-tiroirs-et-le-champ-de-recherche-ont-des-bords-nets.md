@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.29.0
 fr:
   titre: >-
     Les tiroirs et le champ de recherche ont des bords nets

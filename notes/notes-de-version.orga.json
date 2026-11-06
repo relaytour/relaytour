@@ -2,10 +2,10 @@
   "schemaVersion": 5,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.28.0",
+  "version": "0.29.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.29.0",
       "notes": [
         {
           "id": "2026-11-06-orga-une-tache-devient-un-jalon",

@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.29.0
 fr:
   titre: >-
     Les mails de rappel se rangent par périmètre
