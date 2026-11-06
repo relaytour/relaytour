@@ -55,6 +55,7 @@ import {
   dateLongue,
   ranger,
   rangerRappels,
+  titreDuGroupe,
 } from '../lib/suivi-courriel.ts'
 
 import { rendre, type Variables } from './rendu.ts'
@@ -787,7 +788,7 @@ export async function composer(
         return {
           groupe: {
             cle: periode === null ? activite.id : t.editionId,
-            titre: periode ?? activite.nom,
+            titre: titreDuGroupe(activite.nom, periode),
           },
           perimetre: {
             id: t.perimetre.id,
@@ -929,9 +930,10 @@ export async function composer(
     }
     const groupe = {
       cle: edition.id,
-      titre: plusieurs.has(edition.activiteId)
-        ? `${edition.activite.nom} · ${edition.nom}`
-        : edition.activite.nom,
+      titre: titreDuGroupe(
+        edition.activite.nom,
+        plusieurs.has(edition.activiteId) ? edition.nom : null
+      ),
     }
     const lignes = retenus.flatMap(p => {
       const perimetre = {

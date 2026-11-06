@@ -356,6 +356,26 @@ describe('mail des priorités', () => {
     expect(await envoisDe(mardi)).toEqual([ids.coord, ids.membre].sort())
   })
 
+  it('compte un point d’équipe du lundi matin déjà passé à l’heure du job', async () => {
+    const semaineSuivante = new Date('4021-06-14T05:00:00Z')
+    expect(await envoisDe(semaineSuivante)).toEqual(
+      [ids.coord, ids.membre].sort()
+    )
+    const point = await prisma.reunion.create({
+      data: {
+        organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
+        editionId: ids.edition,
+        titre: 'Point du lundi matin',
+        debut: new Date('4021-06-14T04:00:00Z'),
+        fin: new Date('4021-06-14T04:30:00Z'),
+        pointEquipe: true,
+      },
+    })
+    expect(await envoisDe(semaineSuivante)).toEqual([])
+    await prisma.reunion.delete({ where: { id: point.id } })
+  })
+
   it('reprend les seuls périmètres de la personne, rangés par périmètre', async () => {
     const message = await composer(prisma, {
       sorte: 'priorites',

@@ -9,6 +9,7 @@ import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { aujourdhui } from '../lib/droits.ts'
 import { heureLocale } from '../lib/heures.ts'
 import { journal } from '../lib/journal.ts'
+import { moduleActif } from '../lib/modules.ts'
 import { publierNotification } from '../lib/flux.ts'
 import { pousser } from '../lib/push-file.ts'
 
@@ -312,14 +313,16 @@ export async function prioritesAEnvoyer(
     select: {
       id: true,
       activiteId: true,
-      // Les points d'équipe des huit prochains jours suffisent à décider.
+      // Les points d'équipe d'aujourd'hui aux huit prochains jours suffisent à
+      // décider. Un point d'aujourd'hui, même passé à l'heure du job, compte pour
+      // la semaine.
       reunions: {
         where: {
           perimetreId: null,
           pointEquipe: true,
           statut: 'PREVUE',
           debut: {
-            gt: maintenant,
+            gt: new Date(maintenant.getTime() - JOUR),
             lt: new Date(maintenant.getTime() + 9 * JOUR),
           },
         },
@@ -356,9 +359,14 @@ export async function prioritesAEnvoyer(
   const finDeSemaine = jourPlus(jour, 6)
   const resultat: PrioritesAEnvoyer[] = []
   for (const edition of editions) {
-    const jours = edition.reunions.map(
-      r => heureLocale(r.debut, organisation.fuseauHoraire).jour
-    )
+    // Sans module Agenda, aucune réunion ne compte comme point d'équipe, comme
+    // dans le calcul des priorités (ADR 0059) : le mail part alors le lundi.
+    const agenda = await moduleActif(edition.activiteId, 'AGENDA', prisma)
+    const jours = agenda
+      ? edition.reunions.map(
+          r => heureLocale(r.debut, organisation.fuseauHoraire).jour
+        )
+      : []
     const veille = jours.includes(demain)
     const lundiSansPoint =
       lundi && !jours.some(j => j >= jour && j <= finDeSemaine)

@@ -197,6 +197,14 @@ export function avecDeclinaisons(
     : { texte, retrait: [resumeDeclinaisons(compte)] }
 }
 
+/** « Rencontres », ou « Rencontres · 2027 » quand l'activité a plusieurs périodes ouvertes. */
+export function titreDuGroupe(
+  activite: string,
+  periode: string | null
+): string {
+  return periode === null ? activite : `${activite} · ${periode}`
+}
+
 /** Les activités qui ont plus d'une période non archivée : leurs mails nomment la période. */
 export async function activitesAPlusieursPeriodes(
   prisma: PrismaClient,
@@ -257,8 +265,13 @@ export async function rangerRappels(
   for (const n of notifications) {
     const c = parId.get(n.id)
     if (c === undefined) continue
+    // Deux activités peuvent avoir une période de même nom : le groupe se repère
+    // à l'activité, et son titre garde le nom de l'activité.
     const groupe = c.activite
-      ? { cle: c.periode ?? c.activite.id, titre: c.periode ?? c.activite.nom }
+      ? {
+          cle: `${c.activite.id}:${c.periode ?? ''}`,
+          titre: titreDuGroupe(c.activite.nom, c.periode),
+        }
       : { cle: '', titre: sansActivite }
     const perimetreId = n.perimetreId ?? n.tache?.perimetreId ?? null
     const info = perimetreId ? infos.get(perimetreId) : undefined
