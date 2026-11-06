@@ -34,6 +34,15 @@ export const NOMBRE_NOTIFICATIONS = graphql(`
   }
 `)
 
+export const NOMBRE_NOTIFICATIONS_PAR_ACTIVITE = graphql(`
+  query NombreNotificationsParActivite {
+    nombreNotificationsNonLuesParActivite {
+      activiteId
+      nonLues
+    }
+  }
+`)
+
 export const NOMBRE_NOTIFICATIONS_ADMIN = graphql(`
   query NombreNotificationsAdmin {
     nombreNotificationsNonLues(admin: true)
@@ -43,6 +52,14 @@ export const NOMBRE_NOTIFICATIONS_ADMIN = graphql(`
 export const LISTE_NOTIFICATIONS = graphql(`
   query ListeNotifications {
     notifications(limite: 60) {
+      ...NotificationAffichee
+    }
+  }
+`)
+
+export const LISTE_NOTIFICATIONS_ACTIVITE = graphql(`
+  query ListeNotificationsActivite($activiteId: ID!) {
+    notifications(limite: 60, activiteId: $activiteId) {
       ...NotificationAffichee
     }
   }

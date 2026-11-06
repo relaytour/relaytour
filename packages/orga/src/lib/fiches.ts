@@ -18,7 +18,8 @@ export const LIBELLES_SOURCE: Record<SourceFiche, MessageDescriptor> = {
   ESPACE_FICHIERS: msg`Fournisseur cloud`,
   DEPOT: msg({
     message: 'Fichier déposé',
-    comment: 'Origine d’une version de fiche : un fichier déposé dans Relaytour',
+    comment:
+      'Origine d’une version de fiche : un fichier déposé dans Relaytour',
   }),
 }
 

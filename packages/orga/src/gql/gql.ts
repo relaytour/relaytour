@@ -176,8 +176,10 @@ type Documents = {
     "\n  query AdressesEquipe {\n    equipe {\n      id\n      nom\n      email\n    }\n  }\n": typeof types.AdressesEquipeDocument,
     "\n  fragment NotificationAffichee on Notification {\n    id\n    type\n    niveau\n    message\n    lien\n    lue\n    creeLe\n    periode\n    activite {\n      id\n      slug\n      nom\n    }\n    perimetre {\n      id\n      slug\n      nom\n      couleur\n    }\n  }\n": typeof types.NotificationAfficheeFragmentDoc,
     "\n  query NombreNotificationsNonLues {\n    nombreNotificationsNonLues\n  }\n": typeof types.NombreNotificationsNonLuesDocument,
+    "\n  query NombreNotificationsParActivite {\n    nombreNotificationsNonLuesParActivite {\n      activiteId\n      nonLues\n    }\n  }\n": typeof types.NombreNotificationsParActiviteDocument,
     "\n  query NombreNotificationsAdmin {\n    nombreNotificationsNonLues(admin: true)\n  }\n": typeof types.NombreNotificationsAdminDocument,
     "\n  query ListeNotifications {\n    notifications(limite: 60) {\n      ...NotificationAffichee\n    }\n  }\n": typeof types.ListeNotificationsDocument,
+    "\n  query ListeNotificationsActivite($activiteId: ID!) {\n    notifications(limite: 60, activiteId: $activiteId) {\n      ...NotificationAffichee\n    }\n  }\n": typeof types.ListeNotificationsActiviteDocument,
     "\n  query ListeNotificationsAdmin {\n    notifications(admin: true, limite: 200) {\n      ...NotificationAffichee\n    }\n  }\n": typeof types.ListeNotificationsAdminDocument,
     "\n  query NotificationsAutresOrganisations {\n    notificationsAutresOrganisations {\n      slug\n      nom\n      nonLues\n    }\n  }\n": typeof types.NotificationsAutresOrganisationsDocument,
     "\n  mutation MarquerNotificationsLues(\n    $ids: [ID!]\n    $admin: Boolean\n    $activiteId: ID\n    $perimetreId: ID\n  ) {\n    marquerNotificationsLues(\n      ids: $ids\n      admin: $admin\n      activiteId: $activiteId\n      perimetreId: $perimetreId\n    )\n  }\n": typeof types.MarquerNotificationsLuesDocument,
@@ -442,8 +444,10 @@ const documents: Documents = {
     "\n  query AdressesEquipe {\n    equipe {\n      id\n      nom\n      email\n    }\n  }\n": types.AdressesEquipeDocument,
     "\n  fragment NotificationAffichee on Notification {\n    id\n    type\n    niveau\n    message\n    lien\n    lue\n    creeLe\n    periode\n    activite {\n      id\n      slug\n      nom\n    }\n    perimetre {\n      id\n      slug\n      nom\n      couleur\n    }\n  }\n": types.NotificationAfficheeFragmentDoc,
     "\n  query NombreNotificationsNonLues {\n    nombreNotificationsNonLues\n  }\n": types.NombreNotificationsNonLuesDocument,
+    "\n  query NombreNotificationsParActivite {\n    nombreNotificationsNonLuesParActivite {\n      activiteId\n      nonLues\n    }\n  }\n": types.NombreNotificationsParActiviteDocument,
     "\n  query NombreNotificationsAdmin {\n    nombreNotificationsNonLues(admin: true)\n  }\n": types.NombreNotificationsAdminDocument,
     "\n  query ListeNotifications {\n    notifications(limite: 60) {\n      ...NotificationAffichee\n    }\n  }\n": types.ListeNotificationsDocument,
+    "\n  query ListeNotificationsActivite($activiteId: ID!) {\n    notifications(limite: 60, activiteId: $activiteId) {\n      ...NotificationAffichee\n    }\n  }\n": types.ListeNotificationsActiviteDocument,
     "\n  query ListeNotificationsAdmin {\n    notifications(admin: true, limite: 200) {\n      ...NotificationAffichee\n    }\n  }\n": types.ListeNotificationsAdminDocument,
     "\n  query NotificationsAutresOrganisations {\n    notificationsAutresOrganisations {\n      slug\n      nom\n      nonLues\n    }\n  }\n": types.NotificationsAutresOrganisationsDocument,
     "\n  mutation MarquerNotificationsLues(\n    $ids: [ID!]\n    $admin: Boolean\n    $activiteId: ID\n    $perimetreId: ID\n  ) {\n    marquerNotificationsLues(\n      ids: $ids\n      admin: $admin\n      activiteId: $activiteId\n      perimetreId: $perimetreId\n    )\n  }\n": types.MarquerNotificationsLuesDocument,
@@ -1211,11 +1215,19 @@ export function graphql(source: "\n  query NombreNotificationsNonLues {\n    nom
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  query NombreNotificationsParActivite {\n    nombreNotificationsNonLuesParActivite {\n      activiteId\n      nonLues\n    }\n  }\n"): (typeof documents)["\n  query NombreNotificationsParActivite {\n    nombreNotificationsNonLuesParActivite {\n      activiteId\n      nonLues\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  query NombreNotificationsAdmin {\n    nombreNotificationsNonLues(admin: true)\n  }\n"): (typeof documents)["\n  query NombreNotificationsAdmin {\n    nombreNotificationsNonLues(admin: true)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query ListeNotifications {\n    notifications(limite: 60) {\n      ...NotificationAffichee\n    }\n  }\n"): (typeof documents)["\n  query ListeNotifications {\n    notifications(limite: 60) {\n      ...NotificationAffichee\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query ListeNotificationsActivite($activiteId: ID!) {\n    notifications(limite: 60, activiteId: $activiteId) {\n      ...NotificationAffichee\n    }\n  }\n"): (typeof documents)["\n  query ListeNotificationsActivite($activiteId: ID!) {\n    notifications(limite: 60, activiteId: $activiteId) {\n      ...NotificationAffichee\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

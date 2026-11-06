@@ -9,6 +9,7 @@ import { useOrganisation } from '../lib/organisation'
 import {
   grouperParActivite,
   grouperParPerimetre,
+  placerActiviteCourante,
   type Groupe,
 } from '../lib/rangement-notifications'
 import { langueActive } from '../lib/langue'
@@ -186,13 +187,16 @@ function EnTete({
 /**
  * Les notifications rangées par activité, en groupes repliables (ADR 0032). Avec
  * `parPerimetre`, chaque activité se range à son tour par périmètre (ADR 0033).
- * Un groupe sans notification non lue s'ouvre replié.
+ * Un groupe sans notification non lue s'ouvre replié. Avec `activiteCourante`,
+ * l'activité affichée vient en tête et s'ouvre dépliée, même vide ; les autres
+ * activités s'ouvrent repliées.
  */
 export default function ListeNotifications({
   notifications,
   sansActivite,
   parPerimetre = false,
   avecRole = false,
+  activiteCourante,
   onOuvrir,
   onMarquer,
 }: {
@@ -201,6 +205,8 @@ export default function ListeNotifications({
   sansActivite: string
   parPerimetre?: boolean
   avecRole?: boolean
+  /** L'activité affichée, placée en tête et seule dépliée. */
+  activiteCourante?: { id: string; nom: string }
   onOuvrir: (n: Notification) => void
   onMarquer: (cible: CibleGroupe) => void
 }) {
@@ -232,12 +238,23 @@ export default function ListeNotifications({
     </ul>
   )
   const groupes = grouperParActivite(notifications, sansActivite)
+  const ranges =
+    activiteCourante === undefined
+      ? groupes
+      : placerActiviteCourante(groupes, activiteCourante)
+  // La cloche ne déplie que l'activité affichée. L'écran des admins déplie
+  // chaque groupe qui a des non lues.
+  const deplies = ranges.filter(g =>
+    activiteCourante === undefined
+      ? g.nonLues > 0
+      : g.activiteId === activiteCourante.id
+  )
   return (
     <Collapse
       ghost
       className="rt-notifications"
-      defaultActiveKey={groupes.filter(g => g.nonLues > 0).map(g => g.cle)}
-      items={groupes.map(g => ({
+      defaultActiveKey={deplies.map(g => g.cle)}
+      items={ranges.map(g => ({
         key: g.cle,
         label: (
           <EnTete
@@ -276,6 +293,10 @@ export default function ListeNotifications({
                 children: lignes(p.elements, false),
               }))}
             />
+          ) : g.elements.length === 0 ? (
+            <Typography.Text type="secondary">
+              <Trans>Aucune notification dans cette activité.</Trans>
+            </Typography.Text>
           ) : (
             lignes(g.elements, true)
           ),

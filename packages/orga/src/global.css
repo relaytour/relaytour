@@ -771,6 +771,12 @@ button.rt-ligne-lien {
   border-radius: var(--rt-rayon-panneau) 0 0 var(--rt-rayon-panneau);
 }
 
+/* L'ombre d'antd se pose sur le conteneur carré du tiroir et déborde autour de
+   l'arrondi : le tiroir garde la seule ombre du verre. */
+.ant-drawer .ant-drawer-content-wrapper {
+  box-shadow: none;
+}
+
 .ant-drawer-left .ant-drawer-section {
   border-radius: 0 var(--rt-rayon-panneau) var(--rt-rayon-panneau) 0;
 }
@@ -2334,6 +2340,18 @@ button.rt-ligne-declinaisons {
   border-radius: 999px !important;
 }
 
+/* Une saisie semi-automatique qui porte son propre champ laisse ce champ dessiner
+   le fond et la bordure : antd 6 peint aussi la racine du sélecteur, avec un
+   autre arrondi. */
+/* Les classes répétées l'emportent sur les états de survol et de focus d'antd. */
+.ant-select.ant-select-outlined.ant-select-auto-complete:has(
+    .ant-input-affix-wrapper
+  ) {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
 .rt-resultat {
   display: flex;
   align-items: center;
@@ -2359,6 +2377,60 @@ button.rt-ligne-declinaisons {
 
 .ant-btn.rt-bouton-barre:not(:disabled):hover {
   background: rgba(var(--rt-encre-rgb), 0.07);
+}
+
+/* La cloche de l'en-tête : la pastille des autres activités se pose en bas à
+   droite, plus petite et dans la couleur primaire. */
+.rt-cloche {
+  position: relative;
+  display: inline-flex;
+}
+
+.rt-cloche-autres {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 16px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: var(--rt-primaire);
+  box-shadow: 0 0 0 1px var(--rt-sol-transition);
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 14px;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* La pastille des notifications d'admin, en haut à gauche de la cloche. */
+.rt-cloche-admin {
+  position: absolute;
+  top: -2px;
+  left: -6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--rt-alerte);
+  box-shadow: 0 0 0 1px var(--rt-sol-transition);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  pointer-events: none;
+}
+
+.rt-cloche-admin .anticon {
+  font-size: 9px;
+}
+
+.ant-btn.rt-cloche-pied {
+  justify-content: center;
+  gap: 8px;
 }
 
 .rt-compte-bouton {

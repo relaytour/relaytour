@@ -4,6 +4,7 @@ import {
   grouperParActivite,
   grouperParPerimetre,
   type NotificationRangee,
+  placerActiviteCourante,
 } from './rangement-notifications'
 
 const rencontres = { id: 'a1', slug: 'rencontres', nom: 'Rencontres' }
@@ -65,6 +66,39 @@ describe('grouperParPerimetre', () => {
       ['Toute l’activité', null, 'a1', null],
       ['Basket', 'p2', 'a1', null],
       ['Natation', 'p1', 'a1', '#123456'],
+    ])
+  })
+})
+
+describe('placerActiviteCourante', () => {
+  const notifications = [
+    n('1', rencontres, natation),
+    n('2', club, null),
+    n('3', null, null),
+  ]
+
+  it('place l’activité affichée en tête, puis le groupe sans activité', () => {
+    const groupes = placerActiviteCourante(
+      grouperParActivite(notifications, 'Organisation'),
+      club
+    )
+    expect(groupes.map(g => g.titre)).toEqual([
+      'Club',
+      'Organisation',
+      'Rencontres',
+    ])
+  })
+
+  it('garde un groupe vide pour l’activité affichée sans notification', () => {
+    const groupes = placerActiviteCourante(
+      grouperParActivite([n('3', null, null)], 'Organisation'),
+      club
+    )
+    expect(
+      groupes.map(g => [g.cle, g.titre, g.nonLues, g.elements.length])
+    ).toEqual([
+      ['a2', 'Club', 0, 0],
+      ['', 'Organisation', 1, 1],
     ])
   })
 })
