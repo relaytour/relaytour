@@ -95,12 +95,13 @@
             <li><span><span class="libelle">Faite</span></span><span>Marquer une tâche comme faite. Vous pouvez indiquer qui l'a réalisée, information visible par vous et par les admins.</span></li>
             <li><span><span class="libelle">Autres actions</span></span><span>Marquer en cours, remettre à faire ou abandonner. Une tâche ne se supprime pas : elle s'abandonne.</span></li>
           </ul>
+          <p>Le panneau « Priorités » ouvre la page. Sa section « Jalons avant le prochain point » liste les jalons de toute l'activité dont l'échéance approche. Chaque jalon indique combien de ses tâches liées restent ouvertes.</p>
           <p class="note">Votre score n'est visible que par vous et par les admins. Il compte les tâches réalisées, celles rendues à temps, les tâches créées et les fiches écrites.</p>
         </article>
 
         <article class="verre ecran" id="e-retroplanning">
           <div class="ecran-tete"><h3>Rétroplanning</h3><span class="route">/&lt;activité&gt;/retroplanning</span></div>
-          <p>Le rétroplanning couvre tous les périmètres de l'activité. Il regroupe les tâches de la période par mois, de la plus proche à la plus lointaine. Les filtres limitent l'affichage à un groupe de périmètres, aux tâches ouvertes ou en retard, à vos périmètres ou aux tâches qui vous sont assignées.</p>
+          <p>Le rétroplanning couvre tous les périmètres de l'activité. Il regroupe les tâches de la période par mois, de la plus proche à la plus lointaine. Les filtres limitent l'affichage à un groupe de périmètres, aux tâches ouvertes ou en retard, à vos périmètres ou aux tâches qui vous sont assignées. Le filtre « Jalons seuls » n'affiche que les jalons, que signale un drapeau.</p>
           <figure>
             <img src="../captures/retroplanning.webp" data-mobile="../captures/mobile/retroplanning.webp" width="1440" height="900" loading="lazy" alt="Écran Rétroplanning : les tâches regroupées par mois, avec les filtres et le récapitulatif de la sélection." />
             <figcaption>Écran Rétroplanning, sur l'organisation d'exemple. Les échéances sont fictives.</figcaption>
@@ -266,6 +267,15 @@
             <figcaption>Une tâche proposée à un périmètre, sur l'organisation d'exemple.</figcaption>
           </figure>
           <p class="note">Tant que vous ne l'avez pas acceptée, une tâche proposée ne compte ni dans vos tâches, ni dans l'avancement de votre périmètre, ni dans vos rappels. Chaque tâche garde ensuite son statut : abandonner ou modifier l'une ne change pas les autres. Un admin de l'activité peut ajouter une tâche à votre périmètre sans votre accord, même après un refus.</p>
+          <p>Une tâche devient un <strong>jalon</strong> quand elle marque un objectif à atteindre. Le jalon lie les tâches qui y mènent, dans votre périmètre ou dans un autre. Sa carte indique combien de ces tâches restent ouvertes, par exemple « 3 tâches ouvertes sur 8 ». Un jalon reste une tâche : il peut être une simple vérification, ou une action qui achève les tâches liées, comme « Envoyer le parcours finalisé ».</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Jalon</span><span class="libelle">Transformer en jalon</span></span><span>Marquer une tâche comme jalon, par la case « Jalon » à sa création ou depuis le menu « Autres actions ». « Retirer le jalon » défait ce choix et retire ses liens, après une confirmation.</span></li>
+            <li><span><span class="libelle">Lier des tâches</span></span><span>Choisir un périmètre, puis une ou plusieurs de ses tâches. Le lien ne change pas ces tâches. Il suffit de consulter leur périmètre pour les lier.</span></li>
+            <li><span><span class="libelle">Jalon : 3 tâches ouvertes sur 8</span></span><span>Déplier le détail : une tâche liée par ligne, avec son périmètre et son statut. Le bouton « Retirer » sort une tâche du jalon, après une confirmation.</span></li>
+            <li><span><span class="libelle">Mène au jalon</span></span><span>Lire, sur une tâche liée, le jalon qu'elle sert et son périmètre. La croix retire le lien : votre équipe garde ainsi la main sur ses tâches.</span></li>
+            <li><span><span class="libelle">Marquer les déclinaisons comme jalons</span></span><span>Faire de chaque déclinaison un jalon. Chaque périmètre y lie ses propres tâches, et votre tâche affiche leur décompte. Votre périmètre suit ainsi l'avancement des autres sans y être affecté.</span></li>
+          </ul>
+          <p class="note">Un jalon se coche comme toute tâche. Si des tâches liées restent ouvertes, un rappel l'indique d'abord. Un jalon qui attend encore des tâches gagne une place dans les priorités, et les tâches qui mènent à un jalon proche aussi.</p>
           <p class="note">Le panneau « Proposer une personne » liste vos propositions et leur état : en attente, acceptée ou refusée. Vous retirez une proposition tant qu'elle attend.</p>
           <p>Vous consultez aussi les autres périmètres de votre activité. Leur page affiche les tâches, l'avancement et les personnes affectées. Elle ne montre aucune fiche et ne propose aucune action, et un bandeau le rappelle. Pour rejoindre un périmètre, formulez un souhait dans « Tous les périmètres ».</p>
           <figure>
