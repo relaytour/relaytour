@@ -17,6 +17,8 @@ import {
 /**
  * Un panneau de verre, le plus souvent dans la colonne de droite. `teinte`
  * attire l'attention sur une seule chose : un panneau teinté par écran au plus.
+ * Avec `repliable`, un bouton devant le titre replie le panneau, comme un
+ * groupe : seul son en-tête reste affiché.
  */
 export function Panneau({
   titre,
@@ -25,6 +27,7 @@ export function Panneau({
   teinte = false,
   children,
   etiquette,
+  repliable,
 }: {
   titre?: ReactNode
   icone?: ReactNode
@@ -33,16 +36,59 @@ export function Panneau({
   children: ReactNode
   /** Nom accessible du panneau quand il n'a pas de titre. */
   etiquette?: string
+  repliable?: {
+    replie: boolean
+    onBasculer: () => void
+    /** Le nom du panneau en texte, pour le bouton qui le replie. */
+    nom: string
+  }
 }) {
+  const { t } = useLingui()
+  const id = useId()
+  const nom = repliable?.nom ?? ''
+  const classe = `${teinte ? 'rt-verre-teinte' : 'rt-verre'} rt-panneau`
   return (
     <section
-      className={`${teinte ? 'rt-verre-teinte' : 'rt-verre'} rt-panneau`}
+      className={repliable?.replie ? `${classe} rt-panneau-replie` : classe}
       aria-label={titre ? undefined : etiquette}
     >
       {(titre || extra) && (
-        <div className="rt-panneau-titre">
+        <div
+          className={
+            repliable
+              ? 'rt-panneau-titre rt-panneau-titre-repliable'
+              : 'rt-panneau-titre'
+          }
+          // Un clic sur l'en-tête bascule le panneau, sauf sur un lien ou un
+          // bouton qu'il contient. Le clavier passe par le bouton.
+          onClick={
+            repliable
+              ? evenement => {
+                  if (!(evenement.target as Element).closest('a, button'))
+                    repliable.onBasculer()
+                }
+              : undefined
+          }
+        >
           {titre && (
             <h2>
+              {repliable && (
+                <Button
+                  type="text"
+                  size="small"
+                  shape="circle"
+                  className="rt-groupe-bascule"
+                  icon={<RightOutlined rotate={repliable.replie ? 0 : 90} />}
+                  aria-expanded={!repliable.replie}
+                  aria-controls={id}
+                  aria-label={
+                    repliable.replie
+                      ? t`Déplier le panneau ${nom}`
+                      : t`Replier le panneau ${nom}`
+                  }
+                  onClick={repliable.onBasculer}
+                />
+              )}
               {icone}
               {titre}
             </h2>
@@ -50,7 +96,13 @@ export function Panneau({
           {extra}
         </div>
       )}
-      {children}
+      {repliable ? (
+        <div id={id} className="rt-panneau-contenu" hidden={repliable.replie}>
+          {children}
+        </div>
+      ) : (
+        children
+      )}
     </section>
   )
 }

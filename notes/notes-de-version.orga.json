@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-11-06-orga-le-panneau-priorites-se-replie",
+          "date": "2026-11-06",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le panneau « Priorités » se replie",
+            "texte": "Dans « Mon espace », le bouton placé devant le titre « Priorités » replie le panneau, comme pour « Vos tâches ». Votre navigateur garde ce choix d'une visite à l'autre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The Priorities panel can be collapsed",
+            "texte": "In \"My space\", the button in front of the \"Priorities\" title collapses the panel, as for \"Your tasks\". Your browser keeps this choice from one visit to the next.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-11-05-orga-les-priorites-et-les-taches-restent-lisibles-dans-un-panneau",
           "date": "2026-11-05",
           "type": "correctif",

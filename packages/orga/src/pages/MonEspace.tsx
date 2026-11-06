@@ -132,6 +132,8 @@ export default function MonEspace() {
             editionId={edition.id}
             moiId={moiId}
             mesPerimetres={new Set(affectations.map(a => a.perimetre.id))}
+            replie={replies.estReplie('priorites')}
+            onBasculer={() => replies.basculer('priorites')}
           />
         </div>
       )}
