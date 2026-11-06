@@ -178,6 +178,8 @@ Un seul mot par notion. La colonne « Anglais » fixe le terme du catalogue angl
 | tâche partagée | shared task | Tâche d'un périmètre, déclinée dans d'autres périmètres de la même activité pour la même période. Elle garde son statut propre et montre l'état de ses déclinaisons (ADR 0026). |
 | déclinaison | derived task | Tâche créée dans un périmètre cible depuis une tâche partagée, ou tâche existante qui lui est rattachée. Elle vit comme toute tâche de ce périmètre : statut, personnes assignées, échéance (ADR 0026, 0061). |
 | accord | approval | Réponse d'un périmètre cible à une déclinaison proposée : acceptée ou refusée. Un admin de l'activité impose une déclinaison sans accord (ADR 0026). |
+| jalon | milestone | Tâche marquée comme un objectif à atteindre. Elle lie d'autres tâches de la même période et affiche combien restent ouvertes. Elle reste une tâche complète (ADR 0062). |
+| tâche liée | linked task | Tâche qu'un jalon lie, dans son périmètre ou dans un autre périmètre de l'activité. Elle garde son statut et ne change pas (ADR 0062). |
 | reprise des tâches | carry-over | Copie, dans une période, des tâches choisies d'une autre période de la même activité. Chaque échéance garde son écart avec le premier jour, et la tâche reprise repart à faire (ADR 0048). |
 | modèle de départ | starter template | Activité fictive livrée avec le logiciel : des périmètres, leurs tâches types et des fiches, qu'un admin applique à une activité sans périmètre (ADR 0048). |
 | commentaire | comment | Texte daté et signé qu'une personne écrit sur une tâche de son périmètre : un compte rendu, une information, une question (ADR 0029). Ne pas confondre avec une note de version. |
