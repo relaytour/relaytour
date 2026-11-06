@@ -13,6 +13,7 @@ import {
   composer,
   libelleModele,
   lienMailto,
+  listerJalons,
   listerPriorites,
   listerTaches,
   passagesACompleter,
@@ -284,5 +285,38 @@ describe('listerPriorites', () => {
 
   it('rend le texte prévu quand aucun périmètre n’a de priorité', () => {
     expect(listerPriorites([], 'Aucune priorité.')).toBe('Aucune priorité.')
+  })
+})
+
+describe('listerJalons', () => {
+  it('liste les jalons avec leur périmètre, leur échéance et leurs tâches ouvertes', () => {
+    expect(
+      listerJalons([
+        {
+          titre: 'Parcours prêt',
+          perimetre: 'Parcours',
+          echeance: '20 novembre',
+          ouvertes: 3,
+          gardees: 8,
+        },
+        {
+          titre: 'Bénévoles recrutés',
+          perimetre: 'Bénévoles',
+          echeance: null,
+          ouvertes: 0,
+          gardees: 0,
+        },
+      ])
+    ).toBe(
+      [
+        'Jalons avant le prochain point',
+        '- Parcours prêt (Parcours, pour le 20 novembre) : 3 tâches ouvertes sur 8',
+        '- Bénévoles recrutés (Bénévoles) : aucune tâche liée',
+      ].join('\n')
+    )
+  })
+
+  it('ne rend rien sans jalon', () => {
+    expect(listerJalons([])).toBe('')
   })
 })
