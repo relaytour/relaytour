@@ -106,6 +106,37 @@ const PAGE = graphql(`
 
 // Les fiches d'un périmètre suivent la règle de lecture (ADR 0014) : le serveur les
 // refuse en consultation. Elles se demandent à part, avec un accès complet seulement.
+// Jalons (ADR 0062) : le marqueur, le décompte et les jalons que chaque tâche sert.
+// Une requête à part garde la page sous le plafond de champs du serveur.
+const JALONS_DU_PERIMETRE = graphql(`
+  query JalonsDuPerimetre($slug: String!, $editionId: ID!) {
+    perimetre(slug: $slug) {
+      id
+      taches(editionId: $editionId) {
+        id
+        jalon
+        resumeJalon {
+          total
+          ouvertes
+          faites
+          abandonnees
+          enRetard
+          assigneesAMoi
+        }
+        jalons {
+          id
+          titre
+          perimetre {
+            slug
+            nom
+            couleur
+          }
+        }
+      }
+    }
+  }
+`)
+
 const FICHES = graphql(`
   query FichesDuPerimetre($slug: String!) {
     perimetre(slug: $slug) {
@@ -193,6 +224,19 @@ export default function Perimetre() {
     variables: { slug, editionId: editionId ?? '' },
     skip: editionId === undefined,
   })
+  const { data: jalons } = useQuery(JALONS_DU_PERIMETRE, {
+    variables: { slug, editionId: editionId ?? '' },
+    skip: editionId === undefined,
+  })
+  const tachesDuPerimetre = useMemo(() => {
+    const parId = new Map((jalons?.perimetre?.taches ?? []).map(x => [x.id, x]))
+    return (data?.perimetre?.taches ?? []).map(x => {
+      const j = parId.get(x.id)
+      return j === undefined
+        ? x
+        : { ...x, jalon: j.jalon, resumeJalon: j.resumeJalon, jalons: j.jalons }
+    })
+  }, [data, jalons])
   const [filtre, setFiltre] = useState<Filtre>('ouvertes')
   const parPhase = activite.phases.length > 0
   const [regroupementChoisi, setRegroupement] = useState<Regroupement>(() =>
@@ -239,21 +283,19 @@ export default function Perimetre() {
   // filtre choisi : elle vient en tête quand le filtre l'aurait écartée.
   const tacheVisee = parametres.get('tache')
   const taches = useMemo(() => {
-    const toutes = perimetre?.taches ?? []
+    const toutes = tachesDuPerimetre
     const filtrees = toutes.filter(FILTRES[filtre])
     const visee = toutes.find(x => x.id === tacheVisee)
     return visee !== undefined && !filtrees.includes(visee)
       ? [visee, ...filtrees]
       : filtrees
-  }, [perimetre, filtre, tacheVisee])
+  }, [tachesDuPerimetre, filtre, tacheVisee])
   // Dans une section, la tâche visée garde sa place par échéance : la liste du
   // serveur est déjà triée, et la tâche visée y reste quel que soit le filtre.
   const tachesParEcheance = useMemo(
     () =>
-      (perimetre?.taches ?? []).filter(
-        x => FILTRES[filtre](x) || x.id === tacheVisee
-      ),
-    [perimetre, filtre, tacheVisee]
+      tachesDuPerimetre.filter(x => FILTRES[filtre](x) || x.id === tacheVisee),
+    [tachesDuPerimetre, filtre, tacheVisee]
   )
 
   // En consultation, le serveur ne rend pas les fiches (ADR 0014) : le regroupement
@@ -311,13 +353,13 @@ export default function Perimetre() {
   // Le nombre de tâches ouvertes de chaque personne affectée au périmètre.
   const chargeDe = useMemo(() => {
     const charge = new Map<string, number>()
-    for (const tache of perimetre?.taches ?? []) {
+    for (const tache of tachesDuPerimetre) {
       if (!estOuverte(tache)) continue
       for (const p of tache.assignes)
         charge.set(p.id, (charge.get(p.id) ?? 0) + 1)
     }
     return charge
-  }, [perimetre])
+  }, [tachesDuPerimetre])
 
   const aucunePeriode = periode.Aucune
   const cettePeriode = periode.cette

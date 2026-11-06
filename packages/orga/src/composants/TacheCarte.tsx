@@ -3,6 +3,7 @@ import {
   CalendarOutlined,
   CheckOutlined,
   EditOutlined,
+  FlagOutlined,
   LinkOutlined,
   MessageOutlined,
   MoreOutlined,
@@ -24,12 +25,15 @@ import { enumerer } from '../lib/langue'
 import { useLibelleAjustement } from '../lib/priorites'
 import { useCommentairesDeLaPeriode } from '../lib/commentaires'
 import type { ResumeDeclinaisons } from '../lib/declinaisons'
+import type { ResumeJalon } from '../lib/jalons'
 import { dateCourte } from '../lib/erreurs'
 import {
   AJUSTER_PRIORITE,
   ASSIGNER_TACHE,
   CHANGER_STATUT,
+  DELIER_TACHE,
   estOuverte,
+  MARQUER_JALON,
   etatEcheance,
   useActionTache,
   VUES_TACHES,
@@ -38,6 +42,8 @@ import {
 import type { PerimetreCible } from './ChoixPerimetresCibles'
 import DeclinaisonsTache from './DeclinaisonsTache'
 import DeclinerTache from './DeclinerTache'
+import JalonTache from './JalonTache'
+import LierTaches from './LierTaches'
 import RattacherTache from './RattacherTache'
 import EtiquettePerimetre from './EtiquettePerimetre'
 import FilTache from './FilTache'
@@ -77,6 +83,15 @@ export default function TacheCarte({
       perimetre: { slug: string; nom: string; couleur?: string | null }
     } | null
     resumeDeclinaisons?: ResumeDeclinaisons | null
+    // Jalons (ADR 0062) : la page d'un périmètre lit le marqueur, le décompte et
+    // les jalons que la tâche sert. Sans ces champs, la carte n'en montre rien.
+    jalon?: boolean
+    resumeJalon?: ResumeJalon | null
+    jalons?: {
+      id: string
+      titre: string
+      perimetre: { slug: string; nom: string; couleur?: string | null }
+    }[]
   }
   moiId: string
   peutModifier: boolean
@@ -119,6 +134,13 @@ export default function TacheCarte({
   const [ajuster, ajustement] = useMutation(AJUSTER_PRIORITE, {
     refetchQueries: VUES_TACHES,
   })
+  const [marquer, marquage] = useMutation(MARQUER_JALON, {
+    refetchQueries: VUES_TACHES,
+  })
+  const [delier, deliaison] = useMutation(DELIER_TACHE, {
+    refetchQueries: VUES_TACHES,
+  })
+  const [aLier, setALier] = useState(false)
   const libelleAjustement = useLibelleAjustement()
   const [cloture, setCloture] = useState(false)
   const [realisateurs, setRealisateurs] = useState<string[]>([])
@@ -149,7 +171,15 @@ export default function TacheCarte({
   const assignee = tache.assignes.some(p => p.id === moiId)
   const ouverte = estOuverte(tache)
   const enAction =
-    assignation.loading || changement.loading || ajustement.loading
+    assignation.loading ||
+    changement.loading ||
+    ajustement.loading ||
+    marquage.loading ||
+    deliaison.loading
+  // Le marqueur n'est connu que sur la page d'un périmètre : ailleurs, la carte ne
+  // propose pas de transformer la tâche.
+  const jalonConnu = tache.jalon !== undefined
+  const estJalon = tache.jalon === true
   // Le serveur refuse d'assigner une personne non affectée au périmètre pour l'édition.
   const affectee = referents.some(r => r.id === moiId)
   // Toute personne qui écrit dans le périmètre assigne et retire les autres
@@ -207,6 +237,28 @@ export default function TacheCarte({
             : []),
         ]
       : []),
+    // Jalons (ADR 0062) : toute tâche se transforme en jalon, puis lie ses tâches.
+    ...(jalonConnu && !estJalon
+      ? [
+          {
+            key: 'jalon:oui',
+            icon: <FlagOutlined />,
+            label: t`Transformer en jalon`,
+          },
+        ]
+      : []),
+    ...(estJalon && editionId !== undefined
+      ? [{ key: 'lier', icon: <LinkOutlined />, label: t`Lier des tâches` }]
+      : []),
+    ...(estJalon
+      ? [
+          {
+            key: 'jalon:non',
+            icon: <FlagOutlined />,
+            label: t`Retirer le jalon`,
+          },
+        ]
+      : []),
     // L'ajustement de la tâche dans les priorités (ADR 0059).
     ...(peutModifier && ouverte
       ? [
@@ -229,6 +281,53 @@ export default function TacheCarte({
       ? [{ key: 'ABANDONNEE', label: t`Abandonner`, danger: true }]
       : []),
   ]
+
+  const transformer = () =>
+    executer(
+      () => marquer({ variables: { id: tache.id, jalon: true } }),
+      t`La tâche est un jalon. Liez-y les tâches qui y mènent.`
+    )
+
+  // Retirer le marqueur retire aussi les liens : la fenêtre les compte.
+  const retirerJalon = async () => {
+    const liens = tache.resumeJalon?.total ?? 0
+    if (liens > 0) {
+      const ok = await modal.confirm({
+        title: t`Retirer le jalon ?`,
+        content: t`${plural(liens, {
+          one: 'Le lien vers # tâche sera retiré. La tâche liée ne change pas.',
+          other:
+            'Les liens vers # tâches seront retirés. Les tâches liées ne changent pas.',
+        })}`,
+        okText: t`Retirer le jalon`,
+        cancelText: t`Annuler`,
+      })
+      if (!ok) return
+    }
+    await executer(
+      () => marquer({ variables: { id: tache.id, jalon: false } }),
+      t`La tâche n’est plus un jalon.`
+    )
+  }
+
+  const libelleRetrait = (titreJalon: string) =>
+    t`Retirer du jalon ${titreJalon}`
+
+  // Depuis la tâche liée, son équipe retire le lien. La fenêtre annonce les effets.
+  const quitterJalon = async (jalon: { id: string; titre: string }) => {
+    const titreJalon = jalon.titre
+    const ok = await modal.confirm({
+      title: t`Retirer cette tâche du jalon « ${titreJalon} » ?`,
+      content: t`La tâche ne change pas. Elle sort du décompte du jalon, que le périmètre du jalon ne suit plus pour elle. Elle perd aussi la place que le jalon lui donne dans les priorités. Le jalon garde la trace du retrait.`,
+      okText: t`Retirer`,
+      cancelText: t`Annuler`,
+    })
+    if (!ok) return
+    await executer(
+      () => delier({ variables: { id: jalon.id, tacheId: tache.id } }),
+      t`La tâche est retirée du jalon.`
+    )
+  }
 
   const ajusterPriorite = (niveau: AjustementPriorite | null) =>
     executer(
@@ -334,7 +433,23 @@ export default function TacheCarte({
 
   // Les personnes assignées et affectées au périmètre sont proposées comme
   // personnes réalisatrices (ADR 0055) ; la liste reste modifiable.
-  const ouvrirCloture = () => {
+  const ouvrirCloture = async () => {
+    // Un jalon se coche même quand des tâches liées restent ouvertes : la fenêtre
+    // le rappelle d'abord (ADR 0062).
+    const ouvertes = estJalon ? (tache.resumeJalon?.ouvertes ?? 0) : 0
+    if (ouvertes > 0) {
+      const ok = await modal.confirm({
+        title: t`Des tâches liées restent ouvertes`,
+        content: t`${plural(ouvertes, {
+          one: '# tâche liée à ce jalon reste ouverte. Voulez-vous quand même marquer le jalon comme fait ?',
+          other:
+            '# tâches liées à ce jalon restent ouvertes. Voulez-vous quand même marquer le jalon comme fait ?',
+        })}`,
+        okText: t`Continuer`,
+        cancelText: t`Annuler`,
+      })
+      if (!ok) return
+    }
     setRealisateurs(
       tache.assignes
         .filter(p => referents.some(r => r.id === p.id))
@@ -474,6 +589,48 @@ export default function TacheCarte({
                 .join(' ')}
             </p>
           )}
+        {(tache.jalons ?? []).length > 0 && (
+          <p className="rt-demandee-par">
+            <Trans>Mène au jalon</Trans>
+            {(tache.jalons ?? []).map(j => (
+              <span key={j.id} className="rt-jalon-servi">
+                <EtiquettePerimetre
+                  nom={`${j.titre} · ${j.perimetre.nom}`}
+                  couleur={j.perimetre.couleur}
+                  point
+                  lien={lien(
+                    `/perimetres/${j.perimetre.slug}?${editionId ? `edition=${editionId}&` : ''}tache=${j.id}`
+                  )}
+                />
+                {peutModifier && (
+                  <Button
+                    size="small"
+                    type="text"
+                    disabled={enAction}
+                    aria-label={libelleRetrait(j.titre)}
+                    onClick={() => void quitterJalon(j)}
+                  >
+                    ×
+                  </Button>
+                )}
+              </span>
+            ))}
+          </p>
+        )}
+        {estJalon && tache.resumeJalon && (
+          <JalonTache
+            jalonId={tache.id}
+            titre={tache.titre}
+            resume={tache.resumeJalon}
+            editionId={editionId}
+            peutModifier={peutModifier}
+            onLier={
+              peutModifier && editionId !== undefined
+                ? () => setALier(true)
+                : undefined
+            }
+          />
+        )}
         {resume && resume.total > 0 && (
           <DeclinaisonsTache
             tacheId={tache.id}
@@ -548,7 +705,7 @@ export default function TacheCarte({
               type="primary"
               icon={<CheckOutlined />}
               disabled={enAction}
-              onClick={ouvrirCloture}
+              onClick={() => void ouvrirCloture()}
             >
               {t({
                 message: 'Faite',
@@ -574,6 +731,9 @@ export default function TacheCarte({
                   if (key === 'modifier') onModifier?.(tache)
                   if (key === 'decliner') setADecliner(true)
                   if (key === 'rattacher') setARattacher(true)
+                  if (key === 'lier') setALier(true)
+                  if (key === 'jalon:oui') void transformer()
+                  if (key === 'jalon:non') void retirerJalon()
                   if (key === 'reunion') onPlanifierReunion?.(tache)
                   if (key === 'EN_COURS')
                     void statut('EN_COURS', t`Tâche marquée en cours.`)
@@ -648,6 +808,14 @@ export default function TacheCarte({
           perimetres={perimetresCibles}
           estAdmin={estAdmin}
           onFermer={() => setADecliner(false)}
+        />
+      )}
+      {estJalon && peutModifier && editionId !== undefined && (
+        <LierTaches
+          jalon={aLier ? tache : null}
+          perimetres={[tache.perimetre, ...(perimetresCibles ?? [])]}
+          editionId={editionId}
+          onFermer={() => setALier(false)}
         />
       )}
       {declinable && editionId !== undefined && (

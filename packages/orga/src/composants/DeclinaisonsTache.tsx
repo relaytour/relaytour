@@ -1,5 +1,11 @@
-import { DownOutlined, ShareAltOutlined, UpOutlined } from '@ant-design/icons'
+import {
+  DownOutlined,
+  FlagOutlined,
+  ShareAltOutlined,
+  UpOutlined,
+} from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Skeleton } from 'antd'
 import { useId, useState } from 'react'
@@ -86,6 +92,30 @@ export default function DeclinaisonsTache({
   const titres = new Set((declinaisons ?? []).map(d => d.titre))
   const titreCommun =
     titres.size === 1 && !titres.has(titreTache) ? [...titres][0] : undefined
+  const libelleJalonDeclinaison = (r: {
+    total: number
+    ouvertes: number
+    abandonnees: number
+  }) => {
+    const ouvertes = r.ouvertes
+    const gardees = r.total - r.abandonnees
+    return gardees === 0
+      ? t`Jalon sans tâche liée`
+      : t`${plural(ouvertes, {
+          one: `Jalon : # ouverte sur ${gardees}`,
+          other: `Jalon : # ouvertes sur ${gardees}`,
+        })}`
+  }
+  // Les déclinaisons marquées comme jalons (ADR 0062) : la tâche partagée suit le
+  // détail des tâches de chaque périmètre, sans y être affectée.
+  const jalons = (declinaisons ?? []).filter(
+    d => d.jalon && d.accord === 'ACCEPTE'
+  )
+  const ouvertesJalons = jalons.reduce((n, d) => n + d.resumeJalon.ouvertes, 0)
+  const gardeesJalons = jalons.reduce(
+    (n, d) => n + d.resumeJalon.total - d.resumeJalon.abandonnees,
+    0
+  )
 
   return (
     <div className="rt-declinaisons">
@@ -120,6 +150,15 @@ export default function DeclinaisonsTache({
             </li>
           ) : (
             <>
+              {gardeesJalons > 0 && (
+                <li className="rt-note">
+                  <FlagOutlined aria-hidden />{' '}
+                  {t`${plural(ouvertesJalons, {
+                    one: `# tâche ouverte sur ${gardeesJalons} dans les jalons des déclinaisons`,
+                    other: `# tâches ouvertes sur ${gardeesJalons} dans les jalons des déclinaisons`,
+                  })}`}
+                </li>
+              )}
               {titreCommun !== undefined && (
                 <li className="rt-note">
                   <Trans>
@@ -156,6 +195,15 @@ export default function DeclinaisonsTache({
                         {d.enRetard && (
                           <PastilleEtat variante="retard">
                             <Trans>En retard</Trans>
+                          </PastilleEtat>
+                        )}
+                        {d.jalon && (
+                          <PastilleEtat
+                            variante="en-cours"
+                            icone={<FlagOutlined aria-hidden />}
+                            sansPoint
+                          >
+                            {libelleJalonDeclinaison(d.resumeJalon)}
                           </PastilleEtat>
                         )}
                       </>

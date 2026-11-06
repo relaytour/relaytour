@@ -64,6 +64,8 @@ const RETROPLANNING = graphql(`
       origine {
         id
       }
+      # Les jalons portent un drapeau et se filtrent (ADR 0062).
+      jalon
     }
   }
 `)
@@ -104,6 +106,7 @@ export default function Retroplanning() {
   const [statut, setStatut] = useState<FiltreStatut>('ouvertes')
   const [mesPerimetres, setMesPerimetres] = useState(false)
   const [assigneesAMoi, setAssigneesAMoi] = useState(false)
+  const [jalonsSeuls, setJalonsSeuls] = useState(false)
   const [regroupementChoisi, setRegroupement] = useState<Regroupement>(() =>
     lireRegroupement(CLE_REGROUPEMENT_RETROPLANNING, REGROUPEMENTS, 'mois')
   )
@@ -154,7 +157,8 @@ export default function Retroplanning() {
           (statut === 'toutes' ||
             (statut === 'retard' ? x.enRetard : estOuverte(x))) &&
           (!mesPerimetres || affectes.has(x.perimetre.id)) &&
-          (!assigneesAMoi || x.assignes.some(p => p.id === moi?.id))
+          (!assigneesAMoi || x.assignes.some(p => p.id === moi?.id)) &&
+          (!jalonsSeuls || x.jalon)
       ),
     [
       toutes,
@@ -164,6 +168,7 @@ export default function Retroplanning() {
       mesPerimetres,
       affectes,
       assigneesAMoi,
+      jalonsSeuls,
       moi,
     ]
   )
@@ -389,6 +394,9 @@ export default function Retroplanning() {
         </PuceBascule>
         <PuceBascule actif={assigneesAMoi} onChange={setAssigneesAMoi}>
           <Trans>Assignées à moi</Trans>
+        </PuceBascule>
+        <PuceBascule actif={jalonsSeuls} onChange={setJalonsSeuls}>
+          <Trans>Jalons seuls</Trans>
         </PuceBascule>
         <Select
           mode="multiple"

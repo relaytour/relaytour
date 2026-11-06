@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@apollo/client/react'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Alert, Form, Input, Modal } from 'antd'
+import { Alert, Checkbox, Form, Input, Modal } from 'antd'
 import { useEffect } from 'react'
 
 import type { TacheChampsFragment } from '../gql/graphql'
@@ -20,6 +20,8 @@ interface Valeurs {
   cibles: string[]
   titre?: string
   echeance?: string
+  /** Vrai : chaque déclinaison est un jalon (ADR 0062). */
+  jalons?: boolean
 }
 
 /** Le texte qui dit ce que devient une tâche dans les périmètres choisis. */
@@ -97,6 +99,7 @@ export default function DeclinerTache({
             perimetreIds: v.cibles,
             titre: v.titre?.trim() || null,
             echeance: v.echeance || null,
+            jalons: v.jalons ?? false,
           },
         }),
       estAdmin
@@ -182,6 +185,13 @@ export default function DeclinerTache({
               extra={t`Sans date, les périmètres reçoivent l’échéance de cette tâche.`}
             >
               <Input type="date" style={{ maxWidth: 200 }} />
+            </Form.Item>
+            <Form.Item
+              name="jalons"
+              valuePropName="checked"
+              extra={t`Chaque périmètre lie ensuite ses propres tâches à son jalon. Vous suivez leur avancement depuis cette tâche.`}
+            >
+              <Checkbox>{t`Marquer les déclinaisons comme jalons`}</Checkbox>
             </Form.Item>
           </Form>
         </>
