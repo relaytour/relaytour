@@ -284,6 +284,16 @@ describe('notifications de collaboration', () => {
     const david = await executer(ids.david, requete)
     expect(david.nombreNotificationsNonLuesParActivite).toEqual([])
   })
+
+  it('liste les notifications d’une activité, sans celles d’une autre personne', async () => {
+    const requete = `query ($a: ID!) { notifications(activiteId: $a, limite: 100) { id activite { id } } }`
+    const chloe = (await executer(ids.chloe, requete, { a: ACTIVITE }))
+      .notifications as { id: string; activite: { id: string } | null }[]
+    expect(chloe.length).toBeGreaterThan(0)
+    expect(chloe.every(n => n.activite?.id === ACTIVITE)).toBe(true)
+    const david = await executer(ids.david, requete, { a: ACTIVITE })
+    expect(david.notifications).toEqual([])
+  })
 })
 
 describe('rappels d’échéance', () => {

@@ -205,7 +205,7 @@ export default function ListeNotifications({
   sansActivite: string
   parPerimetre?: boolean
   avecRole?: boolean
-  /** L'activité affichée, placée en tête et seule dépliée avec l'organisation. */
+  /** L'activité affichée, placée en tête et seule dépliée. */
   activiteCourante?: { id: string; nom: string }
   onOuvrir: (n: Notification) => void
   onMarquer: (cible: CibleGroupe) => void
@@ -242,13 +242,12 @@ export default function ListeNotifications({
     activiteCourante === undefined
       ? groupes
       : placerActiviteCourante(groupes, activiteCourante)
-  // La cloche déplie l'activité affichée, et le groupe sans activité s'il a des
-  // non lues. L'écran des admins déplie chaque groupe qui a des non lues.
+  // La cloche ne déplie que l'activité affichée. L'écran des admins déplie
+  // chaque groupe qui a des non lues.
   const deplies = ranges.filter(g =>
     activiteCourante === undefined
       ? g.nonLues > 0
-      : g.activiteId === activiteCourante.id ||
-        (g.activiteId === null && g.nonLues > 0)
+      : g.activiteId === activiteCourante.id
   )
   return (
     <Collapse

@@ -118,6 +118,7 @@ export const REQUETES_RAFRAICHIES: ReadonlySet<string> = new Set([
   'NombreNotificationsNonLues',
   'NombreNotificationsParActivite',
   'ListeNotifications',
+  'ListeNotificationsActivite',
   'NombreNotificationsAdmin',
   'ListeNotificationsAdmin',
   'NotificationsAutresOrganisations',

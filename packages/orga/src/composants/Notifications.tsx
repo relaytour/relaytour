@@ -2,15 +2,7 @@ import { BellOutlined, ExportOutlined, SafetyOutlined } from '@ant-design/icons'
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
-import {
-  Badge,
-  Button,
-  Drawer,
-  Empty,
-  Skeleton,
-  Tooltip,
-  Typography,
-} from 'antd'
+import { Badge, Button, Drawer, Skeleton, Tooltip, Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -21,6 +13,7 @@ import { poserPastille } from '../lib/push'
 import {
   AUTRES_ORGANISATIONS,
   LISTE_NOTIFICATIONS,
+  LISTE_NOTIFICATIONS_ACTIVITE,
   MARQUER_NOTIFICATIONS,
   NOMBRE_NOTIFICATIONS,
   NOMBRE_NOTIFICATIONS_ADMIN,
@@ -61,6 +54,13 @@ export default function Notifications() {
     skip: !ouvert,
     fetchPolicy: 'cache-and-network',
   })
+  // La liste générale s'arrête à 60 notifications : celles de l'activité
+  // affichée se chargent à part, pour que son groupe soit complet.
+  const listeIci = useQuery(LISTE_NOTIFICATIONS_ACTIVITE, {
+    skip: !ouvert,
+    variables: { activiteId: activite.id },
+    fetchPolicy: 'cache-and-network',
+  })
   const autres = useQuery(AUTRES_ORGANISATIONS, {
     skip: !ouvert,
     fetchPolicy: 'cache-and-network',
@@ -70,24 +70,37 @@ export default function Notifications() {
       NOMBRE_NOTIFICATIONS,
       NOMBRE_NOTIFICATIONS_PAR_ACTIVITE,
       LISTE_NOTIFICATIONS,
+      LISTE_NOTIFICATIONS_ACTIVITE,
     ],
   })
   const nonLues = nombre?.nombreNotificationsNonLues ?? 0
   const nonLuesAdmin = nombreAdmin?.nombreNotificationsNonLues ?? 0
-  // La cloche compte l'activité affichée et les notifications de l'organisation
-  // qui ne concernent aucune activité. Les autres activités ont leur pastille.
-  const comptes = parActivite?.nombreNotificationsNonLuesParActivite
+  // La pastille principale ne compte que l'activité affichée. Les autres
+  // activités et les notifications de l'organisation, qui ne concernent aucune
+  // activité, forment la pastille « n+ ».
+  const comptes = parActivite?.nombreNotificationsNonLuesParActivite ?? []
   const nonLuesIci =
-    comptes === undefined
-      ? nonLues
-      : comptes
-          .filter(c => c.activiteId === null || c.activiteId === activite.id)
-          .reduce((total, c) => total + c.nonLues, 0)
+    comptes.find(c => c.activiteId === activite.id)?.nonLues ?? 0
+  const nonLuesOrganisation =
+    comptes.find(c => c.activiteId === null)?.nonLues ?? 0
   // Les notifications d'admin ne s'annoncent qu'à une personne qui en a l'écran.
   const adminIci = activiteAdministree !== undefined ? nonLuesAdmin : 0
-  const autresActivites = (comptes ?? []).filter(
+  const autresActivites = comptes.filter(
     c => c.activiteId !== null && c.activiteId !== activite.id && c.nonLues > 0
   ).length
+  const ailleurs = autresActivites + (nonLuesOrganisation > 0 ? 1 : 0)
+  // Les deux listes se réunissent, sans doublon, de la plus récente à la plus
+  // ancienne.
+  const notifications = [
+    ...new Map(
+      [
+        ...(listeIci.data?.notifications ?? []),
+        ...(liste.data?.notifications ?? []),
+      ].map(n => [n.id, n])
+    ).values(),
+  ].sort((a, b) => String(b.creeLe).localeCompare(String(a.creeLe)))
+  const chargement =
+    (liste.loading && !liste.data) || (listeIci.loading && !listeIci.data)
   // L'icône de l'application installée compte toutes les notifications de
   // l'organisation, celles de la cloche et celles des admins (ADR 0024).
   useEffect(
@@ -96,6 +109,40 @@ export default function Notifications() {
   )
   const autresOrganisations =
     autres.data?.notificationsAutresOrganisations ?? []
+
+  // Le résumé de l'infobulle, repris par le libellé d'accessibilité de la cloche.
+  const resume = [
+    nonLuesIci > 0
+      ? plural(nonLuesIci, {
+          one: '# notification non lue dans cette activité',
+          other: '# notifications non lues dans cette activité',
+        })
+      : t`Aucune notification non lue dans cette activité`,
+    ...(autresActivites > 0
+      ? [
+          plural(autresActivites, {
+            one: '# autre activité avec des notifications',
+            other: '# autres activités avec des notifications',
+          }),
+        ]
+      : []),
+    ...(nonLuesOrganisation > 0
+      ? [
+          plural(nonLuesOrganisation, {
+            one: '# notification non lue de l’organisation',
+            other: '# notifications non lues de l’organisation',
+          }),
+        ]
+      : []),
+    ...(adminIci > 0
+      ? [
+          plural(adminIci, {
+            one: '# notification d’admin non lue',
+            other: '# notifications d’admin non lues',
+          }),
+        ]
+      : []),
+  ]
 
   // Une autre organisation s'ouvre dans un nouvel onglet, qui garde son propre
   // choix (ADR 0032). L'application installée n'a pas d'onglets : elle change
@@ -122,30 +169,9 @@ export default function Notifications() {
           open={ouvert ? false : undefined}
           title={
             <span style={{ display: 'flex', flexDirection: 'column' }}>
-              <span>
-                {nonLuesIci > 0
-                  ? plural(nonLuesIci, {
-                      one: '# notification non lue dans cette activité',
-                      other: '# notifications non lues dans cette activité',
-                    })
-                  : t`Aucune notification non lue dans cette activité`}
-              </span>
-              {autresActivites > 0 && (
-                <span>
-                  {plural(autresActivites, {
-                    one: '# autre activité avec des notifications',
-                    other: '# autres activités avec des notifications',
-                  })}
-                </span>
-              )}
-              {adminIci > 0 && (
-                <span>
-                  {plural(adminIci, {
-                    one: '# notification d’admin non lue',
-                    other: '# notifications d’admin non lues',
-                  })}
-                </span>
-              )}
+              {resume.map(ligne => (
+                <span key={ligne}>{ligne}</span>
+              ))}
             </span>
           }
         >
@@ -160,58 +186,18 @@ export default function Notifications() {
               shape="circle"
               className="rt-bouton-barre"
               icon={<BellOutlined />}
-              aria-label={[
-                t`Notifications`,
-                ...(nonLuesIci > 0
-                  ? [
-                      plural(nonLuesIci, {
-                        one: '# non lue dans cette activité',
-                        other: '# non lues dans cette activité',
-                      }),
-                    ]
-                  : []),
-                ...(autresActivites > 0
-                  ? [
-                      plural(autresActivites, {
-                        one: 'd’autres dans # autre activité',
-                        other: 'd’autres dans # autres activités',
-                      }),
-                    ]
-                  : []),
-                ...(adminIci > 0
-                  ? [
-                      plural(adminIci, {
-                        one: '# notification d’admin non lue',
-                        other: '# notifications d’admin non lues',
-                      }),
-                    ]
-                  : []),
-              ].join(', ')}
+              aria-label={[t`Notifications`, ...resume].join(', ')}
               onClick={() => setOuvert(true)}
             />
           </Badge>
         </Tooltip>
-        {autresActivites > 0 && (
-          <span
-            className="rt-cloche-autres"
-            aria-hidden="true"
-            title={plural(autresActivites, {
-              one: 'Notifications non lues dans # autre activité',
-              other: 'Notifications non lues dans # autres activités',
-            })}
-          >
-            {autresActivites > 9 ? '9+' : `${autresActivites}+`}
+        {ailleurs > 0 && (
+          <span className="rt-cloche-autres" aria-hidden="true">
+            {ailleurs > 9 ? '9+' : `${ailleurs}+`}
           </span>
         )}
         {adminIci > 0 && (
-          <span
-            className="rt-cloche-admin"
-            aria-hidden="true"
-            title={plural(adminIci, {
-              one: '# notification d’admin non lue',
-              other: '# notifications d’admin non lues',
-            })}
-          >
+          <span className="rt-cloche-admin" aria-hidden="true">
             <SafetyOutlined />
             {adminIci > 9 ? '9+' : adminIci}
           </span>
@@ -262,15 +248,14 @@ export default function Notifications() {
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {liste.loading && !liste.data ? (
+          {chargement ? (
             <Skeleton active />
-          ) : (liste.data?.notifications ?? []).length === 0 ? (
-            <Empty description={t`Aucune notification.`} />
           ) : (
+            // Le groupe de l'activité affichée s'affiche toujours, même vide.
             <ListeNotifications
               // Une autre activité remet l'ordre et les groupes dépliés à zéro.
               key={activite.id}
-              notifications={liste.data!.notifications}
+              notifications={notifications}
               sansActivite={organisation.nom}
               activiteCourante={activite}
               onOuvrir={n => {

@@ -57,6 +57,14 @@ export const LISTE_NOTIFICATIONS = graphql(`
   }
 `)
 
+export const LISTE_NOTIFICATIONS_ACTIVITE = graphql(`
+  query ListeNotificationsActivite($activiteId: ID!) {
+    notifications(limite: 60, activiteId: $activiteId) {
+      ...NotificationAffichee
+    }
+  }
+`)
+
 export const LISTE_NOTIFICATIONS_ADMIN = graphql(`
   query ListeNotificationsAdmin {
     notifications(admin: true, limite: 200) {

@@ -65,6 +65,7 @@ describe('requetesPour', () => {
       'NombreNotificationsNonLues',
       'NombreNotificationsParActivite',
       'ListeNotifications',
+      'ListeNotificationsActivite',
       'NombreNotificationsAdmin',
       'ListeNotificationsAdmin',
     ])
@@ -112,7 +113,7 @@ describe('requetesPour', () => {
     )
     // Une tâche ou une notification ne relit pas tout.
     expect(requetesPour(['TACHE'])).not.toContain('ListeFiches')
-    expect(requetesPour(['NOTIFICATION'])).toHaveLength(5)
+    expect(requetesPour(['NOTIFICATION'])).toHaveLength(6)
   })
 })
 

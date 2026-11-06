@@ -3375,6 +3375,11 @@ type Query {
   """
   notesDeVersion: [VersionPubliee!]!
   notifications(
+    """
+    Les seules notifications de cette activité : la cloche les charge à part, pour que la limite ne les coupe pas.
+    """
+    activiteId: ID
+
     """Les notifications d’admin plutôt que celles de la cloche (ADR 0033)."""
     admin: Boolean = false
     limite: Int = 30

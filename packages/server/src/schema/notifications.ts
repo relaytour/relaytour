@@ -248,6 +248,10 @@ builder.queryFields(t => ({
         description:
           'Les notifications d’admin plutôt que celles de la cloche (ADR 0033).',
       }),
+      activiteId: t.arg.id({
+        description:
+          'Les seules notifications de cette activité : la cloche les charge à part, pour que la limite ne les coupe pas.',
+      }),
     },
     resolve: async (_root, args, ctx) => {
       const where = await filtreDuNiveau(
@@ -258,7 +262,13 @@ builder.queryFields(t => ({
       // Une personne sans rôle d'admin n'ouvre pas l'écran des admins (ADR 0033).
       if (where === null) throw accesRefuse()
       const lignes = await prisma.notification.findMany({
-        where: { ...where, ...(args.nonLuesSeulement ? { lueLe: null } : {}) },
+        where: {
+          ...where,
+          ...(args.nonLuesSeulement ? { lueLe: null } : {}),
+          ...(args.activiteId === null || args.activiteId === undefined
+            ? {}
+            : dansLeGroupe(String(args.activiteId), null)),
+        },
         select: { ...SELECTION_NOTIFICATION, lueLe: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
         // L'écran des admins range ses notifications par périmètre : il en lit plus.

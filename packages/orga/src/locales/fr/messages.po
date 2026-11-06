@@ -206,14 +206,6 @@ msgstr "{autres, plural, one {# autre tâche au-delà des cinq priorités} other
 msgid "{autresActivites, plural, one {# autre activité avec des notifications} other {# autres activités avec des notifications}}"
 msgstr "{autresActivites, plural, one {# autre activité avec des notifications} other {# autres activités avec des notifications}}"
 
-#: src/composants/Notifications.tsx
-msgid "{autresActivites, plural, one {d’autres dans # autre activité} other {d’autres dans # autres activités}}"
-msgstr "{autresActivites, plural, one {d’autres dans # autre activité} other {d’autres dans # autres activités}}"
-
-#: src/composants/Notifications.tsx
-msgid "{autresActivites, plural, one {Notifications non lues dans # autre activité} other {Notifications non lues dans # autres activités}}"
-msgstr "{autresActivites, plural, one {Notifications non lues dans # autre activité} other {Notifications non lues dans # autres activités}}"
-
 #: src/composants/VerificationAcces.tsx
 msgid "{avecAcces} sur {total} a accès"
 msgstr "{avecAcces} sur {total} a accès"
@@ -796,12 +788,12 @@ msgid "{nonLuesAdmin, plural, one {# en attente} other {# en attente}}"
 msgstr "{nonLuesAdmin, plural, one {# en attente} other {# en attente}}"
 
 #: src/composants/Notifications.tsx
-msgid "{nonLuesIci, plural, one {# non lue dans cette activité} other {# non lues dans cette activité}}"
-msgstr "{nonLuesIci, plural, one {# non lue dans cette activité} other {# non lues dans cette activité}}"
-
-#: src/composants/Notifications.tsx
 msgid "{nonLuesIci, plural, one {# notification non lue dans cette activité} other {# notifications non lues dans cette activité}}"
 msgstr "{nonLuesIci, plural, one {# notification non lue dans cette activité} other {# notifications non lues dans cette activité}}"
+
+#: src/composants/Notifications.tsx
+msgid "{nonLuesOrganisation, plural, one {# notification non lue de l’organisation} other {# notifications non lues de l’organisation}}"
+msgstr "{nonLuesOrganisation, plural, one {# notification non lue de l’organisation} other {# notifications non lues de l’organisation}}"
 
 #: src/lib/espace-fichiers.ts
 msgid "{octets} o"
@@ -2466,10 +2458,6 @@ msgstr "Aucune notification dans cette activité."
 #: src/composants/Notifications.tsx
 msgid "Aucune notification non lue dans cette activité"
 msgstr "Aucune notification non lue dans cette activité"
-
-#: src/composants/Notifications.tsx
-msgid "Aucune notification."
-msgstr "Aucune notification."
 
 #: src/pages/Organigramme.tsx
 msgid "Aucune période n’est en préparation. Les référentes et référents s’affichent quand une période s’ouvre."

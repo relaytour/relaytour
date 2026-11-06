@@ -206,14 +206,6 @@ msgstr "{autres, plural, one {# more task beyond the five priorities} other {# m
 msgid "{autresActivites, plural, one {# autre activité avec des notifications} other {# autres activités avec des notifications}}"
 msgstr "{autresActivites, plural, one {# other activity with notifications} other {# other activities with notifications}}"
 
-#: src/composants/Notifications.tsx
-msgid "{autresActivites, plural, one {d’autres dans # autre activité} other {d’autres dans # autres activités}}"
-msgstr "{autresActivites, plural, one {more in # other activity} other {more in # other activities}}"
-
-#: src/composants/Notifications.tsx
-msgid "{autresActivites, plural, one {Notifications non lues dans # autre activité} other {Notifications non lues dans # autres activités}}"
-msgstr "{autresActivites, plural, one {Unread notifications in # other activity} other {Unread notifications in # other activities}}"
-
 #: src/composants/VerificationAcces.tsx
 msgid "{avecAcces} sur {total} a accès"
 msgstr "{avecAcces} of {total} has access"
@@ -796,12 +788,12 @@ msgid "{nonLuesAdmin, plural, one {# en attente} other {# en attente}}"
 msgstr "{nonLuesAdmin, plural, one {# pending} other {# pending}}"
 
 #: src/composants/Notifications.tsx
-msgid "{nonLuesIci, plural, one {# non lue dans cette activité} other {# non lues dans cette activité}}"
-msgstr "{nonLuesIci, plural, one {# unread in this activity} other {# unread in this activity}}"
-
-#: src/composants/Notifications.tsx
 msgid "{nonLuesIci, plural, one {# notification non lue dans cette activité} other {# notifications non lues dans cette activité}}"
 msgstr "{nonLuesIci, plural, one {# unread notification in this activity} other {# unread notifications in this activity}}"
+
+#: src/composants/Notifications.tsx
+msgid "{nonLuesOrganisation, plural, one {# notification non lue de l’organisation} other {# notifications non lues de l’organisation}}"
+msgstr "{nonLuesOrganisation, plural, one {# unread organization notification} other {# unread organization notifications}}"
 
 #: src/lib/espace-fichiers.ts
 msgid "{octets} o"
@@ -2466,10 +2458,6 @@ msgstr "No notifications in this activity."
 #: src/composants/Notifications.tsx
 msgid "Aucune notification non lue dans cette activité"
 msgstr "No unread notifications in this activity"
-
-#: src/composants/Notifications.tsx
-msgid "Aucune notification."
-msgstr "No notifications."
 
 #: src/pages/Organigramme.tsx
 msgid "Aucune période n’est en préparation. Les référentes et référents s’affichent quand une période s’ouvre."
