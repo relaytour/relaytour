@@ -103,6 +103,64 @@ describe('gabarits', () => {
     expect(texte).toContain('Club & co\n- La tâche « B » (Bassin).')
   })
 
+  it('range les lignes par périmètre et par rubrique, avec des lignes en retrait échappées', () => {
+    const { html, texte } = rendre(
+      'rappels-echeance',
+      {
+        rappels: [
+          {
+            titre: 'Rencontres',
+            elements: [],
+            sousGroupes: [
+              {
+                titre: 'Coordination <i>',
+                rubriques: [
+                  {
+                    titre: 'En retard',
+                    alerte: true,
+                    elements: ['« A », en retard depuis le 3 novembre'],
+                  },
+                  {
+                    titre: 'Déclinaisons en retard',
+                    alerte: true,
+                    elements: [
+                      {
+                        texte: '« Suivre les pôles »',
+                        retrait: [
+                          'Ville : « B » <b>, en retard',
+                          'Déclinaisons : 1 en retard sur 3',
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        lienConnexion: 'https://orga.exemple.org/',
+        lienPreferences: 'https://orga.exemple.org/preferences',
+      },
+      ORGANISATION
+    )
+    expect(html).toContain('Coordination &lt;i&gt;</p>')
+    expect(html).toContain('color:#B0283F">En retard</p>')
+    expect(html).toContain('Ville : « B » &lt;b&gt;, en retard</li>')
+    expect(html).not.toContain('<b>')
+    expect(texte).toContain(
+      [
+        'Rencontres',
+        '  Coordination <i>',
+        '    En retard',
+        '    - « A », en retard depuis le 3 novembre',
+        '    Déclinaisons en retard',
+        '    - « Suivre les pôles »',
+        '        · Ville : « B » <b>, en retard',
+        '        · Déclinaisons : 1 en retard sur 3',
+      ].join('\n')
+    )
+  })
+
   it('refuse un logo qui n’a pas une adresse https', () => {
     expect(() =>
       rendre('essai', {}, { ...ORGANISATION, logoUrl: 'javascript:alert(1)' })

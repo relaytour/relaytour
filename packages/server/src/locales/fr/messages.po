@@ -1703,6 +1703,16 @@ msgstr "La tâche « {titre} »{lieu} est en retard"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
+msgid "La déclinaison « {titre} » ({cible}) de votre tâche « {origine} »{lieu} est en retard depuis le {date}"
+msgstr "La déclinaison « {titre} » ({cible}) de votre tâche « {origine} »{lieu} est en retard depuis le {date}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "La déclinaison « {titre} » ({cible}) de votre tâche « {origine} »{lieu} est en retard"
+msgstr "La déclinaison « {titre} » ({cible}) de votre tâche « {origine} »{lieu} est en retard"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
 msgid "La tâche « {titre} »{lieu} est faite"
 msgstr "La tâche « {titre} »{lieu} est faite"
 
@@ -1751,6 +1761,11 @@ msgstr "Résumé par mail"
 #: src/lib/desabonnement.ts
 msgid "Demandes pour rejoindre l’équipe"
 msgstr "Demandes pour rejoindre l’équipe"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Mail des priorités"
+msgstr "Mail des priorités"
 
 #. js-lingui-explicit-id
 #: src/lib/desabonnement.ts
@@ -2551,6 +2566,92 @@ msgid "Un périmètre choisi est introuvable ou archivé."
 msgstr "Un périmètre choisi est introuvable ou archivé."
 
 #. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "En retard"
+msgstr "En retard"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "Échéance proche"
+msgstr "Échéance proche"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "À venir"
+msgstr "À venir"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "À traiter avant le point"
+msgstr "À traiter avant le point"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "Déclinaisons en retard"
+msgstr "Déclinaisons en retard"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "Autres rappels"
+msgstr "Autres rappels"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "{n} en retard"
+msgstr "{n} en retard"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "{n} en cours"
+msgstr "{n} en cours"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "{n, plural, one {# faite} other {# faites}}"
+msgstr "{n, plural, one {# faite} other {# faites}}"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "Déclinaisons : {total} à faire"
+msgstr "Déclinaisons : {total} à faire"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "Déclinaisons : {parties} sur {total}"
+msgstr "Déclinaisons : {parties} sur {total}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+#: src/lib/suivi-courriel.ts
+msgid "« {titre} », en retard depuis le {date}"
+msgstr "« {titre} », en retard depuis le {date}"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "« {titre} », en retard"
+msgstr "« {titre} », en retard"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "{jours, plural, =0 {« {titre} », échéance aujourd’hui} =1 {« {titre} », échéance demain} other {« {titre} », échéance dans # jours, le {date}}}"
+msgstr "{jours, plural, =0 {« {titre} », échéance aujourd’hui} =1 {« {titre} », échéance demain} other {« {titre} », échéance dans # jours, le {date}}}"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "{cible} : « {titre} », en retard depuis le {date}"
+msgstr "{cible} : « {titre} », en retard depuis le {date}"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "{cible} : « {titre} », en retard"
+msgstr "{cible} : « {titre} », en retard"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
+msgid "« {titre} »"
+msgstr "« {titre} »"
+
+#. js-lingui-explicit-id
 #: src/lib/zip.ts
 msgid "Le format zip64 n’est pas pris en charge."
 msgstr "Le format zip64 n’est pas pris en charge."
@@ -3141,6 +3242,31 @@ msgstr "Télécharger l’export : {lienExport}"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
+msgid "Priorités avant le prochain point"
+msgstr "Priorités avant le prochain point"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Les tâches à traiter en priorité dans vos périmètres."
+msgstr "Les tâches à traiter en priorité dans vos périmètres."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Voir les priorités"
+msgstr "Voir les priorités"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous recevez ce mail parce que vous l’avez demandé. Vous pouvez le désactiver dans vos préférences :"
+msgstr "Vous recevez ce mail parce que vous l’avez demandé. Vous pouvez le désactiver dans vos préférences :"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Voir les priorités : {lienPriorites}"
+msgstr "Voir les priorités : {lienPriorites}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
 msgid "L’adresse de votre espace"
 msgstr "L’adresse de votre espace"
 
@@ -3287,6 +3413,11 @@ msgstr "{tete} : une de vos tâches a été modifiée"
 #: src/courriel/messages.ts
 msgid "{tete} : échéances de vos tâches"
 msgstr "{tete} : échéances de vos tâches"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{tete} : les priorités avant le prochain point"
+msgstr "{tete} : les priorités avant le prochain point"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
@@ -3480,18 +3611,48 @@ msgstr "Aucune nouvelle."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
-msgid "{date} : {titre} ({perimetre}) (en retard)"
-msgstr "{date} : {titre} ({perimetre}) (en retard)"
-
-#. js-lingui-explicit-id
-#: src/courriel/messages.ts
-msgid "{date} : {titre} ({perimetre})"
-msgstr "{date} : {titre} ({perimetre})"
+msgid "« {titre} », pour le {date}"
+msgstr "« {titre} », pour le {date}"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
 msgid "Aucune échéance."
 msgstr "Aucune échéance."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "à prendre"
+msgstr "à prendre"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "« {titre} » · {qui}"
+msgstr "« {titre} » · {qui}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "« {titre} », en retard depuis le {date} · {qui}"
+msgstr "« {titre} », en retard depuis le {date} · {qui}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "« {titre} », pour le {date} · {qui}"
+msgstr "« {titre} », pour le {date} · {qui}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{n, plural, one {et # autre priorité} other {et # autres priorités}}"
+msgstr "{n, plural, one {et # autre priorité} other {et # autres priorités}}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Voici les priorités de {periode} jusqu’au {fin}. Aucun point d’équipe n’est prévu d’ici là."
+msgstr "Voici les priorités de {periode} jusqu’au {fin}. Aucun point d’équipe n’est prévu d’ici là."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Voici les priorités de {periode} avant le point d’équipe du {date}."
+msgstr "Voici les priorités de {periode} avant le point d’équipe du {date}."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts

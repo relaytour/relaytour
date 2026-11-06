@@ -6436,6 +6436,10 @@ msgstr "Le local ferme **à 19 h précises**."
 msgid "Le logo PNG s’affiche partout, y compris dans les mails. Le logo SVG, facultatif, le remplace à l’écran. Sans logo, l’espace affiche le pictogramme de Relaytour."
 msgstr "Le logo PNG s’affiche partout, y compris dans les mails. Le logo SVG, facultatif, le remplace à l’écran. Sans logo, l’espace affiche le pictogramme de Relaytour."
 
+#: src/pages/Preferences.tsx
+msgid "Le mail reprend les priorités du panneau Priorités. Il part à 7 h la veille de chaque point d’équipe, ou le lundi quand aucun point n’est prévu dans la semaine."
+msgstr "Le mail reprend les priorités du panneau Priorités. Il part à 7 h la veille de chaque point d’équipe, ou le lundi quand aucun point n’est prévu dans la semaine."
+
 #: src/composants/EcrireMessage.tsx
 msgid "Le message contient des passages à compléter"
 msgstr "Le message contient des passages à compléter"
@@ -6931,9 +6935,17 @@ msgstr "Les phases, les dates clés, les réunions et les échéances {periodeDe
 msgid "Les phases, qui occupent chacune plusieurs semaines de l’agenda"
 msgstr "Les phases, qui occupent chacune plusieurs semaines de l’agenda"
 
+#: src/pages/Preferences.tsx
+msgid "Les priorités de tous les périmètres."
+msgstr "Les priorités de tous les périmètres."
+
 #: src/composants/ReunionFormulaire.tsx
 msgid "Les priorités de toute l’équipe couvrent les jours jusqu’au prochain point d’équipe. Un rendez-vous à quelques personnes ne change pas cette période."
 msgstr "Les priorités de toute l’équipe couvrent les jours jusqu’au prochain point d’équipe. Un rendez-vous à quelques personnes ne change pas cette période."
+
+#: src/pages/Preferences.tsx
+msgid "Les priorités des périmètres où vous êtes affecté."
+msgstr "Les priorités des périmètres où vous êtes affecté."
 
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
@@ -7270,6 +7282,10 @@ msgid "Mail d’invitation du fournisseur"
 msgstr "Mail d’invitation du fournisseur"
 
 #: src/pages/Preferences.tsx
+msgid "Mail des priorités"
+msgstr "Mail des priorités"
+
+#: src/pages/Preferences.tsx
 msgid "Mails immédiats"
 msgstr "Mails immédiats"
 
@@ -7374,6 +7390,7 @@ msgid "Merci pour votre aide."
 msgstr "Merci pour votre aide."
 
 #: src/composants/Priorites.tsx
+#: src/pages/Preferences.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Mes périmètres"
 msgstr "Mes périmètres"
@@ -10415,6 +10432,7 @@ msgstr "Toute adresse de ces domaines passe pour une adresse de rôle. Relaytour
 #: src/composants/RessourcesFiche.tsx
 #: src/composants/SequenceDetail.tsx
 #: src/lib/agendas-ecrits.ts
+#: src/pages/Preferences.tsx
 msgid "Toute l’activité"
 msgstr "Toute l’activité"
 
@@ -10634,8 +10652,8 @@ msgid "Un mail immédiat quand une autre personne modifie une tâche qui vous es
 msgstr "Un mail immédiat quand une autre personne modifie une tâche qui vous est assignée."
 
 #: src/pages/Preferences.tsx
-msgid "Un mail le matin quand une de vos tâches arrive à échéance dans 7 jours ou le lendemain, ou qu’elle est en retard."
-msgstr "Un mail le matin quand une de vos tâches arrive à échéance dans 7 jours ou le lendemain, ou qu’elle est en retard."
+msgid "Un mail le matin quand une de vos tâches arrive à échéance dans 7 jours ou le lendemain, ou qu’elle est en retard. Il signale aussi les déclinaisons en retard de vos tâches partagées."
+msgstr "Un mail le matin quand une de vos tâches arrive à échéance dans 7 jours ou le lendemain, ou qu’elle est en retard. Il signale aussi les déclinaisons en retard de vos tâches partagées."
 
 #: src/pages/Preferences.tsx
 msgid "Un mail par heure au plus quand une activité que vous administrez reçoit des demandes."
@@ -11421,6 +11439,10 @@ msgstr "Vous lisez ce fil sans pouvoir y écrire."
 #: src/pages/Fiches.tsx
 msgid "Vous lisez ici les documents que l’association range chez son fournisseur cloud. Relaytour n’en garde aucune copie."
 msgstr "Vous lisez ici les documents que l’association range chez son fournisseur cloud. Relaytour n’en garde aucune copie."
+
+#: src/pages/Preferences.tsx
+msgid "Vous lisez les priorités dans l’espace."
+msgstr "Vous lisez les priorités dans l’espace."
 
 #: src/pages/Perimetre.tsx
 msgid "Vous lisez ses tâches et son équipe. Vous ne pouvez pas les modifier. Pour rejoindre ce périmètre, formulez un souhait dans <0>Tous les périmètres</0>."

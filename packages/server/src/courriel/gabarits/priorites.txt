@@ -1,0 +1,18 @@
+{{marque}}
+
+[[Priorités avant le prochain point]]
+
+{{introduction}}
+
+{{priorites}}
+
+[[Voir les priorités : {{lienPriorites}}]]
+
+[[Vous recevez ce mail parce que vous l’avez demandé. Vous pouvez le désactiver dans vos préférences :]] {{lienPreferences}}
+
+--
+[[Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
+organisateur de {{organisation}}.]] {{consigneReponse}}
+
+[[Cet espace est propulsé par Relaytour, logiciel libre.]]
+https://github.com/relaytour/relaytour

@@ -1,5 +1,6 @@
 import {
   FrequenceResume,
+  MailPriorites,
   NiveauNotification,
   prisma,
   type Prisma,
@@ -27,6 +28,12 @@ const NiveauNotificationEnum = builder.enumType(NiveauNotification, {
 })
 const FrequenceResumeEnum = builder.enumType(FrequenceResume, {
   name: 'FrequenceResume',
+})
+
+const MailPrioritesEnum = builder.enumType(MailPriorites, {
+  name: 'MailPriorites',
+  description:
+    'Mail des priorités (ADR 0063) : aucun, celles des périmètres où la personne est affectée, ou celles de toute l’activité.',
 })
 
 // Chaque personne ne lit et ne modifie que ses propres notifications et préférences :
@@ -142,6 +149,7 @@ interface Preferences {
   pushEquipe: boolean
   pushAgenda: boolean
   resumeAdmin: boolean
+  mailPriorites: MailPriorites
 }
 
 const PreferencesRef = builder
@@ -190,6 +198,11 @@ const PreferencesRef = builder
       resumeAdmin: t.exposeBoolean('resumeAdmin', {
         description:
           'La section « Pour vos rôles d’admin » du résumé par mail (ADR 0033).',
+      }),
+      mailPriorites: t.expose('mailPriorites', {
+        type: MailPrioritesEnum,
+        description:
+          'Mail des priorités, la veille de chaque point d’équipe ou le lundi sans point dans la semaine (ADR 0063).',
       }),
     }),
   })
@@ -481,6 +494,10 @@ builder.mutationFields(t => ({
       resumeAdmin: t.arg.boolean({
         description: 'Sans valeur, ce réglage ne change pas.',
       }),
+      mailPriorites: t.arg({
+        type: MailPrioritesEnum,
+        description: 'Sans valeur, ce réglage ne change pas.',
+      }),
     },
     resolve: async (_root, args, ctx) => {
       const facultatifs = [
@@ -505,6 +522,7 @@ builder.mutationFields(t => ({
         mailModification: args.mailModification,
         mailEcheance: args.mailEcheance,
         ...reglages,
+        ...(args.mailPriorites ? { mailPriorites: args.mailPriorites } : {}),
       }
       const userId = ctx.personne!.id
       const organisationId = ctx.organisation!.id

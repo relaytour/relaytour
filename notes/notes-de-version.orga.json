@@ -26,6 +26,24 @@
           }
         },
         {
+          "id": "2026-11-06-orga-un-mail-des-priorites-au-choix-dans-les-preferences",
+          "date": "2026-11-06",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un mail des priorités, au choix dans les préférences",
+            "texte": "Les préférences proposent le réglage « Mail des priorités » : « Mes périmètres », « Toute l'activité » ou « Jamais », par défaut. Le mail part à 7 h la veille de chaque point d'équipe, ou le lundi quand aucun point n'est prévu dans la semaine. Il reprend les priorités du panneau Priorités, rangées par périmètre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A priorities email, to choose in the preferences",
+            "texte": "The preferences offer a \"Priorities email\" setting: \"My areas\", \"Whole activity\" or \"Never\", the default. The email goes out at 7 a.m. the day before each team check-in, or on Monday when no check-in is planned that week. It lists the priorities of the Priorities panel, sorted by area.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-11-06-orga-les-tiroirs-et-le-champ-de-recherche-ont-des-bords-nets",
           "date": "2026-11-06",
           "type": "correctif",
@@ -40,6 +58,24 @@
           "en": {
             "titre": "Drawers and the search field have clean edges",
             "texte": "Drawers no longer show a square shadow around their rounded corners. The search field of the top bar no longer shows a second, sharper background behind its rounded outline.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-11-06-orga-les-mails-de-rappel-se-rangent-par-perimetre",
+          "date": "2026-11-06",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les mails de rappel se rangent par périmètre",
+            "texte": "Le mail de rappel du matin et les échéances du résumé se rangent par activité, puis par périmètre. Dans chaque périmètre, les tâches en retard viennent en premier, puis les échéances proches. Une tâche partagée affiche en retrait le nombre de ses déclinaisons en retard, en cours et faites. Le retard d'une déclinaison prévient aussi les personnes assignées à sa tâche partagée, dans la cloche et dans le mail de rappel.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Reminder emails are sorted by area",
+            "texte": "The morning reminder email and the due dates of the summary are sorted by activity, then by area. In each area, overdue tasks come first, then tasks due soon. A shared task shows, indented, how many of its derived tasks are overdue, in progress and done. An overdue derived task also alerts the people assigned to its shared task, in the bell and in the reminder email.",
             "migration": null
           }
         },
