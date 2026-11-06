@@ -663,84 +663,84 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@better-auth/core@npm:1.7.11":
-  version: 1.7.11
-  resolution: "@better-auth/core@npm:1.7.11"
+"@better-auth/core@npm:1.7.14":
+  version: 1.7.14
+  resolution: "@better-auth/core@npm:1.7.14"
   dependencies:
     "@standard-schema/spec": "npm:^1.1.0"
     zod: "npm:^4.5.4"
   peerDependencies:
     "@better-auth/utils": ^0.4.2 || ^0.5.0
-    "@better-fetch/fetch": 1.3.2
+    "@better-fetch/fetch": 1.3.3
     "@opentelemetry/api": ^1.9.0
-    better-call: 1.4.2
+    better-call: 1.4.4
     jose: ^6.1.0
     kysely: ^0.28.5 || ^0.29.0
     nanostores: ^1.0.1
   peerDependenciesMeta:
     "@opentelemetry/api":
       optional: true
-  checksum: 10/ac926bf4e5890170e868fc20055268e8a54dba0495bf97d847a3fbb156af0ee2a75cc285d141eca2739775c093a084b24093038c60e133738fc0a32a4994cba2
+  checksum: 10/6eb94b2ff7e8b74daecc8d7d7608f5f839d8c2971001f4f998b676ad84e047e127314d27a5f4325221ebb28e6603b2d7f4f96a1d4bab389529945562380bb729
   languageName: node
   linkType: hard
 
-"@better-auth/drizzle-adapter@npm:1.7.11":
-  version: 1.7.11
-  resolution: "@better-auth/drizzle-adapter@npm:1.7.11"
+"@better-auth/drizzle-adapter@npm:1.7.14":
+  version: 1.7.14
+  resolution: "@better-auth/drizzle-adapter@npm:1.7.14"
   peerDependencies:
-    "@better-auth/core": ^1.7.11
+    "@better-auth/core": ^1.7.14
     "@better-auth/utils": ^0.4.2 || ^0.5.0
     drizzle-orm: ^0.45.2 || >=1.0.0-rc.1 <2.0.0
   peerDependenciesMeta:
     drizzle-orm:
       optional: true
-  checksum: 10/06f13215fd2c9a1ba783e34b3507fb37d83e50733728cb623aed01dcf90921c391ec34575f7661529f4f3b8a4dba806f671acd237f7edc871b34595c9906d696
+  checksum: 10/288d8d0a5ef760b3182871701ae71b4e3be73e41b4a2c00a3931b7d1225feb5465d3f9e23f39cc1f24dac194194d8797972bea2c7cc99af6b4032397178d0b20
   languageName: node
   linkType: hard
 
-"@better-auth/kysely-adapter@npm:1.7.11":
-  version: 1.7.11
-  resolution: "@better-auth/kysely-adapter@npm:1.7.11"
+"@better-auth/kysely-adapter@npm:1.7.14":
+  version: 1.7.14
+  resolution: "@better-auth/kysely-adapter@npm:1.7.14"
   peerDependencies:
-    "@better-auth/core": ^1.7.11
+    "@better-auth/core": ^1.7.14
     "@better-auth/utils": ^0.4.2 || ^0.5.0
     kysely: ^0.28.17 || ^0.29.0
   peerDependenciesMeta:
     kysely:
       optional: true
-  checksum: 10/bc835162725bc215fbe172f1904560db3f74a1c1b3bc8f29a2de27b98a529d80cf9f39a284c120eb70deefa9c7c3868f7c72259b3601f052db91185b1a22811c
+  checksum: 10/aa4583f1c1188ef93993e38deec288a8838067e265752af796e1cb021bfcf5f04ec3e0746dd0a4422aa6a616c16313346ac03023d686d843681960e45fdc0eb2
   languageName: node
   linkType: hard
 
-"@better-auth/memory-adapter@npm:1.7.11":
-  version: 1.7.11
-  resolution: "@better-auth/memory-adapter@npm:1.7.11"
+"@better-auth/memory-adapter@npm:1.7.14":
+  version: 1.7.14
+  resolution: "@better-auth/memory-adapter@npm:1.7.14"
   peerDependencies:
-    "@better-auth/core": ^1.7.11
+    "@better-auth/core": ^1.7.14
     "@better-auth/utils": ^0.4.2 || ^0.5.0
-  checksum: 10/dd5efe694cefb2ed42e9b93f25020cb021a8510198849b1bd32550bd2881aff38c13476cd27bc2699c9ee8d4c933469a28dcb63d4737fab59f939ed8fd84f025
+  checksum: 10/c8944440fb0ca1a26f896286f0d09e07c6c4eceea94909a0012ef92e8af427ecbe78f8eadba2bacbe968d4de7bc565078caf449d62874643cde843993dd4a95b
   languageName: node
   linkType: hard
 
-"@better-auth/mongo-adapter@npm:1.7.11":
-  version: 1.7.11
-  resolution: "@better-auth/mongo-adapter@npm:1.7.11"
+"@better-auth/mongo-adapter@npm:1.7.14":
+  version: 1.7.14
+  resolution: "@better-auth/mongo-adapter@npm:1.7.14"
   peerDependencies:
-    "@better-auth/core": ^1.7.11
+    "@better-auth/core": ^1.7.14
     "@better-auth/utils": ^0.4.2 || ^0.5.0
     mongodb: ^6.0.0 || ^7.0.0
   peerDependenciesMeta:
     mongodb:
       optional: true
-  checksum: 10/d7538bf2d5c99dafc218cb89d35694e848475ecc3ebcd8b730bd5b54a33fa3d9941c05f60b97a8bfaae649adb9db6c1f0f387b804dae9e86000a312b716d1b77
+  checksum: 10/e8738f995defe295ced6ad4d3d3ec93ecc0abd8db6c79ba005ee49028fb58ec5e1aae151c7077da9b17854dde15b13b73de9f9add53506188496b8ca2e566db0
   languageName: node
   linkType: hard
 
-"@better-auth/prisma-adapter@npm:1.7.11":
-  version: 1.7.11
-  resolution: "@better-auth/prisma-adapter@npm:1.7.11"
+"@better-auth/prisma-adapter@npm:1.7.14":
+  version: 1.7.14
+  resolution: "@better-auth/prisma-adapter@npm:1.7.14"
   peerDependencies:
-    "@better-auth/core": ^1.7.11
+    "@better-auth/core": ^1.7.14
     "@better-auth/utils": ^0.4.2 || ^0.5.0
     "@prisma/client": ^5.0.0 || ^6.0.0 || ^7.0.0
     prisma: ^5.0.0 || ^6.0.0 || ^7.0.0
@@ -749,22 +749,31 @@ __metadata:
       optional: true
     prisma:
       optional: true
-  checksum: 10/926f66b7035f601d760d68304bbb8bf78fc60070a2dd32341b6ac0c8846e723479039890eab23e9e678f14cf78ca90d81c918d947dfe480b14b3413930a1a7e4
+  checksum: 10/c8194b27c484a690c03f6a64510cd0cc2ca17b018ccac17ed089bb61d9b04e3ca13282067b8e54917553131ad3efd9eefeb0f34a840daa98f120ff3a7c5a300f
   languageName: node
   linkType: hard
 
-"@better-auth/telemetry@npm:1.7.11":
-  version: 1.7.11
-  resolution: "@better-auth/telemetry@npm:1.7.11"
+"@better-auth/telemetry@npm:1.7.14":
+  version: 1.7.14
+  resolution: "@better-auth/telemetry@npm:1.7.14"
   peerDependencies:
-    "@better-auth/core": ^1.7.11
+    "@better-auth/core": ^1.7.14
     "@better-auth/utils": ^0.4.2 || ^0.5.0
-    "@better-fetch/fetch": 1.3.2
-  checksum: 10/82f5da617b0372613a74f1260386095982ea68bf048b16a442b50f2dc4edc9432cbd2e57a6ab8fe36c91448432129cde65b8c5084e28e27a290320627cbe85ce
+    "@better-fetch/fetch": 1.3.3
+  checksum: 10/3af8aa4c7c57f2eb9a5cf088c21d712a8b704fd78b03bd8b3ef4049ce6b7d85e6ee220d907ed61e6bcd5dcdedb8019ead0e6547257a0a46455e6e164ac6933df
   languageName: node
   linkType: hard
 
-"@better-auth/utils@npm:0.5.0, @better-auth/utils@npm:^0.5.0":
+"@better-auth/utils@npm:0.5.1":
+  version: 0.5.1
+  resolution: "@better-auth/utils@npm:0.5.1"
+  dependencies:
+    "@noble/hashes": "npm:^2.0.1"
+  checksum: 10/fbc138310b42e1f8a4020a9afb85e86aef81118c677f858e8359ed6100f667ef54359d58622322269a1410b7f7453fc147e9ed648a28c82cfbcba55e8fdae4c1
+  languageName: node
+  linkType: hard
+
+"@better-auth/utils@npm:^0.5.0":
   version: 0.5.0
   resolution: "@better-auth/utils@npm:0.5.0"
   dependencies:
@@ -773,7 +782,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@better-fetch/fetch@npm:1.3.2, @better-fetch/fetch@npm:^1.3.1":
+"@better-fetch/fetch@npm:1.3.3":
+  version: 1.3.3
+  resolution: "@better-fetch/fetch@npm:1.3.3"
+  checksum: 10/45f502d58500b99c3ab6d3afcfd81868266ff886e4ca67037456c6d9666d2feae68ac1f5080f1e78bb416438a26a60730d737257743d1e28eaea23e9ca807b88
+  languageName: node
+  linkType: hard
+
+"@better-fetch/fetch@npm:^1.3.1":
   version: 1.3.2
   resolution: "@better-fetch/fetch@npm:1.3.2"
   checksum: 10/b25ec332d3ba6f4011d017c30ef2c526a5e3afba52c03b30c62fdd1ababbcd3f48f056c1375fd4e2faa55ed8d69c2738b5bbcc3a413ae255f32de594d0c8e489
@@ -2420,6 +2436,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@lingui/babel-plugin-lingui-macro@npm:6.11.0":
+  version: 6.11.0
+  resolution: "@lingui/babel-plugin-lingui-macro@npm:6.11.0"
+  dependencies:
+    "@lingui/conf": "npm:6.11.0"
+    "@lingui/message-utils": "npm:6.11.0"
+  peerDependencies:
+    "@babel/core": ^7.20.12 || ^8.0.0
+  peerDependenciesMeta:
+    "@babel/core":
+      optional: true
+  checksum: 10/28f25dc3fd277033771e0e6da21ad2b3211ad6b32f2bba7efd5faeaa999f8a4031ef4c6b80f73be9438aa7600c012b9ffa6b330651eabae7fa9f7d39a43de459
+  languageName: node
+  linkType: hard
+
 "@lingui/babel-plugin-lingui-macro@npm:6.9.1, @lingui/babel-plugin-lingui-macro@npm:~6.9.1":
   version: 6.9.1
   resolution: "@lingui/babel-plugin-lingui-macro@npm:6.9.1"
@@ -2476,6 +2507,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@lingui/conf@npm:6.11.0":
+  version: 6.11.0
+  resolution: "@lingui/conf@npm:6.11.0"
+  dependencies:
+    jest-validate: "npm:^29.4.3"
+    jiti: "npm:^2.5.1"
+    lilconfig: "npm:^3.1.3"
+    normalize-path: "npm:^3.0.0"
+  checksum: 10/0a7f6b4fd3bce74f8f8a4adf1bedca1895edab95a0bbb3392b3436ed2dc537be97fe8d8b3547b86d85eec75db6068ac55eee3a87bbf45106ac65ff0203989798
+  languageName: node
+  linkType: hard
+
 "@lingui/conf@npm:6.9.1, @lingui/conf@npm:~6.9.1":
   version: 6.9.1
   resolution: "@lingui/conf@npm:6.9.1"
@@ -2488,7 +2531,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lingui/core@npm:6.9.1, @lingui/core@npm:~6.9.1":
+"@lingui/core@npm:6.11.0, @lingui/core@npm:~6.11.0":
+  version: 6.11.0
+  resolution: "@lingui/core@npm:6.11.0"
+  dependencies:
+    "@lingui/babel-plugin-lingui-macro": "npm:6.11.0"
+    "@lingui/message-utils": "npm:6.11.0"
+  peerDependencies:
+    babel-plugin-macros: 2 || 3
+  peerDependenciesMeta:
+    babel-plugin-macros:
+      optional: true
+  checksum: 10/33eb33070cf3daf2ea1d3db2480e4b417333ec9e91954f67810aa92509f1116784d6d735332ed7a102f684e190bace449be852e3dd7ab29c2eb2c803726a3b3d
+  languageName: node
+  linkType: hard
+
+"@lingui/core@npm:6.9.1":
   version: 6.9.1
   resolution: "@lingui/core@npm:6.9.1"
   dependencies:
@@ -2511,6 +2569,17 @@ __metadata:
     "@lingui/message-utils": "npm:6.9.1"
     pofile-ts: "npm:^4.0.3"
   checksum: 10/afff46b10208fc565f719b41734f8d3d13d92ecaa4bf27c19f2588abb12b42b82c0c8216a157d56bd0adeb7a042973176363941cf59c6e1bc1d9e6f30eba8c8f
+  languageName: node
+  linkType: hard
+
+"@lingui/message-utils@npm:6.11.0":
+  version: 6.11.0
+  resolution: "@lingui/message-utils@npm:6.11.0"
+  dependencies:
+    "@messageformat/date-skeleton": "npm:^1.1.0"
+    "@messageformat/parser": "npm:^5.0.0"
+    "@noble/hashes": "npm:^2.4.0"
+  checksum: 10/a49f797597bff617f79e8c28df220a4b51a22d609e8dbb947bdf091464809a51a53728d3feb77f66f47ba44a3af36a98fc4687bb2a988e9b907d9f56b1863138
   languageName: node
   linkType: hard
 
@@ -2627,12 +2696,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lingui/react@npm:~6.9.1":
-  version: 6.9.1
-  resolution: "@lingui/react@npm:6.9.1"
+"@lingui/react@npm:~6.11.0":
+  version: 6.11.0
+  resolution: "@lingui/react@npm:6.11.0"
   dependencies:
-    "@lingui/babel-plugin-lingui-macro": "npm:6.9.1"
-    "@lingui/core": "npm:6.9.1"
+    "@lingui/babel-plugin-lingui-macro": "npm:6.11.0"
+    "@lingui/core": "npm:6.11.0"
     use-sync-external-store: "npm:^1.6.0"
   peerDependencies:
     babel-plugin-macros: 2 || 3
@@ -2640,7 +2709,7 @@ __metadata:
   peerDependenciesMeta:
     babel-plugin-macros:
       optional: true
-  checksum: 10/bc5a2550f46fd7d051b8e16489a31ceba1e16d3a1418ee56624a9f0e01159cf76af0d95250d889575196a18b53e8a259b344c0b6eb48ee4dc8e70ef1d4777d44
+  checksum: 10/6dbf7a4a0d753265f3be6c1eec6389164652883e8b2198dc96300f98f0ca7bc33dacf1a2e047b570b43bb0c33a9d0dd8a95a66080f0f24a0b208a4add6818bb1
   languageName: node
   linkType: hard
 
@@ -2686,113 +2755,113 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@milkdown/core@npm:7.22.3, @milkdown/core@npm:^7.22.3":
-  version: 7.22.3
-  resolution: "@milkdown/core@npm:7.22.3"
+"@milkdown/core@npm:7.23.0, @milkdown/core@npm:^7.23.0":
+  version: 7.23.0
+  resolution: "@milkdown/core@npm:7.23.0"
   dependencies:
-    "@milkdown/ctx": "npm:7.22.3"
-    "@milkdown/exception": "npm:7.22.3"
-    "@milkdown/prose": "npm:7.22.3"
-    "@milkdown/transformer": "npm:7.22.3"
+    "@milkdown/ctx": "npm:7.23.0"
+    "@milkdown/exception": "npm:7.23.0"
+    "@milkdown/prose": "npm:7.23.0"
+    "@milkdown/transformer": "npm:7.23.0"
     remark-parse: "npm:^11.0.0"
     remark-stringify: "npm:^11.0.0"
     unified: "npm:^11.0.3"
-  checksum: 10/96e5b460b04d235544cf485b595a928911d3b50c7a32e869fc6f9d3658f732c17f6db1a8ccf5d36146a0a37520191b805c288fea95840dafea100d1fe85f7727
+  checksum: 10/f513b78ce30da750fdc70d2a389654a93b5b0b3390dc3cb319a79a5cd745a5443e3868611f559fe54c7a98140db46b12dfb3251512552807606e1bb0520034a0
   languageName: node
   linkType: hard
 
-"@milkdown/ctx@npm:7.22.3, @milkdown/ctx@npm:^7.22.3":
-  version: 7.22.3
-  resolution: "@milkdown/ctx@npm:7.22.3"
+"@milkdown/ctx@npm:7.23.0, @milkdown/ctx@npm:^7.23.0":
+  version: 7.23.0
+  resolution: "@milkdown/ctx@npm:7.23.0"
   dependencies:
-    "@milkdown/exception": "npm:7.22.3"
-  checksum: 10/bad69192315e134ff2bef206035af13700aca595d9cf32c8804a03f11218fe15cb99aa397211a0e52541e3121bd142fe1331ea0d7e765cf3b79bdca4dd0fb61a
+    "@milkdown/exception": "npm:7.23.0"
+  checksum: 10/defc1b5cc0e6de2a64dbb1758494a7672f59b778d31896955cec92f52e640c21627cd93c831b5b81c9128eb6974b6c5e66946ec4617886a1f0062538caf5949f
   languageName: node
   linkType: hard
 
-"@milkdown/exception@npm:7.22.3":
-  version: 7.22.3
-  resolution: "@milkdown/exception@npm:7.22.3"
-  checksum: 10/a6927769a12f899825ca3a4d99b36e794f747bde377b97d7b4b2e1b3c02bfc39629b94c60408698190b333e62a2df1104ed7cd63f721ae105df9b717a5f7e873
+"@milkdown/exception@npm:7.23.0":
+  version: 7.23.0
+  resolution: "@milkdown/exception@npm:7.23.0"
+  checksum: 10/f4a019dacd0aaaa0e2a2faec7b072ad605ea464a52932d730680f34bd8fa95bc2f3e568ca4f8309f29286fe0bb1bd32940ff161933cdee7103adbda9fb1e7678
   languageName: node
   linkType: hard
 
-"@milkdown/plugin-clipboard@npm:^7.22.3":
-  version: 7.22.3
-  resolution: "@milkdown/plugin-clipboard@npm:7.22.3"
+"@milkdown/plugin-clipboard@npm:^7.23.0":
+  version: 7.23.0
+  resolution: "@milkdown/plugin-clipboard@npm:7.23.0"
   dependencies:
-    "@milkdown/core": "npm:7.22.3"
-    "@milkdown/ctx": "npm:7.22.3"
-    "@milkdown/prose": "npm:7.22.3"
-    "@milkdown/utils": "npm:7.22.3"
-  checksum: 10/af69fa4dd60617607a2b1fe18861e889cb988533557c88dd90cc8d4fef349c5bdf76b4f5054a19b10bc36e8413b8366e7b769b85c5bcbee2379a102a26320cc5
+    "@milkdown/core": "npm:7.23.0"
+    "@milkdown/ctx": "npm:7.23.0"
+    "@milkdown/prose": "npm:7.23.0"
+    "@milkdown/utils": "npm:7.23.0"
+  checksum: 10/fd2648296ee85bdf1aae0840e263636649a901d03fccc1d5a70c2ab0320d34e8537223cb0507c7d1304b8a2579c55e37ac4fa8859029bafac5c38258ba36b029
   languageName: node
   linkType: hard
 
-"@milkdown/plugin-history@npm:^7.22.3":
-  version: 7.22.3
-  resolution: "@milkdown/plugin-history@npm:7.22.3"
+"@milkdown/plugin-history@npm:^7.23.0":
+  version: 7.23.0
+  resolution: "@milkdown/plugin-history@npm:7.23.0"
   dependencies:
-    "@milkdown/core": "npm:7.22.3"
-    "@milkdown/ctx": "npm:7.22.3"
-    "@milkdown/prose": "npm:7.22.3"
-    "@milkdown/utils": "npm:7.22.3"
-  checksum: 10/b2e3451b6962b339cab0aa08712563f7fdf4455ee45f3c827b05a4986dd502acd89a5e9966716450b3a14d5d15e18a9f2b6970a7e8b8b960725546a5fff9024e
+    "@milkdown/core": "npm:7.23.0"
+    "@milkdown/ctx": "npm:7.23.0"
+    "@milkdown/prose": "npm:7.23.0"
+    "@milkdown/utils": "npm:7.23.0"
+  checksum: 10/dc7f6258e0775a6f1ddaeddfb2caadb7bfde4c47bf281f2f6e929f3a3194344365f2b8a56ad354c4ffd5a2f2e258d5e13ea14f8380d2b677fc7ea86c126e50c7
   languageName: node
   linkType: hard
 
-"@milkdown/plugin-listener@npm:^7.22.3":
-  version: 7.22.3
-  resolution: "@milkdown/plugin-listener@npm:7.22.3"
+"@milkdown/plugin-listener@npm:^7.23.0":
+  version: 7.23.0
+  resolution: "@milkdown/plugin-listener@npm:7.23.0"
   dependencies:
-    "@milkdown/core": "npm:7.22.3"
-    "@milkdown/ctx": "npm:7.22.3"
-    "@milkdown/prose": "npm:7.22.3"
+    "@milkdown/core": "npm:7.23.0"
+    "@milkdown/ctx": "npm:7.23.0"
+    "@milkdown/prose": "npm:7.23.0"
     "@types/lodash-es": "npm:^4.17.12"
     lodash-es: "npm:^4.17.21"
-  checksum: 10/747cc02ccc7ad4b908ee6757b2342c7489c75dc5e57903f4b29c820bd5f96e16ce7828ccf3f83f498633e280f5a494f72fa15b469af6fea9c72687f3457909e9
+  checksum: 10/ddbbcfc4ac51dda80c7e936cb371fdbb41f6892b3ea0ec8e3c950ef91ebddbe579f98e0622ed0de01905b79a8497e5788d51f5369d0fba657cef6976082246b5
   languageName: node
   linkType: hard
 
-"@milkdown/preset-commonmark@npm:7.22.3, @milkdown/preset-commonmark@npm:^7.22.3":
-  version: 7.22.3
-  resolution: "@milkdown/preset-commonmark@npm:7.22.3"
+"@milkdown/preset-commonmark@npm:7.23.0, @milkdown/preset-commonmark@npm:^7.23.0":
+  version: 7.23.0
+  resolution: "@milkdown/preset-commonmark@npm:7.23.0"
   dependencies:
-    "@milkdown/core": "npm:7.22.3"
-    "@milkdown/ctx": "npm:7.22.3"
-    "@milkdown/exception": "npm:7.22.3"
-    "@milkdown/prose": "npm:7.22.3"
-    "@milkdown/transformer": "npm:7.22.3"
-    "@milkdown/utils": "npm:7.22.3"
+    "@milkdown/core": "npm:7.23.0"
+    "@milkdown/ctx": "npm:7.23.0"
+    "@milkdown/exception": "npm:7.23.0"
+    "@milkdown/prose": "npm:7.23.0"
+    "@milkdown/transformer": "npm:7.23.0"
+    "@milkdown/utils": "npm:7.23.0"
     remark-inline-links: "npm:^7.0.0"
     unist-util-visit: "npm:^5.0.0"
     unist-util-visit-parents: "npm:^6.0.1"
-  checksum: 10/3dc236e8e1ce3cdac577f14decf8fc20921aea647792fd792347d0705f17feee5c3556b816608596e331113d27ad36196e6c816e44c5efc7ee729a679a9dd6e1
+  checksum: 10/3df67f50dde8686529da210f758569044fb25721625498b706af3752fd37a3e29308eae9836a3bbb04c16cd3916ece89a4b2854572bfe055b90150d0cb1d882b
   languageName: node
   linkType: hard
 
-"@milkdown/preset-gfm@npm:^7.22.3":
-  version: 7.22.3
-  resolution: "@milkdown/preset-gfm@npm:7.22.3"
+"@milkdown/preset-gfm@npm:^7.23.0":
+  version: 7.23.0
+  resolution: "@milkdown/preset-gfm@npm:7.23.0"
   dependencies:
-    "@milkdown/core": "npm:7.22.3"
-    "@milkdown/ctx": "npm:7.22.3"
-    "@milkdown/exception": "npm:7.22.3"
-    "@milkdown/preset-commonmark": "npm:7.22.3"
-    "@milkdown/prose": "npm:7.22.3"
-    "@milkdown/transformer": "npm:7.22.3"
-    "@milkdown/utils": "npm:7.22.3"
+    "@milkdown/core": "npm:7.23.0"
+    "@milkdown/ctx": "npm:7.23.0"
+    "@milkdown/exception": "npm:7.23.0"
+    "@milkdown/preset-commonmark": "npm:7.23.0"
+    "@milkdown/prose": "npm:7.23.0"
+    "@milkdown/transformer": "npm:7.23.0"
+    "@milkdown/utils": "npm:7.23.0"
     prosemirror-safari-ime-span: "npm:^1.0.1"
     remark-gfm: "npm:^4.0.1"
-  checksum: 10/6e5264ccf331de6db05bdedbff85e47cb3c4a02f71136a9c7a65d0645d8244c18177c169734b9f8b67e50f1e3f7bd1b1851496f9a21057a9a9cdffb4d1ae7d79
+  checksum: 10/61860bde02a0b526b3150c60592b365aa511cb20d572bfea0b5acbe4ce48e51ec0913c5ff4a08aa21513cf4321be3a068f4c93984ec771b2e9108fbf6b6f5846
   languageName: node
   linkType: hard
 
-"@milkdown/prose@npm:7.22.3, @milkdown/prose@npm:^7.22.3":
-  version: 7.22.3
-  resolution: "@milkdown/prose@npm:7.22.3"
+"@milkdown/prose@npm:7.23.0, @milkdown/prose@npm:^7.23.0":
+  version: 7.23.0
+  resolution: "@milkdown/prose@npm:7.23.0"
   dependencies:
-    "@milkdown/exception": "npm:7.22.3"
+    "@milkdown/exception": "npm:7.23.0"
     prosemirror-changeset: "npm:^2.3.1"
     prosemirror-commands: "npm:^1.7.1"
     prosemirror-dropcursor: "npm:^1.8.2"
@@ -2806,33 +2875,33 @@ __metadata:
     prosemirror-tables: "npm:^1.8.1"
     prosemirror-transform: "npm:^1.10.5"
     prosemirror-view: "npm:^1.41.3"
-  checksum: 10/6ff0cb1cb525530661b390b881042b607b26ad374dd2dfdd97779faced833c4f6f3d7a87bfb2093e39dcfc0f924ef8a52e15a6307d9a753a07471d7f47e19a2c
+  checksum: 10/2e38dc6d109f2b31dabea05ade58687cb5c2376790c2866c18dab60d99385c18964a09fe864d44d92c74b40f0aadb45ebe8cda887d25bedf19222cfec21ed69e
   languageName: node
   linkType: hard
 
-"@milkdown/transformer@npm:7.22.3, @milkdown/transformer@npm:^7.22.3":
-  version: 7.22.3
-  resolution: "@milkdown/transformer@npm:7.22.3"
+"@milkdown/transformer@npm:7.23.0, @milkdown/transformer@npm:^7.23.0":
+  version: 7.23.0
+  resolution: "@milkdown/transformer@npm:7.23.0"
   dependencies:
-    "@milkdown/exception": "npm:7.22.3"
-    "@milkdown/prose": "npm:7.22.3"
+    "@milkdown/exception": "npm:7.23.0"
+    "@milkdown/prose": "npm:7.23.0"
     remark: "npm:^15.0.1"
     unified: "npm:^11.0.3"
-  checksum: 10/2f20f4a9d1f72f593fce203353288b7b0bafecd514704c7c91d4949107d8103fcfa3aae60de0ac5e3738bd8a01f0d12429882b04b0540d3bbe764426f27e38b7
+  checksum: 10/a539b0d6ffcde73f9e4fe7b9923b475af888ec8d708ed4e6669d76669c957aa37e78b4ba86d98e453373fdae29616378cc9ab85d437874daf79f80b510622fce
   languageName: node
   linkType: hard
 
-"@milkdown/utils@npm:7.22.3, @milkdown/utils@npm:^7.22.3":
-  version: 7.22.3
-  resolution: "@milkdown/utils@npm:7.22.3"
+"@milkdown/utils@npm:7.23.0, @milkdown/utils@npm:^7.23.0":
+  version: 7.23.0
+  resolution: "@milkdown/utils@npm:7.23.0"
   dependencies:
-    "@milkdown/core": "npm:7.22.3"
-    "@milkdown/ctx": "npm:7.22.3"
-    "@milkdown/exception": "npm:7.22.3"
-    "@milkdown/prose": "npm:7.22.3"
-    "@milkdown/transformer": "npm:7.22.3"
+    "@milkdown/core": "npm:7.23.0"
+    "@milkdown/ctx": "npm:7.23.0"
+    "@milkdown/exception": "npm:7.23.0"
+    "@milkdown/prose": "npm:7.23.0"
+    "@milkdown/transformer": "npm:7.23.0"
     nanoid: "npm:^6.0.0"
-  checksum: 10/b33cbd3b0ae70f5eb0aff215d70443977516cacb42f7064b17717c03966ad8470ab1ff244ed637f53b9f5b07c2ecb3349022047cfde9d51fc2dfdbd075baafc6
+  checksum: 10/16f801afcfecde728b77e047e53899e9cac8358b2e308d728dafb1bc5025c7c17a36504853e6ec7175186311f899b0882cf27cb655b6320b9a8ccb6a931679b7
   languageName: node
   linkType: hard
 
@@ -3022,7 +3091,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/hashes@npm:^2.0.1, @noble/hashes@npm:^2.2.0":
+"@noble/hashes@npm:^2.0.1, @noble/hashes@npm:^2.2.0, @noble/hashes@npm:^2.4.0":
   version: 2.4.0
   resolution: "@noble/hashes@npm:2.4.0"
   checksum: 10/88d4cdd6cef00f412a39f65bda1d24cba2264c6cacdd1c6c48d7ed66fd9be865ffb7231024fb81177975c684b8a463879b89c5ae6960370b05a546c0fd8afa2c
@@ -3099,12 +3168,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pothos/core@npm:^4.13.0":
-  version: 4.15.1
-  resolution: "@pothos/core@npm:4.15.1"
+"@pothos/core@npm:^4.16.0":
+  version: 4.16.0
+  resolution: "@pothos/core@npm:4.16.0"
   peerDependencies:
     graphql: ^16.10.0 || ^17.0.0
-  checksum: 10/95cc28352fb9aed96ec4bb15691ed9c8091b019f546f6e04cdfa0d1a3666d6862bd9ad4fdec1800fc7d63d33f285a653005a1c861ce0e1f0abe264c4533afc4c
+  checksum: 10/f9e5117aa66ad41edc5d476621b70c1f51008f2ff641b37bab8c54a9e8a8d6a0b499b0e6f434a934a30b6e72eff6db35dc800fdb10842741af1dc86f80ec416b
   languageName: node
   linkType: hard
 
@@ -3134,13 +3203,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pothos/plugin-scope-auth@npm:^4.2.1":
-  version: 4.2.1
-  resolution: "@pothos/plugin-scope-auth@npm:4.2.1"
+"@pothos/plugin-scope-auth@npm:^4.2.2":
+  version: 4.2.2
+  resolution: "@pothos/plugin-scope-auth@npm:4.2.2"
   peerDependencies:
     "@pothos/core": "*"
     graphql: ^16.10.0 || ^17.0.0
-  checksum: 10/471bc6b45a68c3d953633c71b11ecb27176d36844b9b8b3a1cef6db196c37f3c9b285bf3e0e5509438f079d4ec23b90b1a36569933cb7c41426069dd5b7875ef
+  checksum: 10/128606671c6e48e5aa3cfc20a969c4775b475a1d9ac63d61c56b67b383215581a0a1c15a1be7da10579c608c013a42d28af77fa95bb808c62c403587bc6123c5
   languageName: node
   linkType: hard
 
@@ -3973,7 +4042,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@relaytour/database@workspace:packages/database"
   dependencies:
-    "@pothos/core": "npm:^4.13.0"
+    "@pothos/core": "npm:^4.16.0"
     "@pothos/plugin-prisma": "npm:^4.14.0"
     "@prisma/client": "npm:^6.19.0"
     "@types/node": "npm:^24.13.0"
@@ -4001,27 +4070,27 @@ __metadata:
     "@lingui/babel-plugin-lingui-macro": "npm:~6.9.1"
     "@lingui/cli": "npm:~6.9.1"
     "@lingui/conf": "npm:~6.9.1"
-    "@lingui/core": "npm:~6.9.1"
+    "@lingui/core": "npm:~6.11.0"
     "@lingui/format-po": "npm:~6.9.1"
-    "@lingui/react": "npm:~6.9.1"
+    "@lingui/react": "npm:~6.11.0"
     "@lingui/vite-plugin": "npm:~6.9.1"
-    "@milkdown/core": "npm:^7.22.3"
-    "@milkdown/ctx": "npm:^7.22.3"
-    "@milkdown/plugin-clipboard": "npm:^7.22.3"
-    "@milkdown/plugin-history": "npm:^7.22.3"
-    "@milkdown/plugin-listener": "npm:^7.22.3"
-    "@milkdown/preset-commonmark": "npm:^7.22.3"
-    "@milkdown/preset-gfm": "npm:^7.22.3"
-    "@milkdown/prose": "npm:^7.22.3"
-    "@milkdown/transformer": "npm:^7.22.3"
-    "@milkdown/utils": "npm:^7.22.3"
+    "@milkdown/core": "npm:^7.23.0"
+    "@milkdown/ctx": "npm:^7.23.0"
+    "@milkdown/plugin-clipboard": "npm:^7.23.0"
+    "@milkdown/plugin-history": "npm:^7.23.0"
+    "@milkdown/plugin-listener": "npm:^7.23.0"
+    "@milkdown/preset-commonmark": "npm:^7.23.0"
+    "@milkdown/preset-gfm": "npm:^7.23.0"
+    "@milkdown/prose": "npm:^7.23.0"
+    "@milkdown/transformer": "npm:^7.23.0"
+    "@milkdown/utils": "npm:^7.23.0"
     "@relaytour/commun": "workspace:*"
     "@relaytour/tokens": "workspace:*"
     "@types/papaparse": "npm:^5.5.2"
     "@types/react": "npm:^19.3.0"
     "@types/react-dom": "npm:^19.3.0"
     "@vitejs/plugin-react": "npm:^5.2.0"
-    antd: "npm:^6.6.6"
+    antd: "npm:^6.6.8"
     eslint: "npm:^9.39.0"
     eslint-plugin-lingui: "npm:~0.16.0"
     eslint-plugin-react-hooks: "npm:^7.1.1"
@@ -4029,14 +4098,14 @@ __metadata:
     globals: "npm:^17.13.0"
     graphql: "npm:^16.14.0"
     graphql-sse: "npm:^2.6.3"
-    mdast-util-to-markdown: "npm:^2.2.0"
+    mdast-util-to-markdown: "npm:^2.2.1"
     papaparse: "npm:^5.7.0"
     pdfjs-dist: "npm:^6.4.299"
     react: "npm:^19.3.1"
     react-dom: "npm:^19.3.1"
     react-markdown: "npm:^10.1.0"
     react-router: "npm:^7.18.4"
-    read-excel-file: "npm:^9.3.12"
+    read-excel-file: "npm:^9.3.13"
     remark-gfm: "npm:^4.0.1"
     rxjs: "npm:^7.8.2"
     typescript: "npm:~5.9.0"
@@ -4054,12 +4123,12 @@ __metadata:
     "@as-integrations/express5": "npm:^1.1.2"
     "@lingui/cli": "npm:~6.9.1"
     "@lingui/conf": "npm:~6.9.1"
-    "@lingui/core": "npm:~6.9.1"
+    "@lingui/core": "npm:~6.11.0"
     "@lingui/format-po": "npm:~6.9.1"
-    "@pothos/core": "npm:^4.13.0"
+    "@pothos/core": "npm:^4.16.0"
     "@pothos/plugin-complexity": "npm:^4.2.3"
     "@pothos/plugin-prisma": "npm:^4.14.0"
-    "@pothos/plugin-scope-auth": "npm:^4.2.1"
+    "@pothos/plugin-scope-auth": "npm:^4.2.2"
     "@prisma/client": "npm:^6.19.0"
     "@relaytour/commun": "workspace:*"
     "@relaytour/database": "workspace:*"
@@ -4071,7 +4140,7 @@ __metadata:
     "@types/turndown": "npm:^5.0.6"
     "@types/web-push": "npm:^3.6.4"
     "@xmldom/xmldom": "npm:^0.9.10"
-    better-auth: "npm:1.7.11"
+    better-auth: "npm:1.7.14"
     bullmq: "npm:^5.80.0"
     cors: "npm:^2.8.6"
     express: "npm:^5.3.0"
@@ -4081,7 +4150,7 @@ __metadata:
     ioredis: "npm:^5.11.0"
     mammoth: "npm:^1.13.0"
     mjml: "npm:^5.4.0"
-    nodemailer: "npm:^10.1.7"
+    nodemailer: "npm:^10.3.1"
     pino: "npm:^10.4.0"
     pino-pretty: "npm:^13.2.0"
     tsup: "npm:^8.5.0"
@@ -5254,9 +5323,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"antd@npm:^6.6.6":
-  version: 6.6.7
-  resolution: "antd@npm:6.6.7"
+"antd@npm:^6.6.8":
+  version: 6.6.8
+  resolution: "antd@npm:6.6.8"
   dependencies:
     "@ant-design/colors": "npm:^8.0.1"
     "@ant-design/cssinjs": "npm:^2.1.2"
@@ -5309,7 +5378,7 @@ __metadata:
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10/6d435b0246aa87c038efb08a713db66de94401ae5d9e72e33d1e901ec6886aa31fa21542e0292e7f6d2e40bbc040258550cf20f72544faa84038e48942a0e116
+  checksum: 10/6758f659de1a1e71262f7576860f9115768d192345f4555b78045b9284a90937b8d4e77972f6e0ee8a3a609358ca95aa45e06d28e5bb3c4accc09ac490d78936
   languageName: node
   linkType: hard
 
@@ -5445,22 +5514,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"better-auth@npm:1.7.11":
-  version: 1.7.11
-  resolution: "better-auth@npm:1.7.11"
+"better-auth@npm:1.7.14":
+  version: 1.7.14
+  resolution: "better-auth@npm:1.7.14"
   dependencies:
-    "@better-auth/core": "npm:1.7.11"
-    "@better-auth/drizzle-adapter": "npm:1.7.11"
-    "@better-auth/kysely-adapter": "npm:1.7.11"
-    "@better-auth/memory-adapter": "npm:1.7.11"
-    "@better-auth/mongo-adapter": "npm:1.7.11"
-    "@better-auth/prisma-adapter": "npm:1.7.11"
-    "@better-auth/telemetry": "npm:1.7.11"
-    "@better-auth/utils": "npm:0.5.0"
-    "@better-fetch/fetch": "npm:1.3.2"
+    "@better-auth/core": "npm:1.7.14"
+    "@better-auth/drizzle-adapter": "npm:1.7.14"
+    "@better-auth/kysely-adapter": "npm:1.7.14"
+    "@better-auth/memory-adapter": "npm:1.7.14"
+    "@better-auth/mongo-adapter": "npm:1.7.14"
+    "@better-auth/prisma-adapter": "npm:1.7.14"
+    "@better-auth/telemetry": "npm:1.7.14"
+    "@better-auth/utils": "npm:0.5.1"
+    "@better-fetch/fetch": "npm:1.3.3"
     "@noble/ciphers": "npm:^2.2.0"
     "@noble/hashes": "npm:^2.2.0"
-    better-call: "npm:1.4.2"
+    better-call: "npm:1.4.4"
     defu: "npm:^6.1.4"
     jose: "npm:^6.2.3"
     kysely: "npm:^0.28.17 || ^0.29.0"
@@ -5522,13 +5591,13 @@ __metadata:
       optional: true
     vue:
       optional: true
-  checksum: 10/381d3cfddc886cae529a89966b005bf20b7524c8d83876a95e352c04a9f57169f99438d61341a994354e53cc0ea46390f6ecd2ea1da93068294fc704574386c9
+  checksum: 10/b8f900ea9115335b233068b5018d726da7ba1ca9cf8c9bb8680fc4e7cbd20ebc7437b9200008e30249137d4ef3fa3391016813140bf0c00f2cd38cd668765f7f
   languageName: node
   linkType: hard
 
-"better-call@npm:1.4.2":
-  version: 1.4.2
-  resolution: "better-call@npm:1.4.2"
+"better-call@npm:1.4.4":
+  version: 1.4.4
+  resolution: "better-call@npm:1.4.4"
   dependencies:
     "@better-auth/utils": "npm:^0.5.0"
     "@better-fetch/fetch": "npm:^1.3.1"
@@ -5539,7 +5608,7 @@ __metadata:
   peerDependenciesMeta:
     zod:
       optional: true
-  checksum: 10/b30a4f56a7edc26c77ca09042f0a21c5e86e755585d73dc4e3c325cc5312875c0d8227373182e1a049c4ef521b9628363b8dd0a8a36526425efc2c954332c45d
+  checksum: 10/c0b1c91cc6e01516f0cc3041401e4a0b69e7ffb18436b1795d720ff224849781a2825e556c292ce4ae028adc0e3ca6f7b378c120c2ca100bef4f36ca796a8c2e
   languageName: node
   linkType: hard
 
@@ -9374,7 +9443,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mdast-util-to-markdown@npm:^2.0.0, mdast-util-to-markdown@npm:^2.2.0":
+"mdast-util-to-markdown@npm:^2.0.0":
   version: 2.2.0
   resolution: "mdast-util-to-markdown@npm:2.2.0"
   dependencies:
@@ -9390,6 +9459,25 @@ __metadata:
     unist-util-visit: "npm:^5.0.0"
     zwitch: "npm:^2.0.0"
   checksum: 10/5b11e246180761adab57318ee0783e33ccf7ea0e84c88186930bf65c7cbba6e0e1416e1d0cc56659884ff24f09abda4299917fb367ab0203943e1b630d54e419
+  languageName: node
+  linkType: hard
+
+"mdast-util-to-markdown@npm:^2.2.1":
+  version: 2.2.1
+  resolution: "mdast-util-to-markdown@npm:2.2.1"
+  dependencies:
+    "@types/mdast": "npm:^4.0.0"
+    "@types/unist": "npm:^3.0.0"
+    longest-streak: "npm:^3.0.0"
+    mdast-util-phrasing: "npm:^4.0.0"
+    mdast-util-to-string: "npm:^4.0.0"
+    micromark-util-character: "npm:^2.0.0"
+    micromark-util-classify-character: "npm:^2.0.0"
+    micromark-util-decode-string: "npm:^2.0.0"
+    micromark-util-html-tag-name: "npm:^2.0.0"
+    unist-util-visit: "npm:^5.0.0"
+    zwitch: "npm:^2.0.0"
+  checksum: 10/4af93f2df4024c9c59902ae82582027b15b87183028425d0918739468c39d39b3a5209ba1bcb45de41d3ec69346052b45905d0bc093e2cd465b7eb2418c42722
   languageName: node
   linkType: hard
 
@@ -10558,10 +10646,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodemailer@npm:^10.1.7":
-  version: 10.2.1
-  resolution: "nodemailer@npm:10.2.1"
-  checksum: 10/1f7c755800fd184e848955aabf66d7f8d78d1476a62e009e10b9c59d763c63442e7f0945ad4f1a790408df98cdde3e4a611c98b180af73be81d0299840ddd4e7
+"nodemailer@npm:^10.3.1":
+  version: 10.3.1
+  resolution: "nodemailer@npm:10.3.1"
+  checksum: 10/5193882b528ec334d239162d73e5fefc42083c85e95604e8688d10a58fca813843ac6f92cc6f62574602a2ac2e894e4186b24da0e00552d624ce887ccc6b7759
   languageName: node
   linkType: hard
 
@@ -11895,15 +11983,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"read-excel-file@npm:^9.3.12":
-  version: 9.3.12
-  resolution: "read-excel-file@npm:9.3.12"
+"read-excel-file@npm:^9.3.13":
+  version: 9.3.13
+  resolution: "read-excel-file@npm:9.3.13"
   dependencies:
     fflate: "npm:^0.8.3"
     saxen: "npm:^11.1.0"
     unzipper-esm: "npm:^0.13.3"
     worker-f: "npm:^0.1.12"
-  checksum: 10/9d7f8293b609c9a15280be77a378167715fc4a9616728a509dbd98a9e0924034fe1c5c84920a83356974723eb6b273781219c7a4c997fe008f9b2a6e91acc162
+  checksum: 10/dd2f288fc671f210535719fe3344b591627a9846c30b35593acd7831e3feba663a54739bf800afcadf1c17346faacc200a859c069aa824ee4c8206909e870725
   languageName: node
   linkType: hard
 
