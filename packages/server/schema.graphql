@@ -589,6 +589,8 @@ enum CodeRaisonPriorite {
   DECLINAISONS
   ECHEANCE_PROCHE
   EN_COURS
+  JALON
+  MENE_A_UN_JALON
   RETARD
   RETARD_A_REVOIR
   REUNION_A_VENIR
@@ -3131,6 +3133,11 @@ type Priorites {
   """
   fin: String!
 
+  """
+  Les jalons ouverts dont l’échéance tombe dans l’horizon, échéance dépassée comprise, tous périmètres confondus, par échéance (ADR 0062).
+  """
+  jalons: [Tache!]!
+
   """Les périmètres non archivés de l’activité, dans leur ordre."""
   perimetres: [PrioritesDuPerimetre!]!
 
@@ -3536,9 +3543,12 @@ type RaisonPriorite {
   jours: Int
   niveau: AjustementPriorite
 
-  """Déclinaisons actives (DECLINAISONS)."""
+  """Déclinaisons actives (DECLINAISONS) ou tâches liées ouvertes (JALON)."""
   nombre: Int
   points: Int!
+
+  """Le titre du jalon le plus proche (MENE_A_UN_JALON)."""
+  titre: String
 }
 
 """Résultat du dernier export des fiches vers l’espace de fichiers."""

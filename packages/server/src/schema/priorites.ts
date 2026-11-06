@@ -52,6 +52,8 @@ const CODES_RAISON = [
   'A_PRENDRE',
   'EN_COURS',
   'AJUSTEMENT',
+  'JALON',
+  'MENE_A_UN_JALON',
 ] as const satisfies readonly CodeRaison[]
 
 const CodeRaisonEnum = builder.enumType('CodeRaisonPriorite', {
@@ -72,8 +74,14 @@ const RaisonRef = builder.objectRef<Raison>('RaisonPriorite').implement({
     }),
     nombre: t.int({
       nullable: true,
-      description: 'Déclinaisons actives (DECLINAISONS).',
+      description:
+        'Déclinaisons actives (DECLINAISONS) ou tâches liées ouvertes (JALON).',
       resolve: r => r.nombre ?? null,
+    }),
+    titre: t.string({
+      nullable: true,
+      description: 'Le titre du jalon le plus proche (MENE_A_UN_JALON).',
+      resolve: r => r.titre ?? null,
     }),
     niveau: t.field({
       type: AjustementPrioriteEnum,
@@ -172,8 +180,10 @@ const PrioriteRef = builder.objectRef<PrioriteLue>('Priorite').implement({
   fields: t => ({
     tache: t.field({ type: TacheRef, resolve: p => p.tache }),
     score: t.exposeInt('score'),
-    // Une tâche cumule huit raisons au plus : une pour l'échéance, puis le point,
-    // la réunion, les déclinaisons, l'accord, la prise, le statut et l'ajustement.
+    // Une tâche cumule rarement plus de huit raisons : l'échéance, le point, la
+    // réunion, les déclinaisons, l'accord, les jalons, la prise, le statut et
+    // l'ajustement ne se rencontrent presque jamais tous ensemble. Ce nombre
+    // estime le coût d'une requête ; aucune raison n'en dépend.
     raisons: t.field({
       type: [RaisonRef],
       complexity: { field: 1, multiplier: 8 },
@@ -217,6 +227,7 @@ interface PrioritesLues {
   fin: string
   prochainPoint: Awaited<ReturnType<typeof lireReunion>> | null
   perimetres: PrioritesDuPerimetreLues[]
+  jalons: Tache[]
 }
 
 const PrioritesRef = builder.objectRef<PrioritesLues>('Priorites').implement({
@@ -239,6 +250,15 @@ const PrioritesRef = builder.objectRef<PrioritesLues>('Priorites').implement({
         'Les périmètres non archivés de l’activité, dans leur ordre.',
       complexity: { field: 1, multiplier: 4 },
       resolve: p => p.perimetres,
+    }),
+    jalons: t.field({
+      type: [TacheRef],
+      description:
+        'Les jalons ouverts dont l’échéance tombe dans l’horizon, échéance dépassée comprise, tous périmètres confondus, par échéance (ADR 0062).',
+      // Un horizon de deux à quatre semaines porte peu de jalons. Ce nombre estime
+      // le coût de la requête ; la liste n'est pas tronquée.
+      complexity: { field: 1, multiplier: 2 },
+      resolve: p => p.jalons,
     }),
   }),
 })
@@ -275,6 +295,23 @@ builder.queryFields(t => ({
             _count: { select: { assignations: true } },
             declinaisons: {
               select: { statut: true, accord: true, echeance: true },
+            },
+            // Jalons (ADR 0062) : les tâches liées d'un jalon, et les jalons
+            // qu'une tâche sert.
+            liensJalon: { select: { tache: { select: { statut: true } } } },
+            liensTache: {
+              select: {
+                jalon: {
+                  select: {
+                    titre: true,
+                    echeance: true,
+                    statut: true,
+                    accord: true,
+                    jalonLe: true,
+                    perimetre: { select: { archivedAt: true } },
+                  },
+                },
+              },
             },
           },
         }),
@@ -323,6 +360,24 @@ builder.queryFields(t => ({
             d.echeance ? [jourISO(d.echeance)] : []
           ),
           reunionsAVenir: reunions.get(tache.id) ?? 0,
+          ...(tache.jalonLe === null
+            ? {}
+            : {
+                jalonOuvertes: tache.liensJalon.filter(
+                  l =>
+                    l.tache.statut === 'A_FAIRE' ||
+                    l.tache.statut === 'EN_COURS'
+                ).length,
+              }),
+          jalonsServis: tache.liensTache.flatMap(({ jalon }) =>
+            jalon.jalonLe !== null &&
+            jalon.echeance !== null &&
+            (jalon.statut === 'A_FAIRE' || jalon.statut === 'EN_COURS') &&
+            (jalon.accord === null || jalon.accord === 'ACCEPTE') &&
+            jalon.perimetre.archivedAt === null
+              ? [{ titre: jalon.titre, echeance: jourISO(jalon.echeance) }]
+              : []
+          ),
           ajustement:
             ajustement === null
               ? null
@@ -339,8 +394,17 @@ builder.queryFields(t => ({
         perimetres.map(p => p.id),
         h
       )
+      const jalons = taches
+        .filter(
+          t =>
+            t.jalonLe !== null &&
+            t.echeance !== null &&
+            jourISO(t.echeance) <= h.fin
+        )
+        .sort((a, b) => a.echeance!.getTime() - b.echeance!.getTime())
       return {
         fin: h.fin,
+        jalons,
         prochainPoint: point === null ? null : await lireReunion(ctx, point),
         perimetres: classes.map(c => ({
           perimetre: parId.get(c.perimetreId)!,

@@ -281,6 +281,35 @@ export function listerPriorites(
   return blocs.length === 0 ? aucune : blocs.join('\n\n')
 }
 
+/** Un jalon de l'horizon, tel qu'un message le liste (ADR 0062). */
+export interface JalonListe {
+  titre: string
+  perimetre: string
+  /** Date sans heure, déjà formatée, ou null. */
+  echeance: string | null
+  ouvertes: number
+  /** Les tâches liées, abandonnées exclues. */
+  gardees: number
+}
+
+/**
+ * Les jalons avant le prochain point (ADR 0062) : un titre, puis un jalon par ligne
+ * avec son périmètre, son échéance et ses tâches ouvertes. Vide sans jalon.
+ */
+export function listerJalons(jalons: JalonListe[]): string {
+  if (jalons.length === 0) return ''
+  const lignes = jalons.map(jalon => {
+    const { titre, perimetre, echeance, ouvertes, gardees } = jalon
+    const contexte = echeance ? t`${perimetre}, pour le ${echeance}` : perimetre
+    const reste =
+      gardees === 0
+        ? t`aucune tâche liée`
+        : t`${plural(ouvertes, { one: `# tâche ouverte sur ${gardees}`, other: `# tâches ouvertes sur ${gardees}` })}`
+    return `- ${titre} (${contexte}) : ${reste}`
+  })
+  return [t`Jalons avant le prochain point`, ...lignes].join('\n')
+}
+
 // ── Modèles ──────────────────────────────────────────────────────────────────
 
 export interface Modele {

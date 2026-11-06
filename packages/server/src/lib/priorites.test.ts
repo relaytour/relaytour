@@ -135,6 +135,44 @@ describe('score', () => {
     expect(noter(tache({ ajustement: passe }), h).score).toBe(0)
   })
 
+  // Jalons (ADR 0062).
+  it('compte un jalon dont des tâches liées restent ouvertes', () => {
+    expect(codes(tache({ jalonOuvertes: 3 }))).toEqual([['JALON', 5]])
+    expect(codes(tache({ jalonOuvertes: 0 }))).toEqual([])
+  })
+
+  it('compte une fois une tâche qui mène à un jalon de l’horizon, le plus proche', () => {
+    const notee = noter(
+      tache({
+        jalonsServis: [
+          { titre: 'Parcours envoyé', echeance: '2026-11-15' },
+          { titre: 'Parcours prêt', echeance: '2026-11-10' },
+          { titre: 'Bilan', echeance: '2027-03-01' },
+        ],
+      }),
+      horizon(AUJOURDHUI, null)
+    )
+    expect(notee.raisons).toEqual([
+      { code: 'MENE_A_UN_JALON', points: 10, titre: 'Parcours prêt' },
+    ])
+  })
+
+  it('compte un jalon en retard, et ignore un jalon au-delà de l’horizon', () => {
+    const h = horizon(AUJOURDHUI, null)
+    expect(
+      codes(
+        tache({ jalonsServis: [{ titre: 'Passé', echeance: '2026-10-01' }] }),
+        h
+      )
+    ).toEqual([['MENE_A_UN_JALON', 10]])
+    expect(
+      codes(
+        tache({ jalonsServis: [{ titre: 'Loin', echeance: '2026-12-31' }] }),
+        h
+      )
+    ).toEqual([])
+  })
+
   it('ne descend pas sous zéro', () => {
     const basse = { niveau: 'BASSE' as const, jusquAu: '2026-11-18' }
     expect(

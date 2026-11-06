@@ -28,6 +28,8 @@ export type CodeRaison =
   | 'A_PRENDRE'
   | 'EN_COURS'
   | 'AJUSTEMENT'
+  | 'JALON'
+  | 'MENE_A_UN_JALON'
 
 /** Une raison du score : un code, ses points et la valeur qu'elle cite. */
 export interface Raison {
@@ -35,8 +37,10 @@ export interface Raison {
   points: number
   /** Jours de retard ou jours avant l'échéance, selon le code. */
   jours?: number
-  /** Nombre de déclinaisons actives, pour DECLINAISONS. */
+  /** Déclinaisons actives (DECLINAISONS) ou tâches liées ouvertes (JALON). */
   nombre?: number
+  /** Le titre du jalon le plus proche, pour MENE_A_UN_JALON. */
+  titre?: string
   /** Le niveau, pour AJUSTEMENT. */
   niveau?: NiveauAjustement
 }
@@ -63,6 +67,10 @@ export interface TacheAClasser {
   /** Réunions à venir, non annulées, liées à la tâche. */
   reunionsAVenir: number
   ajustement: AjustementEnCours | null
+  /** Pour un jalon : ses tâches liées ouvertes (ADR 0062). Absent : pas un jalon. */
+  jalonOuvertes?: number
+  /** Les jalons ouverts que la tâche sert, avec leur échéance. */
+  jalonsServis?: readonly { titre: string; echeance: string }[]
 }
 
 export interface Horizon {
@@ -164,6 +172,17 @@ export function noter<T extends TacheAClasser>(
   }
   if (tache.declinaisonsEnAttente > 0) {
     raisons.push({ code: 'ACCORD_ATTENDU', points: 5 })
+  }
+  // Jalons (ADR 0062) : un jalon qui attend encore des tâches, et une tâche qui
+  // mène à un jalon de l'horizon. Le second critère compte une fois.
+  if ((tache.jalonOuvertes ?? 0) > 0) {
+    raisons.push({ code: 'JALON', points: 5, nombre: tache.jalonOuvertes })
+  }
+  const proche = (tache.jalonsServis ?? [])
+    .filter(j => j.echeance <= h.fin)
+    .sort((a, b) => (a.echeance < b.echeance ? -1 : 1))[0]
+  if (proche !== undefined) {
+    raisons.push({ code: 'MENE_A_UN_JALON', points: 10, titre: proche.titre })
   }
   if (tache.assignes === 0) raisons.push({ code: 'A_PRENDRE', points: 8 })
   if (tache.statut === 'EN_COURS') raisons.push({ code: 'EN_COURS', points: 3 })
