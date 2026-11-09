@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import { prisma } from '@relaytour/database'
+import { prisma, type Prisma } from '@relaytour/database'
 
 import { erreurSaisie } from './erreurs.ts'
 import { i18n } from './langue.ts'
@@ -33,6 +33,28 @@ export function adresseInjoignable(adresse: string): boolean {
 }
 
 /**
+ * Refuse un robot de plus quand l'organisation compte déjà ROBOTS_MAX robots actifs.
+ * L'appelant tient le verrou de l'organisation : deux entrées simultanées ne
+ * dépassent pas le plafond.
+ */
+export async function exigerPlaceRobot(
+  tx: Prisma.TransactionClient,
+  organisationId: string
+): Promise<void> {
+  const actifs = await tx.appartenance.count({
+    where: { organisationId, archiveLe: null, user: { robot: true } },
+  })
+  if (actifs >= ROBOTS_MAX) {
+    throw erreurSaisie(
+      i18n._(
+        'Votre organisation a déjà {max} robots actifs : archivez-en un avant d’en créer un autre.',
+        { max: ROBOTS_MAX }
+      )
+    )
+  }
+}
+
+/**
  * Crée un robot dans l'organisation et le rattache aux activités choisies. Le robot
  * prend une place de membre (ADR 0058). Le plafond se vérifie sous le verrou de
  * l'organisation, que `placesMembres` prend avant tout comptage.
@@ -46,21 +68,7 @@ export async function creerRobot(demande: {
   const id = randomUUID()
   return prisma.$transaction(async tx => {
     const places = await placesMembres(tx, demande.organisationId)
-    const actifs = await tx.appartenance.count({
-      where: {
-        organisationId: demande.organisationId,
-        archiveLe: null,
-        user: { robot: true },
-      },
-    })
-    if (actifs >= ROBOTS_MAX) {
-      throw erreurSaisie(
-        i18n._(
-          'Votre organisation a déjà {max} robots actifs : archivez-en un avant d’en créer un autre.',
-          { max: ROBOTS_MAX }
-        )
-      )
-    }
+    await exigerPlaceRobot(tx, demande.organisationId)
     await places.prendre()
     await tx.user.create({
       data: {

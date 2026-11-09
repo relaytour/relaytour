@@ -246,6 +246,40 @@ describe('création d’un robot', () => {
       a: [ids.club],
     })
     expect(code(r)).toBe('SAISIE_INVALIDE')
+
+    // Archiver un robot, en créer un autre, puis rétablir le premier : le
+    // rétablissement respecte aussi le plafond.
+    const archive = await prisma.appartenance.findFirstOrThrow({
+      where: {
+        organisationId: ids.org,
+        archiveLe: null,
+        user: { robot: true, id: { not: ids.robot } },
+      },
+      select: { userId: true },
+    })
+    const ARCHIVER =
+      'mutation ($id: ID!, $a: Boolean!) { archiverPersonne(id: $id, archive: $a) { id } }'
+    expect(
+      (
+        await executer({ session: ids.admin }, ARCHIVER, {
+          id: archive.userId,
+          a: true,
+        })
+      ).errors
+    ).toBeUndefined()
+    expect(
+      (
+        await executer({ session: ids.admin }, CREER_ROBOT, {
+          nom: 'Remplaçant',
+          a: [ids.club],
+        })
+      ).errors
+    ).toBeUndefined()
+    const retabli = await executer({ session: ids.admin }, ARCHIVER, {
+      id: archive.userId,
+      a: false,
+    })
+    expect(code(retabli)).toBe('SAISIE_INVALIDE')
   })
 })
 

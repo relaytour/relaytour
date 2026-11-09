@@ -34,6 +34,7 @@ import {
 } from '../lib/invitations.ts'
 import { journal } from '../lib/journal.ts'
 import { revoquerJetonsDe } from '../lib/jetons-acces.ts'
+import { exigerPlaceRobot } from '../lib/robots.ts'
 import { i18n } from '../lib/langue.ts'
 import { limiterParCle } from '../lib/limite.ts'
 import { placesMembres } from '../lib/limites.ts'
@@ -918,7 +919,7 @@ builder.mutationFields(t => ({
       // organisation, son compte et ses autres organisations ne changent pas.
       // Aucune session n'est fermée : le contexte relit l'appartenance à chaque
       // requête, et l'accès à l'organisation tombe à la suivante.
-      await exigerMembre(ctx, id)
+      const membre = await exigerMembre(ctx, id)
       const organisationId = ctx.organisation!.id
       const instant = new Date()
       const change = await prisma.$transaction(async tx => {
@@ -929,6 +930,11 @@ builder.mutationFields(t => ({
         const places = args.archive
           ? null
           : await placesMembres(tx, organisationId, instant)
+        // Rétablir un robot respecte aussi le plafond des robots actifs (ADR 0064).
+        // `placesMembres` a déjà pris le verrou de l'organisation.
+        if (!args.archive && membre.robot && membre.archive) {
+          await exigerPlaceRobot(tx, organisationId)
+        }
         // Une personne déjà archivée garde la date de son archivage.
         const { count } = await tx.appartenance.updateMany({
           where: {
