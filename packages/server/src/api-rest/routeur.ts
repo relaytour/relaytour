@@ -156,11 +156,11 @@ export function routeurApiRest(options: OptionsApiRest): express.Router {
     res.json(contrat)
   })
 
-  routeur.use(express.json({ limit: '1mb' }))
-
-  // Tout le reste exige un jeton d'accès. Une session ne compte pas.
+  // Tout le reste exige un jeton d'accès. Une session ne compte pas. Le contrôle
+  // précède la lecture du corps : un refus ne coûte pas l'analyse d'un mégaoctet.
+  // Le motif est celui de /graphql : `rt_` seul est un jeton invalide.
   routeur.use((req, res, suite) => {
-    const porteur = /^Bearer\s+(rt_\S+)\s*$/i.exec(
+    const porteur = /^Bearer\s+(rt_\S*)\s*$/i.exec(
       req.get('authorization') ?? ''
     )
     if (porteur === null) {
@@ -186,6 +186,8 @@ export function routeurApiRest(options: OptionsApiRest): express.Router {
       (erreur: unknown) => suite(erreur)
     )
   })
+
+  routeur.use(express.json({ limit: '1mb' }))
 
   for (const op of operations) {
     const methode = op.methode.toLowerCase() as 'get' | 'post' | 'patch'
@@ -241,7 +243,21 @@ export function routeurApiRest(options: OptionsApiRest): express.Router {
         ])
         return
       }
-      suite(erreur)
+      // Toute autre erreur (base ou Valkey injoignable) : une erreur interne au
+      // format du contrat, journalisée sous la référence que la réponse porte.
+      // Une réponse déjà commencée se termine par le gestionnaire d'Express.
+      if (res.headersSent) {
+        suite(erreur)
+        return
+      }
+      repondreErreurs(res, [
+        versRest(
+          new GraphQLError('Erreur interne', {
+            path: [],
+            originalError: erreur instanceof Error ? erreur : undefined,
+          })
+        ),
+      ])
     }
   )
 

@@ -221,6 +221,49 @@ describe('accès à l’API REST', () => {
     expect(r.entetes.get('www-authenticate')).toContain('invalid_token')
   })
 
+  it('refuse « rt_ » seul comme un jeton invalide, avant de lire le corps', async () => {
+    const vide = await appeler('GET', '/moi', { jeton: 'rt_' })
+    expect(vide.statut).toBe(401)
+    expect(code(vide)).toBe('JETON_INVALIDE')
+    // Un corps illisible n'est pas lu tant que le jeton n'est pas accepté.
+    const corps = await appeler('POST', '/taches', {
+      jeton: `rt_${'D'.repeat(43)}`,
+      brut: '{"titre":',
+    })
+    expect(corps.statut).toBe(401)
+    expect(code(corps)).toBe('JETON_INVALIDE')
+  })
+
+  it('rend une erreur interne au format du contrat', async () => {
+    const app = express()
+    app.use(
+      '/api/v1',
+      routeurApiRest({
+        schema,
+        version: '9.9.9',
+        contexte: () => Promise.reject(new Error('Valkey injoignable')),
+      })
+    )
+    const panne = app.listen(0, '127.0.0.1')
+    await new Promise(r => panne.once('listening', r))
+    try {
+      const { port } = panne.address() as AddressInfo
+      const r = await fetch(`http://127.0.0.1:${port}/api/v1/moi`, {
+        headers: { authorization: `Bearer ${jetons.lecture}` },
+      })
+      expect(r.status).toBe(500)
+      expect(r.headers.get('content-type')).toContain('application/json')
+      const corps = (await r.json()) as {
+        erreurs: { code: string; reference?: string; message: string }[]
+      }
+      expect(corps.erreurs[0]?.code).toBe('INTERNAL_SERVER_ERROR')
+      expect(corps.erreurs[0]?.reference).toMatch(/^[0-9a-f]{8}$/)
+      expect(corps.erreurs[0]?.message).not.toContain('Valkey')
+    } finally {
+      await new Promise(r => panne.close(r))
+    }
+  })
+
   it('n’a ni webhook ni route inconnue', async () => {
     const webhook = await appeler('POST', '/webhook', {
       jeton: jetons.ecriture,
