@@ -1658,6 +1658,21 @@ msgstr "{acteur} a commenté la tâche « {titre} »{lieu}"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
+msgid "{acteur} s’occupe de la tâche « {titre} »{lieu} à la place de {ancien}"
+msgstr "{acteur} s’occupe de la tâche « {titre} »{lieu} à la place de {ancien}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} vous a assigné la tâche « {titre} »{lieu} à la place de {ancien}"
+msgstr "{acteur} vous a assigné la tâche « {titre} »{lieu} à la place de {ancien}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a assigné la tâche « {titre} »{lieu} à {personne} à la place de {ancien}"
+msgstr "{acteur} a assigné la tâche « {titre} »{lieu} à {personne} à la place de {ancien}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
 msgid "{acteur} s’occupe de la tâche « {titre} »{lieu}"
 msgstr "{acteur} s’occupe de la tâche « {titre} »{lieu}"
 
@@ -3606,6 +3621,11 @@ msgstr "Pour vos rôles d’admin"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
+msgid "{n, plural, one {et # autre nouvelle dans l’application} other {et # autres nouvelles dans l’application}}"
+msgstr "{n, plural, one {et # autre nouvelle dans l’application} other {et # autres nouvelles dans l’application}}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
 msgid "Aucune nouvelle."
 msgstr "Aucune nouvelle."
 
@@ -3643,6 +3663,16 @@ msgstr "« {titre} », pour le {date} · {qui}"
 #: src/courriel/messages.ts
 msgid "{n, plural, one {et # autre priorité} other {et # autres priorités}}"
 msgstr "{n, plural, one {et # autre priorité} other {et # autres priorités}}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Aucune priorité dans vos périmètres d’ici le prochain point."
+msgstr "Aucune priorité dans vos périmètres d’ici le prochain point."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Vos nouvelles"
+msgstr "Vos nouvelles"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts

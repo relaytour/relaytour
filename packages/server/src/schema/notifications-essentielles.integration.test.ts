@@ -5,6 +5,7 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { composer } from '../courriel/messages.ts'
 import { genererRappels } from '../jobs/planification.ts'
 import { consoliderLesFenetres } from '../test/fenetre.ts'
 
@@ -484,5 +485,55 @@ describe('fenêtre de regroupement de dix minutes', () => {
     expect(enFile.filter(m => m.sorte === 'tache-modifiee')).toEqual([
       { sorte: 'tache-modifiee', userId: ids.paul, changement: 'contenu' },
     ])
+  })
+})
+
+describe('résumé regroupé par tâche', () => {
+  it('fusionne un retrait et une reprise, sans répéter un mail immédiat', async () => {
+    const tacheId = await tache(ids.natation, 'Relire l’accueil')
+    const base = {
+      organisationId: ids.organisation,
+      userId: ids.noa,
+      tacheId,
+      perimetreId: ids.natation,
+      acteurId: ids.lea,
+    }
+    const t0 = Date.now() - 60_000
+    await prisma.notification.create({
+      data: {
+        ...base,
+        type: 'TACHE_DESASSIGNEE',
+        personneId: ids.paul,
+        createdAt: new Date(t0),
+      },
+    })
+    await prisma.notification.create({
+      data: {
+        ...base,
+        type: 'TACHE_ASSIGNEE',
+        personneId: ids.lea,
+        createdAt: new Date(t0 + 1_000),
+      },
+    })
+    await prisma.notification.create({
+      data: {
+        ...base,
+        type: 'TACHE_MODIFIEE',
+        envoyeeLe: new Date(),
+        createdAt: new Date(t0 + 2_000),
+      },
+    })
+    const message = await composer(prisma, {
+      sorte: 'resume',
+      userId: ids.noa,
+      organisationId: ids.organisation,
+    })
+    expect(message?.texte).toContain(
+      'Lea s’occupe de la tâche « Relire l’accueil » (Natation) à la place de Paul.'
+    )
+    expect(message?.texte).not.toContain('a retiré Paul')
+    expect(message?.texte).not.toContain(
+      'a modifié la tâche « Relire l’accueil »'
+    )
   })
 })

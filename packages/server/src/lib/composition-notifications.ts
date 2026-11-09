@@ -102,6 +102,11 @@ export interface NotificationLue {
   sondage?: { id: string; titre: string; editionId: string } | null
   sequence?: { id: string; titre: string; editionId: string } | null
   benevole?: { nom: string } | null
+  /**
+   * Pour une assignation regroupée dans un résumé : la personne que la nouvelle
+   * personne remplace sur la tâche (ADR 0065).
+   */
+  remplaceId?: string | null
 }
 
 export interface ActiviteDeNotification {
@@ -187,7 +192,7 @@ async function lireContexte(
     ...new Set(valeurs.filter((v): v is string => v !== null)),
   ]
   const personnes = uniques(
-    notifications.flatMap(n => [n.acteurId, n.personneId])
+    notifications.flatMap(n => [n.acteurId, n.personneId, n.remplaceId ?? null])
   )
   const activites = uniques(notifications.map(activiteIdDe))
   // Le périmètre de la notification, et celui de sa tâche pour le lien : une
@@ -519,6 +524,26 @@ function phrase(
         lieu,
       })
     case 'TACHE_ASSIGNEE':
+      if (n.remplaceId) {
+        const ancien =
+          n.remplaceId === moiId
+            ? i18n._('vous')
+            : (c.noms.get(n.remplaceId) ?? i18n._('une personne'))
+        return n.personneId === n.acteurId
+          ? i18n._(
+              '{acteur} s’occupe de la tâche « {titre} »{lieu} à la place de {ancien}',
+              { acteur, titre, lieu, ancien }
+            )
+          : n.personneId === moiId
+            ? i18n._(
+                '{acteur} vous a assigné la tâche « {titre} »{lieu} à la place de {ancien}',
+                { acteur, titre, lieu, ancien }
+              )
+            : i18n._(
+                '{acteur} a assigné la tâche « {titre} »{lieu} à {personne} à la place de {ancien}',
+                { acteur, titre, lieu, personne, ancien }
+              )
+      }
       return n.personneId === n.acteurId
         ? i18n._('{acteur} s’occupe de la tâche « {titre} »{lieu}', {
             acteur,
@@ -821,4 +846,81 @@ async function fichesConnexesIllisibles(
     if (!(await lisible)) illisibles.add(n.id)
   }
   return illisibles
+}
+
+const ASSIGNATIONS: ReadonlySet<TypeNotification> = new Set([
+  'TACHE_ASSIGNEE',
+  'TACHE_DESASSIGNEE',
+])
+const CHANGEMENTS: ReadonlySet<TypeNotification> = new Set([
+  'TACHE_MODIFIEE',
+  'TACHE_STATUT',
+])
+
+/**
+ * Regroupe les nouvelles d'une même tâche pour un résumé (ADR 0065). Les
+ * notifications arrivent de la plus récente à la plus ancienne, et repartent dans
+ * cet ordre.
+ * - Une personne retirée puis remise, ou ajoutée puis retirée, disparaît.
+ * - Plusieurs modifications ou statuts d'une tâche gardent la plus récente.
+ * - Un retrait et un ajout faits par la même personne forment une seule ligne :
+ *   « Léa s'occupe de la tâche … à la place de Paul ».
+ */
+export function fusionnerParTache<T extends NotificationLue>(
+  recentesDabord: readonly T[]
+): T[] {
+  const chrono = [...recentesDabord].reverse()
+  const retirees = new Set<T>()
+  const remplacements = new Map<T, string>()
+  const assignations = new Map<string, T[]>()
+  const changements = new Map<string, T[]>()
+  for (const n of chrono) {
+    const tacheId = n.tache?.id
+    if (tacheId === undefined) continue
+    if (ASSIGNATIONS.has(n.type)) {
+      const cle = `${tacheId}|${n.personneId ?? ''}`
+      assignations.set(cle, [...(assignations.get(cle) ?? []), n])
+    } else if (CHANGEMENTS.has(n.type)) {
+      changements.set(tacheId, [...(changements.get(tacheId) ?? []), n])
+    }
+  }
+  for (const suite of changements.values()) {
+    for (const n of suite.slice(0, -1)) retirees.add(n)
+  }
+  // L'état net de chaque personne : la dernière ligne, si l'état a changé.
+  const nettes = new Map<string, { retraits: T[]; ajouts: T[] }>()
+  for (const suite of assignations.values()) {
+    for (const n of suite.slice(0, -1)) retirees.add(n)
+    const derniere = suite.at(-1)!
+    const assigneeAvant = suite[0]!.type === 'TACHE_DESASSIGNEE'
+    const assigneeApres = derniere.type === 'TACHE_ASSIGNEE'
+    if (assigneeAvant === assigneeApres) {
+      retirees.add(derniere)
+      continue
+    }
+    const tacheId = derniere.tache!.id
+    const net = nettes.get(tacheId) ?? { retraits: [], ajouts: [] }
+    if (assigneeApres) net.ajouts.push(derniere)
+    else net.retraits.push(derniere)
+    nettes.set(tacheId, net)
+  }
+  for (const { retraits, ajouts } of nettes.values()) {
+    const [retrait] = retraits
+    const [ajout] = ajouts
+    if (
+      retraits.length === 1 &&
+      ajouts.length === 1 &&
+      retrait!.acteurId !== null &&
+      retrait!.acteurId === ajout!.acteurId &&
+      retrait!.personneId !== null
+    ) {
+      retirees.add(retrait!)
+      remplacements.set(ajout!, retrait!.personneId)
+    }
+  }
+  return recentesDabord
+    .filter(n => !retirees.has(n))
+    .map(n =>
+      remplacements.has(n) ? { ...n, remplaceId: remplacements.get(n)! } : n
+    )
 }
