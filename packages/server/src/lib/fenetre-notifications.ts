@@ -145,13 +145,17 @@ export function lignesNettes(
   // Modifications et statuts : une seule ligne, si la tâche a changé.
   const modifications = triees.filter(l => MODIFICATIONS.has(l.type))
   const { statutModifie } = etat
-  if (modifications.length > 0 && (etat.contenuModifie || statutModifie)) {
-    // Un statut changé garde la ligne de statut qui porte le statut final ; sinon,
-    // la dernière modification.
+  // Une ligne sans statut annonce un changement de contenu. Une personne qui n'a
+  // reçu que des statuts ne garde rien d'un statut revenu à sa valeur de départ,
+  // même si une autre personne a modifié le contenu entre-temps.
+  const contenuAnnonce =
+    etat.contenuModifie &&
+    modifications.some(l => l.type === 'TACHE_MODIFIEE' && l.statut === null)
+  if (modifications.length > 0 && (contenuAnnonce || statutModifie)) {
+    // Un statut changé garde la ligne qui porte le statut final, de statut ou de
+    // modification ; sinon, la dernière modification.
     const ligneStatut = statutModifie
-      ? [...modifications]
-          .reverse()
-          .find(l => l.type === 'TACHE_STATUT' && l.statut === etat.statutApres)
+      ? [...modifications].reverse().find(l => l.statut === etat.statutApres)
       : undefined
     const gardee = ligneStatut ?? modifications.at(-1)!
     // Le mail immédiat part si une des lignes l'attendait. Il annonce le statut
