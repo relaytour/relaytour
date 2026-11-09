@@ -5614,6 +5614,10 @@ msgstr "I’m interested in {nomPerimetre}"
 msgid "Jeton révoqué."
 msgstr "Token revoked."
 
+#: src/composants/PreferenceJetons.tsx
+msgid "Jetons actifs : {actifs} sur {JETONS_ACTIFS_MAX}."
+msgstr "Active tokens: {actifs} of {JETONS_ACTIFS_MAX}."
+
 #: src/composants/MenuCompte.tsx
 #: src/composants/PreferenceJetons.tsx
 msgid "Jetons et API"
@@ -5695,8 +5699,8 @@ msgid "L’administration de l’installation a suspendu l’API."
 msgstr "The instance administration has suspended the API."
 
 #: src/composants/PreferenceJetons.tsx
-msgid "L’administration de l’installation l’a suspendue : {motif}"
-msgstr "The instance administration suspended it: {motif}"
+msgid "L’administration de l’installation l’a suspendue : {motif}. Vos jetons ont été révoqués."
+msgstr "The instance administration suspended it: {motif}. Your tokens have been revoked."
 
 #: src/composants/PreferenceJetons.tsx
 msgid "L’administration de l’installation l’a suspendue. Vos jetons ont été révoqués."
@@ -11547,6 +11551,10 @@ msgstr "You"
 #: src/lib/messages.ts
 msgid "Vous annoncez à l’équipe le début de la préparation."
 msgstr "You announce to the team that preparation is starting."
+
+#: src/composants/PreferenceJetons.tsx
+msgid "Vous avez {JETONS_ACTIFS_MAX} jetons actifs, le maximum : révoquez-en un avant d’en créer un autre."
+msgstr "You have {JETONS_ACTIFS_MAX} active tokens, the maximum: revoke one before creating another."
 
 #: src/lib/commentaires.ts
 msgid "Vous avez abandonné la tâche."

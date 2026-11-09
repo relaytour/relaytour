@@ -60,6 +60,9 @@ const REVOQUER = graphql(`
   }
 `)
 
+/** Jetons actifs d'une personne dans une organisation, comme le serveur l'exige. */
+const JETONS_ACTIFS_MAX = 10
+
 /** Durées proposées, en jours. Un jeton vaut un an au plus. */
 const DUREES = [30, 90, 180, 365] as const
 
@@ -121,7 +124,7 @@ function ApiFermee({
         title={t`L’API de votre organisation est suspendue.`}
         description={
           motif
-            ? t`L’administration de l’installation l’a suspendue : ${motif}`
+            ? t`L’administration de l’installation l’a suspendue : ${motif}. Vos jetons ont été révoqués.`
             : t`L’administration de l’installation l’a suspendue. Vos jetons ont été révoqués.`
         }
       />
@@ -160,7 +163,8 @@ export default function PreferenceJetons({
   const { data, refetch } = useQuery(MES_JETONS, { skip: !ouverte })
   const [creer, creation] = useMutation(CREER)
   const [revoquer] = useMutation(REVOQUER)
-  const [jeton, setJeton] = useState<string | null>(null)
+  // Le jeton créé, affiché une seule fois, et son identifiant dans la liste.
+  const [cree, setCree] = useState<{ id: string; jeton: string } | null>(null)
   const [nom, setNom] = useState('')
   const [portee, setPortee] = useState<PorteeJeton>('LECTURE')
   const [toutes, setToutes] = useState(true)
@@ -180,6 +184,8 @@ export default function PreferenceJetons({
   const jetons = data?.mesJetonsAcces ?? []
   const actif = (j: (typeof jetons)[number]) =>
     j.revoqueLe === null && new Date(j.expireLe).getTime() > maintenant
+  const actifs = jetons.filter(actif).length
+  const plafond = actifs >= JETONS_ACTIFS_MAX
 
   const creerJeton = async () => {
     try {
@@ -193,7 +199,10 @@ export default function PreferenceJetons({
           ).toISOString(),
         },
       })
-      setJeton(r.data?.creerJetonAcces.jeton ?? null)
+      const resultat = r.data?.creerJetonAcces
+      setCree(
+        resultat ? { id: resultat.jetonAcces.id, jeton: resultat.jeton } : null
+      )
       setNom('')
       await refetch()
     } catch (e) {
@@ -212,7 +221,8 @@ export default function PreferenceJetons({
         try {
           await revoquer({ variables: { id } })
           // Le jeton affiché à sa création ne sert plus à rien une fois révoqué.
-          setJeton(null)
+          // La révocation d'un autre jeton le laisse affiché.
+          setCree(actuel => (actuel?.id === id ? null : actuel))
           await refetch()
           message.success(t`Jeton révoqué.`)
         } catch (e) {
@@ -291,13 +301,22 @@ export default function PreferenceJetons({
               type="primary"
               icon={<KeyOutlined />}
               loading={creation.loading}
-              disabled={nom.trim() === '' || (!toutes && choisies.length === 0)}
+              disabled={
+                plafond ||
+                nom.trim() === '' ||
+                (!toutes && choisies.length === 0)
+              }
               onClick={() => void creerJeton()}
               style={{ alignSelf: 'flex-start' }}
             >
               <Trans>Créer le jeton</Trans>
             </Button>
-            {jeton && <JetonUnique jeton={jeton} />}
+            <p className="rt-note">
+              {plafond
+                ? t`Vous avez ${JETONS_ACTIFS_MAX} jetons actifs, le maximum : révoquez-en un avant d’en créer un autre.`
+                : t`Jetons actifs : ${actifs} sur ${JETONS_ACTIFS_MAX}.`}
+            </p>
+            {cree && <JetonUnique jeton={cree.jeton} />}
             {jetons.length > 0 && (
               <ul className="rt-jetons">
                 {jetons.map(j => {
