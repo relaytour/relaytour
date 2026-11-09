@@ -311,6 +311,7 @@ describe('ce qui part en push', () => {
       editionId: ids.edition,
       acteurId: ids.alice,
       tacheId: ids.tache,
+      importance: 'MOI',
     })
     expect(pousses).toEqual([])
   })

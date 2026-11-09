@@ -49,9 +49,9 @@ export interface RappelsParPersonne {
  * relancer la tâche le même jour, ou le lendemain, ne crée pas de doublon. Si
  * l'échéance change, les rappels repartent pour la nouvelle date.
  *
- * Les destinataires sont les personnes assignées ; sans personne assignée, ce sont
- * les référent·es du périmètre, pour que rien ne passe inaperçu.
- *
+ * Les destinataires sont les personnes assignées. Sans personne assignée, ce sont
+ * les contacts principaux du périmètre, ou à défaut toute son équipe, pour que rien
+ * ne passe inaperçu (ADR 0065).
  * Une déclinaison en retard prévient en plus les personnes assignées à sa tâche
  * partagée, sauf celles qui sont aussi assignées à la déclinaison (ADR 0063).
  */
@@ -102,15 +102,20 @@ export async function genererRappels(
 
     let destinataires = tache.assignations.map(a => a.userId)
     if (destinataires.length === 0) {
+      // Une tâche sans personne prévient les contacts principaux du périmètre, ou
+      // toute l'équipe quand le périmètre n'en a pas (ADR 0065).
       const affectations = await prisma.affectation.findMany({
         where: {
           perimetreId: tache.perimetreId,
           editionId: tache.editionId,
           user: membreActif(organisation.id),
         },
-        select: { userId: true },
+        select: { userId: true, contactPrincipal: true },
       })
-      destinataires = affectations.map(a => a.userId)
+      const contacts = affectations.filter(a => a.contactPrincipal)
+      destinataires = (contacts.length > 0 ? contacts : affectations).map(
+        a => a.userId
+      )
     }
 
     for (const userId of destinataires) {

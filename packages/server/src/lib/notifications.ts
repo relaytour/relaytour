@@ -11,22 +11,24 @@ import { membreActif } from './appartenances.ts'
 import { publierNotification } from './flux.ts'
 import { pousser } from './push-file.ts'
 
+import { couvre, type ImportancePour } from './importance-notifications.ts'
 import { journal } from './journal.ts'
 
 export const PREFERENCES_PAR_DEFAUT = {
   frequenceResume: 'HEBDOMADAIRE',
   mailModification: true,
   mailEcheance: true,
-  applicationPerimetre: true,
+  suiviPerimetres: 'MOI',
+  detailContactPrincipal: false,
+  suiviAdmin: 'ACTIONS',
   pushTaches: true,
   pushEcheances: true,
   mailDemandes: true,
   pushDemandes: true,
-  applicationEquipe: true,
   pushEquipe: false,
   pushAgenda: true,
   resumeAdmin: true,
-  mailPriorites: 'AUCUN',
+  mailPriorites: 'MES_PERIMETRES',
   dernierResumeLe: null,
 } as const
 
@@ -48,46 +50,74 @@ export async function preferencesDe(
 
 /**
  * Les référentes et référents à prévenir de l'activité d'un périmètre : les personnes
- * affectées, sauf l'acteur et celles qui ont coupé ces notifications dans leurs
- * préférences. Avec une édition, ses personnes affectées ; sans édition (une fiche
- * vaut pour toutes les périodes), celles des éditions non archivées.
+ * affectées, sauf l'acteur, dont les réglages de suivi couvrent l'importance de la
+ * notification (ADR 0065). Avec une édition, ses personnes affectées ; sans édition
+ * (une fiche vaut pour toutes les périodes), celles des éditions non archivées.
+ * L'importance peut dépendre de la personne : contact principal, personne assignée.
  */
 export async function referentsAPrevenir(
   prisma: PrismaClient,
   perimetreId: string,
   editionId: string | null,
-  acteurId: string
+  acteurId: string,
+  importance: ImportancePour
 ): Promise<string[]> {
   const perimetre = await prisma.perimetre.findUnique({
     where: { id: perimetreId },
     select: { organisationId: true },
   })
   if (perimetre === null) return []
+  // L'acteur compte pour savoir si le périmètre a un contact principal, puis sort
+  // de la liste.
   const affectations = await prisma.affectation.findMany({
     where: {
       perimetreId,
       ...(editionId === null
         ? { edition: { statut: { not: 'ARCHIVEE' } } }
         : { editionId }),
-      userId: { not: acteurId },
       // Une personne archivée dans l'organisation ne reçoit rien (ADR 0031).
       user: membreActif(perimetre.organisationId),
     },
-    select: { userId: true },
-    distinct: ['userId'],
+    select: { userId: true, contactPrincipal: true },
   })
-  const ids = affectations.map(a => a.userId)
+  const contacts = new Map<string, boolean>()
+  for (const a of affectations) {
+    contacts.set(
+      a.userId,
+      (contacts.get(a.userId) ?? false) || a.contactPrincipal
+    )
+  }
+  const perimetreAUnContact = affectations.some(a => a.contactPrincipal)
+  contacts.delete(acteurId)
+  const ids = [...contacts.keys()]
   if (ids.length === 0) return []
-  const coupees = await prisma.preferenceOrganisation.findMany({
-    where: {
-      userId: { in: ids },
-      organisationId: perimetre.organisationId,
-      applicationPerimetre: false,
-    },
-    select: { userId: true },
+  const reglages = new Map(
+    (
+      await prisma.preferenceOrganisation.findMany({
+        where: {
+          userId: { in: ids },
+          organisationId: perimetre.organisationId,
+        },
+        select: {
+          userId: true,
+          suiviPerimetres: true,
+          detailContactPrincipal: true,
+        },
+      })
+    ).map(r => [r.userId, r])
+  )
+  return ids.filter(userId => {
+    const contactPrincipal = contacts.get(userId) ?? false
+    const niveau =
+      typeof importance === 'function'
+        ? importance({ userId, contactPrincipal, perimetreAUnContact })
+        : importance
+    return couvre(
+      reglages.get(userId) ?? PREFERENCES_PAR_DEFAUT,
+      niveau,
+      contactPrincipal
+    )
   })
-  const sans = new Set(coupees.map(c => c.userId))
-  return ids.filter(id => !sans.has(id))
 }
 
 /** Une même action répétée dans cette durée ne prévient qu'une fois. */
@@ -122,6 +152,8 @@ export async function notifierLePerimetre(
     statut?: StatutTache
     /** Les personnes déjà prévenues par une autre voie. */
     sauf?: string[]
+    /** L'importance pour les autres référentes et référents (ADR 0065). */
+    importance: ImportancePour
   },
   maintenant = Date.now()
 ): Promise<void> {
@@ -133,7 +165,8 @@ export async function notifierLePerimetre(
         prisma,
         perimetreId,
         notification.editionId,
-        acteurId
+        acteurId,
+        notification.importance
       )
     ).filter(id => !sauf.has(id))
     if (destinataires.length === 0) return

@@ -535,6 +535,19 @@ describe('signal d’une écriture', () => {
   })
 
   it('publie la tâche modifiée et la notification de sa référente', async () => {
+    // Alice suit tout le détail de son périmètre : un statut intermédiaire lui
+    // parvient (ADR 0065).
+    await prisma.preferenceOrganisation.upsert({
+      where: {
+        userId_organisationId: { userId: ids.alice, organisationId: ids.org },
+      },
+      update: { suiviPerimetres: 'DETAIL' },
+      create: {
+        userId: ids.alice,
+        organisationId: ids.org,
+        suiviPerimetres: 'DETAIL',
+      },
+    })
     const flux = await ouvrirLeFlux(await contexte(ids.alice), {
       relireLeContexte: () => contexte(ids.alice),
     })

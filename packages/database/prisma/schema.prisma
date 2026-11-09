@@ -1933,6 +1933,20 @@ enum MailPriorites {
   ACTIVITE
 }
 
+// Ce qu'une personne suit de ses périmètres (ADR 0065) : ce qui la concerne,
+// l'essentiel du périmètre, ou tout le détail.
+enum SuiviPerimetres {
+  MOI
+  SUIVI
+  DETAIL
+}
+
+// Ce qu'un admin suit de ses rôles d'admin (ADR 0065).
+enum SuiviAdmin {
+  ACTIONS
+  DETAIL
+}
+
 enum FrequenceResume {
   QUOTIDIEN
   HEBDOMADAIRE
@@ -1953,6 +1967,8 @@ model PreferenceNotification {
   mailDemandes         Boolean         @default(true)
   // Notification dans l'application quand une autre personne agit sur une tâche ou
   // une fiche d'un périmètre où la personne est affectée.
+  // Remplacé par suiviPerimetres (ADR 0065) : la colonne reste pour un retour
+  // arrière et n'est plus écrite.
   applicationPerimetre Boolean         @default(true)
   // Notifications push (ADR 0024), par famille. Elles ne partent que vers les
   // appareils où la personne les a activées (AbonnementPush).
@@ -1982,6 +1998,8 @@ model PreferenceOrganisation {
   // Vos tâches et vos périmètres.
   mailModification     Boolean         @default(true)
   mailEcheance         Boolean         @default(true)
+  // Remplacé par suiviPerimetres (ADR 0065) : la colonne reste pour un retour
+  // arrière et n'est plus écrite.
   applicationPerimetre Boolean         @default(true)
   pushTaches           Boolean         @default(true)
   pushEcheances        Boolean         @default(true)
@@ -1989,6 +2007,8 @@ model PreferenceOrganisation {
   mailDemandes         Boolean         @default(true)
   pushDemandes         Boolean         @default(true)
   // Vos rôles d'admin : équipe (ADR 0033).
+  // Remplacé par suiviAdmin (ADR 0065) : la colonne reste pour un retour arrière et
+  // n'est plus écrite.
   applicationEquipe    Boolean         @default(true)
   pushEquipe           Boolean         @default(false)
   // La section « Pour vos rôles d'admin » du résumé.
@@ -1997,7 +2017,11 @@ model PreferenceOrganisation {
   pushAgenda           Boolean         @default(true)
   // Mail des priorités, la veille de chaque point d'équipe, ou le lundi sans point
   // dans la semaine (ADR 0063).
-  mailPriorites        MailPriorites   @default(AUCUN)
+  mailPriorites        MailPriorites   @default(MES_PERIMETRES)
+  // Suivi des périmètres et suivi d'admin (ADR 0065).
+  suiviPerimetres        SuiviPerimetres @default(MOI)
+  detailContactPrincipal Boolean         @default(false)
+  suiviAdmin             SuiviAdmin      @default(ACTIONS)
   dernierResumeLe      DateTime?
   updatedAt            DateTime        @updatedAt
 

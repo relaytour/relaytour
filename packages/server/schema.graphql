@@ -1729,6 +1729,16 @@ enum ModeleDeDepart {
 }
 
 """
+Modèle de réglages des notifications (ADR 0065) : Essentiel, Référent·e, Contact principal ou Admin d’activité.
+"""
+enum ModeleNotification {
+  ADMIN_ACTIVITE
+  CONTACT_PRINCIPAL
+  ESSENTIEL
+  REFERENT
+}
+
+"""
 Écran facultatif d’une activité, avec ses données et ses envois (ADR 0052).
 """
 enum ModuleActivite {
@@ -1783,6 +1793,11 @@ type Mutation {
   Crée dans une activité sans périmètre les périmètres, les tâches types et les fiches d’un modèle de départ, puis les tâches de la période courante.
   """
   appliquerModeleDeDepart(activiteId: ID, modele: ModeleDeDepart!): RapportModeleDeDepart!
+
+  """
+  Applique un modèle de réglages aux préférences de la personne dans l’organisation active (ADR 0065). Les familles de push autres que l’équipe ne changent pas.
+  """
+  appliquerModeleNotification(modele: ModeleNotification!): PreferencesNotification!
 
   """
   Applique une proposition chez le fournisseur. Rend APPLIQUEE, ou ECHEC avec son message dans la proposition.
@@ -2274,10 +2289,7 @@ type Mutation {
   """
   modifierPreferencesNotification(
     """Sans valeur, ce réglage ne change pas."""
-    applicationEquipe: Boolean
-
-    """Sans valeur, ce réglage ne change pas."""
-    applicationPerimetre: Boolean
+    detailContactPrincipal: Boolean
     frequenceResume: FrequenceResume!
 
     """Sans valeur, ce réglage ne change pas."""
@@ -2305,6 +2317,12 @@ type Mutation {
 
     """Sans valeur, ce réglage ne change pas."""
     resumeAdmin: Boolean
+
+    """Sans valeur, ce réglage ne change pas."""
+    suiviAdmin: SuiviAdmin
+
+    """Sans valeur, ce réglage ne change pas."""
+    suiviPerimetres: SuiviPerimetres
   ): PreferencesNotification!
   modifierReunion(
     cible: CibleConvocation
@@ -3078,14 +3096,9 @@ type PostesPerimetre {
 """Les préférences de la personne dans l’organisation active (ADR 0032)."""
 type PreferencesNotification {
   """
-  Notifications d’admin sur l’équipe : affectations, souhaits, nominations et archivages (ADR 0033).
+  Tout le détail des périmètres dont la personne est contact principal (ADR 0065).
   """
-  applicationEquipe: Boolean!
-
-  """
-  Notification dans l’application quand une autre personne agit sur une tâche ou une fiche d’un périmètre où la personne est affectée.
-  """
-  applicationPerimetre: Boolean!
+  detailContactPrincipal: Boolean!
   frequenceResume: FrequenceResume!
 
   """
@@ -3099,6 +3112,16 @@ type PreferencesNotification {
   Mail des priorités, la veille de chaque point d’équipe ou le lundi sans point dans la semaine (ADR 0063).
   """
   mailPriorites: MailPriorites!
+
+  """
+  Le modèle que les réglages reproduisent, ou null pour des réglages personnalisés (ADR 0065).
+  """
+  modele: ModeleNotification
+
+  """
+  Le modèle du rôle le plus large de la personne dans l’organisation. La recommandation ne change aucun réglage (ADR 0065).
+  """
+  modeleRecommande: ModeleNotification!
 
   """
   Notification push quand la personne est convoquée à une réunion, ou quand une de ses réunions change ou s’annule (ADR 0037).
@@ -3123,6 +3146,16 @@ type PreferencesNotification {
 
   """La section « Pour vos rôles d’admin » du résumé par mail (ADR 0033)."""
   resumeAdmin: Boolean!
+
+  """
+  Les notifications d’admin reçues : les actions à mener, ou tout le détail (ADR 0065).
+  """
+  suiviAdmin: SuiviAdmin!
+
+  """
+  Ce que la personne reçoit de l’activité de ses périmètres, au-delà de ce qui la concerne (ADR 0065).
+  """
+  suiviPerimetres: SuiviPerimetres!
 }
 
 """
@@ -4069,6 +4102,23 @@ type Subscription {
   Les changements que la personne peut voir, au fil de l’eau. Le serveur ferme le flux après quinze minutes : le client en rouvre un. Une personne garde quatre flux ouverts au plus.
   """
   changements: Changement!
+}
+
+"""
+Ce qu’un admin suit de ses rôles d’admin (ADR 0065) : les actions à mener, ou tout le détail.
+"""
+enum SuiviAdmin {
+  ACTIONS
+  DETAIL
+}
+
+"""
+Ce que la personne suit de ses périmètres (ADR 0065) : ce qui la concerne, l’essentiel du périmètre, ou tout le détail.
+"""
+enum SuiviPerimetres {
+  DETAIL
+  MOI
+  SUIVI
 }
 
 type Tache {
