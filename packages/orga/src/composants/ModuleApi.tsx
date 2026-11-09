@@ -7,6 +7,7 @@ import { messageErreur } from '../lib/erreurs'
 import { API_ORGANISATION, apiOuverte } from '../lib/jetons'
 
 import { Panneau } from './Panneau'
+import RobotsApi from './RobotsApi'
 
 // Le module « API » de l'organisation, dans l'écran « Organisation » (ADR 0064).
 // Un admin de l'organisation l'active ou le désactive. L'administration de
@@ -121,6 +122,8 @@ export default function ModuleApi() {
           </Trans>
         </p>
       )}
+      {/* Les robots ne servent qu'avec l'API ouverte : leurs jetons en dépendent. */}
+      {apiOuverte(etat) && <RobotsApi />}
     </Panneau>
   )
 }

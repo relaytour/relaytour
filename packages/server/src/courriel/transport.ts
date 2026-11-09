@@ -86,6 +86,15 @@ export async function expedier(
   message: Message,
   transport?: Transporter | null
 ): Promise<Issue> {
+  // Une adresse du domaine réservé .invalid (RFC 2606) ne reçoit rien : c'est celle
+  // d'un robot (ADR 0064). Le mail n'est pas envoyé, comme sans transport.
+  if (/\.invalid$/i.test(message.destinataire.trim())) {
+    journal.debug(
+      { evenement: 'courriel-tu', motif: 'adresse-injoignable' },
+      'Adresse injoignable : le mail n’est pas envoyé.'
+    )
+    return 'tu'
+  }
   const voie =
     transport === undefined
       ? { transport: transportPrincipal(), hote: env.COURRIEL?.hote }

@@ -67,7 +67,7 @@ const JETONS_ACTIFS_MAX = 10
 const DUREES = [30, 90, 180, 365] as const
 
 /** La valeur d'un jeton, affichée une seule fois, à sa création. */
-function JetonUnique({ jeton }: { jeton: string }) {
+export function JetonUnique({ jeton }: { jeton: string }) {
   const { t } = useLingui()
   const { message } = App.useApp()
   return (

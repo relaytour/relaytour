@@ -147,7 +147,9 @@ builder.queryFields(t => ({
           select: { adresseVisible: true },
         },
       } as const
-      const actif = membreActif(organisationId)
+      // Un robot n'a pas de place dans l'organigramme (ADR 0064) : il ne représente
+      // personne à contacter.
+      const actif = { ...membreActif(organisationId), robot: false }
       const [activite, edition, perimetres, admins] = await Promise.all([
         prisma.activite.findUniqueOrThrow({ where: { id } }),
         prisma.edition.findFirst({
