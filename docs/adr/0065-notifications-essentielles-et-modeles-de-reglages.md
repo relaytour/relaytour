@@ -49,7 +49,8 @@ Chaque notification reçoit, pour chaque destinataire, une **importance** calcul
 | Fiche créée ou modifiée | | | Les référents |
 | Réunion, sondage, place modifiée | La personne concernée | | |
 | Demande reçue, candidature, souhait de formule, accès à valider, bénévole retiré | Les admins | | |
-| Demande traitée par un autre admin, affectation, personne, rôle d'admin, invitation acceptée | | | Les admins |
+| Invitation acceptée | L'admin qui a invité | | |
+| Demande traitée par un autre admin, affectation, personne, rôle d'admin | | | Les admins |
 
 - Le contact principal reçoit en premier ce qui demande une réponse du périmètre : une déclinaison à accepter, une tâche sans personne qui arrive à échéance. Sans contact principal, toute l'équipe la reçoit, comme aujourd'hui.
 - L'importance ne remplace pas le niveau de notification de l'ADR 0033 (référent, admin d'activité, admin de l'organisation). Elle s'y ajoute.
@@ -121,9 +122,12 @@ Un **modèle de notifications** remplit tous les réglages en un geste. La perso
   - un admin de l'organisation ou d'une activité reçoit le modèle Admin d'activité ;
   - un contact principal d'une période non archivée reçoit le modèle Contact principal ;
   - tout autre membre reçoit le modèle Essentiel.
-- Le rattrapage vaut aussi pour les personnes qui ont déjà enregistré leurs préférences. Il règle le suivi des périmètres, le détail des périmètres de contact, le suivi d'admin et le mail des priorités.
-- Le rattrapage ne rallume jamais un mail coupé : un résumé réglé sur « Jamais » le reste. Les mails immédiats et les familles de push gardent leur valeur.
-- Le mail des priorités prend la valeur du modèle quand il valait « Aucun » avec un résumé hebdomadaire, c'est-à-dire les réglages par défaut d'avant cette décision.
+- Le rattrapage vaut aussi pour les personnes qui ont déjà enregistré leurs préférences. Il applique les réglages du modèle, pour que la page affiche ce modèle.
+- Le rattrapage ne rallume jamais un mail coupé :
+  - un résumé réglé sur « Jamais » le reste, et un résumé hebdomadaire passe à chaque jour pour les modèles qui le demandent ;
+  - un mail immédiat coupé le reste ;
+  - le mail des priorités prend la valeur du modèle seulement quand il valait « Aucun » avec un résumé hebdomadaire, c'est-à-dire les réglages par défaut d'avant cette décision.
+- Une personne qui avait coupé un de ces mails garde donc des réglages personnalisés.
 - Après le rattrapage, un changement de rôle ne change plus les réglages. La page recommande le nouveau modèle.
 - Une note de version d'audience `organisateurs` annonce le changement et indique où choisir un modèle.
 
