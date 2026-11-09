@@ -1653,6 +1653,16 @@ msgstr "{acteur} edited the task “{titre}”{lieu}"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
+msgid "{acteur} a laissé {nombre} commentaires sur la tâche « {titre} »{lieu}"
+msgstr "{acteur} left {nombre} comments on the task “{titre}”{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{autres, plural, one {{acteur} et une autre personne ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}} other {{acteur} et # autres personnes ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}}}"
+msgstr "{autres, plural, one {{acteur} and one other person left {nombre} comments on the task “{titre}”{lieu}} other {{acteur} and # other people left {nombre} comments on the task “{titre}”{lieu}}}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
 msgid "{acteur} a commenté la tâche « {titre} »{lieu}"
 msgstr "{acteur} commented on the task “{titre}”{lieu}"
 

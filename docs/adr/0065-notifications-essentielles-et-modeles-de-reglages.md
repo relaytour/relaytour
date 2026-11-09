@@ -125,6 +125,7 @@ Un **modèle de notifications** remplit tous les réglages en un geste. La perso
 
 - Le résumé ne reprend plus une notification qu'un mail immédiat a déjà portée.
 - Le résumé regroupe les notifications d'une même tâche sur une ligne, qui donne l'effet net sur la période : « Léa Martin s'occupe de la tâche « Relire les catégories » à la place de Paul Durand ».
+- Les commentaires d'une même tâche forment aussi une ligne : « Léa Martin et une autre personne ont laissé 3 commentaires sur la tâche « Relire les catégories » ». La cloche garde une ligne par commentaire.
 - Le résumé range ses lignes par activité, puis par périmètre, comme les mails de l'ADR 0063.
 - Au-delà de 30 lignes, le résumé l'indique : « et 12 autres nouvelles dans l'application ».
 - Le mail des priorités gagne une rubrique « Vos nouvelles » pour une personne en résumé hebdomadaire. Cette rubrique reprend ses notifications non lues, qui comptent ensuite comme résumées.
