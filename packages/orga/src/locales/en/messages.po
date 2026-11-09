@@ -11390,7 +11390,7 @@ msgstr "You have read-only access to this area. The venue, the video link and th
 
 #: src/pages/Preferences.tsx
 msgid "Vous consultez l’espace vous-même."
-msgstr "You are viewing the workspace as yourself."
+msgstr "You check the workspace yourself."
 
 #: src/lib/messages.ts
 msgid "Vous donnez à l’équipe les informations pratiques du premier jour."
