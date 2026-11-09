@@ -58,7 +58,12 @@ type Documents = {
     "\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n": typeof types.RefuserInvitationDocument,
     "\n  query SimulerModeleDeDepart {\n    simulerModeleDeDepart(modele: EVENEMENT_MULTISPORTS) {\n      perimetres {\n        slug\n        nom\n        groupe\n        tachesTypes\n      }\n      fiches\n      groupesAjoutes\n      fichesEnConflit\n      periode\n      tachesCreees\n    }\n  }\n": typeof types.SimulerModeleDeDepartDocument,
     "\n  mutation AppliquerModeleDeDepart {\n    appliquerModeleDeDepart(modele: EVENEMENT_MULTISPORTS) {\n      perimetres {\n        slug\n      }\n      tachesCreees\n    }\n  }\n": typeof types.AppliquerModeleDeDepartDocument,
+    "\n  mutation ActiverApi {\n    activerApi {\n      etat\n      suspensionMotif\n    }\n  }\n": typeof types.ActiverApiDocument,
+    "\n  mutation DesactiverApi {\n    desactiverApi {\n      etat\n      suspensionMotif\n    }\n  }\n": typeof types.DesactiverApiDocument,
     "\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n": typeof types.CreerEditionDocument,
+    "\n  query MesJetonsAcces {\n    mesJetonsAcces {\n      id\n      nom\n      apercu\n      portee\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n    }\n  }\n": typeof types.MesJetonsAccesDocument,
+    "\n  mutation CreerJetonAcces(\n    $nom: String!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n    $expireLe: DateTime\n  ) {\n    creerJetonAcces(\n      nom: $nom\n      portee: $portee\n      activiteIds: $activiteIds\n      expireLe: $expireLe\n    ) {\n      jeton\n      jetonAcces {\n        id\n      }\n    }\n  }\n": typeof types.CreerJetonAccesDocument,
+    "\n  mutation RevoquerJetonAcces($id: ID!) {\n    revoquerJetonAcces(id: $id)\n  }\n": typeof types.RevoquerJetonAccesDocument,
     "\n  mutation ModifierMaLangue($langue: String) {\n    modifierMaLangue(langue: $langue) {\n      id\n      langue\n    }\n  }\n": typeof types.ModifierMaLangueDocument,
     "\n  query MonAdresseVisible {\n    moi {\n      id\n      adresseVisible\n    }\n  }\n": typeof types.MonAdresseVisibleDocument,
     "\n  mutation ModifierMonAdresseVisible($visible: Boolean!) {\n    modifierMonAdresseVisible(visible: $visible)\n  }\n": typeof types.ModifierMonAdresseVisibleDocument,
@@ -152,6 +157,7 @@ type Documents = {
     "\n  mutation ReglerConcerneAussi(\n    $ficheId: ID!\n    $perimetreIds: [ID!]!\n    $groupes: [String!]!\n  ) {\n    reglerConcerneAussi(\n      ficheId: $ficheId\n      perimetreIds: $perimetreIds\n      groupes: $groupes\n    ) {\n      id\n    }\n  }\n": typeof types.ReglerConcerneAussiDocument,
     "\n  query InvitationsEnAttente($activiteId: ID) {\n    invitationsEnAttente(activiteId: $activiteId) {\n      id\n      nom\n      email\n      estAdmin\n      expireLe\n      perimetresAffectes {\n        id\n        nom\n        couleur\n      }\n      perimetresSouhaites {\n        id\n        nom\n        couleur\n      }\n      activitesRattachees\n    }\n  }\n": typeof types.InvitationsEnAttenteDocument,
     "\n  query MesInvitations {\n    mesInvitations {\n      id\n      organisationNom\n      estAdmin\n      perimetres\n      expireLe\n    }\n  }\n": typeof types.MesInvitationsDocument,
+    "\n  query ApiOrganisation {\n    apiOrganisation {\n      etat\n      suspensionMotif\n    }\n  }\n": typeof types.ApiOrganisationDocument,
     "\n  mutation TeleverserMedia($format: FormatMedia!, $donnees: String!) {\n    televerserMedia(format: $format, donnees: $donnees) {\n      empreinte\n      url\n    }\n  }\n": typeof types.TeleverserMediaDocument,
     "\n  query VersionInstallation {\n    versionInstallation\n  }\n": typeof types.VersionInstallationDocument,
     "\n  query NotesDeVersion {\n    notesDeVersion {\n      numero\n      date\n      notes {\n        id\n        type\n        role\n        titre\n        texte\n      }\n    }\n  }\n": typeof types.NotesDeVersionDocument,
@@ -332,7 +338,12 @@ const documents: Documents = {
     "\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n": types.RefuserInvitationDocument,
     "\n  query SimulerModeleDeDepart {\n    simulerModeleDeDepart(modele: EVENEMENT_MULTISPORTS) {\n      perimetres {\n        slug\n        nom\n        groupe\n        tachesTypes\n      }\n      fiches\n      groupesAjoutes\n      fichesEnConflit\n      periode\n      tachesCreees\n    }\n  }\n": types.SimulerModeleDeDepartDocument,
     "\n  mutation AppliquerModeleDeDepart {\n    appliquerModeleDeDepart(modele: EVENEMENT_MULTISPORTS) {\n      perimetres {\n        slug\n      }\n      tachesCreees\n    }\n  }\n": types.AppliquerModeleDeDepartDocument,
+    "\n  mutation ActiverApi {\n    activerApi {\n      etat\n      suspensionMotif\n    }\n  }\n": types.ActiverApiDocument,
+    "\n  mutation DesactiverApi {\n    desactiverApi {\n      etat\n      suspensionMotif\n    }\n  }\n": types.DesactiverApiDocument,
     "\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n": types.CreerEditionDocument,
+    "\n  query MesJetonsAcces {\n    mesJetonsAcces {\n      id\n      nom\n      apercu\n      portee\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n    }\n  }\n": types.MesJetonsAccesDocument,
+    "\n  mutation CreerJetonAcces(\n    $nom: String!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n    $expireLe: DateTime\n  ) {\n    creerJetonAcces(\n      nom: $nom\n      portee: $portee\n      activiteIds: $activiteIds\n      expireLe: $expireLe\n    ) {\n      jeton\n      jetonAcces {\n        id\n      }\n    }\n  }\n": types.CreerJetonAccesDocument,
+    "\n  mutation RevoquerJetonAcces($id: ID!) {\n    revoquerJetonAcces(id: $id)\n  }\n": types.RevoquerJetonAccesDocument,
     "\n  mutation ModifierMaLangue($langue: String) {\n    modifierMaLangue(langue: $langue) {\n      id\n      langue\n    }\n  }\n": types.ModifierMaLangueDocument,
     "\n  query MonAdresseVisible {\n    moi {\n      id\n      adresseVisible\n    }\n  }\n": types.MonAdresseVisibleDocument,
     "\n  mutation ModifierMonAdresseVisible($visible: Boolean!) {\n    modifierMonAdresseVisible(visible: $visible)\n  }\n": types.ModifierMonAdresseVisibleDocument,
@@ -426,6 +437,7 @@ const documents: Documents = {
     "\n  mutation ReglerConcerneAussi(\n    $ficheId: ID!\n    $perimetreIds: [ID!]!\n    $groupes: [String!]!\n  ) {\n    reglerConcerneAussi(\n      ficheId: $ficheId\n      perimetreIds: $perimetreIds\n      groupes: $groupes\n    ) {\n      id\n    }\n  }\n": types.ReglerConcerneAussiDocument,
     "\n  query InvitationsEnAttente($activiteId: ID) {\n    invitationsEnAttente(activiteId: $activiteId) {\n      id\n      nom\n      email\n      estAdmin\n      expireLe\n      perimetresAffectes {\n        id\n        nom\n        couleur\n      }\n      perimetresSouhaites {\n        id\n        nom\n        couleur\n      }\n      activitesRattachees\n    }\n  }\n": types.InvitationsEnAttenteDocument,
     "\n  query MesInvitations {\n    mesInvitations {\n      id\n      organisationNom\n      estAdmin\n      perimetres\n      expireLe\n    }\n  }\n": types.MesInvitationsDocument,
+    "\n  query ApiOrganisation {\n    apiOrganisation {\n      etat\n      suspensionMotif\n    }\n  }\n": types.ApiOrganisationDocument,
     "\n  mutation TeleverserMedia($format: FormatMedia!, $donnees: String!) {\n    televerserMedia(format: $format, donnees: $donnees) {\n      empreinte\n      url\n    }\n  }\n": types.TeleverserMediaDocument,
     "\n  query VersionInstallation {\n    versionInstallation\n  }\n": types.VersionInstallationDocument,
     "\n  query NotesDeVersion {\n    notesDeVersion {\n      numero\n      date\n      notes {\n        id\n        type\n        role\n        titre\n        texte\n      }\n    }\n  }\n": types.NotesDeVersionDocument,
@@ -755,7 +767,27 @@ export function graphql(source: "\n  mutation AppliquerModeleDeDepart {\n    app
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  mutation ActiverApi {\n    activerApi {\n      etat\n      suspensionMotif\n    }\n  }\n"): (typeof documents)["\n  mutation ActiverApi {\n    activerApi {\n      etat\n      suspensionMotif\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DesactiverApi {\n    desactiverApi {\n      etat\n      suspensionMotif\n    }\n  }\n"): (typeof documents)["\n  mutation DesactiverApi {\n    desactiverApi {\n      etat\n      suspensionMotif\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query MesJetonsAcces {\n    mesJetonsAcces {\n      id\n      nom\n      apercu\n      portee\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n    }\n  }\n"): (typeof documents)["\n  query MesJetonsAcces {\n    mesJetonsAcces {\n      id\n      nom\n      apercu\n      portee\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreerJetonAcces(\n    $nom: String!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n    $expireLe: DateTime\n  ) {\n    creerJetonAcces(\n      nom: $nom\n      portee: $portee\n      activiteIds: $activiteIds\n      expireLe: $expireLe\n    ) {\n      jeton\n      jetonAcces {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CreerJetonAcces(\n    $nom: String!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n    $expireLe: DateTime\n  ) {\n    creerJetonAcces(\n      nom: $nom\n      portee: $portee\n      activiteIds: $activiteIds\n      expireLe: $expireLe\n    ) {\n      jeton\n      jetonAcces {\n        id\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevoquerJetonAcces($id: ID!) {\n    revoquerJetonAcces(id: $id)\n  }\n"): (typeof documents)["\n  mutation RevoquerJetonAcces($id: ID!) {\n    revoquerJetonAcces(id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -1128,6 +1160,10 @@ export function graphql(source: "\n  query InvitationsEnAttente($activiteId: ID)
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query MesInvitations {\n    mesInvitations {\n      id\n      organisationNom\n      estAdmin\n      perimetres\n      expireLe\n    }\n  }\n"): (typeof documents)["\n  query MesInvitations {\n    mesInvitations {\n      id\n      organisationNom\n      estAdmin\n      perimetres\n      expireLe\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query ApiOrganisation {\n    apiOrganisation {\n      etat\n      suspensionMotif\n    }\n  }\n"): (typeof documents)["\n  query ApiOrganisation {\n    apiOrganisation {\n      etat\n      suspensionMotif\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
