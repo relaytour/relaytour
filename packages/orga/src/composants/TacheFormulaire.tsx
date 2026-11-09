@@ -1,7 +1,7 @@
 import { useMutation } from '@apollo/client/react'
 import { useLingui } from '@lingui/react/macro'
 import { Checkbox, Form, Input, Modal, Select } from 'antd'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import type { TacheChampsFragment } from '../gql/graphql'
 import {
@@ -15,6 +15,7 @@ import ChoixPerimetresCibles, {
   type PerimetreCible,
 } from './ChoixPerimetresCibles'
 import { AideDeclinaison } from './DeclinerTache'
+import { useModificationEnCours } from '../lib/modifications-en-cours'
 import { TITRE_MAX } from '../lib/taches.ts'
 
 export interface FicheChoix {
@@ -65,6 +66,12 @@ export default function TacheFormulaire({
 }) {
   const { t } = useLingui()
   const [form] = Form.useForm<Valeurs>()
+  // Un formulaire modifié demande confirmation avant de quitter la page pour une
+  // notification (ADR 0065).
+  // La saisie touchée se rattache à la tâche ouverte : une autre ouverture repart
+  // d'une saisie vierge.
+  const [touchee, setTouchee] = useState<typeof tache>(null)
+  useModificationEnCours(tache !== null && touchee === tache)
   const cibles = Form.useWatch('cibles', form) ?? []
   const executer = useActionTache()
   const [creer, creation] = useMutation(CREER_TACHE, {
@@ -172,6 +179,7 @@ export default function TacheFormulaire({
         form={form}
         layout="vertical"
         onFinish={v => void enregistrer(v)}
+        onValuesChange={() => setTouchee(tache)}
         requiredMark={false}
       >
         <Form.Item

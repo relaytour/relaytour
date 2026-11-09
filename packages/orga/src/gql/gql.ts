@@ -29,6 +29,7 @@ type Documents = {
     "\n  mutation FermerAppelBenevoles($id: ID!) {\n    fermerAppelBenevoles(id: $id) {\n      id\n    }\n  }\n": typeof types.FermerAppelBenevolesDocument,
     "\n  mutation RouvrirAppelBenevoles($id: ID!) {\n    rouvrirAppelBenevoles(id: $id) {\n      id\n    }\n  }\n": typeof types.RouvrirAppelBenevolesDocument,
     "\n  mutation RenouvelerAdresseAppelBenevoles($id: ID!) {\n    renouvelerAdresseAppelBenevoles(id: $id) {\n      adresse\n    }\n  }\n": typeof types.RenouvelerAdresseAppelBenevolesDocument,
+    "\n  query DernieresNotifications {\n    notifications(nonLuesSeulement: true, limite: 10) {\n      ...NotificationAffichee\n    }\n  }\n": typeof types.DernieresNotificationsDocument,
     "\n  mutation AccepterChoixCandidature($id: ID!) {\n    accepterChoixCandidature(id: $id) {\n      id\n    }\n  }\n": typeof types.AccepterChoixCandidatureDocument,
     "\n  mutation RefuserChoixCandidature($id: ID!) {\n    refuserChoixCandidature(id: $id) {\n      id\n    }\n  }\n": typeof types.RefuserChoixCandidatureDocument,
     "\n  mutation RefuserCandidature($id: ID!) {\n    refuserCandidature(id: $id) {\n      id\n    }\n  }\n": typeof types.RefuserCandidatureDocument,
@@ -307,6 +308,7 @@ const documents: Documents = {
     "\n  mutation FermerAppelBenevoles($id: ID!) {\n    fermerAppelBenevoles(id: $id) {\n      id\n    }\n  }\n": types.FermerAppelBenevolesDocument,
     "\n  mutation RouvrirAppelBenevoles($id: ID!) {\n    rouvrirAppelBenevoles(id: $id) {\n      id\n    }\n  }\n": types.RouvrirAppelBenevolesDocument,
     "\n  mutation RenouvelerAdresseAppelBenevoles($id: ID!) {\n    renouvelerAdresseAppelBenevoles(id: $id) {\n      adresse\n    }\n  }\n": types.RenouvelerAdresseAppelBenevolesDocument,
+    "\n  query DernieresNotifications {\n    notifications(nonLuesSeulement: true, limite: 10) {\n      ...NotificationAffichee\n    }\n  }\n": types.DernieresNotificationsDocument,
     "\n  mutation AccepterChoixCandidature($id: ID!) {\n    accepterChoixCandidature(id: $id) {\n      id\n    }\n  }\n": types.AccepterChoixCandidatureDocument,
     "\n  mutation RefuserChoixCandidature($id: ID!) {\n    refuserChoixCandidature(id: $id) {\n      id\n    }\n  }\n": types.RefuserChoixCandidatureDocument,
     "\n  mutation RefuserCandidature($id: ID!) {\n    refuserCandidature(id: $id) {\n      id\n    }\n  }\n": types.RefuserCandidatureDocument,
@@ -644,6 +646,10 @@ export function graphql(source: "\n  mutation RouvrirAppelBenevoles($id: ID!) {\
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RenouvelerAdresseAppelBenevoles($id: ID!) {\n    renouvelerAdresseAppelBenevoles(id: $id) {\n      adresse\n    }\n  }\n"): (typeof documents)["\n  mutation RenouvelerAdresseAppelBenevoles($id: ID!) {\n    renouvelerAdresseAppelBenevoles(id: $id) {\n      adresse\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query DernieresNotifications {\n    notifications(nonLuesSeulement: true, limite: 10) {\n      ...NotificationAffichee\n    }\n  }\n"): (typeof documents)["\n  query DernieresNotifications {\n    notifications(nonLuesSeulement: true, limite: 10) {\n      ...NotificationAffichee\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

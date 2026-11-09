@@ -100,6 +100,14 @@ Un **modèle de notifications** remplit tous les réglages en un geste. La perso
 - La désignation d'un contact principal prévient dans l'application la personne nommée et celle qui perd ce rôle. Aucun mail ne part (ADR 0012).
 - Le mail d'équipe ajoute la proposition quand le nouveau rôle appelle un autre modèle que les réglages de la personne.
 
+### L'avis d'une nouvelle notification
+
+- Une notification qui arrive dans la cloche pendant que l'espace est ouvert s'annonce par un avis discret, en bas de l'écran, pendant dix secondes.
+- L'avis nomme l'activité et le périmètre, puis reprend le texte de la notification. Un clic sur l'avis ou sur « Ouvrir » mène à l'objet de la notification et la marque comme lue. « Voir dans la cloche » ouvre la cloche.
+- Les notifications déjà présentes à l'ouverture de l'espace ne s'annoncent pas. Au-delà de trois nouvelles notifications à la fois, un seul avis les compte.
+- Les notifications d'admin gardent leur écran et ne s'annoncent pas.
+- Une saisie en cours (une fiche, une tâche ou un commentaire) demande une confirmation avant de quitter la page, depuis un avis comme depuis la cloche. Le brouillon d'une fiche reste gardé dans le navigateur (ADR 0038).
+
 ### La fenêtre de regroupement
 
 - Les notifications de création, de modification, de statut, d'assignation et de retrait d'une tâche attendent la fin d'une **fenêtre** fixe de 10 minutes, comme le mail d'équipe (ADR 0012).
@@ -158,6 +166,7 @@ Un **modèle de notifications** remplit tous les réglages en un geste. La perso
 - Le contrat GraphQL gagne les trois réglages, les champs `modele`, `modeleRecommande` et `propositionModele`, et les mutations `appliquerModeleNotification` et `ecarterPropositionModele`.
 - `PreferenceOrganisation` gagne `modeleEcarte`, le modèle proposé que la personne a refusé.
 - La page des préférences s'ouvre sur le choix du modèle. Le détail des réglages se déplie en dessous.
+- L'espace organisateur gagne un registre des saisies en cours (`lib/modifications-en-cours.ts`), que l'éditeur de fiche, le formulaire de tâche et le fil de commentaires renseignent.
 - Le gabarit du résumé et celui des priorités changent.
 - Le job des priorités passe avant celui du résumé.
 - Le glossaire reçoit « importance d'une notification » et « modèle de notifications ». Les modes d'emploi et leurs captures des préférences sont à reprendre.

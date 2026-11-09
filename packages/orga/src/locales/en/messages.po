@@ -659,6 +659,10 @@ msgstr "{nombre, plural, one {Milestone: # linked task is still open} other {Mil
 msgid "{nombre, plural, one {Reprise dans # autre périmètre} other {Reprise dans # autres périmètres}}"
 msgstr "{nombre, plural, one {Taken up in # other area} other {Taken up in # other areas}}"
 
+#: src/composants/AvisNotifications.tsx
+msgid "{nombre} nouvelles notifications"
+msgstr "{nombre} new notifications"
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "{nombreAAccepter} à accepter"
 msgstr "{nombreAAccepter} to accept"
@@ -7943,6 +7947,10 @@ msgstr "New common sheet for all areas"
 msgid "Nouvelle fiche du périmètre {nomPerimetre}"
 msgstr "New sheet for the {nomPerimetre} area"
 
+#: src/composants/AvisNotifications.tsx
+msgid "Nouvelle notification"
+msgstr "New notification"
+
 #: src/composants/ReunionFormulaire.tsx
 #: src/pages/Agenda.tsx
 msgid "Nouvelle réunion"
@@ -8093,6 +8101,7 @@ msgid "Ouvrez le dossier qui range les fiches de l’activité. Relaytour y cher
 msgstr "Open the folder that holds the activity’s sheets. Relaytour looks there for one subfolder per area, named after it, and a subfolder “communes” for common sheets."
 
 #. En-tête masqué de la colonne du bouton d’ouverture
+#: src/composants/AvisNotifications.tsx
 #: src/composants/Tableau.tsx
 msgid "Ouvrir"
 msgstr "Open"
@@ -8887,9 +8896,17 @@ msgstr "Follow-up question"
 msgid "Quitter « {titre} » ?"
 msgstr "Leave “{titre}”?"
 
+#: src/composants/navigation-protegee.ts
+msgid "Quitter cette page ?"
+msgstr "Leave this page?"
+
 #: src/pages/EspaceBenevole.tsx
 msgid "Quitter cette place"
 msgstr "Leave this place"
+
+#: src/composants/navigation-protegee.ts
+msgid "Quitter la page"
+msgstr "Leave the page"
 
 #: src/pages/EspaceBenevole.tsx
 msgid "Quittez d’abord vos places à venir pour supprimer vos informations."
@@ -9380,6 +9397,10 @@ msgstr "Restore"
 #: src/pages/Fiche.tsx
 msgid "Restaurer cette version ?"
 msgstr "Restore this version?"
+
+#: src/composants/navigation-protegee.ts
+msgid "Rester sur la page"
+msgstr "Stay on the page"
 
 #: src/pages/FicheEditeur.tsx
 msgid "Résumé de la modification (facultatif)"
@@ -11022,6 +11043,10 @@ msgstr "A person sends you a meeting notice, or one of your meetings changes or 
 msgid "Une réunion lie 20 tâches au plus."
 msgstr "A meeting links up to 20 tasks."
 
+#: src/composants/navigation-protegee.ts
+msgid "Une saisie en cours n’est pas enregistrée. Elle sera perdue si vous quittez la page."
+msgstr "Something you are typing is not saved. It will be lost if you leave the page."
+
 #: src/composants/AppelsBenevoles.tsx
 msgid "Une séquence"
 msgstr "A slot"
@@ -11149,6 +11174,10 @@ msgstr "Visual"
 #: src/pages/Fiche.tsx
 msgid "Voir"
 msgstr "View"
+
+#: src/composants/AvisNotifications.tsx
+msgid "Voir dans la cloche"
+msgstr "See in the bell"
 
 #: src/composants/ReunionsDuPerimetre.tsx
 msgid "Voir l’agenda"

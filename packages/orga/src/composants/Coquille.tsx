@@ -48,6 +48,7 @@ import {
 } from '../lib/volets'
 import { ContexteSession, type Session } from '../lib/session'
 
+import AvisNotifications from './AvisNotifications'
 import PropositionModele from './PropositionModele'
 import AvisMiseAJour from './AvisMiseAJour'
 import AvisRelecture from './AvisRelecture'
@@ -497,6 +498,8 @@ function Mise({ session }: { session: Session }) {
         <main className="rt-contenu">
           {/* Le modèle de notifications du rôle (ADR 0065). */}
           <PropositionModele organisation={active.slug} />
+          {/* Chaque nouvelle notification s'annonce par un avis (ADR 0065). */}
+          <AvisNotifications />
           <AvisMiseAJour />
           <AvisHorsConnexion />
           <AvisRelecture />

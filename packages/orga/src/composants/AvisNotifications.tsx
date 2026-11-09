@@ -1,0 +1,141 @@
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
+import { App, Button, Space } from 'antd'
+import { useEffect, useRef } from 'react'
+
+import { graphql } from '../gql'
+import { ouvrirLaCloche } from '../lib/cloche'
+import { aAnnoncer, AVIS_MAX } from '../lib/nouvelles-notifications'
+import {
+  MARQUER_NOTIFICATIONS,
+  NOMBRE_NOTIFICATIONS,
+} from '../lib/requetes-notifications'
+
+import { useNavigationProtegee } from './navigation-protegee'
+
+const DERNIERES = graphql(`
+  query DernieresNotifications {
+    notifications(nonLuesSeulement: true, limite: 10) {
+      ...NotificationAffichee
+    }
+  }
+`)
+
+/** La durée d'un avis, en secondes. */
+const DUREE = 10
+
+/**
+ * Annonce chaque nouvelle notification de la cloche par un avis discret, en bas de
+ * l'écran (ADR 0065). Un clic sur l'avis ouvre l'objet de la notification et la
+ * marque comme lue ; une saisie en cours demande d'abord une confirmation. Les
+ * notifications présentes à l'ouverture de l'espace ne s'annoncent pas.
+ */
+export default function AvisNotifications() {
+  const { t } = useLingui()
+  const { notification } = App.useApp()
+  const client = useApolloClient()
+  const naviguer = useNavigationProtegee()
+  const [marquer] = useMutation(MARQUER_NOTIFICATIONS, {
+    refetchQueries: [NOMBRE_NOTIFICATIONS],
+  })
+  const { data } = useQuery(NOMBRE_NOTIFICATIONS)
+  const nonLues = data?.nombreNotificationsNonLues
+  const vues = useRef<Set<string> | null>(null)
+  const precedent = useRef<number | undefined>(undefined)
+
+  useEffect(() => {
+    if (nonLues === undefined) return
+    const avant = precedent.current
+    precedent.current = nonLues
+    const premiere = vues.current === null
+    // Une baisse du nombre (une lecture) n'annonce rien.
+    if (!premiere && avant !== undefined && nonLues <= avant) return
+    let annule = false
+    void client
+      .query({ query: DERNIERES, fetchPolicy: 'no-cache' })
+      .then(({ data: lues }) => {
+        if (annule || !lues) return
+        const recues = lues.notifications
+        if (vues.current === null) {
+          // L'ouverture de l'espace retient les notifications déjà là.
+          vues.current = new Set(recues.map(n => n.id))
+          return
+        }
+        const nouvelles = aAnnoncer(recues, vues.current)
+        for (const n of nouvelles) vues.current.add(n.id)
+        const nombre = nouvelles.length
+        if (nombre > AVIS_MAX) {
+          notification.info({
+            key: 'notifications-nouvelles',
+            placement: 'bottomRight',
+            duration: DUREE,
+            title: t`${nombre} nouvelles notifications`,
+            actions: (
+              <Button
+                size="small"
+                type="primary"
+                onClick={() => {
+                  notification.destroy('notifications-nouvelles')
+                  ouvrirLaCloche()
+                }}
+              >
+                <Trans>Voir dans la cloche</Trans>
+              </Button>
+            ),
+          })
+          return
+        }
+        for (const n of nouvelles) {
+          const ouvrir = async () => {
+            notification.destroy(n.id)
+            if (await naviguer(n.lien)) {
+              void marquer({ variables: { ids: [n.id] } })
+            }
+          }
+          notification.open({
+            key: n.id,
+            placement: 'bottomRight',
+            duration: DUREE,
+            title:
+              [n.activite?.nom, n.perimetre?.nom].filter(Boolean).join(' · ') ||
+              t`Nouvelle notification`,
+            description: n.message,
+            onClick: () => void ouvrir(),
+            style: { cursor: 'pointer' },
+            actions: (
+              <Space>
+                <Button
+                  size="small"
+                  type="primary"
+                  onClick={e => {
+                    e.stopPropagation()
+                    void ouvrir()
+                  }}
+                >
+                  <Trans>Ouvrir</Trans>
+                </Button>
+                <Button
+                  size="small"
+                  onClick={e => {
+                    e.stopPropagation()
+                    notification.destroy(n.id)
+                    ouvrirLaCloche()
+                  }}
+                >
+                  <Trans>Voir dans la cloche</Trans>
+                </Button>
+              </Space>
+            ),
+          })
+        }
+      })
+      .catch(() => {
+        // Un avis manqué n'empêche rien : la cloche garde la notification.
+      })
+    return () => {
+      annule = true
+    }
+  }, [nonLues, client, notification, naviguer, marquer, t])
+
+  return null
+}
