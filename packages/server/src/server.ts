@@ -15,6 +15,10 @@ import {
   ENTETE_ORGANISATION,
   type AppContext,
 } from './context.ts'
+import {
+  contexteDeJetonAcces,
+  creerRefusDeJetonAcces,
+} from './contexte-jeton.ts'
 import { env } from './env.ts'
 import { routesEspaceFichiers } from './espace-fichiers/routes.ts'
 import { routeDepotContenu } from './orga/route-depot-contenu.ts'
@@ -31,6 +35,7 @@ import {
   pageDesabonnement,
 } from './lib/desabonnement.ts'
 import { fermerLesFlux } from './lib/flux.ts'
+import { PREFIXE_JETON } from './lib/jetons-acces.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
 import { avecLangue, langueDe, languesDuNavigateur } from './lib/langue.ts'
@@ -346,15 +351,32 @@ app.all('/api/auth/*splat', (req, res) => {
 const REFUS_DE_JETON = { max: 10, fenetreSecondes: 15 * 60 }
 
 /**
- * Le contexte d'une requête : le jeton d'administration de l'installation, sinon la
- * session et l'organisation désignée. L'API et le flux des changements le partagent.
+ * Le contexte d'une requête : un jeton d'accès, le jeton d'administration de
+ * l'installation, sinon la session et l'organisation désignée. L'API et le flux des
+ * changements le partagent. Les autres routes passent `jetonsAcces: false` : elles
+ * servent l'espace organisateur seul, et un jeton d'accès y rend la requête anonyme.
  */
-async function contexteDeRequete(req: express.Request): Promise<AppContext> {
+async function contexteDeRequete(
+  req: express.Request,
+  options: { jetonsAcces?: boolean } = {}
+): Promise<AppContext> {
   // Le jeton d'administration de l'installation ignore toute session (ADR 0008).
   // Un en-tête Bearer, même vide ou malformé, écarte la session : un jeton
   // faux rend la requête anonyme.
   const ip = adresseClient(req)
   const porteur = /^Bearer\b\s*(.*)$/i.exec(req.get('authorization') ?? '')
+  const presente = (porteur?.[1] ?? '').trim()
+  // Un jeton d'accès se reconnaît à son préfixe (ADR 0064) : il ne compte pas parmi
+  // les refus du jeton d'administration.
+  if (porteur !== null && presente.startsWith(PREFIXE_JETON)) {
+    return options.jetonsAcces === false
+      ? buildContext(ip, null)
+      : contexteDeJetonAcces(
+          ip,
+          presente,
+          req.get(ENTETE_ACTIVITE)?.trim() || null
+        )
+  }
   if (porteur !== null) {
     // Avec JETON_ADMINISTRATION_LOCAL, un jeton relayé par le proxy ne vaut rien :
     // la requête devient anonyme, comme avec un jeton faux (ADR 0013).
@@ -369,7 +391,7 @@ async function contexteDeRequete(req: express.Request): Promise<AppContext> {
     )
     const valide =
       tentativePermise &&
-      jetonAdministrationValide((porteur[1] ?? '').trim()) &&
+      jetonAdministrationValide(presente) &&
       (!env.JETON_ADMINISTRATION_LOCAL || requeteLocale(req))
     if (valide) {
       await rendreTentative(cleRefus)
@@ -397,7 +419,9 @@ async function contexteDeRequete(req: express.Request): Promise<AppContext> {
 
 // Espace de fichiers (ADR 0038) : retour de la connexion chez le fournisseur et
 // aperçu d'un document. Les routes vivent sous /medias/, déjà relayé par le proxy.
-routesEspaceFichiers(app, contexteDeRequete, env.ORIGINE_ORGA)
+const contexteSansJeton = (req: express.Request) =>
+  contexteDeRequete(req, { jetonsAcces: false })
+routesEspaceFichiers(app, contexteSansJeton, env.ORIGINE_ORGA)
 
 // Dépôt d'un dossier de contenu (ADR 0049) : l'archive dépasse la borne d'une
 // requête GraphQL et passe par sa propre route.
@@ -406,8 +430,16 @@ const originesOrga = [
   ...env.CORS_ORIGIN,
   ...(env.ORIGINE_ORGA === undefined ? [] : [env.ORIGINE_ORGA]),
 ]
-routeDepotContenu(app, contexteDeRequete, originesOrga)
-routeDepotFiches(app, contexteDeRequete, originesOrga)
+routeDepotContenu(app, contexteSansJeton, originesOrga)
+routeDepotFiches(app, contexteSansJeton, originesOrga)
+
+// Un jeton d'accès refusé reçoit son statut HTTP avant toute exécution (ADR 0064).
+// Le contexte calculé sert ensuite à Apollo, sans second calcul.
+const contextesCalcules = new WeakMap<express.Request, AppContext>()
+const refuserJetonAcces = creerRefusDeJetonAcces(
+  req => contexteDeRequete(req),
+  contextesCalcules
+)
 
 app.use(
   '/graphql',
@@ -420,9 +452,13 @@ app.use(
       langueDe(null, null, languesDuNavigateur(req.get('accept-language'))),
       suite
     ),
+  refuserJetonAcces,
   // Les abonnements partent en SSE (ADR 0017) ; le reste continue vers Apollo.
-  creerGestionnaireFlux({ contexte: contexteDeRequete }),
-  expressMiddleware(apollo, { context: ({ req }) => contexteDeRequete(req) })
+  creerGestionnaireFlux({ contexte: req => contexteDeRequete(req) }),
+  expressMiddleware(apollo, {
+    context: async ({ req }) =>
+      contextesCalcules.get(req) ?? contexteDeRequete(req),
+  })
 )
 
 if (env.APP_ENV === 'local') {

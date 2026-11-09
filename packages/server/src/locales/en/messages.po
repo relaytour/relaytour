@@ -739,6 +739,21 @@ msgid "Cette tâche n’est plus un jalon : transformez-la d’abord."
 msgstr "This task is no longer a milestone. Turn it into one first."
 
 #. js-lingui-explicit-id
+#: src/schema/jetons-acces.ts
+msgid "Choisissez au moins une activité, ou laissez le jeton ouvert à toutes vos activités."
+msgstr "Choose at least one activity, or leave the token open to all your activities."
+
+#. js-lingui-explicit-id
+#: src/schema/jetons-acces.ts
+msgid "Un jeton porte {max} activités au plus."
+msgstr "A token covers {max} activities at most."
+
+#. js-lingui-explicit-id
+#: src/schema/jetons-acces.ts
+msgid "Le nom du jeton"
+msgstr "The token name"
+
+#. js-lingui-explicit-id
 #: src/schema/messages.ts
 msgid "L’objet"
 msgstr "The subject"
@@ -1874,6 +1889,41 @@ msgstr "Contact an admin of your organization."
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts
+msgid "Ce jeton d’accès n’est pas valide, ou il a été révoqué ou a expiré."
+msgstr "This access token is not valid, or it has been revoked or has expired."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "L’administration de l’installation a suspendu l’API de cette organisation : {motif}"
+msgstr "The instance administration has suspended the API of this organization: {motif}"
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "L’administration de l’installation a suspendu l’API de cette organisation."
+msgstr "The instance administration has suspended the API of this organization."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Votre hébergeur ne propose pas l’API à votre organisation."
+msgstr "Your hosting provider does not offer the API to your organization."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "L’API de cette organisation est désactivée. Un admin de l’organisation peut l’activer dans l’écran « Organisation »."
+msgstr "The API of this organization is turned off. An organization admin can turn it on in the \"Organization\" screen."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Ce jeton d’accès n’autorise que la lecture."
+msgstr "This access token only allows reading."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Trop de requêtes avec ce jeton : réessayez dans une minute."
+msgstr "Too many requests with this token: try again in a minute."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
 msgid "La requête est trop profonde ({niveaux} niveaux, maximum {maximum})."
 msgstr "The query is too deep ({niveaux} levels, maximum {maximum})."
 
@@ -2109,6 +2159,21 @@ msgstr "This organization already has an admin: its admins invite the other peop
 
 #. js-lingui-explicit-id
 #: src/lib/installation.ts
+msgid "Une suspension de l’API demande un motif, lisible par les membres."
+msgstr "Suspending the API requires a reason, which members can read."
+
+#. js-lingui-explicit-id
+#: src/lib/installation.ts
+msgid "Le motif dépasse {max} caractères."
+msgstr "The reason exceeds {max} characters."
+
+#. js-lingui-explicit-id
+#: src/lib/installation.ts
+msgid "Un motif ne se donne qu’avec une suspension de l’API."
+msgstr "A reason is only given with an API suspension."
+
+#. js-lingui-explicit-id
+#: src/lib/installation.ts
 msgid "Cette organisation n’a aucune activité ouverte."
 msgstr "This organization has no open activity."
 
@@ -2121,6 +2186,21 @@ msgstr "No activity has the slug “{slug}” in this organization."
 #: src/lib/invitations.ts
 msgid "Cette organisation n’accueille pas de nouvelle personne pour le moment."
 msgstr "This organization is not accepting new people at the moment."
+
+#. js-lingui-explicit-id
+#: src/lib/jetons-acces.ts
+msgid "La date de fin du jeton doit être à venir."
+msgstr "The token end date must be in the future."
+
+#. js-lingui-explicit-id
+#: src/lib/jetons-acces.ts
+msgid "Un jeton vaut un an au plus : choisissez une date plus proche."
+msgstr "A token lasts one year at most: choose an earlier date."
+
+#. js-lingui-explicit-id
+#: src/lib/jetons-acces.ts
+msgid "Vous avez déjà {max} jetons actifs dans cette organisation : révoquez-en un avant d’en créer un autre."
+msgstr "You already have {max} active tokens in this organization: revoke one before creating another."
 
 #. js-lingui-explicit-id
 #: src/lib/limites.ts

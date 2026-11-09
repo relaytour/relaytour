@@ -33,6 +33,7 @@ import {
   inviterCompteExterne,
 } from '../lib/invitations.ts'
 import { journal } from '../lib/journal.ts'
+import { revoquerJetonsDe } from '../lib/jetons-acces.ts'
 import { i18n } from '../lib/langue.ts'
 import { limiterParCle } from '../lib/limite.ts'
 import { placesMembres } from '../lib/limites.ts'
@@ -933,6 +934,11 @@ builder.mutationFields(t => ({
             organisationId,
             maintenant: instant,
           })
+        }
+        // Ses jetons d'accès dans l'organisation sont révoqués (ADR 0064) : un
+        // rétablissement ne les rouvre pas.
+        if (args.archive) {
+          await revoquerJetonsDe(tx, { organisationId, userId: id }, instant)
         }
         return count > 0
       })

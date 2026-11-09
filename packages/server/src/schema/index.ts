@@ -45,6 +45,7 @@ import './formulaire.ts'
 import './messages.ts'
 import './flux.ts'
 import './notes-de-version.ts'
+import './jetons-acces.ts'
 
 import { builder } from './builder.ts'
 

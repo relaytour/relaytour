@@ -155,6 +155,7 @@ describe('accès à l’administration de l’installation', () => {
     expect(champs).toEqual({
       OrganisationInstallation: [
         'activites',
+        'api',
         'creeLe',
         'limites',
         'modulesAutorises',
@@ -173,6 +174,15 @@ describe('accès à l’administration de l’installation', () => {
         'slug',
       ],
       PeriodeInstallation: ['annee', 'debut', 'fin', 'nom', 'statut'],
+      // Le module « API » (ADR 0064) : des réglages et un compteur de jetons.
+      ApiInstallation: [
+        'autorisee',
+        'etat',
+        'imposee',
+        'jetonsActifs',
+        'suspendueLe',
+        'suspensionMotif',
+      ],
     })
   })
 })

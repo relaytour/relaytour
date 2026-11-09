@@ -219,6 +219,42 @@ type ApercuPerimetreModele {
 }
 
 """
+Le module « API » d’une organisation (ADR 0064) : son état, les réglages de l’administration de l’installation et le nombre de jetons actifs.
+"""
+type ApiInstallation {
+  autorisee: Boolean!
+  etat: EtatApi!
+  imposee: Boolean!
+
+  """Jetons ni révoqués ni expirés."""
+  jetonsActifs: Int!
+  suspendueLe: DateTime
+  suspensionMotif: String
+}
+
+"""
+Un champ absent ne change pas. `suspendue: true` exige `suspensionMotif` et révoque tous les jetons de l’organisation ; `suspendue: false` lève la suspension.
+"""
+input ApiInstallationInput {
+  """Faux : l’organisation ne peut pas activer l’API."""
+  autorisee: Boolean
+
+  """Vrai : l’API est active, quel que soit le choix de l’organisation."""
+  imposee: Boolean
+  suspendue: Boolean
+  suspensionMotif: String
+}
+
+"""
+L’état du module « API » de l’organisation active : les jetons d’accès ne répondent que s’il vaut ACTIVE ou IMPOSEE.
+"""
+type ApiOrganisation {
+  etat: EtatApi!
+  suspendueLe: DateTime
+  suspensionMotif: String
+}
+
+"""
 Un appel à bénévoles : une adresse publique ouverte entre deux dates (ADR 0041).
 """
 type AppelBenevoles {
@@ -1092,6 +1128,17 @@ enum EtatAccesFournisseur {
   SANS_COMPTE
 }
 
+"""
+INACTIVE : un admin de l’organisation peut l’activer. ACTIVE : activée par l’organisation. IMPOSEE : activée par l’administration de l’installation. INTERDITE : l’administration de l’installation ne la propose pas. SUSPENDUE : l’administration de l’installation l’a suspendue.
+"""
+enum EtatApi {
+  ACTIVE
+  IMPOSEE
+  INACTIVE
+  INTERDITE
+  SUSPENDUE
+}
+
 enum EtatAppel {
   A_VENIR
   FERME
@@ -1478,6 +1525,44 @@ The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](
 scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
 """
+Un jeton d’accès d’un programme tiers. Sa valeur ne se relit pas : elle s’affiche une seule fois, à sa création.
+"""
+type JetonAcces {
+  """
+  Les activités ouvertes au jeton. Nul : toutes celles que la personne voit.
+  """
+  activiteIds: [ID!]
+
+  """Les huit caractères qui suivent « rt_ », pour reconnaître le jeton."""
+  apercu: String!
+  creeLe: DateTime!
+  dernierAccesLe: DateTime
+  expireLe: DateTime!
+  id: ID!
+  nom: String!
+  portee: PorteeJeton!
+  revoqueLe: DateTime
+}
+
+"""
+Les bornes du jeton qui porte la requête : un programme tiers les lit pour savoir ce qu’il peut faire.
+"""
+type JetonCourant {
+  """Nul : toutes les activités que la personne voit."""
+  activiteIds: [ID!]
+  expireLe: DateTime!
+  portee: PorteeJeton!
+}
+
+"""
+Un jeton qui vient d’être créé. `jeton` est sa valeur, rendue cette seule fois.
+"""
+type JetonCree {
+  jeton: String!
+  jetonAcces: JetonAcces!
+}
+
+"""
 Les lecteurs d’un dossier lié : toute l’activité, ou une liste de périmètres et de groupes de l’activité.
 """
 input LecteursDossierInput {
@@ -1767,6 +1852,11 @@ type Mutation {
   """
   accorderDeclinaison(accepter: Boolean!, id: ID!): Tache!
   accorderDroitRedaction(perimetreId: ID, personneId: ID!): DroitRedaction!
+
+  """
+  Active le module « API » de l’organisation. Refusé quand l’administration de l’installation l’interdit ou le suspend.
+  """
+  activerApi: ApiOrganisation!
   affecter(editionId: ID!, perimetreId: ID!, personneId: ID!): Affectation!
   afficherFicheConnexe(ficheId: ID!, perimetreId: ID!): Fiche!
 
@@ -1908,6 +1998,11 @@ type Mutation {
   creerDateCle(description: String, editionId: ID!, jour: Date!, jourFin: Date, titre: String!): DateCle!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
+
+  """
+  Crée un jeton d’accès pour la personne connectée, dans l’organisation active. Sa valeur n’est rendue qu’ici.
+  """
+  creerJetonAcces(activiteIds: [ID!], expireLe: DateTime, nom: String!, portee: PorteeJeton!): JetonCree!
   creerLieu(activiteId: ID!, description: String, nom: String!, ordre: Int = 0): Lieu!
   creerMessage(message: MessageInput!): Message!
 
@@ -2047,6 +2142,11 @@ type Mutation {
   Retire l’abonnement push de cet appareil. Rend vrai quand un abonnement de la personne connectée a été retiré.
   """
   desabonnerPush(adresse: String!): Boolean!
+
+  """
+  Désactive le module « API » de l’organisation. Les jetons ne sont pas révoqués : ils cessent de répondre, puis répondent de nouveau à la réactivation. Une activation imposée par l’administration de l’installation reste en vigueur.
+  """
+  desactiverApi: ApiOrganisation!
 
   """
   Détache une déclinaison acceptée de sa tâche partagée : elle redevient une tâche ordinaire de son périmètre, avec son statut, ses personnes assignées et son fil. Demande d’écrire dans les deux périmètres (ADR 0061). Rend la tâche détachée.
@@ -2256,7 +2356,7 @@ type Mutation {
   La personne modifie son propre nom, qui vaut dans toutes ses organisations (ADR 0031).
   """
   modifierMonNom(nom: String!): Personne!
-  modifierOrganisationInstallation(autoriserTousLesModules: Boolean, limites: LimitesOrganisationInput, modulesAutorises: [ModuleActivite!], slug: String!, statut: StatutOrganisation): OrganisationInstallation!
+  modifierOrganisationInstallation(api: ApiInstallationInput, autoriserTousLesModules: Boolean, limites: LimitesOrganisationInput, modulesAutorises: [ModuleActivite!], slug: String!, statut: StatutOrganisation): OrganisationInstallation!
 
   """
   Modifie le réglage d’un périmètre. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).
@@ -2524,6 +2624,11 @@ type Mutation {
   retirerSouhait(id: ID!): Boolean!
   revoquerAbonnementAgendaActivite(activiteId: ID!): Boolean!
 
+  """
+  Révoque un jeton d’accès de la personne connectée. Rend faux pour un jeton inconnu, déjà révoqué ou d’une autre personne.
+  """
+  revoquerJetonAcces(id: ID!): Boolean!
+
   """Révoque l’abonnement personnel : son adresse cesse de servir."""
   revoquerMonAbonnementAgenda: Boolean!
 
@@ -2736,6 +2841,7 @@ Une organisation vue par l’administration de l’installation : identité, sta
 """
 type OrganisationInstallation {
   activites: [ActiviteInstallation!]!
+  api: ApiInstallation!
   creeLe: DateTime!
   limites: LimitesOrganisation!
 
@@ -3053,6 +3159,14 @@ enum PorteeConnexionFichiers {
   GESTION
 }
 
+"""
+LECTURE : le jeton lit, et toute mutation est refusée. LECTURE_ECRITURE : le jeton lit et écrit, avec les droits de la personne.
+"""
+enum PorteeJeton {
+  LECTURE
+  LECTURE_ECRITURE
+}
+
 type PostesPerimetre {
   aPourvoir: Int!
   affectations: [Affectation!]!
@@ -3228,6 +3342,9 @@ type Query {
     perimetreIds: [ID!]
   ): Agenda!
 
+  """L’état du module « API » de l’organisation active."""
+  apiOrganisation: ApiOrganisation!
+
   """
   La page publique d’un appel, ou null s’il est fermé ou inconnu. Lisible sans session.
   """
@@ -3358,6 +3475,11 @@ type Query {
   """
   invitationsEnAttente(activiteId: ID): [InvitationEnAttente!]!
 
+  """
+  Le jeton d’accès qui porte la requête. Nul pour une session de l’espace organisateur.
+  """
+  jetonCourant: JetonCourant
+
   """Les lieux d’une activité, dans leur ordre d’affichage."""
   lieux(activiteId: ID!, inclureArchives: Boolean = false): [Lieu!]!
 
@@ -3365,6 +3487,11 @@ type Query {
   Les invitations qui attendent l’accord de la personne connectée (ADR 0030).
   """
   mesInvitations: [InvitationRecue!]!
+
+  """
+  Les jetons d’accès de la personne dans l’organisation active : les jetons actifs, puis ceux révoqués ou expirés depuis moins de 30 jours.
+  """
+  mesJetonsAcces: [JetonAcces!]!
   mesOrganisations: [OrganisationDeLaPersonne!]!
   mesPerimetres(activiteId: ID): [Perimetre!]!
   mesPreferencesNotification: PreferencesNotification!

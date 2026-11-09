@@ -76,6 +76,63 @@ export function limiteAtteinte(
   })
 }
 
+/**
+ * Refus d'un jeton d'accès inutilisable (ADR 0064) : inconnu, révoqué, expiré, ou
+ * d'une personne archivée. Le message est le même dans tous les cas.
+ */
+export function jetonInvalide(): GraphQLError {
+  return new GraphQLError(
+    i18n._(
+      'Ce jeton d’accès n’est pas valide, ou il a été révoqué ou a expiré.'
+    ),
+    { extensions: { code: 'JETON_INVALIDE' } }
+  )
+}
+
+/**
+ * Refus d'un jeton quand le module « API » de son organisation est fermé (ADR 0064).
+ * Le message nomme la cause, et reprend le motif d'une suspension.
+ */
+export function apiInactive(
+  cause: 'organisation' | 'hebergeur' | 'suspendue',
+  motif: string | null = null
+): GraphQLError {
+  const message =
+    cause === 'suspendue'
+      ? motif
+        ? i18n._(
+            'L’administration de l’installation a suspendu l’API de cette organisation : {motif}',
+            { motif }
+          )
+        : i18n._(
+            'L’administration de l’installation a suspendu l’API de cette organisation.'
+          )
+      : cause === 'hebergeur'
+        ? i18n._('Votre hébergeur ne propose pas l’API à votre organisation.')
+        : i18n._(
+            'L’API de cette organisation est désactivée. Un admin de l’organisation peut l’activer dans l’écran « Organisation ».'
+          )
+  return new GraphQLError(message, {
+    extensions: { code: 'API_INACTIVE', cause },
+  })
+}
+
+/** Refus d'une écriture avec un jeton en lecture seule (ADR 0064). */
+export function porteeInsuffisante(): GraphQLError {
+  return new GraphQLError(
+    i18n._('Ce jeton d’accès n’autorise que la lecture.'),
+    { extensions: { code: 'PORTEE_INSUFFISANTE' } }
+  )
+}
+
+/** Refus d'une requête au-delà de la limite de débit d'un jeton (ADR 0064). */
+export function limiteDeDebit(): GraphQLError {
+  return new GraphQLError(
+    i18n._('Trop de requêtes avec ce jeton : réessayez dans une minute.'),
+    { extensions: { code: 'LIMITE_DE_DEBIT' } }
+  )
+}
+
 /** Mesure d'une requête GraphQL, telle que le plugin de complexité la calcule. */
 export interface MesureRequete {
   depth: number
@@ -143,6 +200,10 @@ const CODES_CONNUS = new Set([
   'CONFIRMATION_REQUISE',
   'LECTURE_SEULE',
   'LIMITE_ATTEINTE',
+  'JETON_INVALIDE',
+  'API_INACTIVE',
+  'PORTEE_INSUFFISANTE',
+  'LIMITE_DE_DEBIT',
   'ABONNEMENT_ATTENDU',
   'TROP_DE_FLUX',
   'FLUX_INDISPONIBLE',

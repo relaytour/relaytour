@@ -248,7 +248,7 @@ builder.prismaObjectFields(PersonneRef, t => ({
 
 builder.mutationFields(t => ({
   modifierMonAdresseVisible: t.boolean({
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, session: true } },
     // Une organisation en lecture seule montre encore l'organigramme : la personne
     // doit pouvoir y retirer son accord. Donner son accord reste une écriture.
     skipTypeScopes: true,
