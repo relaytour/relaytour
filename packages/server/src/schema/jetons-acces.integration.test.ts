@@ -399,6 +399,9 @@ describe('jeton d’accès', () => {
       'mutation { modifierMonNom(nom: "Programme") { id } }',
       'mutation { desactiverApi { etat } }',
       'mutation { creerMonAbonnementAgenda { adresse } }',
+      // Le lien personnel d'une fiche bénévole identifie une autre personne.
+      'mutation { lienEspaceBenevole(benevoleId: "x", nouveau: true) }',
+      'mutation { renvoyerLienBenevole(benevoleId: "x") }',
     ]) {
       const r = await executer({ jeton }, query)
       expect(code(r), query).toBe('FORBIDDEN')

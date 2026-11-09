@@ -49,6 +49,7 @@ Un jeton ne remplace pas la session. Ces opérations exigent une session de l'es
 - les opérations du compte : choisir une organisation, accepter une invitation, changer son nom ou sa langue, lire les notifications des autres organisations ;
 - les secrets et les appareils : abonnements à l'agenda (ADR 0037), notifications push (ADR 0024), connexion au fournisseur cloud (ADR 0038) ;
 - les réglages personnels : préférences de notification, accord de l'organigramme (ADR 0036) ;
+- le lien personnel de l'espace bénévole d'une autre personne et son renvoi (ADR 0041), qui identifient cette personne ;
 - l'export complet et l'export du contenu, qui livrent les noms et les adresses des membres ;
 - l'activation et la désactivation du module.
 
@@ -67,7 +68,9 @@ Les notifications de l'organisation ne passent pas par les activités. Un jeton 
 
 ### Sécurité
 
-- Un jeton accepté compte 120 requêtes par minute au plus. Les jetons refusés se comptent par adresse : au-delà de 60 refus en un quart d'heure, l'adresse reçoit la limite de débit, même avec un jeton exact. La valeur reste haute, car un programme qui relaie plusieurs personnes appelle depuis une seule adresse.
+- Un jeton accepté compte 120 requêtes par minute au plus. L'ouverture d'un flux des changements compte une requête, puis chaque relecture de ses droits en compte une autre.
+- Les jetons refusés se comptent par adresse : au-delà de 60 refus en un quart d'heure, l'adresse reçoit la limite de débit, même avec un jeton exact. La valeur reste haute, car un programme qui relaie plusieurs personnes appelle depuis une seule adresse.
+- Cette limite par adresse est un compromis assumé. Derrière un proxy ou un NAT partagé, un programme mal configuré peut fermer l'API aux autres programmes de la même adresse pendant un quart d'heure. Elle borne en échange une recherche de jetons à l'aveugle.
 - Le jeton n'entre jamais au journal (invariant 6). Le journal garde l'identifiant du jeton et l'événement : `jeton-acces-cree`, `jeton-acces-revoque`, `jeton-acces-refuse`.
 - Le dernier usage d'un jeton s'écrit au plus une fois par minute. La personne le lit à côté de chaque jeton.
 - L'archivage d'une personne dans une organisation révoque ses jetons dans la même transaction. Un rétablissement ne les rouvre pas.

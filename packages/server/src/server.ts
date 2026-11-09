@@ -454,7 +454,11 @@ app.use(
     ),
   refuserJetonAcces,
   // Les abonnements partent en SSE (ADR 0017) ; le reste continue vers Apollo.
-  creerGestionnaireFlux({ contexte: req => contexteDeRequete(req) }),
+  creerGestionnaireFlux({
+    contexte: req => contexteDeRequete(req),
+    contexteInitial: async req =>
+      contextesCalcules.get(req) ?? contexteDeRequete(req),
+  }),
   expressMiddleware(apollo, {
     context: async ({ req }) =>
       contextesCalcules.get(req) ?? contexteDeRequete(req),
