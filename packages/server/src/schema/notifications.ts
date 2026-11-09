@@ -613,7 +613,11 @@ builder.mutationFields(t => ({
     resolve: async (_root, args, ctx) => {
       const userId = ctx.personne!.id
       const organisationId = ctx.organisation!.id
-      const donnees = REGLAGES_DES_MODELES[args.modele]
+      // Un modèle appliqué efface un refus passé (ADR 0065).
+      const donnees = {
+        ...REGLAGES_DES_MODELES[args.modele],
+        modeleEcarte: null,
+      }
       return prisma.preferenceOrganisation.upsert({
         where: { userId_organisationId: { userId, organisationId } },
         update: donnees,
@@ -630,11 +634,15 @@ builder.mutationFields(t => ({
     resolve: async (_root, _args, ctx) => {
       const userId = ctx.personne!.id
       const organisationId = ctx.organisation!.id
-      const modeleEcarte = await modeleRecommande(
+      // Seule une proposition faite se refuse : des réglages déjà conformes ne
+      // retiennent aucun refus.
+      const modeleEcarte = await propositionModele(
         prisma,
-        userId,
-        organisationId
+        await preferencesDe(prisma, userId, organisationId)
       )
+      if (modeleEcarte === null) {
+        return preferencesDe(prisma, userId, organisationId)
+      }
       return prisma.preferenceOrganisation.upsert({
         where: { userId_organisationId: { userId, organisationId } },
         update: { modeleEcarte },

@@ -527,11 +527,20 @@ function phrase(
         lieu,
       })
     case 'TACHE_ASSIGNEE':
+      // Une personne remplacée lit « à votre place » (ADR 0065).
+      if (n.remplaceId && n.remplaceId === moiId) {
+        return n.personneId === n.acteurId
+          ? i18n._(
+              '{acteur} s’occupe de la tâche « {titre} »{lieu} à votre place',
+              { acteur, titre, lieu }
+            )
+          : i18n._(
+              '{acteur} a assigné la tâche « {titre} »{lieu} à {personne} à votre place',
+              { acteur, titre, lieu, personne }
+            )
+      }
       if (n.remplaceId) {
-        const ancien =
-          n.remplaceId === moiId
-            ? i18n._('vous')
-            : (c.noms.get(n.remplaceId) ?? i18n._('une personne'))
+        const ancien = c.noms.get(n.remplaceId) ?? i18n._('une personne')
         return n.personneId === n.acteurId
           ? i18n._(
               '{acteur} s’occupe de la tâche « {titre} »{lieu} à la place de {ancien}',

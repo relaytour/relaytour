@@ -42,6 +42,12 @@ export default function AvisNotifications() {
   const nonLues = data?.nombreNotificationsNonLues
   const vues = useRef<Set<string> | null>(null)
   const precedent = useRef<number | undefined>(undefined)
+  // Les actions changent d'identité à chaque navigation : l'effet les lit par une
+  // référence, pour qu'une navigation n'annule pas une lecture en cours.
+  const actions = useRef({ notification, naviguer, marquer, t })
+  useEffect(() => {
+    actions.current = { notification, naviguer, marquer, t }
+  })
 
   useEffect(() => {
     if (nonLues === undefined) return
@@ -50,11 +56,11 @@ export default function AvisNotifications() {
     const premiere = vues.current === null
     // Une baisse du nombre (une lecture) n'annonce rien.
     if (!premiere && avant !== undefined && nonLues <= avant) return
-    let annule = false
+    const { notification, naviguer, marquer, t } = actions.current
     void client
       .query({ query: DERNIERES, fetchPolicy: 'no-cache' })
       .then(({ data: lues }) => {
-        if (annule || !lues) return
+        if (!lues) return
         const recues = lues.notifications
         if (vues.current === null) {
           // L'ouverture de l'espace retient les notifications déjà là.
@@ -132,10 +138,7 @@ export default function AvisNotifications() {
       .catch(() => {
         // Un avis manqué n'empêche rien : la cloche garde la notification.
       })
-    return () => {
-      annule = true
-    }
-  }, [nonLues, client, notification, naviguer, marquer, t])
+  }, [nonLues, client])
 
   return null
 }

@@ -1658,6 +1658,16 @@ msgstr "{acteur} commented on the task “{titre}”{lieu}"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
+msgid "{acteur} s’occupe de la tâche « {titre} »{lieu} à votre place"
+msgstr "{acteur} is taking care of the task “{titre}”{lieu} in your place"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a assigné la tâche « {titre} »{lieu} à {personne} à votre place"
+msgstr "{acteur} assigned the task “{titre}”{lieu} to {personne} in your place"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
 msgid "{acteur} s’occupe de la tâche « {titre} »{lieu} à la place de {ancien}"
 msgstr "{acteur} is taking care of the task “{titre}”{lieu} instead of {ancien}"
 
@@ -3666,6 +3676,11 @@ msgstr "No due dates."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
+msgid "Vos nouvelles"
+msgstr "Your updates"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
 msgid "à prendre"
 msgstr "unassigned"
 
@@ -3693,11 +3708,6 @@ msgstr "{n, plural, one {and # other priority} other {and # other priorities}}"
 #: src/courriel/messages.ts
 msgid "Aucune priorité dans vos périmètres d’ici le prochain point."
 msgstr "No priorities in your areas before the next check-in."
-
-#. js-lingui-explicit-id
-#: src/courriel/messages.ts
-msgid "Vos nouvelles"
-msgstr "Your updates"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts

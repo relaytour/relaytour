@@ -34,12 +34,12 @@
           "etat": "prevu",
           "fr": {
             "titre": "Le résumé regroupe les nouvelles de chaque tâche",
-            "texte": "Le résumé par mail regroupe les nouvelles d'une même tâche sur une ligne : « Léa s'occupe de la tâche à la place de Paul ». Il ne répète plus une modification déjà annoncée par un mail immédiat. Au-delà de trente nouvelles, il indique combien restent dans l'application. Avec le résumé hebdomadaire, le mail des priorités reprend vos nouvelles et remplace le résumé du lundi.",
+            "texte": "Le résumé par mail regroupe les nouvelles d'une même tâche sur une ligne : « Léa s'occupe de la tâche à la place de Paul ». Il ne répète plus une modification déjà annoncée par un mail immédiat. Au-delà de trente nouvelles, il indique combien restent dans l'application. Avec le résumé hebdomadaire, le mail des priorités reprend vos nouvelles et remplace le résumé du lundi. Les nouvelles arrivées après ce mail partent avec le mail des priorités suivant.",
             "migration": null
           },
           "en": {
             "titre": "The summary groups the updates of each task",
-            "texte": "The email summary groups the updates of a single task on one line: \"Léa is taking care of the task instead of Paul\". It no longer repeats a change already announced by an immediate email. Beyond thirty updates, it says how many remain in the app. With the weekly summary, the priorities email includes your updates and replaces the Monday summary.",
+            "texte": "The email summary groups the updates of a single task on one line: \"Léa is taking care of the task instead of Paul\". It no longer repeats a change already announced by an immediate email. Beyond thirty updates, it says how many remain in the app. With the weekly summary, the priorities email includes your updates and replaces the Monday summary. Updates that arrive after this email go out with the next priorities email.",
             "migration": null
           }
         }
