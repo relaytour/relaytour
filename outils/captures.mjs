@@ -271,6 +271,8 @@ const ECRANS = [
     avant:
       "localStorage.setItem('relaytour.retroplanning.regroupement', 'phase')",
   },
+  // La charge de l'équipe pendant la période, vue « Maintenant » (ADR 0055).
+  { nom: 'charge', compte: 'referent', chemin: `${ACTIVITE}/charge` },
   // L'agenda de la période, en liste (ADR 0037).
   {
     nom: 'agenda',
@@ -485,9 +487,8 @@ const ECRANS = [
     nom: 'agenda-mois',
     compte: 'admin-activite',
     chemin: `${ACTIVITE}/agenda`,
+    // Le mois courant montre les réunions et les dates clés proches du jour de la passe.
     avant: "localStorage.setItem('relaytour.agenda.vue', 'mois')",
-    // Le mois suivant porte en général plus de dates que la fin du mois courant.
-    apres: cliquerLibelle('Mois suivant'),
   },
   // Les fiches bénévoles, avec leurs coordonnées lues par un admin (ADR 0040).
   {
