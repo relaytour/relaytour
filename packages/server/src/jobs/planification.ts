@@ -52,6 +52,7 @@ export interface RappelsParPersonne {
  * Les destinataires sont les personnes assignées. Sans personne assignée, ce sont
  * les contacts principaux du périmètre, ou à défaut toute son équipe, pour que rien
  * ne passe inaperçu (ADR 0065).
+ *
  * Une déclinaison en retard prévient en plus les personnes assignées à sa tâche
  * partagée, sauf celles qui sont aussi assignées à la déclinaison (ADR 0063).
  */

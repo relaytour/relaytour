@@ -55,6 +55,11 @@ export function couvreAdmin(
 /**
  * L'importance d'une notification d'admin. Les actions à mener (une demande, un
  * souhait, un accès à valider) concernent l'admin ; le reste est du détail.
+ *
+ * La fonction reprend tout le tableau de l'ADR 0065. Une demande reçue, une
+ * candidature, une invitation acceptée et un bénévole retiré ne passent pas par
+ * `notifierLesAdmins` : leurs points d'émission les créent toujours, ce qui
+ * revient à l'importance « Vous concerne ».
  */
 export function importanceAdmin(type: TypeNotification): Importance {
   switch (type) {
