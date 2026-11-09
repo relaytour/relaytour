@@ -13,6 +13,7 @@ import type { AppContext } from '../context.ts'
 import {
   accesRefuse,
   organisationEnLectureSeule,
+  porteeInsuffisante,
   requeteTropLourde,
 } from '../lib/erreurs.ts'
 
@@ -35,6 +36,8 @@ export const builder = new SchemaBuilder<{
     gestion: boolean
     ecriture: boolean
     administration: boolean
+    session: boolean
+    toutesActivites: boolean
   }
 }>({
   plugins: [ScopeAuthPlugin, ComplexityPlugin, PrismaPlugin],
@@ -51,8 +54,9 @@ export const builder = new SchemaBuilder<{
     // résolveur vérifie ensuite l'activité concernée (ctx.exigerAdminDe).
     authScopes: ctx => ({
       // Une personne connectée, avec ou sans organisation active : elle peut choisir
-      // l'organisation où elle travaille.
-      authentifie: ctx.personne !== null,
+      // l'organisation où elle travaille. Un jeton d'accès ne vaut que pour son
+      // organisation (ADR 0064) : il n'ouvre pas les opérations du compte.
+      authentifie: ctx.personne !== null && ctx.jeton === null,
       connecte: ctx.personne !== null && ctx.organisation !== null,
       admin:
         ctx.personne !== null &&
@@ -64,14 +68,29 @@ export const builder = new SchemaBuilder<{
         ctx.organisation !== null &&
         (ctx.organisation.role === 'ADMIN' ||
           (await ctx.activitesAdministrees()).size > 0),
-      ecriture: ctx.organisation?.statut !== 'LECTURE_SEULE',
+      // ADR 0064 : un jeton en lecture n'écrit pas.
+      ecriture:
+        ctx.organisation?.statut !== 'LECTURE_SEULE' &&
+        ctx.jeton?.portee !== 'LECTURE',
       administration: ctx.administration,
+      // Une session ouverte dans le navigateur, sans jeton d'accès : la gestion des
+      // jetons, les secrets (abonnements, push) et les réglages du compte.
+      session: ctx.personne !== null && ctx.jeton === null,
+      // Une session, ou un jeton sans liste d'activités : pour les lectures de toute
+      // l'organisation qui ne passent pas par les activités (notifications).
+      toutesActivites: ctx.personne !== null && ctx.jeton?.activites == null,
     }),
-    unauthorizedError: (_parent, ctx, info) =>
-      info.parentType.name === 'Mutation' &&
-      ctx.organisation?.statut === 'LECTURE_SEULE'
-        ? organisationEnLectureSeule()
-        : accesRefuse(),
+    unauthorizedError: (_parent, ctx, info) => {
+      // Un jeton d'accès refusé répond sa cause sur tout champ protégé.
+      if (ctx.refus !== null) return ctx.refus
+      if (info.parentType.name === 'Mutation') {
+        if (ctx.organisation?.statut === 'LECTURE_SEULE') {
+          return organisationEnLectureSeule()
+        }
+        if (ctx.jeton?.portee === 'LECTURE') return porteeInsuffisante()
+      }
+      return accesRefuse()
+    },
   },
   // Le schéma comporte des cycles (périmètre ↔ tâches, personne → affectations → périmètre).
   // Ces limites bornent le coût d'une requête imbriquée avant tout résolveur.

@@ -5,6 +5,65 @@
   "version": "0.29.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-11-09-serveur-une-api-rest-v1-documentee-par-openapi",
+          "date": "2026-11-09",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une API REST v1 documentée par OpenAPI",
+            "texte": "Un outil qui ne parle pas GraphQL appelle l'API REST sous `/api/v1/`, avec un jeton d'accès. Elle lit les activités, les périodes, les périmètres, l'équipe, les tâches, les priorités, les commentaires et les fiches. Elle crée, modifie, assigne et commente une tâche, et change son statut. Chaque route suit les droits de la personne du jeton. `/api/v1/openapi.json` décrit l'API au format OpenAPI 3.0.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A REST API v1 documented with OpenAPI",
+            "texte": "A tool that does not speak GraphQL calls the REST API under `/api/v1/`, with an access token. It reads activities, periods, areas, the team, tasks, priorities, comments and sheets. It creates, edits, assigns and comments on a task, and changes its status. Each route follows the rights of the token's person. `/api/v1/openapi.json` describes the API in the OpenAPI 3.0 format.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-11-09-serveur-les-programmes-tiers-accedent-a-l-api-avec-un-jeton-d-acces",
+          "date": "2026-11-09",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les programmes tiers accèdent à l'API avec un jeton d'accès",
+            "texte": "Chaque organisation a un module « API », inactif par défaut. Quand un admin l'active, une personne crée des jetons d'accès qui agissent en son nom, avec ses droits. Un jeton peut se limiter à la lecture et à certaines activités, et il expire au bout d'un an au plus. L'API GraphQL accepte ces jetons en `Authorization: Bearer`. L'administration de l'installation peut interdire, imposer ou suspendre le module.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Third-party programs access the API with an access token",
+            "texte": "Each organization has an \"API\" module, off by default. Once an admin turns it on, a person creates access tokens that act on their behalf, with their rights. A token can be limited to reading and to some activities, and it expires after one year at most. The GraphQL API accepts these tokens as `Authorization: Bearer`. The instance administration can forbid, enforce or suspend the module.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-11-09-serveur-le-relais-transmet-api-v1-a-l-api",
+          "date": "2026-11-09",
+          "type": "rupture",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le relais transmet /api/v1/* à l'API",
+            "texte": "L'API REST des programmes tiers répond sous `/api/v1/*` (ADR 0064). Le relais de l'installation doit transmettre ce chemin à l'API, comme `/graphql`. Sans cette ligne, `/api/v1/*` rend la page de l'espace organisateur, et seule l'API GraphQL accepte les jetons d'accès.",
+            "migration": "Ajoutez `/api/v1/*` à la liste des chemins que votre relais transmet à l'API. Avec le `Caddyfile` d'exemple, la ligne devient `@api path /api/auth/* /api/v1/* /graphql /medias/* /agenda/*`. Vérifiez ensuite que `https://<votre-espace>/api/v1/openapi.json` répond un document JSON."
+          },
+          "en": {
+            "titre": "The proxy forwards /api/v1/* to the API",
+            "texte": "The REST API for third-party programs answers under `/api/v1/*` (ADR 0064). The instance proxy must forward this path to the API, like `/graphql`. Without this line, `/api/v1/*` returns the organizer workspace page, and only the GraphQL API accepts access tokens.",
+            "migration": "Add `/api/v1/*` to the paths your proxy forwards to the API. With the sample `Caddyfile`, the line becomes `@api path /api/auth/* /api/v1/* /graphql /medias/* /agenda/*`. Then check that `https://<your-workspace>/api/v1/openapi.json` returns a JSON document."
+          }
+        }
+      ]
+    },
+    {
       "version": "0.29.0",
       "notes": [
         {

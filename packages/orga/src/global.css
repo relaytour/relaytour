@@ -3270,6 +3270,68 @@ button.rt-agenda-evenement {
   text-align: start;
 }
 
+/* Les jetons d'accès d'une personne (ADR 0064), dans ses préférences. */
+.rt-jetons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rt-jeton {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rt-encre-08);
+}
+
+.rt-jeton-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rt-jeton-apercu {
+  font-size: 12px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.rt-robots {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rt-encre-08);
+}
+
+.rt-robot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--rt-encre-08);
+  border-radius: 12px;
+}
+
+.rt-robot-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#jetons {
+  scroll-margin-top: 80px;
+}
+
 /* L'adresse d'un abonnement à l'agenda (ADR 0037), affichée une seule fois. */
 .rt-abonnement-adresse {
   display: flex;

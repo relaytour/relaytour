@@ -2,6 +2,7 @@ import {
   CheckOutlined,
   CustomerServiceOutlined,
   DownloadOutlined,
+  KeyOutlined,
   LogoutOutlined,
   MailOutlined,
   QuestionCircleOutlined,
@@ -164,6 +165,11 @@ export default function MenuCompte({
               label: t`Préférences`,
             },
             {
+              key: 'jetons',
+              icon: <KeyOutlined />,
+              label: t`Jetons et API`,
+            },
+            {
               key: 'modes-d-emploi',
               icon: <QuestionCircleOutlined />,
               // Le site public s'ouvre dans un nouvel onglet, hors du routeur.
@@ -201,6 +207,7 @@ export default function MenuCompte({
           ],
           onClick: ({ key }) => {
             if (key === 'preferences') navigate(lien('/preferences'))
+            if (key === 'jetons') navigate(lien('/preferences#jetons'))
             if (key === 'notes-de-version') setNotesOuvertes(true)
             if (key === 'installer') setInstallationOuverte(true)
             if (key === 'invitations') setInvitationsOuvertes(true)

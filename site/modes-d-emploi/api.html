@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Utiliser l'API · Modes d'emploi · Relaytour</title>
+    <meta
+      name="description"
+      content="Le mode d'emploi de l'API de Relaytour : activer le module, créer un jeton d'accès, appeler l'API GraphQL ou l'API REST, lire les erreurs et confier une automatisation à un robot."
+    />
+    <link rel="alternate" hreflang="fr" href="https://relaytour.org/modes-d-emploi/api.html" />
+    <link rel="alternate" hreflang="en" href="https://relaytour.org/en/modes-d-emploi/api.html" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../jetons.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Navigation du site">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none" stroke-width="8" stroke-linecap="round" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" stroke="var(--rt-accent)" />
+            <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+          </svg>
+          <span class="logotype">Relay<span>tour</span></span>
+        </a>
+        <ul class="liens">
+          <li><a href="../">Présentation</a></li>
+          <li><a href="../hebergement.html">Hébergement</a></li>
+          <li><a href="../design-system.html">Design system</a></li>
+          <li><a href="./" aria-current="true">Modes d'emploi</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
+          <li><a href="../en/modes-d-emploi/api.html" hreflang="en" lang="en" class="langue">English</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Tous les rôles</span>
+        <h1>Utiliser l'API</h1>
+        <p class="chapo">
+          L'API permet à un programme de travailler dans votre organisation en votre nom : un script, une ligne de commande, un tableur ou un outil de gestion de projet. Le programme présente un jeton d'accès, et Relaytour lui accorde vos droits, jamais davantage.
+        </p>
+        <p class="renvoi">
+          Ce mode d'emploi s'adresse aux personnes qui écrivent ou installent un programme. Les admins de l'organisation y trouvent aussi l'activation du module et les robots.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-principe">
+        <div class="entete">
+          <span class="etiquette">Point de départ</span>
+          <h2 id="t-principe">Ce que fait un jeton d'accès</h2>
+          <p class="texte">
+            Un jeton d'accès appartient à une personne et à une organisation. Il commence par <span class="route">rt_</span> et s'affiche une seule fois, à sa création. Relaytour n'en garde qu'une empreinte : une personne qui perd son jeton en crée un autre.
+          </p>
+          <p class="texte">
+            Le programme lit et modifie ce que la personne lit et modifie dans l'espace organisateur. Le jeton peut réduire ces droits : lecture seule, ou quelques activités seulement. Il ne donne jamais accès au compte lui-même : ni aux préférences, ni aux autres jetons, ni aux exports complets.
+          </p>
+        </div>
+        <nav class="verre sommaire" aria-label="Sommaire">
+          <span class="etiquette">Dans ce mode d'emploi</span>
+          <ol>
+            <li><a href="#t-module">Activer le module « API »</a> : le choix des admins de l'organisation.</li>
+            <li><a href="#t-jetons">Créer un jeton</a> : son nom, sa portée, ses activités et sa durée.</li>
+            <li><a href="#t-graphql">Appeler l'API GraphQL</a> : le schéma complet de l'espace organisateur.</li>
+            <li><a href="#t-rest">Appeler l'API REST</a> : les tâches, les fiches et l'équipe, avec un contrat OpenAPI.</li>
+            <li><a href="#t-erreurs">Lire les erreurs et les limites</a> : les codes rendus et les débits permis.</li>
+            <li><a href="#t-robots">Confier une automatisation à un robot</a> : un membre sans connexion qui porte des jetons.</li>
+            <li><a href="#t-securite">Protéger vos jetons</a> : les bonnes pratiques.</li>
+          </ol>
+        </nav>
+      </section>
+
+      <section aria-labelledby="t-module">
+        <div class="entete">
+          <span class="etiquette">Admins de l'organisation</span>
+          <h2 id="t-module">Activer le module « API »</h2>
+          <p class="texte">
+            Le module « API » est inactif à la création d'une organisation. Tant qu'il reste inactif, personne ne crée de jeton et aucun jeton ne répond.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-module">
+          <div class="ecran-tete"><h3>Le panneau « API pour les programmes tiers »</h3><span class="route">/&lt;activité&gt;/organisation</span></div>
+          <p>Le panneau se trouve en bas de l'écran « Organisation ». Il indique l'état du module et porte l'interrupteur des admins.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Activer l'API</span></span><span>Ouvrir le module. Chaque membre peut alors créer ses jetons dans ses préférences.</span></li>
+            <li><span><span class="libelle">Désactiver</span></span><span>Fermer le module. Aucun jeton n'est révoqué : les jetons cessent de répondre, puis répondent de nouveau à la réactivation.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/organisation-api.webp" data-mobile="../captures/mobile/organisation-api.webp" width="1440" height="900" loading="lazy" alt="Écran Organisation d'une admin : le panneau API pour les programmes tiers, avec l'interrupteur Activer l'API et la liste des robots." />
+            <figcaption>Le panneau « API pour les programmes tiers », sur l'organisation d'exemple.</figcaption>
+          </figure>
+        </article>
+
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>État affiché</th><th>Ce qu'il signifie</th><th>Qui le change</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>Inactive</th><td>Le module est fermé. Les jetons existants ne répondent pas.</td><td>Les admins de l'organisation</td></tr>
+              <tr><th>Active</th><td>Le module est ouvert. Les jetons répondent.</td><td>Les admins de l'organisation</td></tr>
+              <tr><th>Activée par votre hébergeur</th><td>L'administration de l'installation a ouvert le module. L'interrupteur est verrouillé.</td><td>L'administration de l'installation</td></tr>
+              <tr><th>Non proposée par votre hébergeur</th><td>L'administration de l'installation a fermé le module pour cette organisation.</td><td>L'administration de l'installation</td></tr>
+              <tr><th>Suspendue</th><td>L'administration de l'installation a suspendu l'API, par exemple après un usage anormal. Tous les jetons de l'organisation sont révoqués, et le panneau affiche le motif.</td><td>L'administration de l'installation</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Une organisation en lecture seule garde l'API en lecture : les jetons lisent, et toute écriture est refusée.</p>
+      </section>
+
+      <section aria-labelledby="t-jetons">
+        <div class="entete">
+          <span class="etiquette">Chaque membre</span>
+          <h2 id="t-jetons">Créer un jeton</h2>
+          <p class="texte">
+            Chaque personne crée ses jetons dans ses préférences. Le menu de votre profil y mène directement par l'entrée « Jetons et API ».
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-jetons">
+          <div class="ecran-tete"><h3>Le panneau « Jetons et API »</h3><span class="route">/&lt;activité&gt;/preferences#jetons</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nom du jeton</span></span><span>Nommer le programme qui utilisera le jeton, par exemple « script d'import ». Ce nom vous aide à reconnaître le jeton dans la liste.</span></li>
+            <li><span><span class="libelle">Lecture seule</span></span><span>Limiter le programme à la lecture. Ce choix est proposé par défaut.</span></li>
+            <li><span><span class="libelle">Lecture et écriture</span></span><span>Permettre au programme de créer, de modifier et de commenter des tâches, dans la limite de vos droits.</span></li>
+            <li><span><span class="libelle">Seulement ces activités</span></span><span>Choisir les activités que le programme voit. Sans ce choix, le jeton couvre toutes vos activités.</span></li>
+            <li><span><span class="libelle">Durée</span></span><span>Choisir la date de fin du jeton. Un jeton vaut un an au plus, et un an par défaut.</span></li>
+            <li><span><span class="libelle">Créer le jeton</span></span><span>Afficher le jeton. Copiez-le aussitôt dans votre programme : il ne s'affichera plus.</span></li>
+            <li><span><span class="libelle">Révoquer</span></span><span>Mettre fin au jeton. Le programme reçoit un refus dès sa requête suivante.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/preferences-jetons.webp" data-mobile="../captures/mobile/preferences-jetons.webp" width="1440" height="900" loading="lazy" alt="Écran Préférences d'un référent : le panneau Jetons et API, avec le formulaire de création et deux jetons actifs." />
+            <figcaption>Le panneau « Jetons et API », sur l'organisation d'exemple. Les jetons sont fictifs.</figcaption>
+          </figure>
+          <p class="note">La liste montre les huit premiers caractères de chaque jeton, sa portée, ses activités, sa date de fin et son dernier usage. Une personne a au plus dix jetons actifs dans une organisation.</p>
+        </article>
+        <p class="note">Quand une personne est archivée, ses jetons sont révoqués. Ses droits changent dans l'organisation : ceux de ses jetons changent avec eux.</p>
+      </section>
+
+      <section aria-labelledby="t-graphql">
+        <div class="entete">
+          <span class="etiquette">Transport complet</span>
+          <h2 id="t-graphql">Appeler l'API GraphQL</h2>
+          <p class="texte">
+            L'API GraphQL est celle de l'espace organisateur, à l'adresse <span class="route">/graphql</span> de votre installation. Le programme envoie le jeton dans l'en-tête <span class="route">Authorization</span>. L'organisation et ses droits viennent du jeton : aucun autre en-tête n'est nécessaire.
+          </p>
+        </div>
+        <div class="verre panneau">
+          <pre class="source-markdown">curl https://votre-installation.exemple/graphql \
+  -H "Authorization: Bearer rt_…" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ moi { nom } jetonCourant { portee activiteIds expireLe } }"}'</pre>
+        </div>
+        <p class="note">La requête <span class="route">jetonCourant</span> rend les bornes du jeton : sa portée, ses activités et sa date de fin. Un programme la lit au démarrage pour savoir ce qu'il peut faire.</p>
+        <p class="note">Le contrat du schéma est publié dans le dépôt du code source, dans le fichier <span class="route">packages/server/schema.graphql</span>. Les opérations du compte restent réservées à une connexion dans l'espace organisateur : la gestion des jetons, les préférences, les abonnements et les exports complets.</p>
+      </section>
+
+      <section aria-labelledby="t-rest">
+        <div class="entete">
+          <span class="etiquette">Transport simple</span>
+          <h2 id="t-rest">Appeler l'API REST</h2>
+          <p class="texte">
+            L'API REST couvre les usages courants d'un outil tiers : lire ses activités, suivre et modifier des tâches, lire les fiches. Elle répond sous <span class="route">/api/v1</span> avec le même jeton, et chaque route vérifie les mêmes droits que l'API GraphQL.
+          </p>
+          <p class="texte">
+            Le contrat OpenAPI se lit sans jeton à l'adresse <span class="route">/api/v1/openapi.json</span>. Un outil de gestion de projet ou un générateur de client l'importe tel quel.
+          </p>
+        </div>
+        <div class="verre panneau">
+          <pre class="source-markdown">curl https://votre-installation.exemple/api/v1/activites \
+  -H "Authorization: Bearer rt_…"</pre>
+        </div>
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>Route</th><th>Ce qu'elle fait</th></tr>
+            </thead>
+            <tbody>
+              <tr><th><span class="route">GET /moi</span></th><td>La personne au nom de qui le jeton agit.</td></tr>
+              <tr><th><span class="route">GET /jeton</span></th><td>Les bornes du jeton.</td></tr>
+              <tr><th><span class="route">GET /activites</span></th><td>Les activités visibles, dans la limite du jeton.</td></tr>
+              <tr><th><span class="route">GET /activites/{activiteId}/editions</span></th><td>Les périodes d'une activité, et <span class="route">/edition-courante</span> pour la période en cours.</td></tr>
+              <tr><th><span class="route">GET /activites/{activiteId}/perimetres</span></th><td>Les périmètres d'une activité.</td></tr>
+              <tr><th><span class="route">GET /activites/{activiteId}/equipe</span></th><td>Les personnes de l'équipe, sans leurs adresses.</td></tr>
+              <tr><th><span class="route">GET /activites/{activiteId}/taches</span></th><td>Les tâches d'une période, par périmètre.</td></tr>
+              <tr><th><span class="route">GET /editions/{editionId}/mes-taches</span></th><td>Les tâches assignées à la personne.</td></tr>
+              <tr><th><span class="route">GET /editions/{editionId}/priorites</span></th><td>Les priorités de la période.</td></tr>
+              <tr><th><span class="route">GET /taches/{id}</span></th><td>Une tâche, et <span class="route">/commentaires</span> pour son fil.</td></tr>
+              <tr><th><span class="route">POST /taches</span></th><td>Créer une tâche dans un périmètre où la personne écrit.</td></tr>
+              <tr><th><span class="route">PATCH /taches/{id}</span></th><td>Modifier le titre, la description ou l'échéance d'une tâche.</td></tr>
+              <tr><th><span class="route">POST /taches/{id}/statut</span></th><td>Changer le statut d'une tâche.</td></tr>
+              <tr><th><span class="route">POST /taches/{id}/assignation</span></th><td>Assigner une tâche, ou retirer une personne assignée.</td></tr>
+              <tr><th><span class="route">POST /taches/{id}/commentaires</span></th><td>Commenter une tâche.</td></tr>
+              <tr><th><span class="route">GET /activites/{activiteId}/fiches</span></th><td>Les fiches lisibles d'une activité, et <span class="route">/fiches/{slug}</span> pour une fiche avec son contenu.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Une modification peut porter la version de la tâche lue (<span class="route">versionAttendue</span>) ou son statut lu (<span class="route">statutAttendu</span>). Relaytour refuse alors d'écraser un changement fait entre-temps par une autre personne, avec le statut 409.</p>
+      </section>
+
+      <section aria-labelledby="t-erreurs">
+        <div class="entete">
+          <span class="etiquette">Réponses</span>
+          <h2 id="t-erreurs">Lire les erreurs et les limites</h2>
+          <p class="texte">
+            L'API GraphQL rend chaque erreur avec un code dans <span class="route">extensions.code</span>. L'API REST rend le même code dans un corps <span class="route">{ "erreurs": [{ "code", "message" }] }</span>, avec le statut HTTP ci-dessous.
+          </p>
+          <p class="texte">
+            Un refus du jeton lui-même (jeton invalide, module fermé, débit dépassé) rend aussi ce statut HTTP sur <span class="route">/graphql</span>, avant toute exécution de la requête.
+          </p>
+        </div>
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>Code</th><th>Statut REST</th><th>Ce qu'il signifie</th></tr>
+            </thead>
+            <tbody>
+              <tr><th><span class="route">JETON_REQUIS</span></th><td>401</td><td>La requête ne porte aucun jeton.</td></tr>
+              <tr><th><span class="route">JETON_INVALIDE</span></th><td>401</td><td>Le jeton est inconnu, révoqué ou expiré, ou sa personne est archivée. Le message est le même dans tous ces cas.</td></tr>
+              <tr><th><span class="route">API_INACTIVE</span></th><td>403</td><td>Le module est inactif, interdit ou suspendu. La réponse indique la cause, et le motif d'une suspension.</td></tr>
+              <tr><th><span class="route">PORTEE_INSUFFISANTE</span></th><td>403</td><td>Un jeton en lecture seule a demandé une écriture.</td></tr>
+              <tr><th><span class="route">FORBIDDEN</span></th><td>403</td><td>La personne n'a pas ce droit, ou l'activité est hors des limites du jeton.</td></tr>
+              <tr><th><span class="route">SAISIE_INVALIDE</span></th><td>400</td><td>Une valeur envoyée est invalide. Le message nomme le champ.</td></tr>
+              <tr><th><span class="route">CONFLIT_VERSION</span></th><td>409</td><td>La tâche a changé depuis sa lecture.</td></tr>
+              <tr><th><span class="route">LIMITE_DE_DEBIT</span></th><td>429</td><td>Le jeton a dépassé son débit. L'en-tête <span class="route">Retry-After</span> indique l'attente en secondes.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Par jeton</h3>
+            <p>Un jeton envoie au plus 120 requêtes par minute.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Par adresse</h3>
+            <p>Une adresse IP qui présente 60 jetons refusés en 15 minutes est bloquée jusqu'à la fin de cette période.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Par requête</h3>
+            <p>Une requête GraphQL trop profonde ou trop large est refusée avant son exécution, comme dans l'espace organisateur.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-robots">
+        <div class="entete">
+          <span class="etiquette">Admins de l'organisation</span>
+          <h2 id="t-robots">Confier une automatisation à un robot</h2>
+          <p class="texte">
+            Une automatisation partagée par une équipe ne doit pas dépendre du compte d'une personne : une synchronisation avec un outil de gestion de projet, ou un script commun. Un robot est un membre de l'organisation sans connexion. Il porte les jetons de cette automatisation, et ses actions apparaissent sous son nom dans le fil des tâches.
+          </p>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Créer un robot</h3>
+            <p>Dans le panneau de l'API, sous « Robots », un admin de l'organisation nomme le robot et choisit ses activités. Une organisation a au plus cinq robots actifs, et chaque robot prend une place de membre.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Lui donner des droits</h3>
+            <p>Les admins de chaque activité affectent le robot à des périmètres depuis l'écran « Équipe », comme une personne. Un robot peut être admin d'une activité, jamais admin de l'organisation.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Gérer ses jetons</h3>
+            <p>L'admin crée au plus cinq jetons actifs par robot et les révoque depuis le même panneau. Archiver le robot révoque tous ses jetons et libère sa place.</p>
+          </div>
+        </div>
+        <p class="note">Un robot n'a pas d'adresse joignable. Il ne reçoit aucun mail, aucune notification ni aucun code de connexion, et il n'apparaît ni dans le classement ni dans l'organigramme.</p>
+      </section>
+
+      <section aria-labelledby="t-securite">
+        <div class="entete">
+          <span class="etiquette">Bonnes pratiques</span>
+          <h2 id="t-securite">Protéger vos jetons</h2>
+        </div>
+        <div class="verre panneau">
+          <ul class="gestes">
+          <li><span><span class="libelle">Un jeton par programme</span></span><span>Créez un jeton distinct pour chaque programme. Vous révoquez ainsi un seul programme sans interrompre les autres.</span></li>
+          <li><span><span class="libelle">Le moins de droits possible</span></span><span>Choisissez la lecture seule et les seules activités utiles. Choisissez la durée la plus courte qui convient au programme.</span></li>
+          <li><span><span class="libelle">Hors du code</span></span><span>Gardez le jeton dans une variable d'environnement ou un coffre de secrets, jamais dans un dépôt de code ni dans un document partagé.</span></li>
+          <li><span><span class="libelle">Révoquer au moindre doute</span></span><span>Révoquez un jeton dès qu'il a pu être copié par une autre personne. La date du dernier usage, dans la liste, aide à repérer un usage inattendu.</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Autres modes d'emploi</span>
+          <h2 id="t-autres">Poursuivre</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="admin-organisation.html">
+            <span class="role">Admin de l'organisation</span>
+            <h3>Tenir l'organisation</h3>
+            <p>L'identité de l'organisation, ses activités, les comptes, les rôles et les modules.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="referent.html#e-preferences">
+            <span class="role">Référent·e</span>
+            <h3>Régler vos préférences</h3>
+            <p>Les mails et les notifications que vous recevez de l'espace organisateur.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="./">
+            <span class="role">Tous les rôles</span>
+            <h3>Choisir un mode d'emploi</h3>
+            <p>La liste des modes d'emploi de l'espace organisateur.</p>
+            <span class="suite">Voir la liste</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.29.0.
+      </footer>
+    </main>
+    <script src="../bascule.js"></script>
+    <script src="../sommaire.js"></script>
+  </body>
+</html>

@@ -739,6 +739,22 @@ msgid "Cette tâche n’est plus un jalon : transformez-la d’abord."
 msgstr "This task is no longer a milestone. Turn it into one first."
 
 #. js-lingui-explicit-id
+#: src/schema/jetons-acces.ts
+msgid "Choisissez au moins une activité, ou laissez le jeton ouvert à toutes vos activités."
+msgstr "Choose at least one activity, or leave the token open to all your activities."
+
+#. js-lingui-explicit-id
+#: src/schema/jetons-acces.ts
+msgid "Un jeton porte {max} activités au plus."
+msgstr "A token covers {max} activities at most."
+
+#. js-lingui-explicit-id
+#: src/schema/jetons-acces.ts
+#: src/schema/robots.ts
+msgid "Le nom du jeton"
+msgstr "The token name"
+
+#. js-lingui-explicit-id
 #: src/schema/messages.ts
 msgid "L’objet"
 msgstr "The subject"
@@ -837,6 +853,11 @@ msgstr "This person is archived in your organization."
 
 #. js-lingui-explicit-id
 #: src/schema/personnes.ts
+msgid "Un robot ne reçoit pas d’invitation."
+msgstr "A robot does not receive invitations."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
 msgid "Cette personne a déjà été relancée il y a moins d’une heure."
 msgstr "This person was already sent a reminder less than an hour ago."
 
@@ -844,6 +865,11 @@ msgstr "This person was already sent a reminder less than an hour ago."
 #: src/schema/personnes.ts
 msgid "Vous ne pouvez pas retirer vos propres droits d’admin."
 msgstr "You cannot remove your own admin rights."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Un robot ne peut pas être admin de l’organisation."
+msgstr "A robot cannot be an organization admin."
 
 #. js-lingui-explicit-id
 #: src/schema/personnes.ts
@@ -1025,6 +1051,26 @@ msgstr "This meeting is canceled."
 #: src/schema/sondages.ts
 msgid "Cette période est archivée : son agenda est en lecture seule."
 msgstr "This period is archived: its calendar is read-only."
+
+#. js-lingui-explicit-id
+#: src/schema/robots.ts
+msgid "Le nom du robot"
+msgstr "The robot name"
+
+#. js-lingui-explicit-id
+#: src/schema/robots.ts
+msgid "Choisissez au moins une activité."
+msgstr "Choose at least one activity."
+
+#. js-lingui-explicit-id
+#: src/schema/robots.ts
+msgid "Ce robot est archivé : rétablissez-le avant de lui créer un jeton."
+msgstr "This robot is archived: restore it before creating a token for it."
+
+#. js-lingui-explicit-id
+#: src/schema/robots.ts
+msgid "Choisissez au moins une activité, ou laissez le jeton ouvert à toutes les activités du robot."
+msgstr "Choose at least one activity, or leave the token open to all the robot’s activities."
 
 #. js-lingui-explicit-id
 #: src/schema/sondages.ts
@@ -1874,6 +1920,41 @@ msgstr "Contact an admin of your organization."
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts
+msgid "Ce jeton d’accès n’est pas valide, ou il a été révoqué ou a expiré."
+msgstr "This access token is not valid, or it has been revoked or has expired."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "L’administration de l’installation a suspendu l’API de cette organisation : {motif}"
+msgstr "The instance administration has suspended the API of this organization: {motif}"
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "L’administration de l’installation a suspendu l’API de cette organisation."
+msgstr "The instance administration has suspended the API of this organization."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Votre hébergeur ne propose pas l’API à votre organisation."
+msgstr "Your hosting provider does not offer the API to your organization."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "L’API de cette organisation est désactivée. Un admin de l’organisation peut l’activer dans l’écran « Organisation »."
+msgstr "The API of this organization is turned off. An organization admin can turn it on in the \"Organization\" screen."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Ce jeton d’accès n’autorise que la lecture."
+msgstr "This access token only allows reading."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Trop de requêtes avec ce jeton : réessayez dans une minute."
+msgstr "Too many requests with this token: try again in a minute."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
 msgid "La requête est trop profonde ({niveaux} niveaux, maximum {maximum})."
 msgstr "The query is too deep ({niveaux} levels, maximum {maximum})."
 
@@ -2109,6 +2190,21 @@ msgstr "This organization already has an admin: its admins invite the other peop
 
 #. js-lingui-explicit-id
 #: src/lib/installation.ts
+msgid "Une suspension de l’API demande un motif, lisible par les membres."
+msgstr "Suspending the API requires a reason, which members can read."
+
+#. js-lingui-explicit-id
+#: src/lib/installation.ts
+msgid "Le motif dépasse {max} caractères."
+msgstr "The reason exceeds {max} characters."
+
+#. js-lingui-explicit-id
+#: src/lib/installation.ts
+msgid "Un motif ne se donne qu’avec une suspension de l’API."
+msgstr "A reason is only given with an API suspension."
+
+#. js-lingui-explicit-id
+#: src/lib/installation.ts
 msgid "Cette organisation n’a aucune activité ouverte."
 msgstr "This organization has no open activity."
 
@@ -2121,6 +2217,26 @@ msgstr "No activity has the slug “{slug}” in this organization."
 #: src/lib/invitations.ts
 msgid "Cette organisation n’accueille pas de nouvelle personne pour le moment."
 msgstr "This organization is not accepting new people at the moment."
+
+#. js-lingui-explicit-id
+#: src/lib/jetons-acces.ts
+msgid "La date de fin du jeton doit être à venir."
+msgstr "The token end date must be in the future."
+
+#. js-lingui-explicit-id
+#: src/lib/jetons-acces.ts
+msgid "Un jeton vaut un an au plus : choisissez une date plus proche."
+msgstr "A token lasts one year at most: choose an earlier date."
+
+#. js-lingui-explicit-id
+#: src/lib/jetons-acces.ts
+msgid "Vous avez déjà {max} jetons actifs dans cette organisation : révoquez-en un avant d’en créer un autre."
+msgstr "You already have {max} active tokens in this organization: revoke one before creating another."
+
+#. js-lingui-explicit-id
+#: src/lib/jetons-acces.ts
+msgid "Ce robot a déjà {max} jetons actifs : révoquez-en un avant d’en créer un autre."
+msgstr "This robot already has {max} active tokens: revoke one before creating another."
 
 #. js-lingui-explicit-id
 #: src/lib/limites.ts
@@ -2499,6 +2615,11 @@ msgstr "A meeting lasts {max} days at most."
 #: src/lib/reunions.ts
 msgid "La fin de la réunion suit son début."
 msgstr "The meeting must end after it starts."
+
+#. js-lingui-explicit-id
+#: src/lib/robots.ts
+msgid "Votre organisation a déjà {max} robots actifs : archivez-en un avant d’en créer un autre."
+msgstr "Your organization already has {max} active robots: archive one before creating another."
 
 #. js-lingui-explicit-id
 #: src/lib/saisie.ts
@@ -3834,3 +3955,18 @@ msgstr "You will find your places and their instructions on your volunteer page.
 #: src/courriel/messages.ts
 msgid "Votre lien personnel reste le même."
 msgstr "Your personal link stays the same."
+
+#. js-lingui-explicit-id
+#: src/api-rest/routeur.ts
+msgid "Cette route demande un jeton d’accès dans l’en-tête « Authorization: Bearer »."
+msgstr "This route requires an access token in the “Authorization: Bearer” header."
+
+#. js-lingui-explicit-id
+#: src/api-rest/routeur.ts
+msgid "Cette route n’existe pas dans l’API REST v1."
+msgstr "This route does not exist in the REST API v1."
+
+#. js-lingui-explicit-id
+#: src/api-rest/routeur.ts
+msgid "Le corps de la requête doit être un objet JSON de 1 Mo au plus."
+msgstr "The request body must be a JSON object of 1 MB at most."

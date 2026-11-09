@@ -70,6 +70,10 @@ const a = {
   ressource: '',
   // Une proposition d'accès chez le fournisseur pour ce dossier (ADR 0044).
   propositionAcces: '',
+  // Un jeton d'accès de la référente, un robot et le jeton du robot (ADR 0064).
+  jeton: '',
+  robot: '',
+  jetonRobot: '',
   admin: '',
   referente: '',
   // Une autre activité de l'organisation A, son admin et sa référente (ADR 0010).
@@ -108,6 +112,9 @@ async function creerOrganisation(cle: 'a' | 'b') {
       slug,
       nom: `Organisation ${cle}`,
       configuration: {},
+      // Le module « API » est actif dans les deux organisations : un refus vient
+      // des droits, pas d'un module fermé (ADR 0064).
+      apiActivee: true,
       activites: {
         create: {
           slug,
@@ -182,6 +189,40 @@ beforeAll(async () => {
   Object.assign(b, await creerOrganisation('b'))
   a.admin = await creerCompte('admin-a', a.org, true)
   a.referente = await creerCompte('referente-a', a.org, false)
+  a.robot = randomUUID()
+  await prisma.user.create({
+    data: {
+      id: a.robot,
+      email: `robot-${a.robot}@robot.invalid`,
+      name: `Robot ${s}`,
+      robot: true,
+      appartenances: { create: { organisationId: a.org, role: 'MEMBRE' } },
+    },
+  })
+  a.jetonRobot = (
+    await prisma.jetonAcces.create({
+      data: {
+        organisationId: a.org,
+        userId: a.robot,
+        nom: 'jeton du robot de A',
+        empreinte: randomUUID().replace(/-/g, '').padEnd(64, '1'),
+        apercu: 'robotA00',
+        expireLe: new Date(Date.now() + 86_400_000),
+      },
+    })
+  ).id
+  a.jeton = (
+    await prisma.jetonAcces.create({
+      data: {
+        organisationId: a.org,
+        userId: a.referente,
+        nom: 'jeton de A',
+        empreinte: randomUUID().replace(/-/g, '').padEnd(64, '0'),
+        apercu: 'apercuA0',
+        expireLe: new Date(Date.now() + 86_400_000),
+      },
+    })
+  ).id
   b.admin = await creerCompte('admin-b', b.org, true)
   // L'autre activité de A : une période, un périmètre, un admin d'activité qui y
   // est aussi affecté, et une référente.
@@ -630,6 +671,9 @@ afterAll(async () => {
   await prisma.abonnementAgenda.deleteMany({
     where: { organisationId: { in: organisations } },
   })
+  await prisma.jetonAcces.deleteMany({
+    where: { organisationId: { in: organisations } },
+  })
   await prisma.edition.deleteMany({
     where: { organisationId: { in: organisations } },
   })
@@ -645,6 +689,8 @@ afterAll(async () => {
   await prisma.user.deleteMany({
     where: { email: { endsWith: `-${s}@exemple.fr` } },
   })
+  // Le robot de A a une adresse technique, hors du suffixe des comptes de test.
+  await prisma.user.deleteMany({ where: { id: a.robot } })
   await prisma.organisation.deleteMany({ where: { id: { in: organisations } } })
   invaliderConfigurationOrganisation()
   await apollo.stop()
@@ -1426,6 +1472,47 @@ const CAS: Cas[] = [
     query:
       'mutation ($a: ID!) { revoquerAbonnementAgendaActivite(activiteId: $a) }',
     variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  // Jetons d'accès (ADR 0064) : un jeton se révoque par sa porteuse seule, et une
+  // activité invisible ne s'ouvre à aucun jeton.
+  {
+    operation: 'revoquerJetonAcces',
+    query: 'mutation ($id: ID!) { revoquerJetonAcces(id: $id) }',
+    variables: () => ({ id: a.jeton }),
+    attente: {
+      sansEffet: data => expect(data).toEqual({ revoquerJetonAcces: false }),
+    },
+  },
+  // Robots (ADR 0064) : un admin d'une autre organisation, ou qui n'administre
+  // pas l'organisation, ne crée ni robot ni jeton de robot dans A.
+  {
+    operation: 'creerRobot',
+    query:
+      'mutation ($a: [ID!]!) { creerRobot(nom: "Refus", activiteIds: $a) { id } }',
+    variables: () => ({ a: [a.activite] }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'creerJetonRobot',
+    query:
+      'mutation ($r: ID!) { creerJetonRobot(robotId: $r, nom: "refus", portee: LECTURE) { jeton } }',
+    variables: () => ({ r: a.robot }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'revoquerJetonRobot',
+    query: 'mutation ($id: ID!) { revoquerJetonRobot(id: $id) }',
+    variables: () => ({ id: a.jetonRobot }),
+    attente: {
+      sansEffet: data => expect(data).toEqual({ revoquerJetonRobot: false }),
+    },
+  },
+  {
+    operation: 'creerJetonAcces',
+    query:
+      'mutation ($a: [ID!]) { creerJetonAcces(nom: "refus", portee: LECTURE, activiteIds: $a) { jeton } }',
+    variables: () => ({ a: [a.activite] }),
     attente: INTERDIT,
   },
   {
@@ -2254,6 +2341,11 @@ async function etatDeA() {
           orderBy: { id: 'asc' },
         }),
         prisma.abonnementAgenda.count({ where: { organisationId: a.org } }),
+        prisma.jetonAcces.findMany({
+          where: { organisationId: a.org },
+          select: { id: true, revoqueLe: true },
+          orderBy: { id: 'asc' },
+        }),
         prisma.sequence.findMany({
           where: { organisationId: a.org },
           select: {

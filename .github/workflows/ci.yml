@@ -92,6 +92,7 @@ jobs:
           yarn workspace @relaytour/server langues:extraire
           git diff --exit-code \
             packages/server/schema.graphql \
+            packages/server/openapi.json \
             packages/server/src/courriel/gabarits.genere.ts \
             packages/orga/src/gql \
             packages/orga/src/locales \

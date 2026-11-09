@@ -25,6 +25,7 @@ import { useEffect, useState } from 'react'
 import ChampCouleur from '../../composants/ChampCouleur'
 import ChampImage from '../../composants/ChampImage'
 import DepotContenu from '../../composants/DepotContenu'
+import ModuleApi from '../../composants/ModuleApi'
 import ReprendreMonAdresse from '../../composants/ReprendreMonAdresse'
 import { Panneau } from '../../composants/Panneau'
 import Titre from '../../composants/Titre'
@@ -658,6 +659,8 @@ export default function Organisation() {
           </p>
           <DepotContenu />
         </Panneau>
+
+        <ModuleApi />
       </div>
     </>
   )

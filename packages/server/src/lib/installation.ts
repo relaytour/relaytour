@@ -7,6 +7,12 @@ import { synchroniserArchivageDuCompte } from './appartenances.ts'
 import { creerOuRattacherCompte } from './comptes.ts'
 import { annoncerInvitation, inviterCompteExterne } from './invitations.ts'
 import { erreurSaisie } from './erreurs.ts'
+import {
+  etatApi,
+  MOTIF_SUSPENSION_MAX,
+  revoquerJetonsDeLOrganisation,
+  type EtatApi,
+} from './jetons-acces.ts'
 import { i18n } from './langue.ts'
 import { lireModules, modulesValides, type Module } from './modules.ts'
 import {
@@ -295,8 +301,11 @@ export async function modifierOrganisation(
       membres?: number | null
     }
     modulesAutorises?: string[] | null
+    api?: ChangementApi
   }
 ): Promise<void> {
+  const api =
+    changement.api === undefined ? undefined : reglageApi(changement.api)
   const organisation = await prisma.organisation.findUnique({
     where: { slug },
     select: { id: true, limites: true, limiteMembres: true },
@@ -323,24 +332,112 @@ export async function modifierOrganisation(
     limites = r.data
   }
   const { membres, ...limitesDeLaColonne } = limites ?? {}
-  await prisma.organisation.update({
-    where: { id: organisation.id },
-    data: {
-      ...(changement.statut === undefined ? {} : { statut: changement.statut }),
-      ...(limites === undefined
-        ? {}
-        : { limites: limitesDeLaColonne, limiteMembres: membres ?? null }),
-      ...(changement.modulesAutorises === undefined
-        ? {}
-        : {
-            modulesAutorises:
-              changement.modulesAutorises === null
-                ? Prisma.DbNull
-                : modulesValides(changement.modulesAutorises),
-          }),
-    },
+  const instant = new Date()
+  await prisma.$transaction(async tx => {
+    // Une suspension révoque tous les jetons de l'organisation dans la même
+    // transaction (ADR 0064) : aucun jeton ne survit à la suspension qui l'arrête.
+    if (api?.suspendue === true) {
+      await revoquerJetonsDeLOrganisation(tx, organisation.id, instant)
+    }
+    await tx.organisation.update({
+      where: { id: organisation.id },
+      data: {
+        ...(api === undefined ? {} : donneesApi(api, instant)),
+        ...(changement.statut === undefined
+          ? {}
+          : { statut: changement.statut }),
+        ...(limites === undefined
+          ? {}
+          : { limites: limitesDeLaColonne, limiteMembres: membres ?? null }),
+        ...(changement.modulesAutorises === undefined
+          ? {}
+          : {
+              modulesAutorises:
+                changement.modulesAutorises === null
+                  ? Prisma.DbNull
+                  : modulesValides(changement.modulesAutorises),
+            }),
+      },
+    })
   })
   invaliderConfigurationOrganisation()
+}
+
+/**
+ * Le réglage du module « API » par l'administration de l'installation (ADR 0064).
+ * Un champ absent ne change pas. Une suspension exige son motif, que les membres
+ * lisent ; la levée de la suspension efface la date et le motif.
+ */
+export interface ChangementApi {
+  autorisee?: boolean | null
+  imposee?: boolean | null
+  suspendue?: boolean | null
+  suspensionMotif?: string | null
+}
+
+interface ReglageApiValide {
+  autorisee?: boolean
+  imposee?: boolean
+  suspendue?: boolean
+  suspensionMotif?: string
+}
+
+function reglageApi(changement: ChangementApi): ReglageApiValide {
+  const motif = (changement.suspensionMotif ?? '').trim()
+  if (changement.suspendue === true && motif.length === 0) {
+    throw erreurSaisie(
+      i18n._(
+        'Une suspension de l’API demande un motif, lisible par les membres.'
+      )
+    )
+  }
+  if (motif.length > MOTIF_SUSPENSION_MAX) {
+    throw erreurSaisie(
+      i18n._('Le motif dépasse {max} caractères.', {
+        max: MOTIF_SUSPENSION_MAX,
+      })
+    )
+  }
+  if (motif.length > 0 && changement.suspendue !== true) {
+    throw erreurSaisie(
+      i18n._('Un motif ne se donne qu’avec une suspension de l’API.')
+    )
+  }
+  return {
+    ...(typeof changement.autorisee === 'boolean'
+      ? { autorisee: changement.autorisee }
+      : {}),
+    ...(typeof changement.imposee === 'boolean'
+      ? { imposee: changement.imposee }
+      : {}),
+    ...(typeof changement.suspendue === 'boolean'
+      ? { suspendue: changement.suspendue }
+      : {}),
+    ...(motif.length > 0 ? { suspensionMotif: motif } : {}),
+  }
+}
+
+function donneesApi(api: ReglageApiValide, instant: Date) {
+  return {
+    ...(api.autorisee === undefined ? {} : { apiAutorisee: api.autorisee }),
+    ...(api.imposee === undefined ? {} : { apiImposee: api.imposee }),
+    ...(api.suspendue === true
+      ? { apiSuspendueLe: instant, apiSuspensionMotif: api.suspensionMotif }
+      : api.suspendue === false
+        ? { apiSuspendueLe: null, apiSuspensionMotif: null }
+        : {}),
+  }
+}
+
+/** Le module « API » d'une organisation, vu par l'administration de l'installation. */
+export interface ApiInstallation {
+  etat: EtatApi
+  autorisee: boolean
+  imposee: boolean
+  suspendueLe: Date | null
+  suspensionMotif: string | null
+  /** Jetons ni révoqués ni expirés : un compteur, sans aucune donnée des membres. */
+  jetonsActifs: number
 }
 
 export interface PeriodeInstallation {
@@ -368,6 +465,7 @@ export interface OrganisationInstallation {
   creeLe: Date
   nombreMembres: number
   placesMembresOccupees: number
+  api: ApiInstallation
   activites: ActiviteInstallation[]
 }
 
@@ -380,7 +478,7 @@ export async function organisationsInstallation(): Promise<
   OrganisationInstallation[]
 > {
   const maintenant = new Date()
-  const [lignes, actives, invitations] = await Promise.all([
+  const [lignes, actives, invitations, jetons] = await Promise.all([
     prisma.organisation.findMany({
       orderBy: { createdAt: 'asc' },
       select: {
@@ -391,6 +489,11 @@ export async function organisationsInstallation(): Promise<
         limites: true,
         limiteMembres: true,
         modulesAutorises: true,
+        apiActivee: true,
+        apiAutorisee: true,
+        apiImposee: true,
+        apiSuspendueLe: true,
+        apiSuspensionMotif: true,
         createdAt: true,
         _count: { select: { appartenances: true } },
         activites: {
@@ -425,6 +528,11 @@ export async function organisationsInstallation(): Promise<
       where: { expireLe: { gt: maintenant } },
       _count: { _all: true },
     }),
+    prisma.jetonAcces.groupBy({
+      by: ['organisationId'],
+      where: { revoqueLe: null, expireLe: { gt: maintenant } },
+      _count: { _all: true },
+    }),
   ])
   const compte = (
     groupes: { organisationId: string; _count: { _all: number } }[],
@@ -442,6 +550,14 @@ export async function organisationsInstallation(): Promise<
     creeLe: o.createdAt,
     nombreMembres: o._count.appartenances,
     placesMembresOccupees: compte(actives, o.id) + compte(invitations, o.id),
+    api: {
+      etat: etatApi(o),
+      autorisee: o.apiAutorisee,
+      imposee: o.apiImposee,
+      suspendueLe: o.apiSuspendueLe,
+      suspensionMotif: o.apiSuspensionMotif,
+      jetonsActifs: compte(jetons, o.id),
+    },
     activites: o.activites.map(a => ({
       slug: a.slug,
       nom: a.nom,

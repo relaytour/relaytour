@@ -205,11 +205,13 @@ export function creerAuth(pluginsSupplementaires: BetterAuthPlugin[] = []) {
           if (type !== 'sign-in') return
           const user = await prisma.user.findUnique({
             where: { email: email.toLowerCase() },
-            select: { id: true },
+            select: { id: true, robot: true },
           })
           // L'archivage ne ferme plus la connexion (ADR 0031) : une personne archivée
           // dans son organisation doit pouvoir accepter l'invitation d'une autre.
-          if (user === null) return
+          // Un robot ne se connecte jamais (ADR 0064) : il reçoit la même réponse
+          // qu'une adresse inconnue, et aucun code ne part.
+          if (user === null || user.robot) return
           // Exception documentée (ADR 0002) : le job porte le code, il expire avec lui
           // et disparaît dès son traitement. La mise en file n'est pas attendue, pour que
           // la réponse ne soit pas plus lente qu'avec une adresse inconnue.

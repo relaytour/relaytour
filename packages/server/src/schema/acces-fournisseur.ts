@@ -622,7 +622,7 @@ builder.mutationFields(t => ({
 
   saisirAdresseFournisseur: t.field({
     type: CompteVueRef,
-    authScopes: { admin: true },
+    authScopes: { $all: { admin: true, session: true } },
     description:
       'Donne l’adresse du compte d’un membre chez le fournisseur, quand elle diffère de son adresse dans Relaytour. Null : Relaytour reprend son adresse.',
     args: {

@@ -79,6 +79,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/auth': { target: API, xfwd: true },
+      // API REST des programmes tiers (ADR 0064).
+      '/api/v1': { target: API, xfwd: true },
       '/graphql': { target: API, xfwd: true },
       '/medias': { target: API, xfwd: true },
       // Abonnements à l'agenda (ADR 0037).

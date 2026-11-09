@@ -14,6 +14,8 @@ export interface Membre {
   role: RoleOrganisation
   /** Vrai quand la personne est archivée dans l'organisation active (ADR 0031). */
   archive: boolean
+  /** Vrai pour un robot, membre sans connexion (ADR 0064). */
+  robot: boolean
 }
 
 /**
@@ -30,10 +32,14 @@ export async function exigerMembre(
     where: {
       userId_organisationId: { userId, organisationId: ctx.organisation.id },
     },
-    select: { role: true, archiveLe: true },
+    select: { role: true, archiveLe: true, user: { select: { robot: true } } },
   })
   if (ici === null) throw accesRefuse()
-  return { role: ici.role, archive: ici.archiveLe !== null }
+  return {
+    role: ici.role,
+    archive: ici.archiveLe !== null,
+    robot: ici.user.robot,
+  }
 }
 
 function messagePersonneArchivee(): string {
