@@ -71,6 +71,9 @@ type Documents = {
     "\n  query MesPropositions($perimetreId: ID!, $editionId: ID!) {\n    mesPropositions(perimetreId: $perimetreId, editionId: $editionId) {\n      id\n      nom\n      statut\n    }\n  }\n": typeof types.MesPropositionsDocument,
     "\n  mutation ProposerPersonne(\n    $perimetreId: ID!\n    $editionId: ID!\n    $nom: String!\n    $email: String!\n    $mot: String\n  ) {\n    proposerPersonne(\n      perimetreId: $perimetreId\n      editionId: $editionId\n      nom: $nom\n      email: $email\n      mot: $mot\n    )\n  }\n": typeof types.ProposerPersonneDocument,
     "\n  mutation RetirerProposition($id: ID!) {\n    retirerProposition(id: $id)\n  }\n": typeof types.RetirerPropositionDocument,
+    "\n  query PropositionModele {\n    mesPreferencesNotification {\n      propositionModele\n    }\n  }\n": typeof types.PropositionModeleDocument,
+    "\n  mutation AppliquerModelePropose($modele: ModeleNotification!) {\n    appliquerModeleNotification(modele: $modele) {\n      modele\n      propositionModele\n    }\n  }\n": typeof types.AppliquerModeleProposeDocument,
+    "\n  mutation EcarterPropositionModele {\n    ecarterPropositionModele {\n      propositionModele\n    }\n  }\n": typeof types.EcarterPropositionModeleDocument,
     "\n  query RechercheGlobale($texte: String!, $editionId: ID) {\n    recherche(texte: $texte, editionId: $editionId) {\n      taches {\n        id\n        titre\n        edition {\n          id\n        }\n        perimetre {\n          id\n          slug\n          nom\n          couleur\n        }\n      }\n      fiches {\n        id\n        slug\n        titre\n        activite {\n          id\n          slug\n        }\n        perimetre {\n          id\n          nom\n          couleur\n        }\n      }\n      personnes {\n        id\n        nom\n        perimetres {\n          id\n          slug\n          nom\n          activite {\n            id\n            slug\n          }\n        }\n      }\n    }\n  }\n": typeof types.RechercheGlobaleDocument,
     "\n  query SimulerReconduction($sourceId: ID!, $cibleId: ID!) {\n    simulerReconduction(sourceId: $sourceId, cibleId: $cibleId) {\n      lignes {\n        tacheId\n        perimetre\n        titre\n        statutSource\n        echeance\n        declinaisons\n        retenue\n        etat\n        raison\n      }\n      effectifsCrees\n    }\n  }\n": typeof types.SimulerReconductionDocument,
     "\n  mutation ReconduireEdition($sourceId: ID!, $cibleId: ID!, $tacheIds: [ID!]) {\n    reconduireEdition(\n      sourceId: $sourceId\n      cibleId: $cibleId\n      tacheIds: $tacheIds\n    ) {\n      lignes {\n        tacheId\n        etat\n      }\n    }\n  }\n": typeof types.ReconduireEditionDocument,
@@ -346,6 +349,9 @@ const documents: Documents = {
     "\n  query MesPropositions($perimetreId: ID!, $editionId: ID!) {\n    mesPropositions(perimetreId: $perimetreId, editionId: $editionId) {\n      id\n      nom\n      statut\n    }\n  }\n": types.MesPropositionsDocument,
     "\n  mutation ProposerPersonne(\n    $perimetreId: ID!\n    $editionId: ID!\n    $nom: String!\n    $email: String!\n    $mot: String\n  ) {\n    proposerPersonne(\n      perimetreId: $perimetreId\n      editionId: $editionId\n      nom: $nom\n      email: $email\n      mot: $mot\n    )\n  }\n": types.ProposerPersonneDocument,
     "\n  mutation RetirerProposition($id: ID!) {\n    retirerProposition(id: $id)\n  }\n": types.RetirerPropositionDocument,
+    "\n  query PropositionModele {\n    mesPreferencesNotification {\n      propositionModele\n    }\n  }\n": types.PropositionModeleDocument,
+    "\n  mutation AppliquerModelePropose($modele: ModeleNotification!) {\n    appliquerModeleNotification(modele: $modele) {\n      modele\n      propositionModele\n    }\n  }\n": types.AppliquerModeleProposeDocument,
+    "\n  mutation EcarterPropositionModele {\n    ecarterPropositionModele {\n      propositionModele\n    }\n  }\n": types.EcarterPropositionModeleDocument,
     "\n  query RechercheGlobale($texte: String!, $editionId: ID) {\n    recherche(texte: $texte, editionId: $editionId) {\n      taches {\n        id\n        titre\n        edition {\n          id\n        }\n        perimetre {\n          id\n          slug\n          nom\n          couleur\n        }\n      }\n      fiches {\n        id\n        slug\n        titre\n        activite {\n          id\n          slug\n        }\n        perimetre {\n          id\n          nom\n          couleur\n        }\n      }\n      personnes {\n        id\n        nom\n        perimetres {\n          id\n          slug\n          nom\n          activite {\n            id\n            slug\n          }\n        }\n      }\n    }\n  }\n": types.RechercheGlobaleDocument,
     "\n  query SimulerReconduction($sourceId: ID!, $cibleId: ID!) {\n    simulerReconduction(sourceId: $sourceId, cibleId: $cibleId) {\n      lignes {\n        tacheId\n        perimetre\n        titre\n        statutSource\n        echeance\n        declinaisons\n        retenue\n        etat\n        raison\n      }\n      effectifsCrees\n    }\n  }\n": types.SimulerReconductionDocument,
     "\n  mutation ReconduireEdition($sourceId: ID!, $cibleId: ID!, $tacheIds: [ID!]) {\n    reconduireEdition(\n      sourceId: $sourceId\n      cibleId: $cibleId\n      tacheIds: $tacheIds\n    ) {\n      lignes {\n        tacheId\n        etat\n      }\n    }\n  }\n": types.ReconduireEditionDocument,
@@ -806,6 +812,18 @@ export function graphql(source: "\n  mutation ProposerPersonne(\n    $perimetreI
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RetirerProposition($id: ID!) {\n    retirerProposition(id: $id)\n  }\n"): (typeof documents)["\n  mutation RetirerProposition($id: ID!) {\n    retirerProposition(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query PropositionModele {\n    mesPreferencesNotification {\n      propositionModele\n    }\n  }\n"): (typeof documents)["\n  query PropositionModele {\n    mesPreferencesNotification {\n      propositionModele\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AppliquerModelePropose($modele: ModeleNotification!) {\n    appliquerModeleNotification(modele: $modele) {\n      modele\n      propositionModele\n    }\n  }\n"): (typeof documents)["\n  mutation AppliquerModelePropose($modele: ModeleNotification!) {\n    appliquerModeleNotification(modele: $modele) {\n      modele\n      propositionModele\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation EcarterPropositionModele {\n    ecarterPropositionModele {\n      propositionModele\n    }\n  }\n"): (typeof documents)["\n  mutation EcarterPropositionModele {\n    ecarterPropositionModele {\n      propositionModele\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

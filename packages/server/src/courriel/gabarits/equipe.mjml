@@ -23,6 +23,9 @@
           {{changements}}
         </mj-text>
         <mj-text>
+          {{propositionModele}}
+        </mj-text>
+        <mj-text>
           [[Vos périmètres, vos tâches et leurs fiches méthode vous attendent dans l’espace organisateur.]]
         </mj-text>
         <mj-button href="{{lienConnexion}}" background-color="#030303" color="#FFFFFF"

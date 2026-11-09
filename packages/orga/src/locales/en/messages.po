@@ -1687,12 +1687,16 @@ msgstr "Activities missing from the archive (kept):"
 msgid "Actuelle"
 msgstr "Current"
 
+#: src/composants/PropositionModele.tsx
+msgid "Adapter vos notifications à votre rôle"
+msgstr "Adapt your notifications to your role"
+
 #. Rôle d’une personne dans une activité, en liste
 #: src/pages/admin/Personnes.tsx
 msgid "admin"
 msgstr "admin"
 
-#: src/pages/Preferences.tsx
+#: src/composants/modeles-notification.ts
 msgid "Admin d’activité"
 msgstr "Activity admin"
 
@@ -2151,6 +2155,7 @@ msgid "Applications (à essayer)"
 msgstr "Apps (to try)"
 
 #: src/composants/GestionAcces.tsx
+#: src/composants/PropositionModele.tsx
 msgid "Appliquer"
 msgstr "Apply"
 
@@ -2897,7 +2902,7 @@ msgstr "What you like to do or know how to do"
 msgid "Ce qui vous concerne"
 msgstr "What concerns you"
 
-#: src/pages/Preferences.tsx
+#: src/composants/modeles-notification.ts
 msgid "Ce qui vous concerne : vos tâches, vos échéances, vos réunions et les demandes à traiter. Le mail des priorités remplace le résumé de la semaine."
 msgstr "What concerns you: your tasks, your deadlines, your meetings and the requests to handle. The priorities email replaces the weekly summary."
 
@@ -3677,10 +3682,10 @@ msgstr "Activity contact"
 msgid "Contact de l’organisation (facultatif)"
 msgstr "Organization contact (optional)"
 
+#: src/composants/modeles-notification.ts
 #: src/composants/Personne.tsx
 #: src/pages/admin/ImportEquipe.tsx
 #: src/pages/Organigramme.tsx
-#: src/pages/Preferences.tsx
 msgid "Contact principal"
 msgstr "Main contact"
 
@@ -4706,7 +4711,7 @@ msgstr "Try"
 msgid "Essayez cette application avant d’enregistrer : elle ne répond pas sur tous les appareils."
 msgstr "Try this app before saving: it does not respond on every device."
 
-#: src/pages/Preferences.tsx
+#: src/composants/modeles-notification.ts
 msgid "Essentiel"
 msgstr "Essential"
 
@@ -5793,7 +5798,7 @@ msgstr "The test succeeded"
 msgid "L’essentiel du périmètre"
 msgstr "Area essentials"
 
-#: src/pages/Preferences.tsx
+#: src/composants/modeles-notification.ts
 msgid "L’essentiel, et le suivi de vos périmètres : tâches à prendre, tâches faites, déclinaisons."
 msgstr "The essentials, plus follow-up of your areas: tasks to take, completed tasks, derived tasks."
 
@@ -6516,6 +6521,10 @@ msgstr "The “direct places” mode requires at least one column mapped to a sl
 msgid "Le mode d’emploi décrit chaque choix."
 msgstr "The user guide describes each option."
 
+#: src/composants/PropositionModele.tsx
+msgid "Le modèle « {titre} » correspond à votre rôle. Il règle vos mails et vos notifications en un geste."
+msgstr "The “{titre}” preset matches your role. It sets your emails and notifications in one step."
+
 #: src/composants/ModeleDeDepart.tsx
 msgid "Le modèle décrit un rassemblement sportif fictif. Vous renommez, archivez ou complétez ensuite chaque élément comme le vôtre."
 msgstr "The template describes a fictional sports gathering. You then rename, archive, or complete each item as your own."
@@ -6617,11 +6626,11 @@ msgstr "The poll couldn’t be reloaded. What you entered stays on screen: try a
 msgid "Le statut de cette tâche a changé"
 msgstr "This task’s status has changed"
 
-#: src/pages/Preferences.tsx
+#: src/composants/modeles-notification.ts
 msgid "Le suivi de vos périmètres, tout le détail des périmètres dont vous êtes contact principal et un résumé chaque matin."
 msgstr "Follow-up of your areas, every detail of the areas where you are the main contact, and a summary every morning."
 
-#: src/pages/Preferences.tsx
+#: src/composants/modeles-notification.ts
 msgid "Le suivi de vos périmètres, toutes les nouvelles de l’équipe, les priorités de toute l’activité et un résumé chaque matin."
 msgstr "Follow-up of your areas, all team news, the priorities of the whole activity and a summary every morning."
 
@@ -7515,6 +7524,7 @@ msgstr "Formatting"
 msgid "Modèle"
 msgstr "Template"
 
+#: src/composants/PropositionModele.tsx
 #: src/pages/Preferences.tsx
 msgid "Modèle appliqué."
 msgstr "Preset applied."
@@ -7703,6 +7713,10 @@ msgstr "Main navigation"
 #: src/pages/FicheEditeur.tsx
 msgid "Ne pas ajouter"
 msgstr "Don’t add"
+
+#: src/composants/PropositionModele.tsx
+msgid "Ne plus proposer"
+msgstr "Don’t suggest again"
 
 #: src/composants/ConnexionEspace.tsx
 msgid "Nextcloud est connecté."
@@ -9020,8 +9034,8 @@ msgid "Réessayer"
 msgstr "Retry"
 
 #. Rôle d’une personne
+#: src/composants/modeles-notification.ts
 #: src/pages/admin/Personnes.tsx
-#: src/pages/Preferences.tsx
 msgid "Référent·e"
 msgstr "Coordinator"
 
@@ -11171,6 +11185,10 @@ msgstr "View names"
 #: src/composants/VersPremiersPas.tsx
 msgid "Voir les premiers pas"
 msgstr "See the first steps"
+
+#: src/composants/PropositionModele.tsx
+msgid "Voir mes préférences"
+msgstr "See my preferences"
 
 #: src/composants/Priorites.tsx
 msgid "Voir tous les périmètres"

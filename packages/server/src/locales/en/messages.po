@@ -1533,8 +1533,8 @@ msgstr "{acteur} restored {personne} in the organization"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
-msgid "Votre place dans l’équipe a changé{activite}"
-msgstr "Your place in the team changed{activite}"
+msgid "Votre place dans l’équipe a changé{activite}. Vous pouvez adapter vos notifications à votre rôle dans vos préférences"
+msgstr "Your place in the team has changed{activite}. You can adapt your notifications to your role in your preferences"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
@@ -2226,6 +2226,26 @@ msgstr "Choose at least one person."
 #: src/lib/messages.ts
 msgid "Un message compte {max} destinataires au plus."
 msgstr "A message can have at most {max} recipients."
+
+#. js-lingui-explicit-id
+#: src/lib/modeles-notification.ts
+msgid "Essentiel"
+msgstr "Essential"
+
+#. js-lingui-explicit-id
+#: src/lib/modeles-notification.ts
+msgid "Référent·e"
+msgstr "Coordinator"
+
+#. js-lingui-explicit-id
+#: src/lib/modeles-notification.ts
+msgid "Contact principal"
+msgstr "Main contact"
+
+#. js-lingui-explicit-id
+#: src/lib/modeles-notification.ts
+msgid "Admin d’activité"
+msgstr "Activity admin"
 
 #. Rôle de la personne, dans « Le mode d’emploi … présente vos écrans et vos actions. »
 #. js-lingui-explicit-id
@@ -3558,6 +3578,11 @@ msgstr "You will choose your areas with the team after you accept."
 #: src/courriel/messages.ts
 msgid "Vous faites partie de l’équipe de ces périmètres :"
 msgstr "You are part of the team for these areas:"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Le modèle de notifications « {modele} » correspond à votre rôle. Vous pouvez l’appliquer dans vos préférences : {lien}"
+msgstr "The “{modele}” notification preset matches your role. You can apply it in your preferences: {lien}"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts

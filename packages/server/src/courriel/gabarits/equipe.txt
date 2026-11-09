@@ -6,6 +6,8 @@
 
 {{changements}}
 
+{{propositionModele}}
+
 [[Vos périmètres, vos tâches et leurs fiches méthode vous attendent dans l’espace organisateur.]]
 
 [[Ouvrir l’espace organisateur : {{lienConnexion}}]]

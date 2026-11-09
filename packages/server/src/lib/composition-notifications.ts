@@ -382,10 +382,13 @@ function phrase(
         acteur,
         personne,
       })
+    // Le lien mène aux préférences : un nouveau rôle peut appeler un autre modèle
+    // de notifications (ADR 0065).
     case 'PLACE_MODIFIEE':
-      return i18n._('Votre place dans l’équipe a changé{activite}', {
-        activite,
-      })
+      return i18n._(
+        'Votre place dans l’équipe a changé{activite}. Vous pouvez adapter vos notifications à votre rôle dans vos préférences',
+        { activite }
+      )
     case 'REUNION_CONVOQUEE':
     case 'REUNION_MODIFIEE':
     case 'REUNION_ANNULEE': {
@@ -681,7 +684,7 @@ function lien(n: NotificationLue, c: Contexte): string {
     case 'ACCES_FOURNISSEUR_A_VALIDER':
       return `/${slug}/admin/espace-fichiers?onglet=acces`
     case 'PLACE_MODIFIEE':
-      return `/${slug}`
+      return `/${slug}/preferences`
     case 'FICHE_CREEE':
     case 'FICHE_MODIFIEE':
       return n.fiche ? `/${slug}/fiches/${n.fiche.slug}` : `/${slug}`

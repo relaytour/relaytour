@@ -371,7 +371,7 @@ describe('modèles de réglages', () => {
       >
     expect(await lire(ids.paul)).toMatchObject({
       modele: 'ESSENTIEL',
-      modeleRecommande: 'REFERENT',
+      modeleRecommande: 'ESSENTIEL',
       suiviPerimetres: 'MOI',
       suiviAdmin: 'ACTIONS',
       mailPriorites: 'MES_PERIMETRES',
@@ -534,6 +534,68 @@ describe('résumé regroupé par tâche', () => {
     expect(message?.texte).not.toContain('a retiré Paul')
     expect(message?.texte).not.toContain(
       'a modifié la tâche « Relire l’accueil »'
+    )
+  })
+})
+
+describe('proposition du modèle du rôle', () => {
+  const PROPOSITION = `{ mesPreferencesNotification { modele propositionModele } }`
+  const lire = async (userId: string) =>
+    (await reussir(userId, PROPOSITION)).mesPreferencesNotification as {
+      modele: string | null
+      propositionModele: string | null
+    }
+
+  it('ne propose rien à une personne seulement affectée', async () => {
+    expect((await lire(ids.victor)).propositionModele).toBeNull()
+  })
+
+  it('propose le modèle du contact principal jusqu’à son refus', async () => {
+    expect(await lire(ids.contact)).toMatchObject({
+      modele: 'ESSENTIEL',
+      propositionModele: 'CONTACT_PRINCIPAL',
+    })
+    await reussir(
+      ids.contact,
+      `mutation { ecarterPropositionModele { propositionModele } }`
+    )
+    expect((await lire(ids.contact)).propositionModele).toBeNull()
+  })
+
+  it('prévient la personne nommée contact principal, et celle qui perd ce rôle', async () => {
+    const affectation = async (userId: string) =>
+      (
+        await prisma.affectation.findFirstOrThrow({
+          where: { userId, perimetreId: ids.basket, editionId: ids.edition },
+          select: { id: true },
+        })
+      ).id
+    const places = (userId: string) =>
+      prisma.notification.count({
+        where: {
+          userId,
+          type: 'PLACE_MODIFIEE',
+          organisationId: ids.organisation,
+        },
+      })
+    const [avantZoe, avantContact] = [
+      await places(ids.zoe),
+      await places(ids.contact),
+    ]
+    await reussir(
+      ids.admin,
+      `mutation ($a: ID!) { definirContactPrincipal(affectationId: $a, contactPrincipal: true) }`,
+      { a: await affectation(ids.zoe) }
+    )
+    expect(await places(ids.zoe)).toBe(avantZoe + 1)
+    expect(await places(ids.contact)).toBe(avantContact + 1)
+    // Le nouveau rôle appelle le modèle Contact principal.
+    expect((await lire(ids.zoe)).propositionModele).toBe('CONTACT_PRINCIPAL')
+    // Le contact principal d'origine revient pour les tests suivants.
+    await reussir(
+      ids.admin,
+      `mutation ($a: ID!) { definirContactPrincipal(affectationId: $a, contactPrincipal: true) }`,
+      { a: await affectation(ids.contact) }
     )
   })
 })

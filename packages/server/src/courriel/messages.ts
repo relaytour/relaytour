@@ -38,6 +38,10 @@ import {
   jetonDesabonnement,
   type MailDesabonnable,
 } from '../lib/desabonnement.ts'
+import {
+  libelleModele,
+  propositionModele,
+} from '../lib/modeles-notification.ts'
 import { preferencesDe } from '../lib/notifications.ts'
 import { lirePrioritesDeLaPeriode } from '../lib/priorites-periode.ts'
 import { filtreNotificationsAdmin } from '../lib/notifications-admin.ts'
@@ -419,6 +423,18 @@ export async function composer(
       listeDesModesDEmploi(env, langueCourante()),
       role
     )
+    // Un nouveau rôle peut appeler un autre modèle de notifications (ADR 0065).
+    const proposition = await propositionModele(
+      prisma,
+      await preferencesDe(prisma, user.id, idOrganisation)
+    )
+    variables.propositionModele =
+      proposition === null
+        ? ''
+        : i18n._(
+            'Le modèle de notifications « {modele} » correspond à votre rôle. Vous pouvez l’appliquer dans vos préférences : {lien}',
+            { modele: libelleModele(proposition), lien: lienPreferences }
+          )
   }
 
   if (job.sorte === 'demandes') {
