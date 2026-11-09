@@ -7,7 +7,13 @@ const COULEUR = /^#[0-9a-fA-F]{6}$/
 
 export function adresseValide(brute: string): string {
   const adresse = brute.trim().toLowerCase()
-  if (!ADRESSE.test(adresse) || adresse.length > 191) {
+  // Le domaine réservé .invalid (RFC 2606) désigne l'adresse technique d'un robot
+  // (ADR 0064) : personne n'entre dans une organisation par elle.
+  if (
+    !ADRESSE.test(adresse) ||
+    adresse.length > 191 ||
+    adresse.endsWith('.invalid')
+  ) {
     throw erreurSaisie(i18n._('L’adresse mail n’est pas valide.'))
   }
   return adresse

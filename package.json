@@ -38,7 +38,7 @@
     "db:seed": "yarn workspace @relaytour/database seed",
     "db:studio": "yarn workspace @relaytour/database studio",
     "generate": "yarn workspace @relaytour/database generate",
-    "codegen": "yarn workspace @relaytour/server schema:print && yarn workspace @relaytour/server gabarits:print && yarn workspace @relaytour/orga codegen",
+    "codegen": "yarn workspace @relaytour/server schema:print && yarn workspace @relaytour/server openapi:print && yarn workspace @relaytour/server gabarits:print && yarn workspace @relaytour/orga codegen",
     "dev": "concurrently -n server,worker,orga -c green,magenta,cyan \"yarn workspace @relaytour/server dev\" \"yarn workspace @relaytour/server worker\" \"yarn workspace @relaytour/orga dev\"",
     "lint": "eslint --cache --cache-strategy content . && yarn workspace @relaytour/orga lint",
     "format": "prettier --write .",

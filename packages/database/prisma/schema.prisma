@@ -342,6 +342,10 @@ model Activite {
 model User {
   id                       String    @id
   name                     String
+  // Robot (ADR 0064) : un membre sans connexion, créé par un admin de l'organisation
+  // pour porter les jetons d'accès d'une automatisation partagée. Son adresse est
+  // technique, dans le domaine réservé .invalid : aucun mail ne lui part.
+  robot                    Boolean   @default(false)
   email                    String    @unique
   emailVerified            Boolean   @default(false)
   image                    String?   @db.Text

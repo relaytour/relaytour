@@ -120,6 +120,11 @@ type Activite {
   theme: Theme!
 }
 
+type ActiviteDuRobot {
+  id: ID!
+  nom: String!
+}
+
 type ActiviteInstallation {
   archive: Boolean!
   nature: String!
@@ -2003,6 +2008,11 @@ type Mutation {
   Crée un jeton d’accès pour la personne connectée, dans l’organisation active. Sa valeur n’est rendue qu’ici.
   """
   creerJetonAcces(activiteIds: [ID!], expireLe: DateTime, nom: String!, portee: PorteeJeton!): JetonCree!
+
+  """
+  Crée un jeton d’accès pour un robot. Ses activités se vérifient contre celles que le robot voit. Cinq jetons actifs au plus par robot.
+  """
+  creerJetonRobot(activiteIds: [ID!], expireLe: DateTime, nom: String!, portee: PorteeJeton!, robotId: ID!): JetonCree!
   creerLieu(activiteId: ID!, description: String, nom: String!, ordre: Int = 0): Lieu!
   creerMessage(message: MessageInput!): Message!
 
@@ -2047,6 +2057,11 @@ type Mutation {
     tacheIds: [ID!]
     titre: String!
   ): Reunion!
+
+  """
+  Crée un robot, rattaché aux activités choisies. Il prend une place de membre. Cinq robots actifs au plus par organisation.
+  """
+  creerRobot(activiteIds: [ID!]!, nom: String!): Robot!
   creerSequence(
     """Le nombre de renforts recherchés ; 0 ou rien : aucun."""
     besoinBenevoles: Int
@@ -2629,6 +2644,11 @@ type Mutation {
   """
   revoquerJetonAcces(id: ID!): Boolean!
 
+  """
+  Révoque un jeton d’un robot de l’organisation. Rend faux pour un jeton inconnu, déjà révoqué ou qui n’appartient pas à un robot.
+  """
+  revoquerJetonRobot(id: ID!): Boolean!
+
   """Révoque l’abonnement personnel : son adresse cesse de servir."""
   revoquerMonAbonnementAgenda: Boolean!
 
@@ -2998,6 +3018,11 @@ type Personne {
   Vrai tant que la personne ne s’est jamais connectée : un admin de l’organisation peut alors corriger son nom.
   """
   nomModifiable: Boolean!
+
+  """
+  Vrai pour un robot : un membre sans connexion qui porte les jetons d’accès d’une automatisation (ADR 0064).
+  """
+  robot: Boolean!
   souhaits(editionId: ID): [Souhait!]!
 }
 
@@ -3596,6 +3621,9 @@ type Query {
     perimetreId: ID
   ): [Reunion!]!
 
+  """Les robots de l’organisation active, archivés compris."""
+  robots: [Robot!]!
+
   """
   Simule l’import d’un lot de 500 personnes au plus, sans rien écrire : lignes écartées, déjà importées, rapprochements et dépassements.
   """
@@ -3956,6 +3984,22 @@ type Reunion {
   taches: [TacheLieeReunion!]!
   titre: String!
   version: Int!
+}
+
+"""
+Un robot de l’organisation : un membre sans connexion qui porte des jetons d’accès. Il reçoit ses droits comme une personne.
+"""
+type Robot {
+  """Les activités où le robot est rattaché."""
+  activites: [ActiviteDuRobot!]!
+  archive: Boolean!
+  id: ID!
+
+  """
+  Les jetons du robot : actifs, puis révoqués ou expirés depuis moins de 30 jours.
+  """
+  jetons: [JetonAcces!]!
+  nom: String!
 }
 
 enum RoleFournisseur {
