@@ -9,6 +9,7 @@ Cette liste décrit les évolutions envisagées après la première version. Ell
 - **Import des inscriptions par connecteur.** Chaque organisation branche son outil d'inscription ou de billetterie par un connecteur, à l'import régulier ou à la création automatique du compte. Le choix du connecteur appartient à l'organisation.
 - **Connexion par un fournisseur d'identité, facultative.** Une organisation qui dispose d'un annuaire (Microsoft, Google ou autre) peut l'autoriser pour ses membres. La connexion par code mail reste disponible pour tout le monde.
 - **Webhooks sortants.** Une organisation déclare l'adresse d'un outil tiers, par exemple sa messagerie d'équipe. Relaytour y envoie un message signé pour les changements qu'elle choisit : tâche faite, fiche modifiée, demande reçue. Le message porte des identifiants et aucune donnée personnelle, comme le signal du flux des changements (ADR 0017). La signature, les reprises après un échec et le réglage par activité restent à décider.
+- **Suites de l'API.** L'API REST couvre d'autres écrans : l'agenda, le programme et la rédaction des fiches. Un jeton se limite à quelques périmètres, et plus seulement à des activités. Une organisation synchronise ses tâches avec un outil de gestion de projet par un robot, dans les deux sens, avec les webhooks sortants (ADR 0064).
 
 ## À décider en fin d'édition
 

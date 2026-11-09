@@ -8,6 +8,38 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-11-09-orga-vos-jetons-d-acces-se-creent-dans-vos-preferences",
+          "date": "2026-11-09",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Vos jetons d'accès se créent dans vos préférences",
+            "texte": "Le panneau « Jetons et API » de vos préférences crée un jeton d'accès pour un programme : un script, une ligne de commande ou un outil de gestion de projet. Le programme travaille alors en votre nom, avec vos droits. Vous choisissez la lecture seule ou l'écriture, les activités ouvertes et la durée, un an au plus. Le jeton ne s'affiche qu'une fois, et vous le révoquez à tout moment. Un admin de l'organisation active d'abord l'API dans l'écran « Organisation ».",
+            "migration": null
+          },
+          "en": {
+            "titre": "Your access tokens are created in your preferences",
+            "texte": "The \"Tokens and API\" panel of your preferences creates an access token for a program: a script, a command line or a project management tool. The program then works on your behalf, with your rights. You choose read only or write, the open activities and the lifetime, one year at most. The token is shown only once, and you revoke it at any time. An organization admin first turns on the API in the \"Organization\" screen.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-11-09-orga-le-site-publie-le-mode-d-emploi-de-l-api",
+          "date": "2026-11-09",
+          "type": "interne",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le site publie le mode d'emploi de l'API",
+            "texte": "Le mode d'emploi « Utiliser l'API » décrit l'activation du module, la création d'un jeton d'accès, les appels aux API GraphQL et REST, les codes d'erreur, les limites de débit et les robots, en français et en anglais (ADR 0064). Les captures du site montrent le panneau « Jetons et API » et le panneau « API pour les programmes tiers », sur ordinateur et sur téléphone. CONTRIBUTING.md gagne la décision arrêtée « Accès programmatique » et quatre entrées du glossaire.",
+            "migration": null
+          },
+          "en": null
+        },
+        {
           "id": "2026-11-09-orga-la-description-du-choix-jamais-du-resume-par-mail-est-corrig",
           "date": "2026-11-09",
           "type": "correctif",
@@ -22,6 +54,24 @@
           "en": {
             "titre": "The description of the “Never” email summary option is corrected in English",
             "texte": "In the preferences, the “Never” option of the email summary now states that you check the workspace yourself. The previous translation gave this sentence a different meaning.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-11-09-orga-des-robots-pour-les-automatisations-de-l-organisation",
+          "date": "2026-11-09",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Des robots pour les automatisations de l'organisation",
+            "texte": "Sous le panneau « API » de l'écran « Organisation », un admin de l'organisation crée des robots : des membres sans connexion qui portent les jetons d'une automatisation partagée, comme une synchronisation avec un outil de gestion de projet. Un robot reçoit ses activités à sa création, puis ses affectations comme une personne. Il prend une place de membre, ne reçoit aucun mail et n'est jamais admin de l'organisation. L'annuaire et l'équipe l'affichent avec l'étiquette « robot ».",
+            "migration": null
+          },
+          "en": {
+            "titre": "Robots for the organization's automations",
+            "texte": "Under the \"API\" panel of the \"Organization\" screen, an organization admin creates robots: members without sign-in that hold the tokens of a shared automation, such as a sync with a project management tool. A robot gets its activities when it is created, then its appointments like a person. It takes a member seat, receives no email and is never an organization admin. The directory and the team show it with the \"robot\" tag.",
             "migration": null
           }
         }

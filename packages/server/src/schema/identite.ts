@@ -376,7 +376,7 @@ builder.queryFields(t => ({
   // bloque jamais la lecture ni l'export (ADR 0008).
   exportContenu: t.field({
     type: ArchiveContenuRef,
-    authScopes: { admin: true },
+    authScopes: { $all: { admin: true, session: true } },
     resolve: async (_root, _args, ctx) => {
       const organisationId = ctx.organisation!.id
       const contenu = await construireContenu(prisma, organisationId)
@@ -403,7 +403,7 @@ builder.queryFields(t => ({
   // une limite ou la fin d'un essai ne bloque jamais l'export (ADR 0057).
   exportOrganisation: t.field({
     type: ExportOrganisationRef,
-    authScopes: { admin: true },
+    authScopes: { $all: { admin: true, session: true } },
     resolve: async (_root, _args, ctx) => {
       const organisation = ctx.organisation!
       const donnees = JSON.stringify(

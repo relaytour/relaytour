@@ -23,6 +23,8 @@ import { schema } from './index.ts'
 const contexteConnecte: AppContext = {
   ip: '127.0.0.1',
   administration: false,
+  jeton: null,
+  refus: null,
   personne: {
     id: 'p1',
     nom: 'Test',

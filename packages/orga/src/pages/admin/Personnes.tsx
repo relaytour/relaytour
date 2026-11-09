@@ -1,6 +1,7 @@
 import {
   CheckOutlined,
   MailOutlined,
+  RobotOutlined,
   SendOutlined,
   UserAddOutlined,
 } from '@ant-design/icons'
@@ -71,6 +72,7 @@ const PERSONNES = graphql(`
     personnes(inclureArchives: $inclureArchives) {
       id
       nom
+      robot
       email
       estAdmin
       activitesAdministrees
@@ -110,6 +112,7 @@ const EQUIPE = graphql(`
     equipe {
       id
       nom
+      robot
       email
       estAdmin
       activitesAdministrees
@@ -664,7 +667,8 @@ export default function Personnes({
   const joignables = useMemo(
     () =>
       (liste ?? [])
-        .filter(p => !p.archive && p.id !== moiId)
+        // Un robot n'a pas d'adresse joignable (ADR 0064).
+        .filter(p => !p.archive && !p.robot && p.id !== moiId)
         .map(p => ({ id: p.id, nom: p.nom, email: p.email })),
     [liste, moiId]
   )
@@ -1310,6 +1314,11 @@ export default function Personnes({
                 render: (nom: string, p) => (
                   <Space>
                     <span style={{ fontWeight: 600 }}>{nom}</span>
+                    {p.robot && (
+                      <Tag icon={<RobotOutlined />}>
+                        <Trans>robot</Trans>
+                      </Tag>
+                    )}
                     {p.id === moiId && (
                       <Tag>
                         <Trans>Vous</Trans>
@@ -1323,6 +1332,8 @@ export default function Personnes({
                 title: t`Adresse mail`,
                 dataIndex: 'email',
                 tri: p => p.email,
+                // L'adresse technique d'un robot ne sert à rien : elle se masque.
+                render: (email: string, p) => (p.robot ? '—' : email),
               },
               // Les affectations et les souhaits valent pour une période d'une
               // activité : l'annuaire montre les activités à la place.
@@ -1483,7 +1494,7 @@ export default function Personnes({
                     </Button>
                   ) : (
                     <Space>
-                      {p.id !== moiId && (
+                      {p.id !== moiId && !p.robot && (
                         <Button
                           size="small"
                           icon={<SendOutlined />}
@@ -1500,18 +1511,21 @@ export default function Personnes({
                           <Trans>Écrire</Trans>
                         </Button>
                       )}
-                      <Button
-                        size="small"
-                        icon={<MailOutlined />}
-                        onClick={() =>
-                          void executer(
-                            () => renvoyer({ variables: { id: p.id } }),
-                            t`Invitation renvoyée.`
-                          )
-                        }
-                      >
-                        <Trans>Renvoyer l’invitation</Trans>
-                      </Button>
+                      {/* Un robot ne reçoit pas d'invitation (ADR 0064). */}
+                      {!p.robot && (
+                        <Button
+                          size="small"
+                          icon={<MailOutlined />}
+                          onClick={() =>
+                            void executer(
+                              () => renvoyer({ variables: { id: p.id } }),
+                              t`Invitation renvoyée.`
+                            )
+                          }
+                        >
+                          <Trans>Renvoyer l’invitation</Trans>
+                        </Button>
+                      )}
                       {/* Une personne sans affectation pour la période quitte
                           l'équipe de l'activité (ADR 0045). Le serveur refuse si
                           elle reste affectée dans une autre période en cours. */}

@@ -161,7 +161,7 @@ builder.queryFields(t => ({
   monAbonnementAgenda: t.field({
     type: AbonnementAgendaRef,
     nullable: true,
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, session: true } },
     description:
       'L’abonnement personnel actif de la personne dans l’organisation active.',
     resolve: (_root, _args, ctx) =>
@@ -176,7 +176,7 @@ builder.queryFields(t => ({
   abonnementAgendaActivite: t.field({
     type: AbonnementAgendaRef,
     nullable: true,
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, session: true } },
     description:
       'L’abonnement actif à l’agenda global d’une activité, pour ses admins.',
     args: { activiteId: t.arg.id({ required: true }) },
@@ -196,7 +196,7 @@ builder.queryFields(t => ({
 builder.mutationFields(t => ({
   creerMonAbonnementAgenda: t.field({
     type: AdresseAbonnementRef,
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, session: true } },
     description:
       'Crée l’abonnement personnel, et révoque le précédent : son adresse cesse de servir.',
     args: {
@@ -220,7 +220,7 @@ builder.mutationFields(t => ({
 
   reglerMonAbonnementAgenda: t.field({
     type: AbonnementAgendaRef,
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, session: true } },
     description:
       'Change le contenu de l’abonnement personnel. L’adresse ne change pas.',
     args: {
@@ -260,7 +260,7 @@ builder.mutationFields(t => ({
     // Une adresse compromise se révoque même dans une organisation en lecture
     // seule, qui continue de servir ses abonnements.
     skipTypeScopes: true,
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, session: true } },
     description:
       'Révoque l’abonnement personnel : son adresse cesse de servir.',
     resolve: async (_root, _args, ctx) => {
@@ -278,7 +278,7 @@ builder.mutationFields(t => ({
 
   creerAbonnementAgendaActivite: t.field({
     type: AdresseAbonnementRef,
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, session: true } },
     description:
       'Crée l’abonnement à l’agenda global d’une activité, et révoque le précédent.',
     args: {
@@ -297,7 +297,7 @@ builder.mutationFields(t => ({
 
   reglerAbonnementAgendaActivite: t.field({
     type: AbonnementAgendaRef,
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, session: true } },
     description:
       'Change les types d’événements de l’abonnement d’une activité. L’adresse ne change pas.',
     args: {
@@ -329,7 +329,7 @@ builder.mutationFields(t => ({
     // Une adresse compromise se révoque même dans une organisation en lecture
     // seule, qui continue de servir ses abonnements.
     skipTypeScopes: true,
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, session: true } },
     args: { activiteId: t.arg.id({ required: true }) },
     resolve: async (_root, args, ctx) => {
       const activiteId = await activiteAdministree(ctx, args.activiteId)

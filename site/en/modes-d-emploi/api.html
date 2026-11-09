@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Use the API · User guides · Relaytour</title>
+    <meta
+      name="description"
+      content="The user guide for the Relaytour API: turn on the module, create an access token, call the GraphQL API or the REST API, read errors and hand an automation to a robot."
+    />
+    <link rel="alternate" hreflang="fr" href="https://relaytour.org/modes-d-emploi/api.html" />
+    <link rel="alternate" hreflang="en" href="https://relaytour.org/en/modes-d-emploi/api.html" />
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../../jetons.css" />
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Site navigation">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none" stroke-width="8" stroke-linecap="round" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" stroke="var(--rt-accent)" />
+            <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+          </svg>
+          <span class="logotype">Relay<span>tour</span></span>
+        </a>
+        <ul class="liens">
+          <li><a href="../">Overview</a></li>
+          <li><a href="../hebergement.html">Hosting</a></li>
+          <li><a href="../../design-system.html" hreflang="fr">Design system</a></li>
+          <li><a href="./" aria-current="true">User guides</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Source code</a></li>
+          <li><a href="../../modes-d-emploi/api.html" hreflang="fr" lang="fr" class="langue">Français</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">All roles</span>
+        <h1>Use the API</h1>
+        <p class="chapo">
+          The API lets a program work in your organization on your behalf: a script, a command line, a spreadsheet or a project management tool. The program presents an access token, and Relaytour grants it your rights, never more.
+        </p>
+        <p class="renvoi">
+          This guide is for the people who write or install a program. Organization admins also find how to turn on the module and how to use robots.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-principe">
+        <div class="entete">
+          <span class="etiquette">Starting point</span>
+          <h2 id="t-principe">What an access token does</h2>
+          <p class="texte">
+            An access token belongs to one person and one organization. It starts with <span class="route">rt_</span> and is shown only once, when it is created. Relaytour keeps only a fingerprint of it: a person who loses a token creates another one.
+          </p>
+          <p class="texte">
+            The program reads and edits what the person reads and edits in the organizer workspace. The token can narrow these rights: read only, or a few activities only. It never gives access to the account itself: not to preferences, other tokens or full exports.
+          </p>
+        </div>
+        <nav class="verre sommaire" aria-label="Contents">
+          <span class="etiquette">In this guide</span>
+          <ol>
+            <li><a href="#t-module">Turn on the API module</a>: the choice of organization admins.</li>
+            <li><a href="#t-jetons">Create a token</a>: its name, scope, activities and lifetime.</li>
+            <li><a href="#t-graphql">Call the GraphQL API</a>: the full schema of the organizer workspace.</li>
+            <li><a href="#t-rest">Call the REST API</a>: tasks, sheets and team, with an OpenAPI contract.</li>
+            <li><a href="#t-erreurs">Read errors and limits</a>: the codes returned and the allowed rates.</li>
+            <li><a href="#t-robots">Hand an automation to a robot</a>: a member without sign-in who holds tokens.</li>
+            <li><a href="#t-securite">Protect your tokens</a>: good practices.</li>
+          </ol>
+        </nav>
+      </section>
+
+      <section aria-labelledby="t-module">
+        <div class="entete">
+          <span class="etiquette">Organization admins</span>
+          <h2 id="t-module">Turn on the API module</h2>
+          <p class="texte">
+            The API module is off when an organization is created. While it stays off, nobody creates a token and no token gets an answer.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-module">
+          <div class="ecran-tete"><h3>The “API for third-party programs” panel</h3><span class="route">/&lt;activity&gt;/organisation</span></div>
+          <p>The panel is at the bottom of the “Organization” screen. It shows the state of the module and holds the admins’ switch.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Turn on the API</span></span><span>Open the module. Each member can then create tokens in their preferences.</span></li>
+            <li><span><span class="libelle">Turn off</span></span><span>Close the module. No token is revoked: tokens stop getting answers, then work again when the module is turned back on.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/organisation-api.webp" data-mobile="../captures/mobile/organisation-api.webp" width="1440" height="900" loading="lazy" alt="Organization screen of an admin: the API for third-party programs panel, with the Turn on the API switch and the list of robots." />
+            <figcaption>The “API for third-party programs” panel, in the sample organization.</figcaption>
+          </figure>
+        </article>
+
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>State shown</th><th>What it means</th><th>Who changes it</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>Off</th><td>The module is closed. Existing tokens get no answer.</td><td>Organization admins</td></tr>
+              <tr><th>Active</th><td>The module is open. Tokens get answers.</td><td>Organization admins</td></tr>
+              <tr><th>Turned on by your hosting provider</th><td>The installation administration opened the module. The switch is locked.</td><td>The installation administration</td></tr>
+              <tr><th>Not offered by your hosting provider</th><td>The installation administration closed the module for this organization.</td><td>The installation administration</td></tr>
+              <tr><th>Suspended</th><td>The installation administration suspended the API, for example after unusual use. All tokens of the organization are revoked, and the panel shows the reason.</td><td>The installation administration</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">A read-only organization keeps the API in read mode: tokens read, and every write is refused.</p>
+      </section>
+
+      <section aria-labelledby="t-jetons">
+        <div class="entete">
+          <span class="etiquette">Each member</span>
+          <h2 id="t-jetons">Create a token</h2>
+          <p class="texte">
+            Each person creates tokens in their preferences. The “Tokens and API” item in your profile menu leads there directly.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-jetons">
+          <div class="ecran-tete"><h3>The “Tokens and API” panel</h3><span class="route">/&lt;activity&gt;/preferences#jetons</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">Token name</span></span><span>Name the program that will use the token, for example “import script”. This name helps you recognize the token in the list.</span></li>
+            <li><span><span class="libelle">Read only</span></span><span>Limit the program to reading. This choice is selected by default.</span></li>
+            <li><span><span class="libelle">Read and write</span></span><span>Let the program create, edit and comment on tasks, within your rights.</span></li>
+            <li><span><span class="libelle">Only these activities</span></span><span>Choose the activities the program sees. Without this choice, the token covers all your activities.</span></li>
+            <li><span><span class="libelle">Lifetime</span></span><span>Choose the end date of the token. A token lasts one year at most, and one year by default.</span></li>
+            <li><span><span class="libelle">Create the token</span></span><span>Show the token. Copy it into your program right away: it will not be shown again.</span></li>
+            <li><span><span class="libelle">Revoke</span></span><span>End the token. The program gets a refusal from its next request.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/preferences-jetons.webp" data-mobile="../captures/mobile/preferences-jetons.webp" width="1440" height="900" loading="lazy" alt="Preferences screen of a coordinator: the Tokens and API panel, with the creation form and two active tokens." />
+            <figcaption>The “Tokens and API” panel, in the sample organization. The tokens are fictional.</figcaption>
+          </figure>
+          <p class="note">The list shows the first eight characters of each token, its scope, its activities, its end date and its last use. A person has at most ten active tokens in an organization.</p>
+        </article>
+        <p class="note">When a person is archived, their tokens are revoked. When their rights change in the organization, the rights of their tokens change with them.</p>
+      </section>
+
+      <section aria-labelledby="t-graphql">
+        <div class="entete">
+          <span class="etiquette">Full transport</span>
+          <h2 id="t-graphql">Call the GraphQL API</h2>
+          <p class="texte">
+            The GraphQL API is the one of the organizer workspace, at the <span class="route">/graphql</span> address of your installation. The program sends the token in the <span class="route">Authorization</span> header. The organization and its rights come from the token: no other header is needed.
+          </p>
+        </div>
+        <div class="verre panneau">
+          <pre class="source-markdown">curl https://your-installation.example/graphql \
+  -H "Authorization: Bearer rt_…" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ moi { nom } jetonCourant { portee activiteIds expireLe } }"}'</pre>
+        </div>
+        <p class="note">The <span class="route">jetonCourant</span> query returns the bounds of the token: its scope, its activities and its end date. A program reads it at startup to know what it can do. The names in the schema are in French.</p>
+        <p class="note">The schema contract is published in the source code repository, in the <span class="route">packages/server/schema.graphql</span> file. Account operations stay reserved to a sign-in in the organizer workspace: token management, preferences, subscriptions and full exports.</p>
+      </section>
+
+      <section aria-labelledby="t-rest">
+        <div class="entete">
+          <span class="etiquette">Simple transport</span>
+          <h2 id="t-rest">Call the REST API</h2>
+          <p class="texte">
+            The REST API covers the common needs of a third-party tool: read activities, follow and edit tasks, read sheets. It answers under <span class="route">/api/v1</span> with the same token, and each route checks the same rights as the GraphQL API.
+          </p>
+          <p class="texte">
+            The OpenAPI contract can be read without a token at <span class="route">/api/v1/openapi.json</span>. A project management tool or a client generator imports it as it is.
+          </p>
+        </div>
+        <div class="verre panneau">
+          <pre class="source-markdown">curl https://your-installation.example/api/v1/activites \
+  -H "Authorization: Bearer rt_…"</pre>
+        </div>
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>Route</th><th>What it does</th></tr>
+            </thead>
+            <tbody>
+              <tr><th><span class="route">GET /moi</span></th><td>The person on whose behalf the token acts.</td></tr>
+              <tr><th><span class="route">GET /jeton</span></th><td>The bounds of the token.</td></tr>
+              <tr><th><span class="route">GET /activites</span></th><td>The visible activities, within the limits of the token.</td></tr>
+              <tr><th><span class="route">GET /activites/{activiteId}/editions</span></th><td>The periods of an activity, and <span class="route">/edition-courante</span> for the current period.</td></tr>
+              <tr><th><span class="route">GET /activites/{activiteId}/perimetres</span></th><td>The areas of an activity.</td></tr>
+              <tr><th><span class="route">GET /activites/{activiteId}/equipe</span></th><td>The people of the team, without their addresses.</td></tr>
+              <tr><th><span class="route">GET /activites/{activiteId}/taches</span></th><td>The tasks of a period, by area.</td></tr>
+              <tr><th><span class="route">GET /editions/{editionId}/mes-taches</span></th><td>The tasks assigned to the person.</td></tr>
+              <tr><th><span class="route">GET /editions/{editionId}/priorites</span></th><td>The priorities of the period.</td></tr>
+              <tr><th><span class="route">GET /taches/{id}</span></th><td>A task, and <span class="route">/commentaires</span> for its thread.</td></tr>
+              <tr><th><span class="route">POST /taches</span></th><td>Create a task in an area where the person writes.</td></tr>
+              <tr><th><span class="route">PATCH /taches/{id}</span></th><td>Edit the title, the description or the due date of a task.</td></tr>
+              <tr><th><span class="route">POST /taches/{id}/statut</span></th><td>Change the status of a task.</td></tr>
+              <tr><th><span class="route">POST /taches/{id}/assignation</span></th><td>Assign a task, or remove an assigned person.</td></tr>
+              <tr><th><span class="route">POST /taches/{id}/commentaires</span></th><td>Comment on a task.</td></tr>
+              <tr><th><span class="route">GET /activites/{activiteId}/fiches</span></th><td>The readable sheets of an activity, and <span class="route">/fiches/{slug}</span> for one sheet with its content.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">An edit can carry the version of the task as read (<span class="route">versionAttendue</span>) or its status as read (<span class="route">statutAttendu</span>). Relaytour then refuses to overwrite a change made in the meantime by another person, with status 409.</p>
+      </section>
+
+      <section aria-labelledby="t-erreurs">
+        <div class="entete">
+          <span class="etiquette">Responses</span>
+          <h2 id="t-erreurs">Read errors and limits</h2>
+          <p class="texte">
+            The GraphQL API returns each error with a code in <span class="route">extensions.code</span>. The REST API returns the same code in a <span class="route">{ "erreurs": [{ "code", "message" }] }</span> body, with the HTTP status below.
+          </p>
+          <p class="texte">
+            A refusal of the token itself (invalid token, closed module, rate exceeded) also returns this HTTP status on <span class="route">/graphql</span>, before the query runs.
+          </p>
+        </div>
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>Code</th><th>REST status</th><th>What it means</th></tr>
+            </thead>
+            <tbody>
+              <tr><th><span class="route">JETON_REQUIS</span></th><td>401</td><td>The request carries no token.</td></tr>
+              <tr><th><span class="route">JETON_INVALIDE</span></th><td>401</td><td>The token is unknown, revoked or expired, or its person is archived. The message is the same in all these cases.</td></tr>
+              <tr><th><span class="route">API_INACTIVE</span></th><td>403</td><td>The module is off, not offered or suspended. The response gives the cause, and the reason for a suspension.</td></tr>
+              <tr><th><span class="route">PORTEE_INSUFFISANTE</span></th><td>403</td><td>A read-only token asked for a write.</td></tr>
+              <tr><th><span class="route">FORBIDDEN</span></th><td>403</td><td>The person does not have this right, or the activity is outside the limits of the token.</td></tr>
+              <tr><th><span class="route">SAISIE_INVALIDE</span></th><td>400</td><td>A value sent is invalid. The message names the field.</td></tr>
+              <tr><th><span class="route">CONFLIT_VERSION</span></th><td>409</td><td>The task changed since it was read.</td></tr>
+              <tr><th><span class="route">LIMITE_DE_DEBIT</span></th><td>429</td><td>The token exceeded its rate. The <span class="route">Retry-After</span> header gives the wait in seconds.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Per token</h3>
+            <p>A token sends at most 120 requests per minute.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Per address</h3>
+            <p>An IP address that presents 60 refused tokens within 15 minutes is blocked until the end of that period.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Per query</h3>
+            <p>A GraphQL query that is too deep or too wide is refused before it runs, as in the organizer workspace.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-robots">
+        <div class="entete">
+          <span class="etiquette">Organization admins</span>
+          <h2 id="t-robots">Hand an automation to a robot</h2>
+          <p class="texte">
+            An automation shared by a team should not depend on the account of one person: a sync with a project management tool, or a shared script. A robot is a member of the organization without sign-in. It holds the tokens of this automation, and its actions appear under its name in task threads.
+          </p>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Create a robot</h3>
+            <p>In the API panel, under “Robots”, an organization admin names the robot and chooses its activities. An organization has at most five active robots, and each robot takes a member seat.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Give it rights</h3>
+            <p>The admins of each activity assign the robot to areas from the “Team” screen, like a person. A robot can be an activity admin, never an organization admin.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Manage its tokens</h3>
+            <p>The admin creates at most five active tokens per robot and revokes them from the same panel. Archiving the robot revokes all its tokens and frees its seat.</p>
+          </div>
+        </div>
+        <p class="note">A robot has no reachable address. It receives no email, no notification and no sign-in code, and it appears neither in the ranking nor in the org chart.</p>
+      </section>
+
+      <section aria-labelledby="t-securite">
+        <div class="entete">
+          <span class="etiquette">Good practices</span>
+          <h2 id="t-securite">Protect your tokens</h2>
+        </div>
+        <div class="verre panneau">
+          <ul class="gestes">
+          <li><span><span class="libelle">One token per program</span></span><span>Create a separate token for each program. You can then revoke one program without stopping the others.</span></li>
+          <li><span><span class="libelle">The fewest rights possible</span></span><span>Choose read only and the activities you need. Choose the shortest lifetime that suits the program.</span></li>
+          <li><span><span class="libelle">Outside the code</span></span><span>Keep the token in an environment variable or a secrets vault, never in a code repository or a shared document.</span></li>
+          <li><span><span class="libelle">Revoke at the slightest doubt</span></span><span>Revoke a token as soon as another person may have copied it. The date of last use, in the list, helps you spot unexpected use.</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Other user guides</span>
+          <h2 id="t-autres">Keep going</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="admin-organisation.html">
+            <span class="role">Organization admin</span>
+            <h3>Run the organization</h3>
+            <p>The identity of the organization, its activities, accounts, roles and modules.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+          <a class="verre panneau lien-guide" href="referent.html#e-preferences">
+            <span class="role">Coordinator</span>
+            <h3>Set your preferences</h3>
+            <p>The emails and notifications you receive from the organizer workspace.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+          <a class="verre panneau lien-guide" href="./">
+            <span class="role">All roles</span>
+            <h3>Choose a user guide</h3>
+            <p>The list of user guides for the organizer workspace.</p>
+            <span class="suite">See the list</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.29.0.
+      </footer>
+    </main>
+    <script src="../../bascule.js"></script>
+    <script src="../../sommaire.js"></script>
+  </body>
+</html>

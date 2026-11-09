@@ -5,8 +5,11 @@ import {
   type StatutOrganisation,
 } from '@relaytour/database'
 
+import type { GraphQLError } from 'graphql'
+
 import { dansLEquipe } from './lib/appartenances.ts'
 import { accesRefuse, erreurSaisie } from './lib/erreurs.ts'
+import type { JetonDuContexte } from './lib/jetons-acces.ts'
 import { langueDe, preciserLangue } from './lib/langue.ts'
 import { configurationOrganisation } from './lib/organisation.ts'
 
@@ -63,6 +66,17 @@ export interface AppContext {
    */
   administration: boolean
   personne: PersonneConnectee | null
+  /**
+   * Jeton d'accès porteur de la requête (ADR 0064). Nul pour une session ou pour le
+   * jeton d'administration. Avec un jeton, l'organisation est celle du jeton, et sa
+   * liste d'activités réduit tout ce que la personne voit.
+   */
+  jeton: JetonDuContexte | null
+  /**
+   * Refus d'un jeton d'accès inutilisable. La requête est alors anonyme, et les champs
+   * protégés répondent ce refus plutôt qu'un accès refusé.
+   */
+  refus: GraphQLError | null
   /** Null sans session, sans appartenance, ou pour une organisation suspendue ou archivée. */
   organisation: OrganisationActive | null
   /** Identifiants des périmètres où la personne est affectée pour une édition donnée. */
@@ -156,13 +170,31 @@ export function choisirOrganisation(
   return { ...choisie.organisation, role: choisie.role }
 }
 
+export interface OptionsDuContexte {
+  /** Le jeton d'accès de la requête, déjà résolu (ADR 0064). */
+  jeton?: JetonDuContexte | null
+  /** Le refus d'un jeton d'accès présenté et inutilisable. */
+  refus?: GraphQLError | null
+}
+
 export async function buildContext(
   ip: string | undefined,
   userId: string | null,
   organisationDemandee: string | null = null,
   administration = false,
-  activiteDemandee: string | null = null
+  activiteDemandee: string | null = null,
+  options: OptionsDuContexte = {}
 ): Promise<AppContext> {
+  const jeton = options.jeton ?? null
+  // Un jeton limité à des activités (ADR 0064) réduit chaque ensemble d'activités
+  // à sa liste. Il ne porte pas le rôle d'admin de l'organisation : une opération
+  // de toute l'organisation lui est refusée, et il administre seulement les
+  // activités de sa liste que la personne administre.
+  const activitesDuJeton = jeton?.activites ?? null
+  const dansLeJeton = (ids: Iterable<string>) =>
+    activitesDuJeton === null
+      ? [...ids]
+      : [...ids].filter(id => activitesDuJeton.has(id))
   // Le jeton d'administration ignore toute session.
   const user =
     userId === null || administration
@@ -196,9 +228,16 @@ export async function buildContext(
   // L'archivage porte sur l'appartenance (ADR 0031) : une personne archivée partout
   // garde sa session, sans aucune organisation active. Elle lit ses invitations.
   const actif = user !== null
-  const organisation = actif
+  const choisie = actif
     ? choisirOrganisation(user.appartenances, organisationDemandee)
     : null
+  // Le rôle réel calcule les activités administrées ; le rôle exposé est celui que
+  // vérifient les scopes et les résolveurs.
+  const adminOrganisation = choisie?.role === 'ADMIN'
+  const organisation =
+    choisie !== null && activitesDuJeton !== null && adminOrganisation
+      ? { ...choisie, role: 'MEMBRE' as const }
+      : choisie
   const personne = actif
     ? {
         id: user.id,
@@ -233,9 +272,23 @@ export async function buildContext(
             editionId,
             perimetre: { organisationId: organisation.id },
           },
-          select: { perimetreId: true },
+          select: {
+            perimetreId: true,
+            perimetre: { select: { activiteId: true } },
+          },
         })
-        .then(lignes => new Set(lignes.map(l => l.perimetreId)))
+        .then(
+          lignes =>
+            new Set(
+              lignes
+                .filter(
+                  l =>
+                    activitesDuJeton === null ||
+                    activitesDuJeton.has(l.perimetre.activiteId)
+                )
+                .map(l => l.perimetreId)
+            )
+        )
       cache.set(editionId, resultat)
     }
     return resultat
@@ -251,10 +304,24 @@ export async function buildContext(
           userId: personne.id,
           perimetre: { organisationId: organisation.id },
         },
-        select: { perimetreId: true },
+        select: {
+          perimetreId: true,
+          perimetre: { select: { activiteId: true } },
+        },
         distinct: ['perimetreId'],
       })
-      .then(lignes => new Set(lignes.map(l => l.perimetreId)))
+      .then(
+        lignes =>
+          new Set(
+            lignes
+              .filter(
+                l =>
+                  activitesDuJeton === null ||
+                  activitesDuJeton.has(l.perimetre.activiteId)
+              )
+              .map(l => l.perimetreId)
+          )
+      )
     return connus
   }
 
@@ -263,7 +330,7 @@ export async function buildContext(
     if (personne === null || organisation === null)
       return Promise.resolve(new Set<string>())
     administrees ??= (
-      personne.estAdmin
+      adminOrganisation
         ? prisma.activite
             .findMany({
               where: { organisationId: organisation.id },
@@ -280,7 +347,7 @@ export async function buildContext(
               select: { activiteId: true },
             })
             .then(lignes => lignes.map(l => l.activiteId))
-    ).then(ids => new Set(ids))
+    ).then(ids => new Set(dansLeJeton(ids)))
     return administrees
   }
 
@@ -314,7 +381,7 @@ export async function buildContext(
       return Promise.resolve(new Set<string>())
     visibles ??= Promise.all([
       activitesAdministrees(),
-      personne.estAdmin
+      adminOrganisation
         ? Promise.resolve([])
         : prisma.perimetre.findMany({
             where: {
@@ -326,7 +393,7 @@ export async function buildContext(
           }),
     ]).then(
       ([admin, affectees]) =>
-        new Set([...admin, ...affectees.map(p => p.activiteId)])
+        new Set(dansLeJeton([...admin, ...affectees.map(p => p.activiteId)]))
     )
     return visibles
   }
@@ -356,7 +423,7 @@ export async function buildContext(
       }),
     ]).then(
       ([visiblesIci, autres]) =>
-        new Set([...visiblesIci, ...autres.map(a => a.id)])
+        new Set(dansLeJeton([...visiblesIci, ...autres.map(a => a.id)]))
     )
     return decouvertes
   }
@@ -483,6 +550,8 @@ export async function buildContext(
     ip,
     administration,
     personne,
+    jeton,
+    refus: options.refus ?? null,
     organisation,
     perimetresAffectes,
     perimetresConnus,
