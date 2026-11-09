@@ -11,6 +11,8 @@ import { organisationParDefaut } from '../lib/organisation.ts'
 import { empreinteAdresse } from '../lib/push.ts'
 import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 
+import { consoliderLesFenetres } from '../test/fenetre.ts'
+
 import { schema } from './index.ts'
 
 // Notifications push (ADR 0024). Le canal s'ouvre ici avec des clés d'essai, et les
@@ -54,6 +56,8 @@ async function executer(
     { query, variables },
     { contextValue: await contexteDeTest(userId) }
   )
+  // La fenêtre de regroupement se termine tout de suite (ADR 0065).
+  await consoliderLesFenetres()
   if (r.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
   return r.body.singleResult
@@ -268,13 +272,24 @@ describe('ce qui part en push', () => {
 
   it('pousse l’assignation à la personne concernée', async () => {
     pousses.length = 0
-    await notifier(prisma, {
-      ...base(),
-      type: 'TACHE_ASSIGNEE',
-      destinataires: [ids.bruno],
-      personneId: ids.bruno,
+    // La fenêtre de regroupement ne garde qu'une assignation réelle (ADR 0065).
+    await prisma.tacheAssignation.create({
+      data: { tacheId: ids.tache, userId: ids.bruno },
     })
-    expect(pousses).toEqual([await derniere(ids.bruno)])
+    try {
+      await notifier(prisma, {
+        ...base(),
+        type: 'TACHE_ASSIGNEE',
+        destinataires: [ids.bruno],
+        personneId: ids.bruno,
+      })
+      await consoliderLesFenetres()
+      expect(pousses).toEqual([await derniere(ids.bruno)])
+    } finally {
+      await prisma.tacheAssignation.deleteMany({
+        where: { tacheId: ids.tache, userId: ids.bruno },
+      })
+    }
   })
 
   it('ne pousse pas l’assignation d’une autre personne', async () => {
@@ -295,6 +310,7 @@ describe('ce qui part en push', () => {
       { ...base(), type: 'TACHE_MODIFIEE', destinataires: [ids.bruno] },
       { mailImmediat: true }
     )
+    await consoliderLesFenetres()
     expect(pousses).toEqual([await derniere(ids.bruno)])
   })
 

@@ -264,7 +264,8 @@ async function filtreDuNiveau(
   organisationId: string,
   admin: boolean
 ): Promise<Prisma.NotificationWhereInput | null> {
-  const base = { userId, organisationId }
+  // Une notification de tâche en attente de sa fenêtre ne s'affiche pas (ADR 0065).
+  const base = { userId, organisationId, disponibleLe: null }
   if (!admin) return { ...base, niveau: 'REFERENT' }
   const filtre = await filtreNotificationsAdmin(prisma, userId, organisationId)
   return filtre === null ? null : { ...base, ...filtre }
@@ -437,6 +438,7 @@ builder.queryFields(t => ({
               userId,
               organisationId: organisation.id,
               lueLe: null,
+              disponibleLe: null,
               OR: [
                 { niveau: 'REFERENT' },
                 ...(filtreAdmin === null ? [] : [filtreAdmin]),

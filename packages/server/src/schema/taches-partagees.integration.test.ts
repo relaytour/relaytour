@@ -7,6 +7,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildContext, type AppContext } from '../context.ts'
 import { calculerScores } from '../lib/score.ts'
 
+import { consoliderLesFenetres } from '../test/fenetre.ts'
+
 import { schema } from './index.ts'
 
 // Tâches partagées (ADR 0026) : une tâche d'un périmètre se décline dans d'autres
@@ -60,6 +62,8 @@ async function executer(
     { query, variables },
     { contextValue: await buildContext('127.0.0.1', userId, slug) }
   )
+  // La fenêtre de regroupement se termine tout de suite (ADR 0065).
+  await consoliderLesFenetres()
   if (r.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
   return r.body.singleResult

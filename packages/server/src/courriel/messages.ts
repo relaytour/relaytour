@@ -689,6 +689,8 @@ export async function composer(
       organisationId: idOrganisation,
       lueLe: null,
       resumeeLe: null,
+      // Une notification de tâche en attente de sa fenêtre attend le résumé suivant.
+      disponibleLe: null,
     }
     const [personne, notifications, notificationsAdmin, taches] =
       await Promise.all([

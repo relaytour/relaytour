@@ -13,6 +13,7 @@ import { langueDeLOrganisation } from '../../lib/langue-destinataire.ts'
 import { renouvelerAcces } from '../../espace-fichiers/index.ts'
 import { purgerDemandes } from '../../lib/demandes.ts'
 import { aujourdhui } from '../../lib/droits.ts'
+import { consoliderTache } from '../../lib/fenetre-notifications.ts'
 import { journal } from '../../lib/journal.ts'
 import { purgerDonneesTechniques, purgerMedias } from '../../lib/purge.ts'
 import {
@@ -44,6 +45,13 @@ async function organisationsVisees(
 export async function planificationProcessor(
   job: Job<PlanificationJobData, unknown, TachePlanifiee>
 ): Promise<void> {
+  // La fin de la fenêtre de regroupement d'une tâche (ADR 0065).
+  if (job.name === 'consolider-tache') {
+    if (job.data.tacheId && job.data.fin) {
+      await consoliderTache(prisma, job.data.tacheId, new Date(job.data.fin))
+    }
+    return
+  }
   if (job.name === 'synchro') {
     await synchroniserPlanification()
     return

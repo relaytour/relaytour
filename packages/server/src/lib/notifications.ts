@@ -8,6 +8,11 @@ import type {
 import { mettreEnFile } from '../courriel/file.ts'
 
 import { membreActif } from './appartenances.ts'
+import {
+  finDeFenetre,
+  planifierConsolidation,
+  TYPES_REGROUPES,
+} from './fenetre-notifications.ts'
 import { publierNotification } from './flux.ts'
 import { pousser } from './push-file.ts'
 
@@ -176,6 +181,13 @@ export async function notifierLePerimetre(
     })
     const cible = notification.tacheId ?? notification.ficheId ?? perimetreId
     const tranche = Math.floor(maintenant / TRANCHE_PERIMETRE_MS)
+    // Une modification ou un statut d'une tâche attend la fin de sa fenêtre
+    // (ADR 0065). Un commentaire et une fiche restent immédiats.
+    const fin =
+      notification.tacheId !== undefined && TYPES_REGROUPES.has(type)
+        ? finDeFenetre(maintenant)
+        : null
+    let creees = 0
     for (const userId of destinataires) {
       try {
         await prisma.notification.create({
@@ -188,6 +200,7 @@ export async function notifierLePerimetre(
             ficheId: notification.ficheId ?? null,
             perimetreId,
             statut: statut ?? null,
+            disponibleLe: fin,
             // La clé d'un passage à « faite » ne porte pas son auteur non plus. Une
             // fiche connexe (ADR 0039) prévient une fois par fiche et par tranche,
             // quels que soient l'auteur et le chemin du partage.
@@ -197,11 +210,20 @@ export async function notifierLePerimetre(
                 : `${type}-${cible}-${statut ?? ''}-${statut === 'FAITE' ? '' : acteurId}-${userId}-${tranche}`,
           },
         })
-        publierNotification(organisationId, userId)
+        creees++
+        if (fin === null) publierNotification(organisationId, userId)
       } catch (erreur) {
         // P2002 : cette personne est déjà prévenue de cette action dans la tranche.
         if ((erreur as { code?: string }).code !== 'P2002') throw erreur
       }
+    }
+    if (fin !== null && creees > 0) {
+      await planifierConsolidation(
+        prisma,
+        notification.tacheId!,
+        fin,
+        maintenant
+      )
     }
   } catch (erreur) {
     journal.error(
@@ -239,9 +261,14 @@ export async function notifier(
     /** Pour TACHE_STATUT : le nouveau statut. */
     statut?: StatutTache
   },
-  options: { mailImmediat?: boolean } = {}
+  options: { mailImmediat?: boolean; maintenant?: number } = {}
 ): Promise<void> {
   const anonyme = notification.statut === 'FAITE'
+  // Une notification de tâche attend la fin de sa fenêtre : la consolidation publie,
+  // pousse et envoie le mail immédiat (ADR 0065).
+  const fin = TYPES_REGROUPES.has(notification.type)
+    ? finDeFenetre(options.maintenant)
+    : null
   const destinataires = [...new Set(notification.destinataires)].filter(
     id => id !== notification.acteurId
   )
@@ -263,9 +290,12 @@ export async function notifier(
           perimetreId: notification.perimetreId,
           personneId: notification.personneId ?? null,
           statut: notification.statut ?? null,
+          disponibleLe: fin,
+          mailEnAttente: fin !== null && (options.mailImmediat ?? false),
         },
         select: { id: true },
       })
+      if (fin !== null) continue
       publierNotification(organisationId, userId)
       // Push (ADR 0024) : la modification d'une tâche assignée, et l'assignation
       // ou le retrait qui concerne le destinataire lui-même. Ce que la personne
@@ -294,6 +324,14 @@ export async function notifier(
           }
         )
       }
+    }
+    if (fin !== null) {
+      await planifierConsolidation(
+        prisma,
+        notification.tacheId,
+        fin,
+        options.maintenant
+      )
     }
   } catch (erreur) {
     journal.error(

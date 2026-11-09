@@ -2,15 +2,34 @@ import { randomUUID } from 'node:crypto'
 
 import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
 import { genererRappels } from '../jobs/planification.ts'
+import { consoliderLesFenetres } from '../test/fenetre.ts'
 
 import { schema } from './index.ts'
 
 // Notifications essentielles et modèles de réglages (ADR 0065). Chaque compte part
 // des réglages par défaut : le modèle Essentiel.
+
+// Les mails mis en file se notent au passage, sans rien changer à leur envoi.
+const enFile = vi.hoisted(
+  () => [] as { sorte: string; userId?: string; changement?: string }[]
+)
+vi.mock('../courriel/file.ts', async importOriginal => {
+  const reel = await importOriginal<typeof import('../courriel/file.ts')>()
+  return {
+    mettreEnFile: (...args: Parameters<typeof reel.mettreEnFile>) => {
+      enFile.push({
+        sorte: args[0],
+        userId: (args[1] as { userId?: string }).userId,
+        changement: args[2]?.tache?.changement,
+      })
+      return reel.mettreEnFile(...args)
+    },
+  }
+})
 
 const s = randomUUID().slice(0, 8)
 const slug = `essentielles-${s}`
@@ -391,5 +410,79 @@ describe('modèles de réglages', () => {
     const r = await executer(null, APPLIQUER, { m: 'ESSENTIEL' })
     expect(r.errors?.[0]?.extensions?.code).toBeDefined()
     expect(r.data?.appliquerModeleNotification ?? null).toBeNull()
+  })
+})
+
+describe('fenêtre de regroupement de dix minutes', () => {
+  const NON_LUES = `{ nombreNotificationsNonLues }`
+  const nonLues = async (userId: string) =>
+    (await reussir(userId, NON_LUES)).nombreNotificationsNonLues as number
+
+  it('une notification attend la fin de sa fenêtre, puis s’affiche', async () => {
+    const tacheId = await tache(ids.natation, 'Afficher les horaires')
+    // Les fenêtres des tests précédents se terminent d'abord.
+    await consoliderLesFenetres()
+    const avant = await nonLues(ids.paul)
+    await reussir(ids.lea, ASSIGNER, { id: tacheId, a: true, p: ids.paul })
+    // En attente : ni dans la cloche, ni dans son nombre.
+    expect(await nonLues(ids.paul)).toBe(avant)
+    await consoliderLesFenetres()
+    expect(await nonLues(ids.paul)).toBe(avant + 1)
+    expect(await types(ids.paul, tacheId)).toEqual(['TACHE_ASSIGNEE'])
+  })
+
+  it('un retrait puis une remise de la même personne ne laissent rien', async () => {
+    const tacheId = await tache(ids.natation, 'Contrôler les chronos', {
+      assignes: [ids.paul],
+    })
+    await regler(ids.noa, { suiviPerimetres: 'DETAIL' })
+    try {
+      await reussir(ids.lea, ASSIGNER, { id: tacheId, a: false, p: ids.paul })
+      await reussir(ids.lea, ASSIGNER, { id: tacheId, a: true, p: ids.paul })
+      await consoliderLesFenetres()
+      expect(await types(ids.paul, tacheId)).toEqual([])
+      expect(await types(ids.noa, tacheId)).toEqual([])
+    } finally {
+      await regler(ids.noa, { suiviPerimetres: 'MOI' })
+    }
+  })
+
+  it('un statut revenu à sa valeur de départ ne laisse ni notification ni mail', async () => {
+    const tacheId = await tache(ids.natation, 'Ranger le matériel', {
+      assignes: [ids.paul],
+    })
+    enFile.length = 0
+    const STATUT = `mutation ($id: ID!, $s: StatutTache!) {
+      changerStatutTache(id: $id, statut: $s, confirmer: true) { id }
+    }`
+    await reussir(ids.lea, STATUT, { id: tacheId, s: 'EN_COURS' })
+    await reussir(ids.lea, STATUT, { id: tacheId, s: 'A_FAIRE' })
+    await consoliderLesFenetres()
+    expect(await types(ids.paul, tacheId)).toEqual([])
+    expect(enFile.filter(m => m.sorte === 'tache-modifiee')).toEqual([])
+  })
+
+  it('plusieurs modifications donnent une notification et un mail', async () => {
+    const tacheId = await tache(ids.natation, 'Préparer les dossards', {
+      assignes: [ids.paul],
+    })
+    enFile.length = 0
+    const MODIFIER = `mutation ($id: ID!, $t: String!) {
+      modifierTache(id: $id, titre: $t, confirmer: true) { id }
+    }`
+    await reussir(ids.lea, MODIFIER, {
+      id: tacheId,
+      t: 'Préparer les dossards (1)',
+    })
+    await reussir(ids.lea, MODIFIER, {
+      id: tacheId,
+      t: 'Préparer les dossards (2)',
+    })
+    expect(enFile.filter(m => m.sorte === 'tache-modifiee')).toEqual([])
+    await consoliderLesFenetres()
+    expect(await types(ids.paul, tacheId)).toEqual(['TACHE_MODIFIEE'])
+    expect(enFile.filter(m => m.sorte === 'tache-modifiee')).toEqual([
+      { sorte: 'tache-modifiee', userId: ids.paul, changement: 'contenu' },
+    ])
   })
 })

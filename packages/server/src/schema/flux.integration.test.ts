@@ -29,6 +29,8 @@ import {
   type Changement,
 } from '../lib/flux.ts'
 
+import { consoliderLesFenetres } from '../test/fenetre.ts'
+
 import { schema } from './index.ts'
 
 // Flux des changements (ADR 0017). Un signal ne porte aucune donnée, mais il dit
@@ -561,6 +563,8 @@ describe('signal d’une écriture', () => {
     expect(
       reponse.body.kind === 'single' && reponse.body.singleResult.errors
     ).toBeUndefined()
+    // La fenêtre de regroupement se termine tout de suite (ADR 0065).
+    await consoliderLesFenetres()
     // Alice, référente du périmètre, reçoit le signal de la tâche et celui de sa
     // cloche, dans un ordre libre.
     const recus = [
