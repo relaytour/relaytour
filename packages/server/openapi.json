@@ -1,0 +1,3318 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Relaytour",
+    "version": "0.0.0-contrat",
+    "description": "API REST v1 de Relaytour (ADR 0064). Chaque requête porte un jeton d’accès dans l’en-tête « Authorization: Bearer ». Le jeton agit au nom d’une personne, dans une seule organisation, avec ses droits. L’API GraphQL `/graphql` accepte le même jeton et ouvre toutes les opérations.",
+    "license": {
+      "name": "AGPL-3.0-only"
+    }
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "jeton": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "compte",
+      "description": "La personne et son jeton."
+    },
+    {
+      "name": "activites",
+      "description": "Activités, périodes, périmètres et équipe."
+    },
+    {
+      "name": "taches",
+      "description": "Tâches, priorités et commentaires."
+    },
+    {
+      "name": "fiches",
+      "description": "Fiches méthode."
+    }
+  ],
+  "paths": {
+    "/api/v1/moi": {
+      "get": {
+        "operationId": "moi",
+        "summary": "La personne au nom de qui le jeton agit.",
+        "tags": [
+          "compte"
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "nom": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "nom",
+                    "email"
+                  ],
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jeton": {
+      "get": {
+        "operationId": "jetonCourant",
+        "summary": "Les bornes du jeton : sa portée, ses activités et sa date de fin.",
+        "tags": [
+          "compte"
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "portee": {
+                      "type": "string",
+                      "enum": [
+                        "LECTURE",
+                        "LECTURE_ECRITURE"
+                      ]
+                    },
+                    "activiteIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "nullable": true,
+                      "description": "Nul : toutes les activités que la personne voit."
+                    },
+                    "expireLe": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "portee",
+                    "expireLe"
+                  ],
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activites": {
+      "get": {
+        "operationId": "activites",
+        "summary": "Les activités que la personne voit, dans la limite du jeton.",
+        "tags": [
+          "activites"
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "nom": {
+                        "type": "string"
+                      },
+                      "nature": {
+                        "type": "string",
+                        "enum": [
+                          "EVENEMENT",
+                          "MANDAT",
+                          "SAISON"
+                        ]
+                      },
+                      "archive": {
+                        "type": "boolean"
+                      },
+                      "modules": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "AGENDA",
+                            "BENEVOLES",
+                            "CLASSEMENT",
+                            "DOCUMENTS"
+                          ]
+                        },
+                        "description": "Les modules actifs : ceux que l’activité active et que l’hébergeur autorise (ADR 0052)."
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "slug",
+                      "nom",
+                      "nature",
+                      "archive",
+                      "modules"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activites/{activiteId}/editions": {
+      "get": {
+        "operationId": "editions",
+        "summary": "Les périodes d’une activité.",
+        "tags": [
+          "activites"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "activiteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "annee": {
+                        "type": "integer"
+                      },
+                      "nom": {
+                        "type": "string"
+                      },
+                      "debut": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "fin": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "statut": {
+                        "type": "string",
+                        "enum": [
+                          "ARCHIVEE",
+                          "EN_COURS",
+                          "PREPARATION"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "annee",
+                      "nom",
+                      "debut",
+                      "fin",
+                      "statut"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activites/{activiteId}/edition-courante": {
+      "get": {
+        "operationId": "editionCourante",
+        "summary": "La période en cours d’une activité, ou null.",
+        "tags": [
+          "activites"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "activiteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "annee": {
+                      "type": "integer"
+                    },
+                    "nom": {
+                      "type": "string"
+                    },
+                    "debut": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "fin": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "statut": {
+                      "type": "string",
+                      "enum": [
+                        "ARCHIVEE",
+                        "EN_COURS",
+                        "PREPARATION"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "annee",
+                    "nom",
+                    "debut",
+                    "fin",
+                    "statut"
+                  ],
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activites/{activiteId}/perimetres": {
+      "get": {
+        "operationId": "perimetres",
+        "summary": "Les périmètres d’une activité, avec l’accès de la personne à chacun.",
+        "tags": [
+          "activites"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "activiteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "nom": {
+                        "type": "string"
+                      },
+                      "groupe": {
+                        "type": "string"
+                      },
+                      "archive": {
+                        "type": "boolean"
+                      },
+                      "acces": {
+                        "type": "string",
+                        "enum": [
+                          "AUCUN",
+                          "COMPLET",
+                          "CONSULTATION"
+                        ],
+                        "description": "Accès de la personne connectée au périmètre (ADR 0014). COMPLET : elle lit ses tâches et ses fiches. CONSULTATION : elle lit ses tâches, son avancement et son équipe, sans ses fiches. AUCUN : elle ne lit ni ses tâches, ni son avancement, ni son équipe, ni ses fiches. Le nom et la description du périmètre restent lisibles en découverte (ADR 0012)."
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "slug",
+                      "nom",
+                      "groupe",
+                      "archive",
+                      "acces"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activites/{activiteId}/equipe": {
+      "get": {
+        "operationId": "equipe",
+        "summary": "Les personnes de l’équipe d’une activité, sans leurs adresses.",
+        "tags": [
+          "activites"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "activiteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "nom": {
+                        "type": "string"
+                      },
+                      "archive": {
+                        "type": "boolean",
+                        "description": "Vrai quand la personne est archivée dans l’organisation active."
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "nom",
+                      "archive"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activites/{activiteId}/taches": {
+      "get": {
+        "operationId": "tachesParPerimetre",
+        "summary": "Les tâches d’une période, rangées par périmètre. Un périmètre sans accès rend une liste vide.",
+        "tags": [
+          "taches"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "activiteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "editionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "nom": {
+                        "type": "string"
+                      },
+                      "acces": {
+                        "type": "string",
+                        "enum": [
+                          "AUCUN",
+                          "COMPLET",
+                          "CONSULTATION"
+                        ],
+                        "description": "Accès de la personne connectée au périmètre (ADR 0014). COMPLET : elle lit ses tâches et ses fiches. CONSULTATION : elle lit ses tâches, son avancement et son équipe, sans ses fiches. AUCUN : elle ne lit ni ses tâches, ni son avancement, ni son équipe, ni ses fiches. Le nom et la description du périmètre restent lisibles en découverte (ADR 0012)."
+                      },
+                      "taches": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "titre": {
+                              "type": "string"
+                            },
+                            "statut": {
+                              "type": "string",
+                              "enum": [
+                                "ABANDONNEE",
+                                "A_FAIRE",
+                                "EN_COURS",
+                                "FAITE"
+                              ]
+                            },
+                            "echeance": {
+                              "type": "string",
+                              "format": "date",
+                              "nullable": true
+                            },
+                            "enRetard": {
+                              "type": "boolean"
+                            },
+                            "jalon": {
+                              "type": "boolean",
+                              "description": "Vrai quand la tâche est un jalon (ADR 0062)."
+                            },
+                            "version": {
+                              "type": "integer",
+                              "description": "Nombre de modifications du contenu. `modifierTache` la reçoit en `versionAttendue`."
+                            },
+                            "modifieeLe": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "titre",
+                            "statut",
+                            "enRetard",
+                            "jalon",
+                            "version",
+                            "modifieeLe"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "slug",
+                      "nom",
+                      "acces",
+                      "taches"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/editions/{editionId}/mes-taches": {
+      "get": {
+        "operationId": "mesTaches",
+        "summary": "Les tâches assignées à la personne pour une période.",
+        "tags": [
+          "taches"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "editionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "titre": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "statut": {
+                        "type": "string",
+                        "enum": [
+                          "ABANDONNEE",
+                          "A_FAIRE",
+                          "EN_COURS",
+                          "FAITE"
+                        ]
+                      },
+                      "echeance": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                      },
+                      "enRetard": {
+                        "type": "boolean"
+                      },
+                      "jalon": {
+                        "type": "boolean",
+                        "description": "Vrai quand la tâche est un jalon (ADR 0062)."
+                      },
+                      "version": {
+                        "type": "integer",
+                        "description": "Nombre de modifications du contenu. `modifierTache` la reçoit en `versionAttendue`."
+                      },
+                      "creeLe": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "modifieeLe": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "termineeLe": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                      },
+                      "perimetre": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "nom"
+                        ]
+                      },
+                      "edition": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "annee": {
+                            "type": "integer"
+                          },
+                          "nom": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "annee",
+                          "nom"
+                        ]
+                      },
+                      "assignes": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "nom": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "nom"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "titre",
+                      "statut",
+                      "enRetard",
+                      "jalon",
+                      "version",
+                      "creeLe",
+                      "modifieeLe",
+                      "perimetre",
+                      "edition",
+                      "assignes"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/editions/{editionId}/priorites": {
+      "get": {
+        "operationId": "priorites",
+        "summary": "Les priorités d’une période, par périmètre, avec le score et ses raisons.",
+        "tags": [
+          "taches"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "editionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fin": {
+                      "type": "string",
+                      "description": "Dernier jour de l’horizon (AAAA-MM-JJ), dans le fuseau de l’organisation."
+                    },
+                    "perimetres": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "perimetre": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "slug": {
+                                "type": "string"
+                              },
+                              "nom": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "slug",
+                              "nom"
+                            ]
+                          },
+                          "autres": {
+                            "type": "integer",
+                            "description": "Priorités au-delà du plafond de cinq."
+                          },
+                          "priorites": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "score": {
+                                  "type": "integer"
+                                },
+                                "raisons": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "code": {
+                                        "type": "string",
+                                        "enum": [
+                                          "ACCORD_ATTENDU",
+                                          "AJUSTEMENT",
+                                          "AVANT_LE_POINT",
+                                          "A_PRENDRE",
+                                          "DECLINAISONS",
+                                          "ECHEANCE_PROCHE",
+                                          "EN_COURS",
+                                          "JALON",
+                                          "MENE_A_UN_JALON",
+                                          "RETARD",
+                                          "RETARD_A_REVOIR",
+                                          "REUNION_A_VENIR"
+                                        ]
+                                      },
+                                      "points": {
+                                        "type": "integer"
+                                      },
+                                      "jours": {
+                                        "type": "integer",
+                                        "nullable": true,
+                                        "description": "Jours de retard (RETARD, RETARD_A_REVOIR) ou jours avant l’échéance (ECHEANCE_PROCHE)."
+                                      },
+                                      "nombre": {
+                                        "type": "integer",
+                                        "nullable": true,
+                                        "description": "Déclinaisons actives (DECLINAISONS) ou tâches liées ouvertes (JALON)."
+                                      },
+                                      "titre": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "description": "Le titre du jalon le plus proche (MENE_A_UN_JALON)."
+                                      }
+                                    },
+                                    "required": [
+                                      "code",
+                                      "points"
+                                    ]
+                                  }
+                                },
+                                "tache": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "titre": {
+                                      "type": "string"
+                                    },
+                                    "statut": {
+                                      "type": "string",
+                                      "enum": [
+                                        "ABANDONNEE",
+                                        "A_FAIRE",
+                                        "EN_COURS",
+                                        "FAITE"
+                                      ]
+                                    },
+                                    "echeance": {
+                                      "type": "string",
+                                      "format": "date",
+                                      "nullable": true
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "titre",
+                                    "statut"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "score",
+                                "raisons",
+                                "tache"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "perimetre",
+                          "autres",
+                          "priorites"
+                        ]
+                      },
+                      "description": "Les périmètres non archivés de l’activité, dans leur ordre."
+                    }
+                  },
+                  "required": [
+                    "fin",
+                    "perimetres"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/taches/{id}": {
+      "get": {
+        "operationId": "tache",
+        "summary": "Une tâche.",
+        "tags": [
+          "taches"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "titre": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "statut": {
+                      "type": "string",
+                      "enum": [
+                        "ABANDONNEE",
+                        "A_FAIRE",
+                        "EN_COURS",
+                        "FAITE"
+                      ]
+                    },
+                    "echeance": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "enRetard": {
+                      "type": "boolean"
+                    },
+                    "jalon": {
+                      "type": "boolean",
+                      "description": "Vrai quand la tâche est un jalon (ADR 0062)."
+                    },
+                    "version": {
+                      "type": "integer",
+                      "description": "Nombre de modifications du contenu. `modifierTache` la reçoit en `versionAttendue`."
+                    },
+                    "creeLe": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "modifieeLe": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "termineeLe": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "perimetre": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "nom": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "nom"
+                      ]
+                    },
+                    "edition": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "annee": {
+                          "type": "integer"
+                        },
+                        "nom": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "annee",
+                        "nom"
+                      ]
+                    },
+                    "assignes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nom"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "titre",
+                    "statut",
+                    "enRetard",
+                    "jalon",
+                    "version",
+                    "creeLe",
+                    "modifieeLe",
+                    "perimetre",
+                    "edition",
+                    "assignes"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "modifierTache",
+        "summary": "Modifie une tâche. `versionAttendue` refuse d’écraser une modification faite entre-temps (409).",
+        "tags": [
+          "taches"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "titre": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "echeance": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "versionAttendue": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "confirmer": {
+                    "type": "boolean",
+                    "nullable": true
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "titre": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "statut": {
+                      "type": "string",
+                      "enum": [
+                        "ABANDONNEE",
+                        "A_FAIRE",
+                        "EN_COURS",
+                        "FAITE"
+                      ]
+                    },
+                    "echeance": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "enRetard": {
+                      "type": "boolean"
+                    },
+                    "jalon": {
+                      "type": "boolean",
+                      "description": "Vrai quand la tâche est un jalon (ADR 0062)."
+                    },
+                    "version": {
+                      "type": "integer",
+                      "description": "Nombre de modifications du contenu. `modifierTache` la reçoit en `versionAttendue`."
+                    },
+                    "creeLe": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "modifieeLe": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "termineeLe": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "perimetre": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "nom": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "nom"
+                      ]
+                    },
+                    "edition": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "annee": {
+                          "type": "integer"
+                        },
+                        "nom": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "annee",
+                        "nom"
+                      ]
+                    },
+                    "assignes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nom"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "titre",
+                    "statut",
+                    "enRetard",
+                    "jalon",
+                    "version",
+                    "creeLe",
+                    "modifieeLe",
+                    "perimetre",
+                    "edition",
+                    "assignes"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/taches/{id}/commentaires": {
+      "get": {
+        "operationId": "filTache",
+        "summary": "Les commentaires d’une tâche.",
+        "tags": [
+          "taches"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tacheId": {
+                      "type": "string"
+                    },
+                    "nombreCommentaires": {
+                      "type": "integer",
+                      "description": "Le nombre total de commentaires de la tâche."
+                    },
+                    "commentaires": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "texte": {
+                            "type": "string"
+                          },
+                          "creeLe": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "modifieLe": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true,
+                            "description": "Le moment de la dernière modification du texte par son auteur, ou null."
+                          },
+                          "auteur": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "nom": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "nom"
+                            ],
+                            "nullable": true,
+                            "description": "Null quand le compte de l’auteur n’existe plus."
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "texte",
+                          "creeLe"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "tacheId",
+                    "nombreCommentaires",
+                    "commentaires"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "commenterTache",
+        "summary": "Ajoute un commentaire à une tâche.",
+        "tags": [
+          "taches"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "texte": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "texte"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tacheId": {
+                      "type": "string"
+                    },
+                    "nombreCommentaires": {
+                      "type": "integer",
+                      "description": "Le nombre total de commentaires de la tâche."
+                    },
+                    "commentaires": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "texte": {
+                            "type": "string"
+                          },
+                          "creeLe": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "modifieLe": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true,
+                            "description": "Le moment de la dernière modification du texte par son auteur, ou null."
+                          },
+                          "auteur": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "nom": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "nom"
+                            ],
+                            "nullable": true,
+                            "description": "Null quand le compte de l’auteur n’existe plus."
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "texte",
+                          "creeLe"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "tacheId",
+                    "nombreCommentaires",
+                    "commentaires"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/taches": {
+      "post": {
+        "operationId": "creerTache",
+        "summary": "Crée une tâche dans un périmètre où la personne écrit.",
+        "tags": [
+          "taches"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "perimetreId": {
+                    "type": "string"
+                  },
+                  "editionId": {
+                    "type": "string"
+                  },
+                  "titre": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "echeance": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "mAssigner": {
+                    "type": "boolean",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "perimetreId",
+                  "editionId",
+                  "titre"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "titre": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "statut": {
+                      "type": "string",
+                      "enum": [
+                        "ABANDONNEE",
+                        "A_FAIRE",
+                        "EN_COURS",
+                        "FAITE"
+                      ]
+                    },
+                    "echeance": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "enRetard": {
+                      "type": "boolean"
+                    },
+                    "jalon": {
+                      "type": "boolean",
+                      "description": "Vrai quand la tâche est un jalon (ADR 0062)."
+                    },
+                    "version": {
+                      "type": "integer",
+                      "description": "Nombre de modifications du contenu. `modifierTache` la reçoit en `versionAttendue`."
+                    },
+                    "creeLe": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "modifieeLe": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "termineeLe": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "perimetre": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "nom": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "nom"
+                      ]
+                    },
+                    "edition": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "annee": {
+                          "type": "integer"
+                        },
+                        "nom": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "annee",
+                        "nom"
+                      ]
+                    },
+                    "assignes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nom"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "titre",
+                    "statut",
+                    "enRetard",
+                    "jalon",
+                    "version",
+                    "creeLe",
+                    "modifieeLe",
+                    "perimetre",
+                    "edition",
+                    "assignes"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/taches/{id}/statut": {
+      "post": {
+        "operationId": "changerStatutTache",
+        "summary": "Change le statut d’une tâche. `statutAttendu` refuse d’écraser un changement fait entre-temps (409).",
+        "tags": [
+          "taches"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "statut": {
+                    "type": "string",
+                    "enum": [
+                      "ABANDONNEE",
+                      "A_FAIRE",
+                      "EN_COURS",
+                      "FAITE"
+                    ]
+                  },
+                  "statutAttendu": {
+                    "type": "string",
+                    "enum": [
+                      "ABANDONNEE",
+                      "A_FAIRE",
+                      "EN_COURS",
+                      "FAITE"
+                    ],
+                    "nullable": true
+                  },
+                  "realisateurs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "nullable": true
+                  },
+                  "confirmer": {
+                    "type": "boolean",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "statut"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "titre": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "statut": {
+                      "type": "string",
+                      "enum": [
+                        "ABANDONNEE",
+                        "A_FAIRE",
+                        "EN_COURS",
+                        "FAITE"
+                      ]
+                    },
+                    "echeance": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "enRetard": {
+                      "type": "boolean"
+                    },
+                    "jalon": {
+                      "type": "boolean",
+                      "description": "Vrai quand la tâche est un jalon (ADR 0062)."
+                    },
+                    "version": {
+                      "type": "integer",
+                      "description": "Nombre de modifications du contenu. `modifierTache` la reçoit en `versionAttendue`."
+                    },
+                    "creeLe": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "modifieeLe": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "termineeLe": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "perimetre": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "nom": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "nom"
+                      ]
+                    },
+                    "edition": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "annee": {
+                          "type": "integer"
+                        },
+                        "nom": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "annee",
+                        "nom"
+                      ]
+                    },
+                    "assignes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nom"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "titre",
+                    "statut",
+                    "enRetard",
+                    "jalon",
+                    "version",
+                    "creeLe",
+                    "modifieeLe",
+                    "perimetre",
+                    "edition",
+                    "assignes"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/taches/{id}/assignation": {
+      "post": {
+        "operationId": "assignerTache",
+        "summary": "Assigne une tâche à une personne affectée à son périmètre, ou l’en retire.",
+        "tags": [
+          "taches"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "assigne": {
+                    "type": "boolean"
+                  },
+                  "personneId": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "assigne"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "titre": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "statut": {
+                      "type": "string",
+                      "enum": [
+                        "ABANDONNEE",
+                        "A_FAIRE",
+                        "EN_COURS",
+                        "FAITE"
+                      ]
+                    },
+                    "echeance": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "enRetard": {
+                      "type": "boolean"
+                    },
+                    "jalon": {
+                      "type": "boolean",
+                      "description": "Vrai quand la tâche est un jalon (ADR 0062)."
+                    },
+                    "version": {
+                      "type": "integer",
+                      "description": "Nombre de modifications du contenu. `modifierTache` la reçoit en `versionAttendue`."
+                    },
+                    "creeLe": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "modifieeLe": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "termineeLe": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "perimetre": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "nom": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "nom"
+                      ]
+                    },
+                    "edition": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "annee": {
+                          "type": "integer"
+                        },
+                        "nom": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "annee",
+                        "nom"
+                      ]
+                    },
+                    "assignes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nom"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "titre",
+                    "statut",
+                    "enRetard",
+                    "jalon",
+                    "version",
+                    "creeLe",
+                    "modifieeLe",
+                    "perimetre",
+                    "edition",
+                    "assignes"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activites/{activiteId}/fiches": {
+      "get": {
+        "operationId": "fiches",
+        "summary": "Les fiches d’une activité que la personne lit, sans leur contenu.",
+        "tags": [
+          "fiches"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "activiteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "titre": {
+                        "type": "string"
+                      },
+                      "archive": {
+                        "type": "boolean"
+                      },
+                      "modifieeLe": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "perimetre": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "nom"
+                        ],
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "slug",
+                      "titre",
+                      "archive",
+                      "modifieeLe"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activites/{activiteId}/fiches/{slug}": {
+      "get": {
+        "operationId": "fiche",
+        "summary": "Une fiche et son contenu en Markdown, ou null.",
+        "tags": [
+          "fiches"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "activiteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "titre": {
+                      "type": "string"
+                    },
+                    "contenu": {
+                      "type": "string"
+                    },
+                    "archive": {
+                      "type": "boolean"
+                    },
+                    "modifieeLe": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "perimetre": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "nom": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "nom"
+                      ],
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "slug",
+                    "titre",
+                    "contenu",
+                    "archive",
+                    "modifieeLe"
+                  ],
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "jeton": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Un jeton d’accès `rt_…`."
+      }
+    },
+    "schemas": {
+      "Erreurs": {
+        "type": "object",
+        "required": [
+          "erreurs"
+        ],
+        "properties": {
+          "erreurs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "code",
+                "message"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "reference": {
+                  "type": "string",
+                  "description": "Référence d’une erreur interne, à citer au support."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

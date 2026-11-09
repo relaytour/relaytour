@@ -263,6 +263,8 @@ export interface JetonACreer {
   portee: PorteeJeton
   activiteIds: string[] | null
   expireLe: Date
+  /** Jetons actifs permis à la porteuse : 10 pour une personne, 5 pour un robot. */
+  max?: number
 }
 
 /**
@@ -286,12 +288,18 @@ export async function creerJetonAcces(
           expireLe: { gt: maintenant },
         },
       })
-      if (actifs >= JETONS_ACTIFS_MAX) {
+      const max = donnees.max ?? JETONS_ACTIFS_MAX
+      if (actifs >= max) {
         throw erreurSaisie(
-          i18n._(
-            'Vous avez déjà {max} jetons actifs dans cette organisation : révoquez-en un avant d’en créer un autre.',
-            { max: JETONS_ACTIFS_MAX }
-          )
+          donnees.max === undefined
+            ? i18n._(
+                'Vous avez déjà {max} jetons actifs dans cette organisation : révoquez-en un avant d’en créer un autre.',
+                { max }
+              )
+            : i18n._(
+                'Ce robot a déjà {max} jetons actifs : révoquez-en un avant d’en créer un autre.',
+                { max }
+              )
         )
       }
       return tx.jetonAcces.create({

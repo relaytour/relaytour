@@ -8,6 +8,7 @@
     "dev": "tsx watch --env-file=.env src/server.ts",
     "worker": "tsx watch --env-file=.env src/worker.ts",
     "schema:print": "tsx scripts/print-schema.ts",
+    "openapi:print": "tsx scripts/print-openapi.ts",
     "gabarits:print": "tsx scripts/gabarits-courriel.ts",
     "courriel:essai": "tsx --env-file=.env scripts/essai-courriel.ts",
     "admin:creer": "tsx --env-file=.env scripts/creer-admin.ts",

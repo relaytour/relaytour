@@ -41,6 +41,20 @@ L'API GraphQL contrôle déjà chaque champ selon la personne et son organisatio
 - Un jeton n'ouvre jamais plus que la session de la personne. Le contrôle des champs reste celui de l'API : un jeton ne crée aucun droit.
 - Une requête porteuse d'un jeton lit ses bornes par `jetonCourant`.
 
+### Les robots
+
+- Un robot est un membre de l'organisation sans connexion. Un admin de l'organisation le crée, avec sa session, pour une automatisation partagée : une synchronisation avec un outil de gestion de projet, un script d'équipe.
+- Le robot est un compte (`User.robot`), avec une appartenance de membre. Ses actions ont ainsi un auteur dans le journal, le fil d'une tâche et les notifications, comme celles d'une personne.
+- La création le rattache aux activités choisies. Il reçoit ensuite ses droits par les écrans existants : rattachements, affectations, rôle d'admin d'une activité. Il n'est jamais admin de l'organisation.
+- Son adresse est technique, dans le domaine réservé `.invalid` (RFC 2606) :
+  - l'envoi d'un mail vers une adresse `.invalid` n'a jamais lieu ;
+  - aucun code de connexion ne se prépare pour un robot ;
+  - une adresse `.invalid` est refusée partout où une personne entre par son adresse (invitation, import, formulaire public).
+- Un robot prend une place de membre (ADR 0058). Une organisation compte cinq robots actifs au plus.
+- Un admin de l'organisation crée et révoque les jetons d'un robot, cinq actifs au plus. Les activités d'un jeton de robot se vérifient contre celles que le robot voit, jamais contre celles de l'admin.
+- L'archivage d'un robot révoque ses jetons et libère sa place. Un robot archivé ne reçoit pas de jeton.
+- Un robot n'entre ni au classement (ADR 0056) ni à l'organigramme (ADR 0036). L'annuaire et l'équipe l'affichent avec l'étiquette « robot », sans adresse et sans bouton pour lui écrire.
+
 ### Ce qu'un jeton n'ouvre pas
 
 Un jeton ne remplace pas la session. Ces opérations exigent une session de l'espace organisateur :
@@ -66,6 +80,18 @@ Les notifications de l'organisation ne passent pas par les activités. Un jeton 
 - CORS ne change pas. Un jeton sert un programme, pas une page d'une autre origine.
 - L'introspection reste fermée en production. Le contrat publié `packages/server/schema.graphql` documente l'API.
 
+### API REST v1
+
+- Un outil qui ne parle pas GraphQL appelle l'API REST sous `/api/v1/`, avec le même jeton. Une session de l'espace organisateur ne l'ouvre pas : un cookie n'y est jamais lu.
+- Chaque route exécute un document GraphQL écrit dans `packages/server/src/api-rest/operations.ts`, sur le schéma de l'API, avec le contexte du jeton. Une route n'ouvre donc aucun droit que GraphQL n'ouvre pas.
+- La liste des routes est fermée. Elle couvre la personne et son jeton, les activités, les périodes, les périmètres et l'équipe, les tâches, les priorités, les commentaires et les fiches. Elle crée, modifie, assigne et commente une tâche, et change son statut.
+- Un document ne sélectionne que des champs lisibles par toute personne qui lit l'objet. L'équipe se rend sans adresses.
+- Une route lit ses paramètres dans le chemin, puis dans l'adresse pour `GET` ou dans un corps JSON d'un mégaoctet au plus pour `POST` et `PATCH`.
+- Une réponse réussie rend la valeur du champ racine, avec le statut 200, ou 201 pour une création. Une erreur rend `{ erreurs: [{ code, message }] }` avec un statut tiré du code : 400 saisie, 401 jeton, 403 accès, portée, API fermée ou lecture seule, 409 conflit, 422 limite, 429 débit, 500 erreur interne masquée avec sa référence.
+- `/api/v1/openapi.json` sert le contrat OpenAPI 3.0, sans jeton. Le contrat se calcule à partir des documents : une réponse décrit les champs sélectionnés, pas le type GraphQL entier. `packages/server/openapi.json` en est la copie commitée, vérifiée en CI comme `schema.graphql`.
+- Chaque document reste sous la limite de complexité du serveur (2 000 points), et un test le vérifie.
+- Le relais de l'exploitant transmet `/api/v1/*` comme `/graphql`.
+
 ### Sécurité
 
 - Un jeton accepté compte 120 requêtes par minute au plus. L'ouverture d'un flux des changements compte une requête, puis chaque relecture de ses droits en compte une autre.
@@ -80,20 +106,22 @@ Les notifications de l'organisation ne passent pas par les activités. Un jeton 
 
 - **Un jeton d'organisation sans compte.** Le journal, le fil d'une tâche, les notifications et le score attribuent chaque action à un compte. Un jeton sans compte demanderait un acteur fictif, ou des colonnes nulles dans toutes ces tables.
 - **OAuth dans Relaytour.** Chaque installation devrait enregistrer les programmes clients et tenir un serveur d'autorisation. Un jeton personnel suffit à une ligne de commande et à une automatisation. Un programme tiers peut proposer OAuth à ses propres utilisateurs.
+- **Une API REST générée pour tout le schéma (Sofa).** La bibliothèque `sofa-api` crée une route par champ racine, choisit elle-même les champs rendus et ouvre des routes de webhook. Une seule erreur de champ fait alors échouer toute la réponse, et le contrat décrit chaque type GraphQL entier. Une liste fermée de documents écrits à la main garde des réponses exactes et un contrat lisible.
 - **Un jeton sans date de fin.** Un jeton oublié resterait valable. La date de fin d'un an borne le risque d'une fuite.
 - **Des droits fins par opération.** Les droits de la personne existent déjà, champ par champ. Une liste d'opérations par jeton serait une seconde politique d'accès à tenir.
 
 ## Conséquences
 
-- Une migration additive ajoute cinq colonnes à `Organisation` et la table `JetonAcces`. Après un retour à une version antérieure, les jetons cessent de répondre et aucune donnée ne se perd.
+- Deux migrations additives ajoutent cinq colonnes à `Organisation`, la table `JetonAcces` et la colonne `User.robot`. Après un retour à une version antérieure, les jetons cessent de répondre, un robot devient un compte ordinaire sans connexion, et aucune donnée ne se perd.
 - Un admin de l'organisation qui n'active pas le module ne change rien à son organisation.
 - Une opération nouvelle qui touche au compte, à un secret ou à un appareil exige `session` dans ses `authScopes`. Une lecture nouvelle de toute l'organisation, hors des activités, exige `toutesActivites`.
-- Une opération nouvelle qui reçoit un identifiant entre dans la table des refus croisés, comme aujourd'hui. Le garde-fou couvre `creerJetonAcces` et `revoquerJetonAcces`.
+- Une opération nouvelle qui reçoit un identifiant entre dans la table des refus croisés, comme aujourd'hui. Le garde-fou couvre `creerJetonAcces`, `revoquerJetonAcces`, `creerRobot`, `creerJetonRobot` et `revoquerJetonRobot`.
+- Toute nouvelle façon de faire entrer une personne par son adresse passe par `adresseValide`, qui refuse le domaine `.invalid`.
 - Les webhooks sortants restent hors de cette décision (feuille de route).
 
 ## Revue de sécurité
 
-Les tests prouvent chaque contrôle par le refus (`jetons-acces.integration.test.ts`, `refus-croises.integration.test.ts`) :
+Les tests prouvent chaque contrôle par le refus (`jetons-acces.integration.test.ts`, `robots.integration.test.ts`, `api-rest.integration.test.ts`, `refus-croises.integration.test.ts`) :
 
 - un module inactif, interdit ou suspendu refuse la création et l'usage des jetons, avec sa cause ;
 - un jeton en lecture refuse une mutation ;
@@ -104,12 +132,16 @@ Les tests prouvent chaque contrôle par le refus (`jetons-acces.integration.test
 - une personne ne révoque pas le jeton d'une autre ;
 - la suspension et l'archivage révoquent les jetons ;
 - le journal ne reçoit jamais un jeton ;
-- la route GraphQL répond 401, 403 ou 429 avant toute exécution.
+- la route GraphQL répond 401, 403 ou 429 avant toute exécution ;
+- l'API REST refuse une requête sans jeton, même avec un cookie, et rend chaque refus avec son statut ;
+- une référente, un jeton ou un admin d'une autre organisation ne crée ni robot ni jeton de robot ;
+- un robot prend une place de membre, ne devient pas admin de l'organisation, n'entre pas par son adresse et ne reçoit aucun mail ;
+- les activités d'un jeton de robot se vérifient contre celles du robot.
 
 ## Plan de mise en œuvre
 
 1. Serveur : module, jetons, contexte, scopes, administration de l'installation, tests (cette ADR, statut proposée).
 2. Espace organisateur : panneau « Jetons et API » des préférences, entrée du menu du compte, panneau « API » de l'écran « Organisation ».
-3. API REST v1 générée depuis le schéma, sur une liste choisie d'opérations, avec son contrat OpenAPI commité. Elle demande une ligne de relais `/api/v1/*` chez l'exploitant.
-4. Robots : des membres sans connexion, créés par un admin de l'organisation, qui portent des jetons pour une automatisation partagée.
+3. API REST v1 sur une liste fermée de documents GraphQL, avec son contrat OpenAPI calculé et commité. Elle demande une ligne de relais `/api/v1/*` chez l'exploitant.
+4. Robots : des membres sans connexion, créés par un admin de l'organisation, qui portent des jetons pour une automatisation partagée. Ils se gèrent sous le panneau « API » de l'écran « Organisation ».
 5. Mode d'emploi de l'API, glossaire, et passage de l'ADR à « acceptée ».

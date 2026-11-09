@@ -34,6 +34,7 @@ import {
 } from '../lib/invitations.ts'
 import { journal } from '../lib/journal.ts'
 import { revoquerJetonsDe } from '../lib/jetons-acces.ts'
+import { exigerPlaceRobot } from '../lib/robots.ts'
 import { i18n } from '../lib/langue.ts'
 import { limiterParCle } from '../lib/limite.ts'
 import { placesMembres } from '../lib/limites.ts'
@@ -100,6 +101,10 @@ export const PersonneRef = builder.prismaObject('User', {
   fields: t => ({
     id: t.exposeID('id'),
     nom: t.exposeString('name'),
+    robot: t.exposeBoolean('robot', {
+      description:
+        'Vrai pour un robot : un membre sans connexion qui porte les jetons d’accès d’une automatisation (ADR 0064).',
+    }),
     // L'adresse se lit par la personne elle-même, par un admin de l'organisation et
     // par un admin d'une activité dont elle fait partie de l'équipe (ADR 0018). Le
     // rôle d'admin d'une autre activité ne l'ouvre pas. Un admin de l'organisation
@@ -732,6 +737,10 @@ builder.mutationFields(t => ({
           i18n._('Cette personne est archivée dans votre organisation.')
         )
       }
+      // Un robot ne se connecte jamais : il ne reçoit pas d'invitation (ADR 0064).
+      if (membre.robot) {
+        throw erreurSaisie(i18n._('Un robot ne reçoit pas d’invitation.'))
+      }
       const personne = { id: String(id) }
       // Une relance par personne et par heure : un admin ne peut pas inonder une boîte.
       if (
@@ -777,6 +786,12 @@ builder.mutationFields(t => ({
         )
       }
       const membre = await exigerMembre(ctx, id)
+      // Un robot n'est jamais admin de l'organisation (ADR 0064).
+      if (args.estAdmin && membre.robot) {
+        throw erreurSaisie(
+          i18n._('Un robot ne peut pas être admin de l’organisation.')
+        )
+      }
       // Une personne archivée ne devient pas admin : elle se rétablit d'abord.
       if (args.estAdmin && membre.role !== 'ADMIN') refuserArchivee(membre)
       const nom = texteRequis(args.nom, i18n._('Le nom'))
@@ -904,7 +919,7 @@ builder.mutationFields(t => ({
       // organisation, son compte et ses autres organisations ne changent pas.
       // Aucune session n'est fermée : le contexte relit l'appartenance à chaque
       // requête, et l'accès à l'organisation tombe à la suivante.
-      await exigerMembre(ctx, id)
+      const membre = await exigerMembre(ctx, id)
       const organisationId = ctx.organisation!.id
       const instant = new Date()
       const change = await prisma.$transaction(async tx => {
@@ -915,6 +930,11 @@ builder.mutationFields(t => ({
         const places = args.archive
           ? null
           : await placesMembres(tx, organisationId, instant)
+        // Rétablir un robot respecte aussi le plafond des robots actifs (ADR 0064).
+        // `placesMembres` a déjà pris le verrou de l'organisation.
+        if (!args.archive && membre.robot && membre.archive) {
+          await exigerPlaceRobot(tx, organisationId)
+        }
         // Une personne déjà archivée garde la date de son archivage.
         const { count } = await tx.appartenance.updateMany({
           where: {

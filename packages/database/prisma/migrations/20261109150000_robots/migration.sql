@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `User` ADD COLUMN `robot` BOOLEAN NOT NULL DEFAULT false;
+

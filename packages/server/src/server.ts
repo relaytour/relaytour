@@ -15,6 +15,7 @@ import {
   ENTETE_ORGANISATION,
   type AppContext,
 } from './context.ts'
+import { routeurApiRest } from './api-rest/routeur.ts'
 import {
   contexteDeJetonAcces,
   creerRefusDeJetonAcces,
@@ -38,6 +39,7 @@ import { fermerLesFlux } from './lib/flux.ts'
 import { PREFIXE_JETON } from './lib/jetons-acces.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
+import { versionInstallation } from './lib/notes-de-version.ts'
 import { avecLangue, langueDe, languesDuNavigateur } from './lib/langue.ts'
 import { formaterErreur } from './lib/erreurs.ts'
 import { limiterParCle, rendreTentative } from './lib/limite.ts'
@@ -432,6 +434,27 @@ const originesOrga = [
 ]
 routeDepotContenu(app, contexteSansJeton, originesOrga)
 routeDepotFiches(app, contexteSansJeton, originesOrga)
+
+// API REST v1 (ADR 0064) : un jeton d'accès seul l'ouvre, jamais une session. Le
+// relais de l'exploitant transmet /api/v1/* comme /graphql.
+app.use(
+  '/api/v1',
+  (req, _res, suite) =>
+    avecLangue(
+      langueDe(null, null, languesDuNavigateur(req.get('accept-language'))),
+      suite
+    ),
+  routeurApiRest({
+    schema,
+    version: versionInstallation(),
+    contexte: (req, jeton) =>
+      contexteDeJetonAcces(
+        adresseClient(req),
+        jeton,
+        req.get(ENTETE_ACTIVITE)?.trim() || null
+      ),
+  })
+)
 
 // Un jeton d'accès refusé reçoit son statut HTTP avant toute exécution (ADR 0064).
 // Le contexte calculé sert ensuite à Apollo, sans second calcul.
