@@ -3914,3 +3914,18 @@ msgstr "Vous retrouvez vos places et leurs consignes dans votre espace."
 #: src/courriel/messages.ts
 msgid "Votre lien personnel reste le même."
 msgstr "Votre lien personnel reste le même."
+
+#. js-lingui-explicit-id
+#: src/api-rest/routeur.ts
+msgid "Cette route demande un jeton d’accès dans l’en-tête « Authorization: Bearer »."
+msgstr "Cette route demande un jeton d’accès dans l’en-tête « Authorization: Bearer »."
+
+#. js-lingui-explicit-id
+#: src/api-rest/routeur.ts
+msgid "Cette route n’existe pas dans l’API REST v1."
+msgstr "Cette route n’existe pas dans l’API REST v1."
+
+#. js-lingui-explicit-id
+#: src/api-rest/routeur.ts
+msgid "Le corps de la requête doit être un objet JSON de 1 Mo au plus."
+msgstr "Le corps de la requête doit être un objet JSON de 1 Mo au plus."

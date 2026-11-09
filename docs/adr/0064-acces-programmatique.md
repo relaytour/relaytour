@@ -66,6 +66,18 @@ Les notifications de l'organisation ne passent pas par les activités. Un jeton 
 - CORS ne change pas. Un jeton sert un programme, pas une page d'une autre origine.
 - L'introspection reste fermée en production. Le contrat publié `packages/server/schema.graphql` documente l'API.
 
+### API REST v1
+
+- Un outil qui ne parle pas GraphQL appelle l'API REST sous `/api/v1/`, avec le même jeton. Une session de l'espace organisateur ne l'ouvre pas : un cookie n'y est jamais lu.
+- Chaque route exécute un document GraphQL écrit dans `packages/server/src/api-rest/operations.ts`, sur le schéma de l'API, avec le contexte du jeton. Une route n'ouvre donc aucun droit que GraphQL n'ouvre pas.
+- La liste des routes est fermée. Elle couvre la personne et son jeton, les activités, les périodes, les périmètres et l'équipe, les tâches, les priorités, les commentaires et les fiches. Elle crée, modifie, assigne et commente une tâche, et change son statut.
+- Un document ne sélectionne que des champs lisibles par toute personne qui lit l'objet. L'équipe se rend sans adresses.
+- Une route lit ses paramètres dans le chemin, puis dans l'adresse pour `GET` ou dans un corps JSON d'un mégaoctet au plus pour `POST` et `PATCH`.
+- Une réponse réussie rend la valeur du champ racine, avec le statut 200, ou 201 pour une création. Une erreur rend `{ erreurs: [{ code, message }] }` avec un statut tiré du code : 400 saisie, 401 jeton, 403 accès, portée, API fermée ou lecture seule, 409 conflit, 422 limite, 429 débit, 500 erreur interne masquée avec sa référence.
+- `/api/v1/openapi.json` sert le contrat OpenAPI 3.0, sans jeton. Le contrat se calcule à partir des documents : une réponse décrit les champs sélectionnés, pas le type GraphQL entier. `packages/server/openapi.json` en est la copie commitée, vérifiée en CI comme `schema.graphql`.
+- Chaque document reste sous la limite de complexité du serveur (2 000 points), et un test le vérifie.
+- Le relais de l'exploitant transmet `/api/v1/*` comme `/graphql`.
+
 ### Sécurité
 
 - Un jeton accepté compte 120 requêtes par minute au plus. L'ouverture d'un flux des changements compte une requête, puis chaque relecture de ses droits en compte une autre.
@@ -80,6 +92,7 @@ Les notifications de l'organisation ne passent pas par les activités. Un jeton 
 
 - **Un jeton d'organisation sans compte.** Le journal, le fil d'une tâche, les notifications et le score attribuent chaque action à un compte. Un jeton sans compte demanderait un acteur fictif, ou des colonnes nulles dans toutes ces tables.
 - **OAuth dans Relaytour.** Chaque installation devrait enregistrer les programmes clients et tenir un serveur d'autorisation. Un jeton personnel suffit à une ligne de commande et à une automatisation. Un programme tiers peut proposer OAuth à ses propres utilisateurs.
+- **Une API REST générée pour tout le schéma (Sofa).** La bibliothèque `sofa-api` crée une route par champ racine, choisit elle-même les champs rendus et ouvre des routes de webhook. Une seule erreur de champ fait alors échouer toute la réponse, et le contrat décrit chaque type GraphQL entier. Une liste fermée de documents écrits à la main garde des réponses exactes et un contrat lisible.
 - **Un jeton sans date de fin.** Un jeton oublié resterait valable. La date de fin d'un an borne le risque d'une fuite.
 - **Des droits fins par opération.** Les droits de la personne existent déjà, champ par champ. Une liste d'opérations par jeton serait une seconde politique d'accès à tenir.
 
@@ -110,6 +123,6 @@ Les tests prouvent chaque contrôle par le refus (`jetons-acces.integration.test
 
 1. Serveur : module, jetons, contexte, scopes, administration de l'installation, tests (cette ADR, statut proposée).
 2. Espace organisateur : panneau « Jetons et API » des préférences, entrée du menu du compte, panneau « API » de l'écran « Organisation ».
-3. API REST v1 générée depuis le schéma, sur une liste choisie d'opérations, avec son contrat OpenAPI commité. Elle demande une ligne de relais `/api/v1/*` chez l'exploitant.
+3. API REST v1 sur une liste fermée de documents GraphQL, avec son contrat OpenAPI calculé et commité. Elle demande une ligne de relais `/api/v1/*` chez l'exploitant.
 4. Robots : des membres sans connexion, créés par un admin de l'organisation, qui portent des jetons pour une automatisation partagée.
 5. Mode d'emploi de l'API, glossaire, et passage de l'ADR à « acceptée ».

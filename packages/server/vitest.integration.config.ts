@@ -1,4 +1,10 @@
+import { createRequire } from 'node:module'
+
 import { defineConfig } from 'vitest/config'
+
+// Une seule copie de graphql : Vite préférerait sa version ESM, que Pothos et Apollo
+// ne chargent pas. Le schéma et l'API REST (ADR 0064) partagent ainsi leurs classes.
+const graphql = createRequire(import.meta.url).resolve('graphql')
 
 // Tests d'intégration : une vraie MariaDB est requise (DATABASE_URL).
 // La CI monte un service dédié ; le poste local utilise sa base de développement.
@@ -16,6 +22,7 @@ process.env.CLE_CHIFFREMENT_ESPACE_FICHIERS ||= Buffer.alloc(32, 7).toString(
 process.env.NEXTCLOUD_HOTES ||= '*'
 
 export default defineConfig({
+  resolve: { alias: [{ find: /^graphql$/, replacement: graphql }] },
   test: {
     environment: 'node',
     include: ['src/**/*.integration.test.ts'],

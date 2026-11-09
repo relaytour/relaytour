@@ -3914,3 +3914,18 @@ msgstr "You will find your places and their instructions on your volunteer page.
 #: src/courriel/messages.ts
 msgid "Votre lien personnel reste le même."
 msgstr "Your personal link stays the same."
+
+#. js-lingui-explicit-id
+#: src/api-rest/routeur.ts
+msgid "Cette route demande un jeton d’accès dans l’en-tête « Authorization: Bearer »."
+msgstr "This route requires an access token in the “Authorization: Bearer” header."
+
+#. js-lingui-explicit-id
+#: src/api-rest/routeur.ts
+msgid "Cette route n’existe pas dans l’API REST v1."
+msgstr "This route does not exist in the REST API v1."
+
+#. js-lingui-explicit-id
+#: src/api-rest/routeur.ts
+msgid "Le corps de la requête doit être un objet JSON de 1 Mo au plus."
+msgstr "The request body must be a JSON object of 1 MB at most."
