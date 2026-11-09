@@ -430,11 +430,17 @@ export async function composer(
     )
     variables.propositionModele =
       proposition === null
-        ? ''
-        : i18n._(
-            'Le modèle de notifications « {modele} » correspond à votre rôle. Vous pouvez l’appliquer dans vos préférences : {lien}',
-            { modele: libelleModele(proposition), lien: lienPreferences }
-          )
+        ? []
+        : [
+            {
+              paragraphe: i18n._(
+                'Le modèle de notifications « {modele} » correspond à votre rôle.',
+                { modele: libelleModele(proposition) }
+              ),
+              libelleLien: i18n._('Appliquer ce modèle dans vos préférences'),
+              lien: lienPreferences,
+            },
+          ]
   }
 
   if (job.sorte === 'demandes') {

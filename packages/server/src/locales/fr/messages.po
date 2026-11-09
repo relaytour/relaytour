@@ -3591,8 +3591,13 @@ msgstr "Vous faites partie de l’équipe de ces périmètres :"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
-msgid "Le modèle de notifications « {modele} » correspond à votre rôle. Vous pouvez l’appliquer dans vos préférences : {lien}"
-msgstr "Le modèle de notifications « {modele} » correspond à votre rôle. Vous pouvez l’appliquer dans vos préférences : {lien}"
+msgid "Le modèle de notifications « {modele} » correspond à votre rôle."
+msgstr "Le modèle de notifications « {modele} » correspond à votre rôle."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Appliquer ce modèle dans vos préférences"
+msgstr "Appliquer ce modèle dans vos préférences"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts

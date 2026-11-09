@@ -20,10 +20,7 @@
           [[Votre place dans l’équipe d’organisation a changé.]]
         </mj-text>
         <mj-text>
-          {{changements}}
-        </mj-text>
-        <mj-text>
-          {{propositionModele}}
+          {{changements}}{{propositionModele}}
         </mj-text>
         <mj-text>
           [[Vos périmètres, vos tâches et leurs fiches méthode vous attendent dans l’espace organisateur.]]
