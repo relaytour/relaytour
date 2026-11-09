@@ -26,6 +26,20 @@
           }
         },
         {
+          "id": "2026-11-09-orga-le-site-publie-le-mode-d-emploi-de-l-api",
+          "date": "2026-11-09",
+          "type": "interne",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le site publie le mode d'emploi de l'API",
+            "texte": "Le mode d'emploi « Utiliser l'API » décrit l'activation du module, la création d'un jeton d'accès, les appels aux API GraphQL et REST, les codes d'erreur, les limites de débit et les robots, en français et en anglais (ADR 0064). Les captures du site montrent le panneau « Jetons et API » et le panneau « API pour les programmes tiers », sur ordinateur et sur téléphone. CONTRIBUTING.md gagne la décision arrêtée « Accès programmatique » et quatre entrées du glossaire.",
+            "migration": null
+          },
+          "en": null
+        },
+        {
           "id": "2026-11-09-orga-des-robots-pour-les-automatisations-de-l-organisation",
           "date": "2026-11-09",
           "type": "fonctionnalite",
