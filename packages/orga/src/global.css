@@ -3303,6 +3303,31 @@ button.rt-agenda-evenement {
   overflow-wrap: anywhere;
 }
 
+.rt-robots {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rt-encre-08);
+}
+
+.rt-robot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--rt-encre-08);
+  border-radius: 12px;
+}
+
+.rt-robot-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 #jetons {
   scroll-margin-top: 80px;
 }

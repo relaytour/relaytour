@@ -1703,6 +1703,10 @@ msgstr "Activités absentes de l’archive (gardées) :"
 msgid "Activités du jeton"
 msgstr "Activités du jeton"
 
+#: src/composants/RobotsApi.tsx
+msgid "Activités du robot"
+msgstr "Activités du robot"
+
 #: src/pages/Fiche.tsx
 msgid "Actuelle"
 msgstr "Actuelle"
@@ -2076,6 +2080,7 @@ msgstr "Annulée"
 #: src/composants/Repartition.tsx
 #: src/composants/RessourcesFiche.tsx
 #: src/composants/ReunionFormulaire.tsx
+#: src/composants/RobotsApi.tsx
 #: src/composants/SequenceDetail.tsx
 #: src/composants/SequenceFormulaire.tsx
 #: src/composants/SondageDetail.tsx
@@ -2212,6 +2217,10 @@ msgstr "Après l’ouverture, cette fenêtre propose de copier les adresses."
 msgid "Arbitrage"
 msgstr "Arbitrage"
 
+#: src/composants/RobotsApi.tsx
+msgid "archivé"
+msgstr "archivé"
+
 #. Statut d’un lieu mis de côté
 #: src/composants/LieuxFenetre.tsx
 #: src/composants/ReglagePerimetre.tsx
@@ -2226,6 +2235,7 @@ msgstr "Archivé"
 msgid "Archivée"
 msgstr "Archivée"
 
+#: src/composants/RobotsApi.tsx
 #: src/pages/admin/Personnes.tsx
 msgid "Archiver"
 msgstr "Archiver"
@@ -2241,6 +2251,10 @@ msgstr "Archiver cette personne ?"
 #: src/composants/LieuxFenetre.tsx
 msgid "Archiver le lieu"
 msgstr "Archiver le lieu"
+
+#: src/composants/RobotsApi.tsx
+msgid "Archiver le robot « {nomRobot} » ?"
+msgstr "Archiver le robot « {nomRobot} » ?"
 
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Arrêter"
@@ -2443,6 +2457,10 @@ msgstr "Aucune activité"
 #: src/composants/FournisseurActivite.tsx
 msgid "Aucune activité ne vous est encore ouverte."
 msgstr "Aucune activité ne vous est encore ouverte."
+
+#: src/composants/RobotsApi.tsx
+msgid "Aucune activité."
+msgstr "Aucune activité."
 
 #: src/pages/admin/Organisation.tsx
 msgid "Aucune adresse de contact n’est déclarée."
@@ -3838,6 +3856,10 @@ msgstr "Créer le dossier d’export ici"
 msgid "Créer le jeton"
 msgstr "Créer le jeton"
 
+#: src/composants/RobotsApi.tsx
+msgid "Créer le robot"
+msgstr "Créer le robot"
+
 #: src/composants/PremiersPas.tsx
 msgid "Créer les périmètres"
 msgstr "Créer les périmètres"
@@ -3845,6 +3867,10 @@ msgstr "Créer les périmètres"
 #: src/composants/AbonnementAgenda.tsx
 msgid "Créer mon adresse"
 msgstr "Créer mon adresse"
+
+#: src/composants/RobotsApi.tsx
+msgid "Créer un jeton"
+msgstr "Créer un jeton"
 
 #: src/pages/ImportBenevoles.tsx
 msgid "Créer une fiche"
@@ -4131,6 +4157,7 @@ msgid "Dernier jour de la phase : aucun, la dernière phase reçoit tout ce qui 
 msgstr "Dernier jour de la phase : aucun, la dernière phase reçoit tout ce qui suit"
 
 #: src/composants/PreferenceJetons.tsx
+#: src/composants/RobotsApi.tsx
 msgid "Dernier usage le {dernier}."
 msgstr "Dernier usage le {dernier}."
 
@@ -4794,10 +4821,12 @@ msgid "Exemples"
 msgstr "Exemples"
 
 #: src/composants/PreferenceJetons.tsx
+#: src/composants/RobotsApi.tsx
 msgid "Expiré"
 msgstr "Expiré"
 
 #: src/composants/PreferenceJetons.tsx
+#: src/composants/RobotsApi.tsx
 msgid "Expiré le {fin}."
 msgstr "Expiré le {fin}."
 
@@ -5578,6 +5607,7 @@ msgid "Jamais"
 msgstr "Jamais"
 
 #: src/composants/PreferenceJetons.tsx
+#: src/composants/RobotsApi.tsx
 msgid "Jamais utilisé."
 msgstr "Jamais utilisé."
 
@@ -6506,6 +6536,10 @@ msgstr "Le groupe de la ligne ne porte ni nom, ni adresse, ni téléphone."
 msgid "Le gymnase ouvre à 8 h."
 msgstr "Le gymnase ouvre à 8 h."
 
+#: src/composants/RobotsApi.tsx
+msgid "Le jeton cesse aussitôt de servir."
+msgstr "Le jeton cesse aussitôt de servir."
+
 #: src/composants/PreferenceJetons.tsx
 msgid "Le jeton cesse aussitôt de servir. Le programme qui l’utilise perd son accès."
 msgstr "Le jeton cesse aussitôt de servir. Le programme qui l’utilise perd son accès."
@@ -6691,6 +6725,10 @@ msgstr "Le résumé reprend aussi vos notifications d’admin non lues, dans une
 msgid "Le rétroplanning n’a pas pu être chargé."
 msgstr "Le rétroplanning n’a pas pu être chargé."
 
+#: src/composants/RobotsApi.tsx
+msgid "Le robot reprend une place de membre. Ses anciens jetons restent révoqués."
+msgstr "Le robot reprend une place de membre. Ses anciens jetons restent révoqués."
+
 #: src/pages/admin/Redaction.tsx
 msgid "Le rôle d’admin donne déjà la rédaction des fiches. Il se modifie depuis l’écran Admins."
 msgstr "Le rôle d’admin donne déjà la rédaction des fiches. Il se modifie depuis l’écran Admins."
@@ -6784,11 +6822,13 @@ msgid "Lecture"
 msgstr "Lecture"
 
 #: src/composants/PreferenceJetons.tsx
+#: src/composants/RobotsApi.tsx
 msgid "Lecture et écriture"
 msgstr "Lecture et écriture"
 
 #: src/composants/FichesConnexes.tsx
 #: src/composants/PreferenceJetons.tsx
+#: src/composants/RobotsApi.tsx
 msgid "Lecture seule"
 msgstr "Lecture seule"
 
@@ -6827,6 +6867,10 @@ msgstr "Les admins rédigent toutes les fiches. Les autres personnes ont besoin 
 #: src/pages/admin/Activites.tsx
 msgid "Les admins, les contacts principaux, les référentes et les référents."
 msgstr "Les admins, les contacts principaux, les référentes et les référents."
+
+#: src/composants/RobotsApi.tsx
+msgid "Les affectations et le rôle d’admin d’une activité se donnent depuis l’écran « Équipe » de chaque activité, comme pour une personne."
+msgstr "Les affectations et le rôle d’admin d’une activité se donnent depuis l’écran « Équipe » de chaque activité, comme pour une personne."
 
 #: src/composants/SequenceFormulaire.tsx
 msgid "Les appels à bénévoles proposent la séquence tant que ce nombre n’est pas atteint. Les responsables n’y comptent pas."
@@ -7848,9 +7892,17 @@ msgstr "nom de la période"
 msgid "Nom du jeton"
 msgstr "Nom du jeton"
 
+#: src/composants/RobotsApi.tsx
+msgid "Nom du jeton du robot"
+msgstr "Nom du jeton du robot"
+
 #: src/composants/PreferenceJetons.tsx
 msgid "Nom du jeton, par exemple « script d’import »"
 msgstr "Nom du jeton, par exemple « script d’import »"
+
+#: src/composants/RobotsApi.tsx
+msgid "Nom du jeton, par exemple « synchronisation »"
+msgstr "Nom du jeton, par exemple « synchronisation »"
 
 #: src/composants/LieuxFenetre.tsx
 msgid "Nom du lieu"
@@ -7859,6 +7911,14 @@ msgstr "Nom du lieu"
 #: src/lib/messages.ts
 msgid "nom du périmètre"
 msgstr "nom du périmètre"
+
+#: src/composants/RobotsApi.tsx
+msgid "Nom du robot"
+msgstr "Nom du robot"
+
+#: src/composants/RobotsApi.tsx
+msgid "Nom du robot, par exemple « Synchronisation »"
+msgstr "Nom du robot, par exemple « Synchronisation »"
 
 #: src/pages/Preferences.tsx
 msgid "Nom enregistré."
@@ -9457,6 +9517,14 @@ msgstr "Résumé de la modification (facultatif)"
 msgid "Résumé par mail"
 msgstr "Résumé par mail"
 
+#: src/composants/RobotsApi.tsx
+msgid "Rétablir"
+msgstr "Rétablir"
+
+#: src/composants/RobotsApi.tsx
+msgid "Rétablir le robot « {nomRobot} » ?"
+msgstr "Rétablir le robot « {nomRobot} » ?"
+
 #: src/composants/SondageDetail.tsx
 msgid "Retenir ce créneau"
 msgstr "Retenir ce créneau"
@@ -9687,17 +9755,24 @@ msgid "Revenir aux dossiers"
 msgstr "Revenir aux dossiers"
 
 #: src/composants/PreferenceJetons.tsx
+#: src/composants/RobotsApi.tsx
 msgid "Révoqué"
 msgstr "Révoqué"
 
 #: src/composants/PreferenceJetons.tsx
+#: src/composants/RobotsApi.tsx
 msgid "Révoqué."
 msgstr "Révoqué."
 
 #: src/composants/AbonnementAgenda.tsx
 #: src/composants/PreferenceJetons.tsx
+#: src/composants/RobotsApi.tsx
 msgid "Révoquer"
 msgstr "Révoquer"
+
+#: src/composants/RobotsApi.tsx
+msgid "Révoquer ce jeton du robot ?"
+msgstr "Révoquer ce jeton du robot ?"
 
 #: src/composants/AbonnementAgenda.tsx
 msgid "Révoquer l’abonnement de l’activité ?"
@@ -9710,6 +9785,18 @@ msgstr "Révoquer le jeton « {libelle} » ?"
 #: src/composants/AbonnementAgenda.tsx
 msgid "Révoquer votre abonnement ?"
 msgstr "Révoquer votre abonnement ?"
+
+#: src/pages/admin/Personnes.tsx
+msgid "robot"
+msgstr "robot"
+
+#: src/composants/RobotsApi.tsx
+msgid "Robot créé."
+msgstr "Robot créé."
+
+#: src/composants/RobotsApi.tsx
+msgid "Robots"
+msgstr "Robots"
 
 #. Colonne de l’annuaire
 #. En-tête de colonne d’un tableau d’exemple : rôle d’un bénévole
@@ -9990,6 +10077,14 @@ msgstr "Séquence supprimée."
 #: src/pages/ImportBenevoles.tsx
 msgid "Séquences"
 msgstr "Séquences"
+
+#: src/composants/RobotsApi.tsx
+msgid "Ses activités"
+msgstr "Ses activités"
+
+#: src/composants/RobotsApi.tsx
+msgid "Ses jetons sont révoqués aussitôt, et sa place de membre se libère."
+msgstr "Ses jetons sont révoqués aussitôt, et sa place de membre se libère."
 
 #: src/composants/PreferenceJetons.tsx
 msgid "Seulement ces activités"
@@ -10899,6 +10994,10 @@ msgstr "Un programme envoie le jeton dans l’en-tête « Authorization: Bearer 
 msgid "Un retrait attend toujours la décision d’un admin. Relaytour ne retire que les accès qu’il a lui-même créés."
 msgstr "Un retrait attend toujours la décision d’un admin. Relaytour ne retire que les accès qu’il a lui-même créés."
 
+#: src/composants/RobotsApi.tsx
+msgid "Un robot porte les jetons d’une automatisation partagée, comme une synchronisation avec un outil de gestion de projet. Il n’a pas d’adresse, ne se connecte jamais et ne reçoit aucun mail. Il reçoit ses droits comme une personne : activités, affectations, rôle d’admin d’une activité. Il prend une place de membre."
+msgstr "Un robot porte les jetons d’une automatisation partagée, comme une synchronisation avec un outil de gestion de projet. Il n’a pas d’adresse, ne se connecte jamais et ne reçoit aucun mail. Il reçoit ses droits comme une personne : activités, affectations, rôle d’admin d’une activité. Il prend une place de membre."
+
 #: src/pages/Preferences.tsx
 msgid "Un seul mail pour la semaine."
 msgstr "Un seul mail pour la semaine."
@@ -11156,6 +11255,7 @@ msgid "Valable {jours} jours"
 msgstr "Valable {jours} jours"
 
 #: src/composants/PreferenceJetons.tsx
+#: src/composants/RobotsApi.tsx
 msgid "Valable jusqu’au {fin}."
 msgstr "Valable jusqu’au {fin}."
 

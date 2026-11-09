@@ -750,6 +750,7 @@ msgstr "A token covers {max} activities at most."
 
 #. js-lingui-explicit-id
 #: src/schema/jetons-acces.ts
+#: src/schema/robots.ts
 msgid "Le nom du jeton"
 msgstr "The token name"
 
@@ -852,6 +853,11 @@ msgstr "This person is archived in your organization."
 
 #. js-lingui-explicit-id
 #: src/schema/personnes.ts
+msgid "Un robot ne reçoit pas d’invitation."
+msgstr "A robot does not receive invitations."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
 msgid "Cette personne a déjà été relancée il y a moins d’une heure."
 msgstr "This person was already sent a reminder less than an hour ago."
 
@@ -859,6 +865,11 @@ msgstr "This person was already sent a reminder less than an hour ago."
 #: src/schema/personnes.ts
 msgid "Vous ne pouvez pas retirer vos propres droits d’admin."
 msgstr "You cannot remove your own admin rights."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Un robot ne peut pas être admin de l’organisation."
+msgstr "A robot cannot be an organization admin."
 
 #. js-lingui-explicit-id
 #: src/schema/personnes.ts
@@ -1040,6 +1051,26 @@ msgstr "This meeting is canceled."
 #: src/schema/sondages.ts
 msgid "Cette période est archivée : son agenda est en lecture seule."
 msgstr "This period is archived: its calendar is read-only."
+
+#. js-lingui-explicit-id
+#: src/schema/robots.ts
+msgid "Le nom du robot"
+msgstr "The robot name"
+
+#. js-lingui-explicit-id
+#: src/schema/robots.ts
+msgid "Choisissez au moins une activité."
+msgstr "Choose at least one activity."
+
+#. js-lingui-explicit-id
+#: src/schema/robots.ts
+msgid "Ce robot est archivé : rétablissez-le avant de lui créer un jeton."
+msgstr "This robot is archived: restore it before creating a token for it."
+
+#. js-lingui-explicit-id
+#: src/schema/robots.ts
+msgid "Choisissez au moins une activité, ou laissez le jeton ouvert à toutes les activités du robot."
+msgstr "Choose at least one activity, or leave the token open to all the robot’s activities."
 
 #. js-lingui-explicit-id
 #: src/schema/sondages.ts
@@ -2203,6 +2234,11 @@ msgid "Vous avez déjà {max} jetons actifs dans cette organisation : révoquez-
 msgstr "You already have {max} active tokens in this organization: revoke one before creating another."
 
 #. js-lingui-explicit-id
+#: src/lib/jetons-acces.ts
+msgid "Ce robot a déjà {max} jetons actifs : révoquez-en un avant d’en créer un autre."
+msgstr "This robot already has {max} active tokens: revoke one before creating another."
+
+#. js-lingui-explicit-id
 #: src/lib/limites.ts
 msgid "{activites, plural, one {Votre organisation a atteint sa limite de # activité. Archivez une activité ou demandez une limite plus haute.} other {Votre organisation a atteint sa limite de # activités. Archivez une activité ou demandez une limite plus haute.}}"
 msgstr "{activites, plural, one {Your organization has reached its limit of # activity. Archive an activity or ask for a higher limit.} other {Your organization has reached its limit of # activities. Archive an activity or ask for a higher limit.}}"
@@ -2579,6 +2615,11 @@ msgstr "A meeting lasts {max} days at most."
 #: src/lib/reunions.ts
 msgid "La fin de la réunion suit son début."
 msgstr "The meeting must end after it starts."
+
+#. js-lingui-explicit-id
+#: src/lib/robots.ts
+msgid "Votre organisation a déjà {max} robots actifs : archivez-en un avant d’en créer un autre."
+msgstr "Your organization already has {max} active robots: archive one before creating another."
 
 #. js-lingui-explicit-id
 #: src/lib/saisie.ts

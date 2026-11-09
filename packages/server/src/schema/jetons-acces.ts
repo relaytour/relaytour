@@ -27,7 +27,7 @@ import { builder } from './builder.ts'
 /** Une personne choisit 50 activités au plus pour un jeton. */
 const ACTIVITES_MAX = 50
 
-const PorteeJetonEnum = builder.enumType(PorteeJeton, {
+export const PorteeJetonEnum = builder.enumType(PorteeJeton, {
   name: 'PorteeJeton',
   description:
     'LECTURE : le jeton lit, et toute mutation est refusée. LECTURE_ECRITURE : le jeton lit et écrit, avec les droits de la personne.',
@@ -42,7 +42,7 @@ export const EtatApiEnum = builder.enumType('EtatApi', {
 const activitesDe = (j: Pick<JetonAcces, 'activiteIds'>) =>
   Array.isArray(j.activiteIds) ? (j.activiteIds as unknown[]).map(String) : null
 
-const JetonAccesRef = builder.objectRef<JetonAcces>('JetonAcces').implement({
+export const JetonAccesRef = builder.objectRef<JetonAcces>('JetonAcces').implement({
   description:
     'Un jeton d’accès d’un programme tiers. Sa valeur ne se relit pas : elle s’affiche une seule fois, à sa création.',
   fields: t => ({
@@ -69,7 +69,7 @@ const JetonAccesRef = builder.objectRef<JetonAcces>('JetonAcces').implement({
   }),
 })
 
-const JetonCreeRef = builder
+export const JetonCreeRef = builder
   .objectRef<{ jeton: string; jetonAcces: JetonAcces }>('JetonCree')
   .implement({
     description:
