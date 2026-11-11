@@ -659,6 +659,10 @@ msgstr "{nombre, plural, one {Jalon : # tâche liée reste ouverte} other {Jalon
 msgid "{nombre, plural, one {Reprise dans # autre périmètre} other {Reprise dans # autres périmètres}}"
 msgstr "{nombre, plural, one {Reprise dans # autre périmètre} other {Reprise dans # autres périmètres}}"
 
+#: src/composants/AvisNotifications.tsx
+msgid "{nombre} nouvelles notifications"
+msgstr "{nombre} nouvelles notifications"
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "{nombreAAccepter} à accepter"
 msgstr "{nombreAAccepter} à accepter"
@@ -7943,6 +7947,10 @@ msgstr "Nouvelle fiche commune à tous les périmètres"
 msgid "Nouvelle fiche du périmètre {nomPerimetre}"
 msgstr "Nouvelle fiche du périmètre {nomPerimetre}"
 
+#: src/composants/AvisNotifications.tsx
+msgid "Nouvelle notification"
+msgstr "Nouvelle notification"
+
 #: src/composants/ReunionFormulaire.tsx
 #: src/pages/Agenda.tsx
 msgid "Nouvelle réunion"
@@ -8093,6 +8101,7 @@ msgid "Ouvrez le dossier qui range les fiches de l’activité. Relaytour y cher
 msgstr "Ouvrez le dossier qui range les fiches de l’activité. Relaytour y cherche un sous-dossier par périmètre, à son nom, et un sous-dossier « communes » pour les fiches communes."
 
 #. En-tête masqué de la colonne du bouton d’ouverture
+#: src/composants/AvisNotifications.tsx
 #: src/composants/Tableau.tsx
 msgid "Ouvrir"
 msgstr "Ouvrir"
@@ -8887,9 +8896,17 @@ msgstr "Question complémentaire"
 msgid "Quitter « {titre} » ?"
 msgstr "Quitter « {titre} » ?"
 
+#: src/composants/navigation-protegee.ts
+msgid "Quitter cette page ?"
+msgstr "Quitter cette page ?"
+
 #: src/pages/EspaceBenevole.tsx
 msgid "Quitter cette place"
 msgstr "Quitter cette place"
+
+#: src/composants/navigation-protegee.ts
+msgid "Quitter la page"
+msgstr "Quitter la page"
 
 #: src/pages/EspaceBenevole.tsx
 msgid "Quittez d’abord vos places à venir pour supprimer vos informations."
@@ -9380,6 +9397,10 @@ msgstr "Restaurer"
 #: src/pages/Fiche.tsx
 msgid "Restaurer cette version ?"
 msgstr "Restaurer cette version ?"
+
+#: src/composants/navigation-protegee.ts
+msgid "Rester sur la page"
+msgstr "Rester sur la page"
 
 #: src/pages/FicheEditeur.tsx
 msgid "Résumé de la modification (facultatif)"
@@ -11022,6 +11043,10 @@ msgstr "Une personne vous convoque à une réunion, ou une de vos réunions chan
 msgid "Une réunion lie 20 tâches au plus."
 msgstr "Une réunion lie 20 tâches au plus."
 
+#: src/composants/navigation-protegee.ts
+msgid "Une saisie en cours n’est pas enregistrée. Elle sera perdue si vous quittez la page."
+msgstr "Une saisie en cours n’est pas enregistrée. Elle sera perdue si vous quittez la page."
+
 #: src/composants/AppelsBenevoles.tsx
 msgid "Une séquence"
 msgstr "Une séquence"
@@ -11149,6 +11174,10 @@ msgstr "Visuel"
 #: src/pages/Fiche.tsx
 msgid "Voir"
 msgstr "Voir"
+
+#: src/composants/AvisNotifications.tsx
+msgid "Voir dans la cloche"
+msgstr "Voir dans la cloche"
 
 #: src/composants/ReunionsDuPerimetre.tsx
 msgid "Voir l’agenda"

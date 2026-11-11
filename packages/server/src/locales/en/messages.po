@@ -1653,8 +1653,28 @@ msgstr "{acteur} edited the task “{titre}”{lieu}"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
+msgid "{acteur} a laissé {nombre} commentaires sur la tâche « {titre} »{lieu}"
+msgstr "{acteur} left {nombre} comments on the task “{titre}”{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{autres, plural, one {{acteur} et une autre personne ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}} other {{acteur} et # autres personnes ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}}}"
+msgstr "{autres, plural, one {{acteur} and one other person left {nombre} comments on the task “{titre}”{lieu}} other {{acteur} and # other people left {nombre} comments on the task “{titre}”{lieu}}}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
 msgid "{acteur} a commenté la tâche « {titre} »{lieu}"
 msgstr "{acteur} commented on the task “{titre}”{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} s’occupe de la tâche « {titre} »{lieu} à votre place"
+msgstr "{acteur} is taking care of the task “{titre}”{lieu} in your place"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a assigné la tâche « {titre} »{lieu} à {personne} à votre place"
+msgstr "{acteur} assigned the task “{titre}”{lieu} to {personne} in your place"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
@@ -3581,8 +3601,13 @@ msgstr "You are part of the team for these areas:"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
-msgid "Le modèle de notifications « {modele} » correspond à votre rôle. Vous pouvez l’appliquer dans vos préférences : {lien}"
-msgstr "The “{modele}” notification preset matches your role. You can apply it in your preferences: {lien}"
+msgid "Le modèle de notifications « {modele} » correspond à votre rôle."
+msgstr "The “{modele}” notification preset matches your role."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Appliquer ce modèle dans vos préférences"
+msgstr "Apply this preset in your preferences"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
@@ -3666,6 +3691,11 @@ msgstr "No due dates."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
+msgid "Vos nouvelles"
+msgstr "Your updates"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
 msgid "à prendre"
 msgstr "unassigned"
 
@@ -3693,11 +3723,6 @@ msgstr "{n, plural, one {and # other priority} other {and # other priorities}}"
 #: src/courriel/messages.ts
 msgid "Aucune priorité dans vos périmètres d’ici le prochain point."
 msgstr "No priorities in your areas before the next check-in."
-
-#. js-lingui-explicit-id
-#: src/courriel/messages.ts
-msgid "Vos nouvelles"
-msgstr "Your updates"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts

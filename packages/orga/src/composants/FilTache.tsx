@@ -17,6 +17,7 @@ import {
   type Fil,
 } from '../lib/commentaires'
 import { messageErreur } from '../lib/erreurs'
+import { useModificationEnCours } from '../lib/modifications-en-cours'
 import { decouperLiens } from '../lib/liens'
 
 import { Avatar } from './Personne'
@@ -101,6 +102,9 @@ export default function FilTache({
 
   const [texte, setTexte] = useState('')
   const [enEdition, setEnEdition] = useState<{ id: string; texte: string }>()
+  // Un commentaire en cours d'écriture demande confirmation avant de quitter la
+  // page pour une notification (ADR 0065).
+  useModificationEnCours(texte.trim() !== '' || enEdition !== undefined)
   const [avecHistorique, setAvecHistorique] = useState(true)
   const fil = data?.filTache
   const elements = fil ? composerFil(fil, avecHistorique) : []

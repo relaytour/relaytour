@@ -107,6 +107,11 @@ export interface NotificationLue {
    * personne remplace sur la tâche (ADR 0065).
    */
   remplaceId?: string | null
+  /**
+   * Pour un commentaire regroupé dans un résumé : le nombre de commentaires de la
+   * tâche, et le nombre d'autres personnes qui l'ont commentée (ADR 0065).
+   */
+  commentaires?: { nombre: number; autresAuteurs: number }
 }
 
 export interface ActiviteDeNotification {
@@ -521,17 +526,38 @@ function phrase(
       })
     // Le texte du commentaire ne figure jamais dans une notification (ADR 0029).
     case 'TACHE_COMMENTEE':
+      if (n.commentaires && n.commentaires.nombre > 1) {
+        const { nombre, autresAuteurs: autres } = n.commentaires
+        return autres === 0
+          ? i18n._(
+              '{acteur} a laissé {nombre} commentaires sur la tâche « {titre} »{lieu}',
+              { acteur, titre, lieu, nombre }
+            )
+          : i18n._(
+              '{autres, plural, one {{acteur} et une autre personne ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}} other {{acteur} et # autres personnes ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}}}',
+              { acteur, titre, lieu, nombre, autres }
+            )
+      }
       return i18n._('{acteur} a commenté la tâche « {titre} »{lieu}', {
         acteur,
         titre,
         lieu,
       })
     case 'TACHE_ASSIGNEE':
+      // Une personne remplacée lit « à votre place » (ADR 0065).
+      if (n.remplaceId && n.remplaceId === moiId) {
+        return n.personneId === n.acteurId
+          ? i18n._(
+              '{acteur} s’occupe de la tâche « {titre} »{lieu} à votre place',
+              { acteur, titre, lieu }
+            )
+          : i18n._(
+              '{acteur} a assigné la tâche « {titre} »{lieu} à {personne} à votre place',
+              { acteur, titre, lieu, personne }
+            )
+      }
       if (n.remplaceId) {
-        const ancien =
-          n.remplaceId === moiId
-            ? i18n._('vous')
-            : (c.noms.get(n.remplaceId) ?? i18n._('une personne'))
+        const ancien = c.noms.get(n.remplaceId) ?? i18n._('une personne')
         return n.personneId === n.acteurId
           ? i18n._(
               '{acteur} s’occupe de la tâche « {titre} »{lieu} à la place de {ancien}',
@@ -868,6 +894,8 @@ const CHANGEMENTS: ReadonlySet<TypeNotification> = new Set([
  * - Plusieurs modifications ou statuts d'une tâche gardent la plus récente.
  * - Un retrait et un ajout faits par la même personne forment une seule ligne :
  *   « Léa s'occupe de la tâche … à la place de Paul ».
+ * - Les commentaires d'une tâche forment une seule ligne, à la place du plus
+ *   récent : « Léa et 2 autres personnes ont laissé 4 commentaires sur la tâche … ».
  */
 export function fusionnerParTache<T extends NotificationLue>(
   recentesDabord: readonly T[]
@@ -877,6 +905,7 @@ export function fusionnerParTache<T extends NotificationLue>(
   const remplacements = new Map<T, string>()
   const assignations = new Map<string, T[]>()
   const changements = new Map<string, T[]>()
+  const commentaires = new Map<string, T[]>()
   for (const n of chrono) {
     const tacheId = n.tache?.id
     if (tacheId === undefined) continue
@@ -885,7 +914,21 @@ export function fusionnerParTache<T extends NotificationLue>(
       assignations.set(cle, [...(assignations.get(cle) ?? []), n])
     } else if (CHANGEMENTS.has(n.type)) {
       changements.set(tacheId, [...(changements.get(tacheId) ?? []), n])
+    } else if (n.type === 'TACHE_COMMENTEE') {
+      commentaires.set(tacheId, [...(commentaires.get(tacheId) ?? []), n])
     }
+  }
+  const regroupes = new Map<T, NonNullable<NotificationLue['commentaires']>>()
+  for (const suite of commentaires.values()) {
+    if (suite.length < 2) continue
+    for (const n of suite.slice(0, -1)) retirees.add(n)
+    const dernier = suite.at(-1)!
+    const auteurs = new Set(suite.map(n => n.acteurId))
+    auteurs.delete(dernier.acteurId)
+    regroupes.set(dernier, {
+      nombre: suite.length,
+      autresAuteurs: auteurs.size,
+    })
   }
   for (const suite of changements.values()) {
     for (const n of suite.slice(0, -1)) retirees.add(n)
@@ -924,6 +967,10 @@ export function fusionnerParTache<T extends NotificationLue>(
   return recentesDabord
     .filter(n => !retirees.has(n))
     .map(n =>
-      remplacements.has(n) ? { ...n, remplaceId: remplacements.get(n)! } : n
+      remplacements.has(n)
+        ? { ...n, remplaceId: remplacements.get(n)! }
+        : regroupes.has(n)
+          ? { ...n, commentaires: regroupes.get(n)! }
+          : n
     )
 }

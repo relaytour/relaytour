@@ -188,4 +188,51 @@ describe('gabarits', () => {
     )
     expect(texte).toContain('- Tâche <b>A</b>\n- Tâche B')
   })
+
+  // Proposition du modèle de notifications dans le mail d'équipe (ADR 0065).
+  const equipe = (propositionModele: unknown[]) =>
+    rendre(
+      'equipe',
+      {
+        nom: 'Sofia',
+        changements: ['Vous rejoignez le périmètre Accueil.'],
+        propositionModele: propositionModele as [],
+        lienConnexion: 'https://orga.exemple.org/',
+        roleModeDEmploi: 'des référentes et référents',
+        lienModeDEmploi: 'https://relaytour.org/modes-d-emploi/referent.html',
+      },
+      ORGANISATION
+    )
+
+  it('rend la proposition d’un modèle en paragraphe avec un lien échappé', () => {
+    const { html, texte } = equipe([
+      {
+        paragraphe: 'Le modèle « <b>Contact</b> » correspond à votre rôle.',
+        libelleLien: 'Appliquer ce modèle',
+        lien: 'https://orga.exemple.org/preferences?a=1&b=2',
+      },
+    ])
+    expect(html).toContain(
+      `Le modèle « &lt;b&gt;Contact&lt;/b&gt; » correspond à votre rôle. <a href="https://orga.exemple.org/preferences?a=1&amp;b=2" style="color:${ORGANISATION.couleurPrimaire};font-weight:600">Appliquer ce modèle</a>`
+    )
+    expect(texte).toContain(
+      '- Vous rejoignez le périmètre Accueil.\n\nLe modèle « <b>Contact</b> » correspond à votre rôle.\nAppliquer ce modèle : https://orga.exemple.org/preferences?a=1&b=2\n\n'
+    )
+  })
+
+  it('n’écrit rien sans proposition, pas même une ligne vide', () => {
+    const { html, texte } = equipe([])
+    expect(html).not.toContain('<a href="https://orga.exemple.org/preferences')
+    expect(texte).toContain(
+      '- Vous rejoignez le périmètre Accueil.\n\nVos périmètres'
+    )
+  })
+
+  it('refuse le lien d’une proposition qui n’est pas en https', () => {
+    expect(() =>
+      equipe([
+        { paragraphe: 'x', libelleLien: 'y', lien: 'javascript:alert(1)' },
+      ])
+    ).toThrow(/https/)
+  })
 })

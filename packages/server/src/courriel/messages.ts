@@ -430,11 +430,17 @@ export async function composer(
     )
     variables.propositionModele =
       proposition === null
-        ? ''
-        : i18n._(
-            'Le modèle de notifications « {modele} » correspond à votre rôle. Vous pouvez l’appliquer dans vos préférences : {lien}',
-            { modele: libelleModele(proposition), lien: lienPreferences }
-          )
+        ? []
+        : [
+            {
+              paragraphe: i18n._(
+                'Le modèle de notifications « {modele} » correspond à votre rôle.',
+                { modele: libelleModele(proposition) }
+              ),
+              libelleLien: i18n._('Appliquer ce modèle dans vos préférences'),
+              lien: lienPreferences,
+            },
+          ]
   }
 
   if (job.sorte === 'demandes') {
@@ -969,14 +975,33 @@ export async function composer(
             resumeeLe: null,
             disponibleLe: null,
             envoyeeLe: null,
+            // Le mail d'une activité porte ses nouvelles, et celles qui ne
+            // concernent aucune activité : deux mails ne répètent pas une nouvelle.
+            OR: [
+              { activiteId: edition.activiteId },
+              { tache: { perimetre: { activiteId: edition.activiteId } } },
+              { fiche: { activiteId: edition.activiteId } },
+              { activiteId: null, tacheId: null, ficheId: null },
+            ],
           },
           select: SELECTION_NOTIFICATION,
           orderBy: { createdAt: 'desc' },
           take: LIMITE_RESUME,
         })
       : []
+    // Les nouvelles d'une même tâche se regroupent avant de compter : des nouvelles
+    // qui s'annulent ne font pas partir le mail.
+    const nouvelles = grouperParActivite(
+      await composerNotifications(
+        prisma,
+        fusionnerParTache(nouvellesLues),
+        userId
+      ),
+      configuration.nomCourt,
+      `${i18n._('Vos nouvelles')} · `
+    )
     // Sans priorité ni nouvelle, aucun mail ne part.
-    if (retenus.length === 0 && nouvellesLues.length === 0) return null
+    if (retenus.length === 0 && nouvelles.length === 0) return null
     const jourPriorites = new Date(
       `${aujourdhui(maintenant, configuration.fuseauHoraire)}T00:00:00Z`
     )
@@ -1058,15 +1083,6 @@ export async function composer(
               'Aucune priorité dans vos périmètres d’ici le prochain point.'
             ),
           ]
-    const nouvelles = grouperParActivite(
-      await composerNotifications(
-        prisma,
-        fusionnerParTache(nouvellesLues),
-        userId
-      ),
-      configuration.nomCourt,
-      `${i18n._('Vos nouvelles')} · `
-    )
     variables.nouvelles = nouvelles.length > 0 ? nouvelles : ''
     variables.introduction =
       lues.pointDebut === null

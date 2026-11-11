@@ -12,7 +12,7 @@
 | [0008](0008-activites-et-administration-de-l-installation.md) | Activités d'une organisation et administration de l'installation | Acceptée, réalisée |
 | [0009](0009-identite-des-activites-et-source-de-verite-du-contenu.md) | Identité des activités et source de vérité du contenu | Acceptée |
 | [0010](0010-admins-d-activite-et-visibilite-des-activites.md) | Admins d'activité et visibilité des activités | Acceptée, annuaire cloisonné par l'ADR 0018, nomination des admins élargie par l'ADR 0019, assignation d'une tâche ouverte par l'ADR 0028, rattachement ajouté par l'ADR 0045 |
-| [0011](0011-contact-principal-d-un-perimetre.md) | Contact principal d'un périmètre | Acceptée, assignation d'une tâche ouverte par l'ADR 0028 |
+| [0011](0011-contact-principal-d-un-perimetre.md) | Contact principal d'un périmètre | Acceptée, assignation d'une tâche ouverte par l'ADR 0028, notifications complétées par l'ADR 0065 |
 | [0012](0012-decouvrir-les-perimetres-et-rejoindre-l-equipe.md) | Découvrir les périmètres et rejoindre l'équipe | Acceptée, accès aux tâches élargi par l'ADR 0014, découverte limitée à l'équipe par l'ADR 0045 |
 | [0013](0013-administrer-l-equipe-depuis-le-serveur.md) | Administrer l'équipe depuis le serveur | Acceptée |
 | [0014](0014-consulter-les-perimetres-de-son-activite.md) | Consulter les périmètres de son activité | Acceptée |
@@ -33,7 +33,7 @@
 | [0029](0029-commentaires-d-une-tache.md) | Commentaires d'une tâche | Acceptée |
 | [0030](0030-cloisonnement-des-organisations.md) | Cloisonnement des organisations d'une installation partagée | Acceptée, réalisée |
 | [0031](0031-archivage-et-nom-par-organisation.md) | Archivage par organisation et nom tenu par la personne | Acceptée, réalisée |
-| [0032](0032-notifications-par-organisation.md) | Préférences de notification par organisation et notifications qui nomment leur contexte | Acceptée, réalisée |
+| [0032](0032-notifications-par-organisation.md) | Préférences de notification par organisation et notifications qui nomment leur contexte | Acceptée, réalisée, réglages de suivi remplacés par l'ADR 0065 |
 | [0033](0033-notifications-d-admin.md) | Notifications d'admin, rangées par activité et par périmètre | Acceptée, réalisée |
 | [0034](0034-plafond-quotidien-des-mails.md) | Plafond quotidien des mails d'une installation | Acceptée, réalisée |
 | [0035](0035-connexion-uniforme-et-jeton-local.md) | Connexion à réponse uniforme et jeton d'administration local par défaut | Acceptée, réalisée |

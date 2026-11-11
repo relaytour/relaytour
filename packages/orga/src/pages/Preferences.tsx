@@ -300,7 +300,7 @@ export default function Preferences() {
                 pouvez ensuite changer chaque réglage ci-dessous.
               </Trans>
             </p>
-            <div className="rt-choix">
+            <div className="rt-choix rt-choix-large">
               <Radio.Group
                 value={data.mesPreferencesNotification.modele ?? null}
                 disabled={application.loading}
@@ -314,9 +314,11 @@ export default function Preferences() {
                       {m.titre}
                       {data.mesPreferencesNotification.modeleRecommande ===
                         m.valeur && (
-                        <Tag style={{ marginInlineStart: 8 }}>
-                          <Trans>Recommandé pour vous</Trans>
-                        </Tag>
+                        <span className="rt-choix-etiquette">
+                          <Tag>
+                            <Trans>Recommandé pour vous</Trans>
+                          </Tag>
+                        </span>
                       )}
                     </span>
                     <span className="rt-choix-detail">{m.detail}</span>
