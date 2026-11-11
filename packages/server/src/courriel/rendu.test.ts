@@ -189,6 +189,27 @@ describe('gabarits', () => {
     expect(texte).toContain('- Tâche <b>A</b>\n- Tâche B')
   })
 
+  it('nomme le lien des préférences dans le HTML et garde l’adresse dans le texte', () => {
+    const lien = 'https://orga.exemple.org/preferences?organisation=o'
+    for (const nom of [
+      'demandes',
+      'priorites',
+      'rappels-echeance',
+      'tache-modifiee',
+      'resume',
+    ] as const) {
+      const variables = {
+        ...VARIABLES_VIDES(GABARITS[nom].variables),
+        lienPreferences: lien,
+      }
+      const { html, texte } = rendre(nom, variables, ORGANISATION)
+      expect(html, nom).toContain(`<a href="${lien}"`)
+      expect(html, nom).toContain('Ouvrir vos préférences</a>')
+      expect(html.replaceAll(`href="${lien}"`, ''), nom).not.toContain(lien)
+      expect(texte, nom).toContain(lien)
+    }
+  })
+
   // Proposition du modèle de notifications dans le mail d'équipe (ADR 0065).
   const equipe = (propositionModele: unknown[]) =>
     rendre(

@@ -3292,13 +3292,23 @@ msgstr "Voir les demandes"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
-msgid "Vous pouvez désactiver ces mails dans vos préférences :"
-msgstr "Vous pouvez désactiver ces mails dans vos préférences :"
+msgid "Vous pouvez désactiver ces mails dans vos préférences."
+msgstr "Vous pouvez désactiver ces mails dans vos préférences."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Ouvrir vos préférences"
+msgstr "Ouvrir vos préférences"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
 msgid "Voir les demandes : {lienDemandes}"
 msgstr "Voir les demandes : {lienDemandes}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous pouvez désactiver ces mails dans vos préférences :"
+msgstr "Vous pouvez désactiver ces mails dans vos préférences :"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
@@ -3433,13 +3443,18 @@ msgstr "Voir les priorités"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
-msgid "Vous recevez ce mail parce que vous l’avez demandé. Vous pouvez le désactiver dans vos préférences :"
-msgstr "Vous recevez ce mail parce que vous l’avez demandé. Vous pouvez le désactiver dans vos préférences :"
+msgid "Vous recevez ce mail parce que vous l’avez demandé. Vous pouvez le désactiver dans vos préférences."
+msgstr "Vous recevez ce mail parce que vous l’avez demandé. Vous pouvez le désactiver dans vos préférences."
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
 msgid "Voir les priorités : {lienPriorites}"
 msgstr "Voir les priorités : {lienPriorites}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous recevez ce mail parce que vous l’avez demandé. Vous pouvez le désactiver dans vos préférences :"
+msgstr "Vous recevez ce mail parce que vous l’avez demandé. Vous pouvez le désactiver dans vos préférences :"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
@@ -3488,6 +3503,11 @@ msgstr "Ces tâches vous sont assignées et demandent votre attention :"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
+msgid "Vous pouvez désactiver ces rappels dans vos préférences."
+msgstr "Vous pouvez désactiver ces rappels dans vos préférences."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
 msgid "Vous pouvez désactiver ces rappels dans vos préférences :"
 msgstr "Vous pouvez désactiver ces rappels dans vos préférences :"
 
@@ -3510,6 +3530,11 @@ msgstr "Nouvelles non lues"
 #: src/courriel/gabarits.genere.ts
 msgid "Vos échéances des 14 prochains jours"
 msgstr "Vos échéances des 14 prochains jours"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous pouvez changer la fréquence de ce résumé ou le désactiver dans vos préférences."
+msgstr "Vous pouvez changer la fréquence de ce résumé ou le désactiver dans vos préférences."
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts

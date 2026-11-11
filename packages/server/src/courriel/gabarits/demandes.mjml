@@ -28,7 +28,8 @@
           [[Voir les demandes]]
         </mj-button>
         <mj-text font-size="13px" line-height="20px" color="#5B6670" padding="0">
-          [[Vous pouvez désactiver ces mails dans vos préférences :]] {{lienPreferences}}
+          [[Vous pouvez désactiver ces mails dans vos préférences.]]
+          <a href="{{lienPreferences}}" style="color:#5B6670;text-decoration:underline">[[Ouvrir vos préférences]]</a>
         </mj-text>
       </mj-column>
     </mj-section>
