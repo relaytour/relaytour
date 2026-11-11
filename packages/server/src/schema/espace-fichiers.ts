@@ -824,7 +824,7 @@ builder.queryFields(t => ({
 
 builder.mutationFields(t => ({
   commencerConnexionEspaceFichiers: t.string({
-    authScopes: { admin: true },
+    authScopes: { $all: { admin: true, session: true } },
     description:
       'Adresse où l’admin se connecte chez le fournisseur pour accorder l’accès à Relaytour. Elle vaut dix minutes, une seule fois.',
     args: {
@@ -904,7 +904,7 @@ builder.mutationFields(t => ({
 
   connecterCompteServiceGoogle: t.prismaField({
     type: ConnexionFichiersRef,
-    authScopes: { admin: true },
+    authScopes: { $all: { admin: true, session: true } },
     description:
       'Connecte Google Drive par un compte de service : la clé JSON du compte, que l’organisation a créée. L’organisation partage ensuite ses dossiers avec l’adresse du compte.',
     args: { cle: t.arg.string({ required: true }) },
@@ -972,7 +972,7 @@ builder.mutationFields(t => ({
 
   commencerConnexionNextcloud: t.field({
     type: DebutConnexionNextcloudRef,
-    authScopes: { admin: true },
+    authScopes: { $all: { admin: true, session: true } },
     description:
       'Commence la connexion au Nextcloud de l’association, à l’adresse donnée. L’admin ouvre ensuite la page rendue et y accorde l’accès ; Nextcloud crée un mot de passe d’application pour Relaytour.',
     args: { adresse: t.arg.string({ required: true }) },
@@ -1015,7 +1015,7 @@ builder.mutationFields(t => ({
   }),
 
   terminerConnexionNextcloud: t.boolean({
-    authScopes: { admin: true },
+    authScopes: { $all: { admin: true, session: true } },
     description:
       'Demande à Nextcloud si l’admin a accordé l’accès. Vrai une fois la connexion enregistrée ; faux tant qu’il n’a pas terminé.',
     args: { etat: t.arg.string({ required: true }) },
@@ -1092,7 +1092,7 @@ builder.mutationFields(t => ({
   }),
 
   deconnecterEspaceFichiers: t.boolean({
-    authScopes: { admin: true },
+    authScopes: { $all: { admin: true, session: true } },
     description:
       'Efface le jeton de l’espace de fichiers. Les dossiers liés restent, indisponibles jusqu’à une nouvelle connexion.',
     resolve: async (_root, _args, ctx) => {

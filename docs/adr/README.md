@@ -64,6 +64,7 @@
 | [0061](0061-rattacher-une-tache-existante-a-une-tache-partagee.md) | Rattacher une tâche existante à une tâche partagée | Proposée |
 | [0062](0062-jalons.md) | Jalons | Acceptée, réalisée |
 | [0063](0063-mails-de-suivi-hierarchises.md) | Mails de suivi hiérarchisés | Proposée |
+| [0064](0064-acces-programmatique.md) | Accès programmatique : module API et jetons d'accès | Proposée |
 | [0065](0065-notifications-essentielles-et-modeles-de-reglages.md) | Notifications essentielles, modèles de réglages et fenêtre de regroupement | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

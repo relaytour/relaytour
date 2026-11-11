@@ -17,17 +17,23 @@ const REFUS_JSON = { 'content-type': 'application/json; charset=utf-8' }
 
 /**
  * Le gestionnaire du flux. `contexte` construit le contexte d'une requête comme le
- * fait l'API : session, organisation, jeton d'administration.
+ * fait l'API : session, organisation, jeton d'administration ou jeton d'accès.
+ * `contexteInitial`, facultatif, sert à l'ouverture du flux : il reprend un contexte
+ * déjà calculé pour la requête, pour qu'un jeton d'accès ne compte qu'une fois
+ * (ADR 0064). Chaque relecture des droits passe par `contexte`.
  */
 export function creerGestionnaireFlux(options: {
   contexte: (req: Request) => Promise<AppContext>
+  contexteInitial?: (req: Request) => Promise<AppContext>
 }): RequestHandler {
   // La bibliothèque attend un contexte indexable : le contexte de l'API en est un,
   // sans le déclarer.
   const gerer = createHandler<Record<PropertyKey, unknown>>({
     schema,
     context: async req => {
-      const contexte = await options.contexte(req.raw)
+      const contexte = await (options.contexteInitial ?? options.contexte)(
+        req.raw
+      )
       // Le flux revalide la session avec les en-têtes de sa requête d'origine.
       const relire = () => options.contexte(req.raw)
       return { ...contexte, relire }

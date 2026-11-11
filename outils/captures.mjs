@@ -100,6 +100,8 @@ const ANGLAIS_DES_GESTES = {
   Gras: 'Bold',
   'Documents liés': 'Linked documents',
   'Votre adresse dans l’organigramme': 'Your address in the org chart',
+  'Jetons et API': 'Tokens and API',
+  'API pour les programmes tiers': 'API for third-party programs',
   'Votre agenda dans Outlook, Google ou Apple':
     'Your calendar in Outlook, Google or Apple',
   'Mois suivant': 'Next month',
@@ -174,10 +176,6 @@ const cliquerLibelle = libelle =>
  */
 const placer = (texte, marge, pret = 'true') =>
   `(e => (e && window.scrollTo(0, e.getBoundingClientRect().top + window.scrollY - ${marge}), Boolean(e) && (p => ${pret})(e.closest('section'))))([...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim().startsWith(${JSON.stringify(x(texte))})))`
-
-/** Fait défiler jusqu'au titre dont le texte vaut `texte`. */
-const defiler = texte =>
-  `(e => (e?.scrollIntoView({ block: 'start' }), Boolean(e)))([...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim() === ${JSON.stringify(x(texte))}))`
 
 // Un export de billetterie fictif, pour photographier l'assistant d'import
 // (ADR 0042) : deux personnes proches de fiches de l'instance d'exemple, un lot de
@@ -471,6 +469,13 @@ const ECRANS = [
     chemin: `${ACTIVITE}/preferences`,
     apres: placer('Votre adresse dans l’organigramme', 140),
   },
+  // Les jetons d'accès de la personne (ADR 0064), dans les préférences.
+  {
+    nom: 'preferences-jetons',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/preferences`,
+    apres: placer('Jetons et API', 140),
+  },
   // Le tiroir de la cloche, rangé par activité (ADR 0032). La cloche est dans la
   // barre haute, hors de <main>.
   {
@@ -599,7 +604,9 @@ const ECRANS = [
     nom: 'preferences-messagerie',
     compte: 'admin-activite',
     chemin: `${ACTIVITE}/preferences`,
-    apres: defiler('Votre messagerie'),
+    // Le panneau n'est plus le dernier des préférences : la marge garde son titre
+    // sous la barre haute flottante.
+    apres: placer('Votre messagerie', 140),
   },
   // L'historique des messages. L'instance d'exemple doit en porter au moins un.
   {
@@ -721,7 +728,15 @@ const ECRANS = [
   {
     nom: 'organisation-contenu',
     chemin: `${ACTIVITE}/admin/organisation`,
-    apres: defiler('Contenu de l’organisation'),
+    // Le panneau n'est plus le dernier de l'écran : la marge garde son titre sous
+    // la barre haute flottante.
+    apres: placer('Contenu de l’organisation', 140),
+  },
+  // Le module « API » et les robots de l'organisation (ADR 0064).
+  {
+    nom: 'organisation-api',
+    chemin: `${ACTIVITE}/admin/organisation`,
+    apres: placer('API pour les programmes tiers', 140),
   },
 ].map(ecran => ({ compte: 'admin-organisation', ...ecran }))
 
@@ -1134,6 +1149,10 @@ for (;;) {
   if (horsConnexion(await adresseCourante())) break
   await attendre(1000)
 }
+// Dans le simulateur, la première page qui répond peut encore se recharger
+// d'elle-même (langue, version) : sa dernière attente resterait ouverte et
+// prendrait le prochain ordre sans y répondre. La page se stabilise d'abord.
+if (values.simulateur) await attendre(5000)
 console.log('✔ Session ouverte. Les captures commencent.')
 
 // ── Captures ────────────────────────────────────────────────────────────────

@@ -31,6 +31,8 @@ const contexte = (
 ): AppContext => ({
   ip: undefined,
   administration: false,
+  jeton: null,
+  refus: null,
   personne,
   organisation: active,
   perimetresAffectes: () => Promise.resolve(new Set(['natation'])),

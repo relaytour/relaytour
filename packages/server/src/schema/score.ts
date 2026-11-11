@@ -93,7 +93,7 @@ builder.queryFields(t => ({
       ) {
         throw accesRefuse()
       }
-      const scores = [
+      const tous = [
         ...(
           await calculerScores(
             prisma,
@@ -101,17 +101,19 @@ builder.queryFields(t => ({
             ctx.organisation!.fuseauHoraire
           )
         ).values(),
-      ]
-        .filter(s => s.points > 0)
-        .sort((a, b) => b.points - a.points)
-      // Les personnes se chargent en une seule requête, pas une par ligne.
+      ].filter(s => s.points > 0)
+      // Les personnes se chargent en une seule requête, pas une par ligne. Un robot
+      // n'entre pas au classement (ADR 0064) : le rang ne compte que les personnes.
       const personnes = new Map(
         (
           await prisma.user.findMany({
-            where: { id: { in: scores.map(s => s.userId) } },
+            where: { id: { in: tous.map(s => s.userId) }, robot: false },
           })
         ).map(p => [p.id, p])
       )
+      const scores = tous
+        .filter(s => personnes.has(s.userId))
+        .sort((a, b) => b.points - a.points)
       // Rang partagé en cas d'égalité : 1, 1, 3.
       return scores.flatMap(score => {
         const personne = personnes.get(score.userId)

@@ -403,7 +403,7 @@ builder.mutationFields(t => ({
   // ── Gestes de l'équipe ─────────────────────────────────────────────────────
 
   lienEspaceBenevole: t.string({
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, session: true } },
     description:
       'Le lien personnel d’une fiche, à copier : créé s’il n’existe pas. `nouveau` tire un nouveau lien, qui révoque l’ancien. Aucun mail ne part. Réservé aux personnes qui lisent ses coordonnées.',
     args: {
@@ -427,7 +427,7 @@ builder.mutationFields(t => ({
   }),
 
   renvoyerLienBenevole: t.boolean({
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, session: true } },
     description:
       'Renvoie par mail le lien personnel d’une fiche joignable, une seule fois. Le lien reste le même. Réservé aux personnes qui lisent ses coordonnées.',
     args: { benevoleId: t.arg.id({ required: true }) },

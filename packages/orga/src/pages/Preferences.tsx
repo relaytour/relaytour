@@ -6,6 +6,7 @@ import { useState } from 'react'
 
 import { PreferenceAgenda } from '../composants/AbonnementAgenda'
 import { DeuxColonnes, Panneau } from '../composants/Panneau'
+import PreferenceJetons from '../composants/PreferenceJetons'
 import PreferenceLangue from '../composants/PreferenceLangue'
 import PreferenceMessagerie from '../composants/PreferenceMessagerie'
 import PreferenceOrganigramme from '../composants/PreferenceOrganigramme'
@@ -667,6 +668,7 @@ export default function Preferences() {
           <PreferenceOrganigramme />
           {/* Seuls les admins écrivent un message (ADR 0020). */}
           {(administre || session?.moi?.estAdmin) && <PreferenceMessagerie />}
+          <PreferenceJetons modesDEmploi={organisation.modesDEmploi} />
         </DeuxColonnes>
       )}
     </>

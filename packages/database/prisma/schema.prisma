@@ -54,6 +54,16 @@ model Organisation {
   // appartenances actives et invitations en attente. Nul : aucune limite. Hors de
   // `limites`, pour la même raison que les modules.
   limiteMembres        Int?
+  // Module « API » de l'organisation (ADR 0064) : l'accès des programmes tiers par
+  // des jetons d'accès. Un admin de l'organisation l'active ; l'administration de
+  // l'installation l'autorise, l'impose ou le suspend. Inactif par défaut.
+  apiActivee           Boolean            @default(false)
+  apiAutorisee         Boolean            @default(true)
+  apiImposee           Boolean            @default(false)
+  // Suspension d'urgence par l'administration de l'installation, avec son motif,
+  // lisible par les membres. Elle révoque tous les jetons de l'organisation.
+  apiSuspendueLe       DateTime?
+  apiSuspensionMotif   String?            @db.VarChar(500)
   // Source de vérité du contenu (ADR 0009) : dernière modification faite dans
   // l'application, et dernier import ou export du dossier de contenu. Un import
   // refuse d'écraser une modification plus récente que la dernière synchronisation.
@@ -96,6 +106,7 @@ model Organisation {
   propositionsAcces       PropositionAcces[]
   permissionsCreees       PermissionCreee[]
   fichesExportees         FicheExportee[]
+  jetonsAcces             JetonAcces[]
 }
 
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
@@ -331,6 +342,10 @@ model Activite {
 model User {
   id                       String    @id
   name                     String
+  // Robot (ADR 0064) : un membre sans connexion, créé par un admin de l'organisation
+  // pour porter les jetons d'accès d'une automatisation partagée. Son adresse est
+  // technique, dans le domaine réservé .invalid : aucun mail ne lui part.
+  robot                    Boolean   @default(false)
   email                    String    @unique
   emailVerified            Boolean   @default(false)
   image                    String?   @db.Text
@@ -390,6 +405,8 @@ model User {
   convocations            ConvocationReunion[]
   abonnementsAgenda       AbonnementAgenda[]       @relation("AbonnementPersonne")
   abonnementsCrees        AbonnementAgenda[]       @relation("AbonnementAuteur")
+  jetonsAcces             JetonAcces[]             @relation("JetonPorteur")
+  jetonsAccesCrees        JetonAcces[]             @relation("JetonAuteur")
   sondagesCrees           Sondage[]                @relation("SondageAuteur")
   participationsSondage   ParticipantSondage[]
   reponsesSondage         ReponseSondage[]
@@ -1577,6 +1594,51 @@ model AbonnementAgenda {
   @@index([empreinte])
   @@index([userId])
   @@index([activiteId])
+  @@index([creeParId])
+}
+
+// Portée d'un jeton d'accès (ADR 0064). LECTURE refuse toute mutation.
+enum PorteeJeton {
+  LECTURE
+  LECTURE_ECRITURE
+}
+
+// Jeton d'accès d'un programme tiers (ADR 0064). Il agit au nom d'une personne,
+// dans une seule organisation, avec les droits de cette personne et jamais plus.
+// Le jeton n'est jamais gardé : le serveur garde son empreinte SHA-256, comme pour
+// un abonnement à l'agenda (ADR 0037).
+model JetonAcces {
+  id             String      @id @default(cuid())
+  organisationId String
+  // La personne dont le jeton porte les droits.
+  userId         String
+  // La personne qui a créé le jeton : la porteuse elle-même, ou un admin plus tard.
+  creeParId      String?
+  // Libellé choisi à la création, pour reconnaître le programme : « script d'import ».
+  nom            String      @db.VarChar(80)
+  empreinte      String      @db.Char(64)
+  // Les huit caractères qui suivent le préfixe, pour reconnaître le jeton à l'écran.
+  apercu         String      @db.VarChar(8)
+  portee         PorteeJeton @default(LECTURE)
+  // Les activités ouvertes au jeton. Nul : toutes celles que la personne voit.
+  activiteIds    Json?
+  expireLe       DateTime
+  // Dernier usage, posé au plus une fois par minute.
+  dernierAccesLe DateTime?
+  revoqueLe      DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  user         User         @relation("JetonPorteur", fields: [userId], references: [id], onDelete: Cascade)
+  creePar      User?        @relation("JetonAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+
+  // L'empreinte est unique dans son organisation (invariant 18) ; le jeton ne porte
+  // pas l'organisation, d'où l'index sur l'empreinte seule.
+  @@unique([organisationId, empreinte])
+  @@index([empreinte])
+  @@index([organisationId, userId])
+  @@index([userId])
   @@index([creeParId])
 }
 

@@ -5,6 +5,7 @@ import { journal } from '../lib/journal.ts'
 import { i18n } from '../lib/langue.ts'
 import type { LimitesInstallation } from '../lib/limites.ts'
 import {
+  type ApiInstallation,
   creerOrganisation,
   inviterAdmin,
   modifierOrganisation,
@@ -18,6 +19,7 @@ import { rappelerAdresses } from '../lib/rappel-adresses.ts'
 
 import { ModuleActiviteEnum } from './activites.ts'
 import { builder } from './builder.ts'
+import { EtatApiEnum } from './jetons-acces.ts'
 
 // Administration de l'installation (ADR 0008).
 //
@@ -54,6 +56,42 @@ const LimitesInput = builder.inputType('LimitesOrganisationInput', {
     activites: t.int(),
     periodesOuvertes: t.int(),
     membres: t.int(),
+  }),
+})
+
+const ApiInstallationRef = builder
+  .objectRef<ApiInstallation>('ApiInstallation')
+  .implement({
+    description:
+      'Le module « API » d’une organisation (ADR 0064) : son état, les réglages de l’administration de l’installation et le nombre de jetons actifs.',
+    fields: t => ({
+      etat: t.expose('etat', { type: EtatApiEnum }),
+      autorisee: t.exposeBoolean('autorisee'),
+      imposee: t.exposeBoolean('imposee'),
+      suspendueLe: t.expose('suspendueLe', {
+        type: 'DateTime',
+        nullable: true,
+      }),
+      suspensionMotif: t.exposeString('suspensionMotif', { nullable: true }),
+      jetonsActifs: t.exposeInt('jetonsActifs', {
+        description: 'Jetons ni révoqués ni expirés.',
+      }),
+    }),
+  })
+
+const ApiInstallationInput = builder.inputType('ApiInstallationInput', {
+  description:
+    'Un champ absent ne change pas. `suspendue: true` exige `suspensionMotif` et révoque tous les jetons de l’organisation ; `suspendue: false` lève la suspension.',
+  fields: t => ({
+    autorisee: t.boolean({
+      description: 'Faux : l’organisation ne peut pas activer l’API.',
+    }),
+    imposee: t.boolean({
+      description:
+        'Vrai : l’API est active, quel que soit le choix de l’organisation.',
+    }),
+    suspendue: t.boolean(),
+    suspensionMotif: t.string(),
   }),
 })
 
@@ -102,6 +140,7 @@ const OrganisationInstallationRef = builder
         resolve: o => o.modulesAutorises,
       }),
       creeLe: t.expose('creeLe', { type: 'DateTime' }),
+      api: t.field({ type: ApiInstallationRef, resolve: o => o.api }),
       nombreMembres: t.exposeInt('nombreMembres', {
         description: 'Appartenances, archivées comprises.',
       }),
@@ -227,6 +266,7 @@ builder.mutationFields(t => ({
       // tous. `autoriserTousLesModules` revient à aucune restriction (ADR 0052).
       modulesAutorises: t.arg({ type: [ModuleActiviteEnum] }),
       autoriserTousLesModules: t.arg.boolean(),
+      api: t.arg({ type: ApiInstallationInput }),
     },
     resolve: async (_root, args) => {
       if (
@@ -250,6 +290,7 @@ builder.mutationFields(t => ({
           args.limites === null || args.limites === undefined
             ? undefined
             : args.limites,
+        api: args.api ?? undefined,
       })
       journal.info(
         {
@@ -262,6 +303,16 @@ builder.mutationFields(t => ({
             args.autoriserTousLesModules === true
               ? 'tous'
               : (args.modulesAutorises ?? undefined),
+          // Le motif d'une suspension reste hors du journal : il peut nommer une
+          // personne.
+          api:
+            args.api === null || args.api === undefined
+              ? undefined
+              : {
+                  autorisee: args.api.autorisee ?? undefined,
+                  imposee: args.api.imposee ?? undefined,
+                  suspendue: args.api.suspendue ?? undefined,
+                },
         },
         'Une organisation a été modifiée par l’administration de l’installation.'
       )

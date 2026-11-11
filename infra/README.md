@@ -13,7 +13,7 @@ Ce dossier décrit le déploiement de référence (ADR 0004) : une machine sous 
 | `server` | API GraphQL, port 4400 sur `127.0.0.1` |
 | `worker` | Mails, rappels et résumés |
 
-L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*`, `/graphql`, `/medias/*` et `/agenda/*` vers l'API. `/medias/*` sert les logos et les favicons des organisations (ADR 0009). `/agenda/*` sert les abonnements à l'agenda, que relisent Outlook, Google ou Apple (ADR 0037). `/graphql` porte aussi le flux des changements (voir « Laisser passer le flux des changements »). Aucun outil Node n'est nécessaire sur le serveur.
+L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*`, `/api/v1/*`, `/graphql`, `/medias/*` et `/agenda/*` vers l'API. `/medias/*` sert les logos et les favicons des organisations (ADR 0009). `/agenda/*` sert les abonnements à l'agenda, que relisent Outlook, Google ou Apple (ADR 0037). `/graphql` porte aussi le flux des changements (voir « Laisser passer le flux des changements »). Aucun outil Node n'est nécessaire sur le serveur.
 
 ## Étapes
 
@@ -208,6 +208,16 @@ Une installation peut porter plusieurs organisations (ADR 0008). Chacune a ses m
 5. **Code source.** L'espace organisateur lie le code source de la version exécutée, comme l'AGPL l'exige (article 13). Par défaut, le lien mène au dépôt public. Un hébergeur qui modifie Relaytour indique son propre dépôt dans `CODE_SOURCE_URL`. De la même façon, le menu du compte et le mail d'invitation lient les modes d'emploi du site de Relaytour ; `MODES_D_EMPLOI_URL` les remplace par ceux de l'hébergeur, et `MODES_D_EMPLOI_URL_EN` par leur version anglaise (ADR 0047).
 6. **Version et support.** Le menu du compte affiche le numéro de version de l'installation et ouvre les notes de version, limitées au rôle de chaque personne (ADR 0021). Le bouton « Support » du même menu ouvre l'adresse de support que l'organisation a déclarée. Pour les organisations qui n'en ont pas, `SUPPORT_URL` indique l'action de l'hébergeur : une page d'assistance en `https://` ou une adresse en `mailto:`. Sans l'une ni l'autre, le bouton n'apparaît pas.
 7. **Identité et contenu.** Les admins d'une organisation modifient son nom, ses contacts, son logo et son thème dans l'espace organisateur, et téléchargent son contenu en archive. Le portail d'un hébergeur ne gère que le statut, les limites et les modules autorisés (ADR 0009, 0052).
+
+## Ouvrir l'API aux programmes tiers
+
+Un programme tiers (script, ligne de commande, outil de gestion de projet) travaille dans une organisation avec un jeton d'accès (ADR 0064). Le jeton agit au nom d'une personne, avec ses droits.
+
+1. **Le module « API ».** Chaque organisation a un module « API », inactif par défaut. Un admin de l'organisation l'active dans l'écran « Organisation ». Chaque personne crée ensuite ses jetons dans ses préférences.
+2. **Le relais.** L'API GraphQL accepte les jetons sur `/graphql`, sans réglage. L'API REST v1 répond sous `/api/v1/*` : le relais transmet ce chemin comme `/graphql`. Le `Caddyfile` d'exemple le fait. Sans cette ligne, `/api/v1/*` rend la page de l'espace organisateur.
+3. **Le contrat.** `https://orga.exemple.org/api/v1/openapi.json` décrit l'API REST au format OpenAPI 3.0, sans jeton. Le dépôt en garde une copie dans `packages/server/openapi.json`.
+4. **Le réglage de l'hébergeur.** L'argument `api` de `modifierOrganisationInstallation` règle le module d'une organisation : `autorisee: false` l'interdit, `imposee: true` l'active sans le choix de l'organisation, `suspendue: true` avec un `suspensionMotif` le suspend et révoque tous ses jetons. La requête `organisations` rend l'état du module et le nombre de jetons actifs, sans aucune donnée des membres.
+5. **Les limites.** Un jeton compte 120 requêtes par minute au plus. Soixante jetons refusés en un quart d'heure depuis une même adresse ferment l'API à cette adresse pour la fenêtre. Le journal note `jeton-acces-refuse` sans jamais écrire le jeton.
 
 ## Constituer une équipe depuis le serveur
 

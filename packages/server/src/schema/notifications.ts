@@ -311,7 +311,7 @@ function dansLeGroupe(
 builder.queryFields(t => ({
   notifications: t.field({
     type: [NotificationRef],
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, toutesActivites: true } },
     args: {
       nonLuesSeulement: t.arg.boolean({ defaultValue: false }),
       limite: t.arg.int({ defaultValue: 30 }),
@@ -362,7 +362,7 @@ builder.queryFields(t => ({
   }),
 
   nombreNotificationsNonLues: t.int({
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, toutesActivites: true } },
     args: {
       admin: t.arg.boolean({
         defaultValue: false,
@@ -384,7 +384,7 @@ builder.queryFields(t => ({
 
   nombreNotificationsNonLuesParActivite: t.field({
     type: [NonLuesActiviteRef],
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, toutesActivites: true } },
     description:
       'Les notifications non lues de la cloche, comptées par activité. La cloche affiche celles de l’activité ouverte et signale les autres activités.',
     resolve: async (_root, _args, ctx) => {
@@ -420,7 +420,7 @@ builder.queryFields(t => ({
 
   notificationsAutresOrganisations: t.field({
     type: [AutreOrganisationRef],
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, session: true } },
     description:
       'Les autres organisations de la personne qui ont des notifications non lues : celles de la cloche, et celles des rôles d’admin qu’elle y tient encore (ADR 0032).',
     resolve: async (_root, _args, ctx) => {
@@ -466,7 +466,7 @@ builder.queryFields(t => ({
 
   mesPreferencesNotification: t.field({
     type: PreferencesRef,
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, toutesActivites: true } },
     resolve: (_root, _args, ctx) =>
       preferencesDe(prisma, ctx.personne!.id, ctx.organisation!.id),
   }),
@@ -474,7 +474,7 @@ builder.queryFields(t => ({
 
 builder.mutationFields(t => ({
   marquerNotificationsLues: t.int({
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, toutesActivites: true } },
     // Lire une notification ne modifie aucune donnée de l'organisation : une
     // organisation en lecture seule le permet, à la différence des autres mutations.
     skipTypeScopes: true,
@@ -520,7 +520,7 @@ builder.mutationFields(t => ({
 
   modifierPreferencesNotification: t.field({
     type: PreferencesRef,
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, session: true } },
     description:
       'Modifie les préférences de la personne dans l’organisation active (ADR 0032).',
     args: {

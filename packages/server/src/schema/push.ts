@@ -32,7 +32,7 @@ builder.queryFields(t => ({
   }),
 
   abonnePush: t.boolean({
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, session: true } },
     description:
       'Vrai quand cet abonnement, désigné par son adresse, est enregistré pour la personne connectée.',
     args: { adresse: t.arg.string({ required: true }) },
@@ -48,7 +48,7 @@ builder.queryFields(t => ({
 
 builder.mutationFields(t => ({
   abonnerPush: t.boolean({
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, session: true } },
     // Un abonnement appartient à la personne, pas à l'organisation : une
     // organisation en lecture seule le permet, comme la lecture des notifications.
     skipTypeScopes: true,
@@ -105,7 +105,7 @@ builder.mutationFields(t => ({
   }),
 
   desabonnerPush: t.boolean({
-    authScopes: { connecte: true },
+    authScopes: { $all: { connecte: true, session: true } },
     skipTypeScopes: true,
     description:
       'Retire l’abonnement push de cet appareil. Rend vrai quand un abonnement de la personne connectée a été retiré.',
