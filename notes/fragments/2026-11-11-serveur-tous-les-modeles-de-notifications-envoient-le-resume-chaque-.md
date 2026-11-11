@@ -2,7 +2,7 @@
 cible: serveur
 type: correctif
 audience: organisateurs
-role: admin-activite
+role: referent
 etat: prevu
 fr:
   titre: >-

@@ -12,7 +12,7 @@
           "date": "2026-11-11",
           "type": "correctif",
           "audience": "organisateurs",
-          "role": "admin-activite",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Tous les modèles de notifications envoient le résumé chaque semaine",
