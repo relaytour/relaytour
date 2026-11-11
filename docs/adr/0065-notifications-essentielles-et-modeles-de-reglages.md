@@ -87,9 +87,26 @@ Un **modèle de notifications** remplit tous les réglages en un geste. La perso
 | Push de l'équipe | Non | Non | Non | Oui |
 
 - Le modèle Essentiel s'applique par défaut à toute personne, quel que soit son rôle.
-- La page des préférences recommande le modèle du rôle le plus large de la personne dans l'organisation. L'ordre va de l'admin d'activité au contact principal, puis à la personne affectée. La page n'applique pas ce modèle d'office.
+- La page des préférences recommande le modèle du rôle le plus large de la personne dans l'organisation : Admin d'activité pour un admin, Contact principal pour un contact principal d'une période non archivée, Essentiel pour toute autre personne. Le modèle Référent·e reste un choix de la personne. La page n'applique pas ce modèle d'office.
 - Le serveur ne garde pas le nom du modèle. Il le déduit des réglages. Un changement dans la définition d'un modèle ne modifie donc les réglages de personne.
 - Les autres réglages (fréquence du résumé, mails immédiats, familles de push) gardent leur sens actuel.
+
+### La proposition du modèle du rôle
+
+- Un changement de rôle ne change pas les réglages (décision de Quentin, 09/11). L'espace propose alors le modèle du nouveau rôle, sans l'appliquer.
+- Un avis discret, en bas de l'écran, propose le modèle recommandé quand les réglages de la personne ne le suivent pas. Il se montre au plus une fois par jour et par navigateur.
+- L'avis porte trois actions : « Appliquer », « Voir mes préférences » et « Ne plus proposer ». Le refus se garde dans l'organisation. Un changement de place ou un modèle appliqué l'efface, et la proposition revient alors si les réglages ne suivent pas le rôle.
+- La notification « Votre place dans l'équipe a changé » invite à adapter ses notifications à son rôle, et son lien mène aux préférences.
+- La désignation d'un contact principal prévient dans l'application la personne nommée et celle qui perd ce rôle. Aucun mail ne part (ADR 0012).
+- Le mail d'équipe ajoute la proposition quand le nouveau rôle appelle un autre modèle que les réglages de la personne.
+
+### L'avis d'une nouvelle notification
+
+- Une notification qui arrive dans la cloche pendant que l'espace est ouvert s'annonce par un avis discret, en bas de l'écran, pendant dix secondes.
+- L'avis nomme l'activité et le périmètre, puis reprend le texte de la notification. Un clic sur l'avis ou sur « Ouvrir » mène à l'objet de la notification et la marque comme lue. « Voir dans la cloche » ouvre la cloche.
+- Les notifications déjà présentes à l'ouverture de l'espace ne s'annoncent pas. Au-delà de trois nouvelles notifications à la fois, un seul avis les compte.
+- Les notifications d'admin gardent leur écran et ne s'annoncent pas.
+- Une saisie en cours (une fiche, une tâche ou un commentaire) demande une confirmation avant de quitter la page, depuis un avis comme depuis la cloche. Le brouillon d'une fiche reste gardé dans le navigateur (ADR 0038).
 
 ### La fenêtre de regroupement
 
@@ -108,6 +125,7 @@ Un **modèle de notifications** remplit tous les réglages en un geste. La perso
 
 - Le résumé ne reprend plus une notification qu'un mail immédiat a déjà portée.
 - Le résumé regroupe les notifications d'une même tâche sur une ligne, qui donne l'effet net sur la période : « Léa Martin s'occupe de la tâche « Relire les catégories » à la place de Paul Durand ».
+- Les commentaires d'une même tâche forment aussi une ligne : « Léa Martin et une autre personne ont laissé 3 commentaires sur la tâche « Relire les catégories » ». La cloche garde une ligne par commentaire.
 - Le résumé range ses lignes par activité, puis par périmètre, comme les mails de l'ADR 0063.
 - Au-delà de 30 lignes, le résumé l'indique : « et 12 autres nouvelles dans l'application ».
 - Le mail des priorités gagne une rubrique « Vos nouvelles » pour une personne en résumé hebdomadaire. Cette rubrique reprend ses notifications non lues, qui comptent ensuite comme résumées.
@@ -146,8 +164,10 @@ Un **modèle de notifications** remplit tous les réglages en un geste. La perso
 - `Notification` gagne `disponibleLe`, nul pour une notification visible. `Journal` gagne `statutPrecedent`, écrit à chaque changement de statut.
 - `lib/importance-notifications.ts` porte le classement, et `lib/modeles-notification.ts` les modèles. Les points d'émission des notifications de tâche, de fiche et de retard passent par le même calcul des destinataires.
 - La file `planification` reçoit le job `consolider-tache`, mis en file au premier événement d'une tâche dans une fenêtre.
-- Le contrat GraphQL gagne les trois réglages, les champs `modele` et `modeleRecommande`, et la mutation `appliquerModeleNotification`.
+- Le contrat GraphQL gagne les trois réglages, les champs `modele`, `modeleRecommande` et `propositionModele`, et les mutations `appliquerModeleNotification` et `ecarterPropositionModele`.
+- `PreferenceOrganisation` gagne `modeleEcarte`, le modèle proposé que la personne a refusé.
 - La page des préférences s'ouvre sur le choix du modèle. Le détail des réglages se déplie en dessous.
+- L'espace organisateur gagne un registre des saisies en cours (`lib/modifications-en-cours.ts`), que l'éditeur de fiche, le formulaire de tâche et le fil de commentaires renseignent.
 - Le gabarit du résumé et celui des priorités changent.
 - Le job des priorités passe avant celui du résumé.
 - Le glossaire reçoit « importance d'une notification » et « modèle de notifications ». Les modes d'emploi et leurs captures des préférences sont à reprendre.

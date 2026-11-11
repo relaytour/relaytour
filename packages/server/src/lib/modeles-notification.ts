@@ -7,6 +7,7 @@ import type {
 } from '@relaytour/database'
 
 import { membreActif } from './appartenances.ts'
+import { i18n } from './langue.ts'
 
 // Modèles de réglages des notifications (ADR 0065). Un modèle remplit les réglages
 // en un geste ; le serveur ne garde pas son nom et le déduit des réglages.
@@ -78,6 +79,20 @@ export const REGLAGES_DES_MODELES: Record<Modele, ReglagesModele> = {
   },
 }
 
+/** Le nom d'un modèle, dans la langue courante. */
+export function libelleModele(modele: Modele): string {
+  switch (modele) {
+    case 'ESSENTIEL':
+      return i18n._('Essentiel')
+    case 'REFERENT':
+      return i18n._('Référent·e')
+    case 'CONTACT_PRINCIPAL':
+      return i18n._('Contact principal')
+    case 'ADMIN_ACTIVITE':
+      return i18n._('Admin d’activité')
+  }
+}
+
 /** Le modèle que des réglages reproduisent, ou null pour des réglages personnalisés. */
 export function modeleDe(reglages: ReglagesModele): Modele | null {
   for (const modele of MODELES) {
@@ -92,8 +107,9 @@ export function modeleDe(reglages: ReglagesModele): Modele | null {
 
 /**
  * Le modèle recommandé pour le rôle le plus large de la personne dans
- * l'organisation : admin, puis contact principal, puis personne affectée. La
- * recommandation ne change aucun réglage.
+ * l'organisation : admin, puis contact principal. Une personne seulement affectée
+ * garde le modèle Essentiel, qui vaut par défaut ; le modèle Référent·e reste un
+ * choix. La recommandation ne change aucun réglage (ADR 0065).
  */
 export async function modeleRecommande(
   prisma: PrismaClient,
@@ -120,6 +136,28 @@ export async function modeleRecommande(
   if (appartenance.role === 'ADMIN' || adminActivite > 0)
     return 'ADMIN_ACTIVITE'
   if (affectations.some(a => a.contactPrincipal)) return 'CONTACT_PRINCIPAL'
-  if (affectations.length > 0) return 'REFERENT'
   return 'ESSENTIEL'
+}
+
+/**
+ * Le modèle à proposer à une personne : celui de son rôle, quand ses réglages ne le
+ * suivent pas et qu'elle ne l'a pas refusé. Null sinon (ADR 0065).
+ */
+export async function propositionModele(
+  prisma: PrismaClient,
+  preferences: ReglagesModele & {
+    userId: string
+    organisationId: string
+    modeleEcarte: Modele | null
+  }
+): Promise<Modele | null> {
+  const recommande = await modeleRecommande(
+    prisma,
+    preferences.userId,
+    preferences.organisationId
+  )
+  return recommande === modeleDe(preferences) ||
+    recommande === preferences.modeleEcarte
+    ? null
+    : recommande
 }

@@ -361,11 +361,19 @@
 
         <article class="verre ecran" id="e-preferences">
           <div class="ecran-tete"><h3>Préférences</h3><span class="route">/&lt;activité&gt;/preferences</span></div>
-          <p>Vous choisissez les mails que vous recevez, et les notifications de vos périmètres. Les notifications de vos tâches restent visibles dans l'espace, quel que soit votre choix pour les mails.</p>
+          <p>Vous choisissez les mails que vous recevez, et les notifications de vos périmètres. La page s'ouvre sur le <strong>modèle de notifications</strong>, qui règle tout en un geste. Vous pouvez ensuite changer chaque réglage ; la page affiche alors « Personnalisé ».</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Essentiel</span></span><span>Ce qui vous concerne : vos tâches, vos échéances, vos réunions et les décisions qui vous attendent. Le mail des priorités remplace le résumé de la semaine. C'est le modèle par défaut.</span></li>
+            <li><span><span class="libelle">Référent·e</span></span><span>L'essentiel, et le suivi de vos périmètres : tâches à prendre, tâches faites, déclinaisons.</span></li>
+            <li><span><span class="libelle">Contact principal</span></span><span>Le suivi de vos périmètres, tout le détail des périmètres dont vous êtes contact principal et un résumé chaque matin.</span></li>
+            <li><span><span class="libelle">Admin d'activité</span></span><span>Le suivi de vos périmètres, toutes les nouvelles de l'équipe, les priorités de toute l'activité et un résumé chaque matin.</span></li>
+          </ul>
+          <p>L'étiquette « Recommandé pour vous » marque le modèle de votre rôle. Quand votre rôle change, vos réglages restent les mêmes : un avis en bas de l'écran vous propose le modèle de votre nouveau rôle, au plus une fois par jour. Vous l'appliquez, vous ouvrez vos préférences, ou vous refusez la proposition.</p>
+          <p class="note">Les notifications de vos tâches restent visibles dans l'espace, quel que soit votre choix pour les mails. Le réglage « Suivi de vos périmètres » ajoute l'essentiel ou tout le détail de l'activité de vos périmètres.</p>
           <p class="note">Vos préférences valent pour l'organisation affichée. Si vous appartenez à plusieurs organisations, chacune garde ses propres réglages.</p>
           <p class="note">Les admins y trouvent aussi le panneau « Votre messagerie », décrit dans le mode d'emploi <a href="messagerie.html">« Choisir votre messagerie »</a>.</p>
           <figure>
-            <img src="../captures/preferences.webp" data-mobile="../captures/mobile/preferences.webp" width="1440" height="900" loading="lazy" alt="Écran Préférences : le choix du résumé par mail, les réglages des mails immédiats et celui des notifications de vos périmètres." />
+            <img src="../captures/preferences.webp" data-mobile="../captures/mobile/preferences.webp" width="1440" height="900" loading="lazy" alt="Écran Préférences : le choix du modèle de notifications, puis le résumé par mail, le mail des priorités, les mails immédiats et le suivi de vos périmètres." />
             <figcaption>Écran Préférences, sur l'organisation d'exemple.</figcaption>
           </figure>
           <figure>
@@ -457,9 +465,10 @@
             <figcaption>Le tiroir de la cloche, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
           </figure>
           <p class="note">Si vous appartenez à plusieurs organisations, l'encadré « Vous avez d'autres notifications dans vos organisations » liste celles qui ont du nouveau. Chacune s'ouvre dans un nouvel onglet, et l'onglet d'origine garde la sienne. Dans l'application installée, l'organisation change dans la même fenêtre.</p>
-          <p>Quand une autre personne crée, modifie, commence, termine ou abandonne une tâche de votre périmètre, vous recevez une notification. Vous en recevez une aussi quand elle crée ou modifie une fiche du périmètre. Un clic sur la notification d'une tâche ouvre le périmètre et met cette tâche en évidence.</p>
-          <p class="note">Pour une fiche, ou pour une tâche qui ne vous est pas assignée, aucun mail ne part. Le réglage « Activité de vos périmètres », dans vos <a href="#e-preferences">Préférences</a>, désactive ces notifications.</p>
-          <p class="note">Une tâche qui vous est assignée garde sa notification, quel que soit ce réglage. Un mail vous prévient aussi quand une autre personne la modifie ou change son statut, selon le réglage « Modification de vos tâches ».</p>
+          <p>Par défaut, la cloche garde ce qui vous concerne : une tâche qui vous est assignée ou retirée, une modification ou un commentaire sur vos tâches, vos échéances, vos réunions. Le contact principal d'un périmètre reçoit aussi les déclinaisons à accepter et les retards des tâches sans personne. Un clic sur la notification d'une tâche ouvre le périmètre et met cette tâche en évidence.</p>
+          <p class="note">Le réglage « Suivi de vos périmètres », dans vos <a href="#e-preferences">Préférences</a>, ajoute l'essentiel du périmètre (tâches à prendre, tâches faites, déclinaisons) ou tout le détail (chaque modification, assignation et commentaire). Pour une fiche, ou pour une tâche qui ne vous est pas assignée, aucun mail ne part.</p>
+          <p class="note">Une notification de tâche arrive au plus dix minutes après l'action. Une personne retirée puis remise sur la tâche, ou un statut revenu à sa valeur de départ, ne notifie personne. Plusieurs modifications de la même tâche donnent une seule notification et un seul mail.</p>
+          <p>Une notification qui arrive pendant que l'espace est ouvert s'annonce aussi par un avis discret, en bas de l'écran. Un clic sur l'avis ouvre la tâche ou l'objet concerné. « Voir dans la cloche » ouvre la cloche. Si vous êtes en train d'écrire une fiche, une tâche ou un commentaire, l'espace vous demande de confirmer avant de quitter la page.</p>
           <p class="note">Une tâche terminée est annoncée sans nom : seuls la personne qui l'a cochée et les admins savent qui l'a terminée.</p>
         </article>
       </section>

@@ -34,6 +34,7 @@ export const PREFERENCES_PAR_DEFAUT = {
   pushAgenda: true,
   resumeAdmin: true,
   mailPriorites: 'MES_PERIMETRES',
+  modeleEcarte: null,
   dernierResumeLe: null,
 } as const
 

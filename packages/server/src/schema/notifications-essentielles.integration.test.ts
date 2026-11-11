@@ -371,7 +371,7 @@ describe('modèles de réglages', () => {
       >
     expect(await lire(ids.paul)).toMatchObject({
       modele: 'ESSENTIEL',
-      modeleRecommande: 'REFERENT',
+      modeleRecommande: 'ESSENTIEL',
       suiviPerimetres: 'MOI',
       suiviAdmin: 'ACTIONS',
       mailPriorites: 'MES_PERIMETRES',
@@ -532,8 +532,107 @@ describe('résumé regroupé par tâche', () => {
       'Lea s’occupe de la tâche « Relire l’accueil » (Natation) à la place de Paul.'
     )
     expect(message?.texte).not.toContain('a retiré Paul')
+    // La personne remplacée lit « à votre place ».
+    for (const type of ['TACHE_DESASSIGNEE', 'TACHE_ASSIGNEE'] as const) {
+      await prisma.notification.create({
+        data: {
+          ...base,
+          userId: ids.paul,
+          type,
+          personneId: type === 'TACHE_ASSIGNEE' ? ids.lea : ids.paul,
+          createdAt: new Date(t0 + (type === 'TACHE_ASSIGNEE' ? 1_000 : 0)),
+        },
+      })
+    }
+    const pourPaul = await composer(prisma, {
+      sorte: 'resume',
+      userId: ids.paul,
+      organisationId: ids.organisation,
+    })
+    expect(pourPaul?.texte).toContain(
+      'Lea s’occupe de la tâche « Relire l’accueil » (Natation) à votre place.'
+    )
     expect(message?.texte).not.toContain(
       'a modifié la tâche « Relire l’accueil »'
+    )
+  })
+})
+
+describe('proposition du modèle du rôle', () => {
+  const PROPOSITION = `{ mesPreferencesNotification { modele propositionModele } }`
+  const lire = async (userId: string) =>
+    (await reussir(userId, PROPOSITION)).mesPreferencesNotification as {
+      modele: string | null
+      propositionModele: string | null
+    }
+
+  it('ne propose rien à une personne seulement affectée, ni ne retient de refus', async () => {
+    expect((await lire(ids.victor)).propositionModele).toBeNull()
+    await reussir(
+      ids.victor,
+      `mutation { ecarterPropositionModele { propositionModele } }`
+    )
+    const ligne = await prisma.preferenceOrganisation.findUnique({
+      where: {
+        userId_organisationId: {
+          userId: ids.victor,
+          organisationId: ids.organisation,
+        },
+      },
+    })
+    expect(ligne?.modeleEcarte ?? null).toBeNull()
+  })
+
+  it('propose le modèle du contact principal jusqu’à son refus', async () => {
+    expect(await lire(ids.contact)).toMatchObject({
+      modele: 'ESSENTIEL',
+      propositionModele: 'CONTACT_PRINCIPAL',
+    })
+    await reussir(
+      ids.contact,
+      `mutation { ecarterPropositionModele { propositionModele } }`
+    )
+    expect((await lire(ids.contact)).propositionModele).toBeNull()
+  })
+
+  it('prévient la personne nommée contact principal, et celle qui perd ce rôle', async () => {
+    const affectation = async (userId: string) =>
+      (
+        await prisma.affectation.findFirstOrThrow({
+          where: { userId, perimetreId: ids.basket, editionId: ids.edition },
+          select: { id: true },
+        })
+      ).id
+    const places = (userId: string) =>
+      prisma.notification.count({
+        where: {
+          userId,
+          type: 'PLACE_MODIFIEE',
+          organisationId: ids.organisation,
+        },
+      })
+    const [avantZoe, avantContact] = [
+      await places(ids.zoe),
+      await places(ids.contact),
+    ]
+    await reussir(
+      ids.admin,
+      `mutation ($a: ID!) { definirContactPrincipal(affectationId: $a, contactPrincipal: true) }`,
+      { a: await affectation(ids.zoe) }
+    )
+    expect(await places(ids.zoe)).toBe(avantZoe + 1)
+    expect(await places(ids.contact)).toBe(avantContact + 1)
+    // Le nouveau rôle appelle le modèle Contact principal.
+    expect((await lire(ids.zoe)).propositionModele).toBe('CONTACT_PRINCIPAL')
+    // Le contact principal d'origine revient pour les tests suivants.
+    await reussir(
+      ids.admin,
+      `mutation ($a: ID!) { definirContactPrincipal(affectationId: $a, contactPrincipal: true) }`,
+      { a: await affectation(ids.contact) }
+    )
+    // Le changement de place efface son refus : la proposition revient.
+    expect((await lire(ids.contact)).propositionModele).toBe(
+      'CONTACT_PRINCIPAL'
     )
   })
 })

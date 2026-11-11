@@ -2074,6 +2074,11 @@ type Mutation {
   ecarterPropositionAcces(id: ID!): Boolean!
 
   """
+  Refuse le modèle proposé pour le rôle de la personne. La proposition revient avec une autre recommandation (ADR 0065).
+  """
+  ecarterPropositionModele: PreferencesNotification!
+
+  """
   Enregistre une correspondance d’import, ou remplace celle qui porte le même nom dans l’activité.
   """
   enregistrerCorrespondanceImport(activiteId: ID!, associations: JSONObject!, entetes: [String!]!, nom: String!, reglages: JSONObject!): CorrespondanceImport!
@@ -3122,6 +3127,11 @@ type PreferencesNotification {
   Le modèle du rôle le plus large de la personne dans l’organisation. La recommandation ne change aucun réglage (ADR 0065).
   """
   modeleRecommande: ModeleNotification!
+
+  """
+  Le modèle à proposer à la personne : celui de son rôle, quand ses réglages ne le suivent pas et qu’elle ne l’a pas refusé (ADR 0065).
+  """
+  propositionModele: ModeleNotification
 
   """
   Notification push quand la personne est convoquée à une réunion, ou quand une de ses réunions change ou s’annule (ADR 0037).
