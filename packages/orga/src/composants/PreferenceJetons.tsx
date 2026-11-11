@@ -1,7 +1,7 @@
 import { CopyOutlined, KeyOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Alert, App, Button, Input, Radio, Select, Tag } from 'antd'
+import { Alert, App, Button, Checkbox, Input, Radio, Select, Tag } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router'
 
@@ -10,12 +10,14 @@ import type { EtatApi, PorteeJeton } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { jourDeLInstant, messageErreur } from '../lib/erreurs'
 import { API_ORGANISATION, apiOuverte } from '../lib/jetons'
+import { MOI } from '../lib/requetes'
 
 import { Panneau } from './Panneau'
 
 // Jetons d'accès des programmes tiers (ADR 0064). Une personne crée ses jetons
 // ici, avec sa session : un jeton agit en son nom, dans cette organisation, avec
-// ses droits. Sa valeur ne s'affiche qu'une fois.
+// ses droits. Sa valeur ne s'affiche qu'une fois, et sa création arrive par mail,
+// avec un lien de révocation. La gestion des membres se coche à dessein.
 
 const MES_JETONS = graphql(`
   query MesJetonsAcces {
@@ -24,6 +26,7 @@ const MES_JETONS = graphql(`
       nom
       apercu
       portee
+      gestionMembres
       activiteIds
       expireLe
       dernierAccesLe
@@ -39,12 +42,14 @@ const CREER = graphql(`
     $portee: PorteeJeton!
     $activiteIds: [ID!]
     $expireLe: DateTime
+    $gestionMembres: Boolean
   ) {
     creerJetonAcces(
       nom: $nom
       portee: $portee
       activiteIds: $activiteIds
       expireLe: $expireLe
+      gestionMembres: $gestionMembres
     ) {
       jeton
       jetonAcces {
@@ -57,6 +62,12 @@ const CREER = graphql(`
 const REVOQUER = graphql(`
   mutation RevoquerJetonAcces($id: ID!) {
     revoquerJetonAcces(id: $id)
+  }
+`)
+
+const REVOQUER_TOUS = graphql(`
+  mutation RevoquerMesJetonsAcces {
+    revoquerMesJetonsAcces
   }
 `)
 
@@ -157,16 +168,23 @@ export default function PreferenceJetons({
   const { t } = useLingui()
   const { message, modal } = App.useApp()
   const { activites } = useActivite()
+  const { data: session } = useQuery(MOI)
   const { data: api } = useQuery(API_ORGANISATION)
   const etat = api?.apiOrganisation.etat
   const ouverte = apiOuverte(etat)
   const { data, refetch } = useQuery(MES_JETONS, { skip: !ouverte })
   const [creer, creation] = useMutation(CREER)
   const [revoquer] = useMutation(REVOQUER)
+  const [revoquerTous, revocation] = useMutation(REVOQUER_TOUS)
   // Le jeton créé, affiché une seule fois, et son identifiant dans la liste.
   const [cree, setCree] = useState<{ id: string; jeton: string } | null>(null)
   const [nom, setNom] = useState('')
   const [portee, setPortee] = useState<PorteeJeton>('LECTURE')
+  // La gestion des membres se coche à dessein : un jeton fuité ne change pas l'équipe.
+  const [gestionMembres, setGestionMembres] = useState(false)
+  // Seule une personne qui gère des membres a un usage de cette dimension.
+  const gereDesMembres =
+    session?.moi?.estAdmin === true || activites.some(a => a.estAdministree)
   const [toutes, setToutes] = useState(true)
   const [choisies, setChoisies] = useState<string[]>([])
   const [duree, setDuree] = useState<number>(365)
@@ -197,6 +215,7 @@ export default function PreferenceJetons({
           expireLe: new Date(
             Date.now() + duree * 86_400_000 - 60_000
           ).toISOString(),
+          gestionMembres: portee === 'LECTURE_ECRITURE' && gestionMembres,
         },
       })
       const resultat = r.data?.creerJetonAcces
@@ -225,6 +244,26 @@ export default function PreferenceJetons({
           setCree(actuel => (actuel?.id === id ? null : actuel))
           await refetch()
           message.success(t`Jeton révoqué.`)
+        } catch (e) {
+          message.error(messageErreur(e))
+          throw e
+        }
+      },
+    })
+
+  const revoquerTout = () =>
+    void modal.confirm({
+      title: t`Révoquer tous vos jetons ?`,
+      content: t`Vos ${actifs} jetons actifs dans cette organisation cessent aussitôt de servir. Les programmes qui les utilisent perdent leur accès.`,
+      okText: t`Tout révoquer`,
+      okButtonProps: { danger: true },
+      cancelText: t`Annuler`,
+      onOk: async () => {
+        try {
+          await revoquerTous()
+          setCree(null)
+          await refetch()
+          message.success(t`Tous vos jetons sont révoqués.`)
         } catch (e) {
           message.error(messageErreur(e))
           throw e
@@ -282,6 +321,22 @@ export default function PreferenceJetons({
                 options={ouvertes.map(a => ({ value: a.id, label: a.nom }))}
               />
             )}
+            {gereDesMembres && portee === 'LECTURE_ECRITURE' && (
+              <Checkbox
+                checked={gestionMembres}
+                onChange={e => setGestionMembres(e.target.checked)}
+              >
+                <Trans>
+                  Ce jeton peut inviter, retirer et promouvoir des membres
+                </Trans>
+                <span className="rt-note rt-note-ligne">
+                  <Trans>
+                    Décoché, le jeton garde vos autres droits, mais l’équipe ne
+                    change pas par son intermédiaire.
+                  </Trans>
+                </span>
+              </Checkbox>
+            )}
             <Select
               aria-label={t`Durée du jeton`}
               value={duree}
@@ -314,9 +369,23 @@ export default function PreferenceJetons({
             <p className="rt-note">
               {plafond
                 ? t`Vous avez ${JETONS_ACTIFS_MAX} jetons actifs, le maximum : révoquez-en un avant d’en créer un autre.`
-                : t`Jetons actifs : ${actifs} sur ${JETONS_ACTIFS_MAX}.`}
+                : t`Jetons actifs : ${actifs} sur ${JETONS_ACTIFS_MAX}.`}{' '}
+              <Trans>
+                Chaque création vous est signalée par mail, avec un lien pour
+                révoquer le jeton.
+              </Trans>
             </p>
             {cree && <JetonUnique jeton={cree.jeton} />}
+            {actifs > 1 && (
+              <Button
+                danger
+                loading={revocation.loading}
+                onClick={revoquerTout}
+                style={{ alignSelf: 'flex-start' }}
+              >
+                <Trans>Révoquer tous mes jetons</Trans>
+              </Button>
+            )}
             {jetons.length > 0 && (
               <ul className="rt-jetons">
                 {jetons.map(j => {
@@ -344,6 +413,12 @@ export default function PreferenceJetons({
                             ? t`Lecture seule`
                             : t`Lecture et écriture`}{' '}
                           · {perimetre}
+                          {j.gestionMembres && (
+                            <>
+                              {' · '}
+                              <Trans>Gestion des membres</Trans>
+                            </>
+                          )}
                         </span>
                         <span className="rt-note">
                           {actif(j)

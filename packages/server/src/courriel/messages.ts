@@ -38,6 +38,7 @@ import {
   jetonDesabonnement,
   type MailDesabonnable,
 } from '../lib/desabonnement.ts'
+import { adresseRevocation, jetonRevocation } from '../lib/revocation-jeton.ts'
 import {
   libelleModele,
   propositionModele,
@@ -119,6 +120,12 @@ export function sujets(
       nomCourt,
     }),
     'lien-export': i18n._('{nomCourt} : l’export de vos données', {
+      nomCourt,
+    }),
+    'jeton-cree': i18n._('{nomCourt} : un jeton d’accès a été créé', {
+      nomCourt,
+    }),
+    'jeton-revoque': i18n._('{nomCourt} : un jeton d’accès a été révoqué', {
       nomCourt,
     }),
   }
@@ -1404,6 +1411,94 @@ export async function composer(
             'Vous retrouvez vos places et leurs consignes dans votre espace.'
           )
       variables.avertissement = i18n._('Votre lien personnel reste le même.')
+    }
+  }
+
+  // Jetons d'accès (ADR 0064) : la création d'un jeton se signale à la personne au
+  // nom de qui il agit, avec un lien de révocation signé ; un jeton de robot se
+  // signale à l'admin qui l'a créé. La révocation par un admin se signale à la
+  // porteuse. Le mail ne porte jamais la valeur du jeton.
+  if (job.sorte === 'jeton-cree' || job.sorte === 'jeton-revoque') {
+    if (job.jetonAccesId === undefined) {
+      throw new Error(`Le mail « ${job.sorte} » exige un jeton.`)
+    }
+    const jeton = await prisma.jetonAcces.findUnique({
+      where: { id: job.jetonAccesId },
+      select: {
+        nom: true,
+        apercu: true,
+        portee: true,
+        gestionMembres: true,
+        activiteIds: true,
+        expireLe: true,
+        revoqueLe: true,
+        user: { select: { name: true, robot: true } },
+        revoquePar: { select: { name: true } },
+      },
+    })
+    // Un jeton disparu avec son compte, ou une révocation annulée : rien à dire.
+    if (
+      jeton === null ||
+      (job.sorte === 'jeton-revoque' && jeton.revoqueLe === null)
+    ) {
+      return null
+    }
+    const destinataire = await prisma.user.findUniqueOrThrow({
+      where: { id: job.userId },
+      select: { name: true },
+    })
+    variables.nom = destinataire.name
+    const apercu = `rt_${jeton.apercu}…`
+    variables.porteur = jeton.user.robot
+      ? i18n._('Ce jeton agit au nom du robot « {robot} », avec ses droits.', {
+          robot: jeton.user.name,
+        })
+      : i18n._('Ce jeton agit en votre nom, avec vos droits.')
+    const droits = [
+      jeton.portee === 'LECTURE'
+        ? i18n._('lecture seule')
+        : i18n._('lecture et écriture'),
+      jeton.activiteIds === null
+        ? i18n._('toutes les activités')
+        : i18n._('certaines activités seulement'),
+      ...(jeton.gestionMembres ? [i18n._('gestion des membres')] : []),
+    ]
+    variables.droits = i18n._('Portée : {droits}.', {
+      droits: droits.join(', '),
+    })
+    // Les liens suivent la forme des autres mails : l'organisation en paramètre, que
+    // l'espace organisateur choisit à l'ouverture (ADR 0032).
+    variables.lienJetons = jeton.user.robot
+      ? lienVers('/admin/organisation')
+      : `${lienPreferences}#jetons`
+    if (job.sorte === 'jeton-cree') {
+      variables.intro = i18n._(
+        'Le jeton d’accès « {jeton} » ({apercu}) vient d’être créé. Il reste valable jusqu’au {fin}.',
+        {
+          jeton: jeton.nom,
+          apercu,
+          fin: jeton.expireLe.toLocaleDateString(langueCourante(), {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'UTC',
+          }),
+        }
+      )
+      const { env } = await import('../env.ts')
+      variables.lienRevocation = adresseRevocation(
+        origine,
+        jetonRevocation(env.BETTER_AUTH_SECRET, job.jetonAccesId)
+      )
+    } else {
+      variables.intro = i18n._(
+        'Le jeton d’accès « {jeton} » ({apercu}) a été révoqué par {par}. Le programme qui l’utilisait n’a plus accès à l’espace.',
+        {
+          jeton: jeton.nom,
+          apercu,
+          par: jeton.revoquePar?.name ?? i18n._('un admin de l’organisation'),
+        }
+      )
     }
   }
 

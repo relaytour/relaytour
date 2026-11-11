@@ -297,7 +297,7 @@ builder.mutationFields(t => ({
   }),
 
   relancerInvitation: t.boolean({
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, gestionMembres: true } },
     description:
       'Renvoie le mail d’une invitation en attente, une fois par heure au plus.',
     args: { id: t.arg.id({ required: true }) },
@@ -323,7 +323,7 @@ builder.mutationFields(t => ({
   }),
 
   retirerInvitation: t.boolean({
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, gestionMembres: true } },
     description:
       'Retire une invitation en attente. Un admin d’activité retire les périmètres et les rattachements de ses activités ; l’invitation disparaît quand il n’en reste aucun.',
     args: { id: t.arg.id({ required: true }) },

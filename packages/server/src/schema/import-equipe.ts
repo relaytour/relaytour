@@ -105,7 +105,7 @@ builder.queryFields(t => ({
 builder.mutationFields(t => ({
   importerEquipe: t.field({
     type: RapportImportEquipeRef,
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, gestionMembres: true } },
     description:
       'Importe un lot de lignes de l’équipe : comptes, rattachements, affectations et contacts principaux qui manquent. Rien n’est retiré, et aucun mail ne part sans `envoyerMails`.',
     args: {

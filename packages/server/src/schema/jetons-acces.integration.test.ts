@@ -12,11 +12,32 @@ import {
   contexteDeJetonAcces,
   creerRefusDeJetonAcces,
 } from '../contexte-jeton.ts'
+import { composer } from '../courriel/messages.ts'
+import { env } from '../env.ts'
 import { JETONS_ACTIFS_MAX } from '../lib/jetons-acces.ts'
 import { journal } from '../lib/journal.ts'
 import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
+import {
+  CHEMIN_REVOCATION,
+  jetonARevoquer,
+  jetonRevocation,
+  lireJetonRevocation,
+  revoquerParLien,
+} from '../lib/revocation-jeton.ts'
 
 import { schema } from './index.ts'
+
+// Les mails de la création et de la révocation d'un jeton se gardent ici : rien ne
+// part vers la file.
+const enFile = vi.hoisted(
+  () => [] as { sorte: string; cible: unknown; options: unknown }[]
+)
+vi.mock('../courriel/file.ts', () => ({
+  mettreEnFile: (sorte: string, cible: unknown, options: unknown = {}) => {
+    enFile.push({ sorte, cible, options })
+    return Promise.resolve(true)
+  },
+}))
 
 // Jetons d'accès et module « API » (ADR 0064). Un jeton agit au nom d'une personne,
 // dans une seule organisation, avec ses droits et jamais plus. Les contrôles se
@@ -616,6 +637,238 @@ describe('désactivation et administration de l’installation', () => {
       'mutation ($id: ID!) { archiverPersonne(id: $id, archive: false) { id } }',
       { id: ids.referente }
     )
+  })
+})
+
+describe('mail de création et lien de révocation', () => {
+  it('la création met en file un mail à la personne, avec un lien de révocation et sans la valeur', async () => {
+    enFile.length = 0
+    const { jeton, jetonAcces } = await creerJeton(ids.referente, 'LECTURE')
+    expect(enFile).toEqual([
+      {
+        sorte: 'jeton-cree',
+        cible: { userId: ids.referente },
+        options: { organisationId: ids.org, jetonAccesId: jetonAcces.id },
+      },
+    ])
+    const message = await composer(prisma, {
+      sorte: 'jeton-cree',
+      userId: ids.referente,
+      organisationId: ids.org,
+      jetonAccesId: jetonAcces.id,
+    })
+    expect(message).not.toBeNull()
+    expect(message?.texte).toContain('jeton LECTURE')
+    expect(message?.texte).toContain(CHEMIN_REVOCATION)
+    // Le lien des préférences a la forme des autres mails : l'organisation en
+    // paramètre, puis l'ancre du panneau.
+    expect(message?.texte).toContain(`/preferences?organisation=${slug}#jetons`)
+    expect(message?.texte).not.toContain(`/${slug}/preferences`)
+    expect(message?.texte).not.toContain(jeton)
+    expect(message?.html).not.toContain(jeton)
+  })
+
+  it('le lien du mail révoque le jeton sans session, une seule fois', async () => {
+    const { jeton, jetonAcces } = await creerJeton(ids.referente, 'LECTURE')
+    const lien = jetonRevocation(env.BETTER_AUTH_SECRET, jetonAcces.id)
+    expect(lireJetonRevocation(env.BETTER_AUTH_SECRET, lien)).toBe(
+      jetonAcces.id
+    )
+    expect((await jetonARevoquer(prisma, jetonAcces.id))?.id).toBe(
+      jetonAcces.id
+    )
+    expect(await revoquerParLien(prisma, jetonAcces.id)).toBe(true)
+    expect(await revoquerParLien(prisma, jetonAcces.id)).toBe(false)
+    // Un jeton qui ne répond plus vaut un lien non valide.
+    expect(await jetonARevoquer(prisma, jetonAcces.id)).toBeNull()
+    expect(code(await executer({ jeton }, ACTIVITES))).toBe('JETON_INVALIDE')
+  })
+})
+
+describe('jetons de l’organisation', () => {
+  const LISTE = `{ jetonsAccesOrganisation {
+    jeton { id nom gestionMembres revoqueLe } porteur { id nom robot } revoquePar
+  } }`
+  const REVOQUER_ORG =
+    'mutation ($id: ID!) { revoquerJetonOrganisation(id: $id) }'
+  type Ligne = {
+    jeton: { id: string; revoqueLe: string | null }
+    porteur: { id: string; robot: boolean }
+    revoquePar: string | null
+  }
+  const lignes = (r: Awaited<ReturnType<typeof executer>>) =>
+    (r.data as { jetonsAccesOrganisation: Ligne[] }).jetonsAccesOrganisation
+
+  it('un admin voit les jetons des membres ; une référente et un jeton, non', async () => {
+    const { jetonAcces } = await creerJeton(ids.referente, 'LECTURE')
+    const r = await executer({ session: ids.admin }, LISTE)
+    expect(r.errors).toBeUndefined()
+    const ligne = lignes(r).find(l => l.jeton.id === jetonAcces.id)
+    expect(ligne?.porteur).toEqual({
+      id: ids.referente,
+      nom: `Référente ${s}`,
+      robot: false,
+    })
+    expect(code(await executer({ session: ids.referente }, LISTE))).toBe(
+      'FORBIDDEN'
+    )
+    const { jeton } = await creerJeton(ids.admin, 'LECTURE_ECRITURE')
+    expect(code(await executer({ jeton }, LISTE))).toBe('FORBIDDEN')
+  })
+
+  it('un admin révoque le jeton d’un membre, qui en est prévenu', async () => {
+    const { jeton, jetonAcces } = await creerJeton(ids.referente, 'LECTURE')
+    enFile.length = 0
+    const r = await executer({ session: ids.admin }, REVOQUER_ORG, {
+      id: jetonAcces.id,
+    })
+    expect(r.data).toEqual({ revoquerJetonOrganisation: true })
+    expect(enFile).toEqual([
+      {
+        sorte: 'jeton-revoque',
+        cible: { userId: ids.referente },
+        options: { organisationId: ids.org, jetonAccesId: jetonAcces.id },
+      },
+    ])
+    expect(code(await executer({ jeton }, ACTIVITES))).toBe('JETON_INVALIDE')
+    const ligne = lignes(await executer({ session: ids.admin }, LISTE)).find(
+      l => l.jeton.id === jetonAcces.id
+    )
+    expect(ligne?.revoquePar).toBe(`Admin ${s}`)
+    // Une seconde révocation ne fait rien.
+    const encore = await executer({ session: ids.admin }, REVOQUER_ORG, {
+      id: jetonAcces.id,
+    })
+    expect(encore.data).toEqual({ revoquerJetonOrganisation: false })
+    // Le mail nomme l'admin.
+    const message = await composer(prisma, {
+      sorte: 'jeton-revoque',
+      userId: ids.referente,
+      organisationId: ids.org,
+      jetonAccesId: jetonAcces.id,
+    })
+    expect(message?.texte).toContain(`Admin ${s}`)
+  })
+
+  it('une référente ne révoque pas par l’organisation', async () => {
+    const { jetonAcces } = await creerJeton(ids.admin, 'LECTURE')
+    expect(
+      code(
+        await executer({ session: ids.referente }, REVOQUER_ORG, {
+          id: jetonAcces.id,
+        })
+      )
+    ).toBe('FORBIDDEN')
+  })
+
+  it('une personne révoque tous ses jetons d’un geste', async () => {
+    await creerJeton(ids.referente, 'LECTURE')
+    await creerJeton(ids.referente, 'LECTURE_ECRITURE')
+    const ou = {
+      organisationId: ids.org,
+      userId: ids.referente,
+      revoqueLe: null,
+      expireLe: { gt: new Date() },
+    }
+    const actifs = await prisma.jetonAcces.count({ where: ou })
+    expect(actifs).toBeGreaterThanOrEqual(2)
+    const r = await executer(
+      { session: ids.referente },
+      'mutation { revoquerMesJetonsAcces }'
+    )
+    expect(r.data).toEqual({ revoquerMesJetonsAcces: actifs })
+    expect(await prisma.jetonAcces.count({ where: ou })).toBe(0)
+  })
+})
+
+describe('gestion des membres', () => {
+  const CREER_GM = `mutation ($nom: String!, $p: PorteeJeton!, $gm: Boolean) {
+    creerJetonAcces(nom: $nom, portee: $p, gestionMembres: $gm) {
+      jeton jetonAcces { id gestionMembres }
+    }
+  }`
+  const RENOMMER = `mutation ($id: ID!, $nom: String!) {
+    modifierPersonne(id: $id, nom: $nom, estAdmin: false) { id }
+  }`
+  const INVITER =
+    'mutation { inviterPersonne(email: "programme@exemple.fr", nom: "Programme") { enAttente } }'
+
+  async function creerAvecMembres(userId: string, p: string, gm: boolean) {
+    const r = await executer({ session: userId }, CREER_GM, {
+      nom: `membres ${gm}`,
+      p,
+      gm,
+    })
+    expect(r.errors).toBeUndefined()
+    return (
+      r.data as {
+        creerJetonAcces: {
+          jeton: string
+          jetonAcces: { gestionMembres: boolean }
+        }
+      }
+    ).creerJetonAcces
+  }
+
+  it('un jeton sans la dimension n’invite ni ne renomme personne', async () => {
+    const { jeton, jetonAcces } = await creerAvecMembres(
+      ids.admin,
+      'LECTURE_ECRITURE',
+      false
+    )
+    expect(jetonAcces.gestionMembres).toBe(false)
+    const r = await executer({ jeton }, RENOMMER, {
+      id: ids.referente,
+      nom: 'Par un programme',
+    })
+    expect(code(r)).toBe('PORTEE_INSUFFISANTE')
+    expect(r.errors?.[0]?.message).toContain('gestion des membres')
+    expect(code(await executer({ jeton }, INVITER))).toBe('PORTEE_INSUFFISANTE')
+    const bornes = await executer(
+      { jeton },
+      '{ jetonCourant { gestionMembres } }'
+    )
+    expect(bornes.data).toEqual({ jetonCourant: { gestionMembres: false } })
+    const nom = await prisma.user.findUniqueOrThrow({
+      where: { id: ids.referente },
+      select: { name: true },
+    })
+    expect(nom.name).toBe(`Référente ${s}`)
+  })
+
+  it('un jeton créé avec la dimension gère les membres, dans les droits de la personne', async () => {
+    const admin = await creerAvecMembres(ids.admin, 'LECTURE_ECRITURE', true)
+    expect(admin.jetonAcces.gestionMembres).toBe(true)
+    const ok = await executer({ jeton: admin.jeton }, RENOMMER, {
+      id: ids.referente,
+      nom: `Référente ${s}`,
+    })
+    expect(ok.errors).toBeUndefined()
+    // La dimension ne crée aucun droit : une référente n'administre personne.
+    const referente = await creerAvecMembres(
+      ids.referente,
+      'LECTURE_ECRITURE',
+      true
+    )
+    const refus = await executer({ jeton: referente.jeton }, RENOMMER, {
+      id: ids.admin,
+      nom: 'Par un programme',
+    })
+    expect(code(refus)).toBe('FORBIDDEN')
+  })
+
+  it('un jeton en lecture reçoit d’abord le refus de la lecture', async () => {
+    const { jeton } = await creerAvecMembres(ids.admin, 'LECTURE', true)
+    const r = await executer({ jeton }, RENOMMER, {
+      id: ids.referente,
+      nom: `Référente ${s}`,
+    })
+    expect(code(r)).toBe('PORTEE_INSUFFISANTE')
+    expect(r.errors?.[0]?.message).toContain('lecture')
+    await prisma.jetonAcces.updateMany({
+      where: { organisationId: ids.org, revoqueLe: null },
+      data: { revoqueLe: new Date() },
+    })
   })
 })
 

@@ -462,7 +462,7 @@ const InvitationEnvoyeeRef = builder
 builder.mutationFields(t => ({
   inviterPersonne: t.field({
     type: InvitationEnvoyeeRef,
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, gestionMembres: true } },
     args: {
       email: t.arg.string({ required: true }),
       nom: t.arg.string({ required: true }),
@@ -771,7 +771,7 @@ builder.mutationFields(t => ({
 
   modifierPersonne: t.prismaField({
     type: PersonneRef,
-    authScopes: { admin: true },
+    authScopes: { $all: { admin: true, gestionMembres: true } },
     args: {
       id: t.arg.id({ required: true }),
       nom: t.arg.string({ required: true }),
@@ -903,7 +903,7 @@ builder.mutationFields(t => ({
 
   archiverPersonne: t.prismaField({
     type: PersonneRef,
-    authScopes: { admin: true },
+    authScopes: { $all: { admin: true, gestionMembres: true } },
     args: {
       id: t.arg.id({ required: true }),
       archive: t.arg.boolean({ required: true }),
@@ -995,7 +995,7 @@ builder.mutationFields(t => ({
 
   affecter: t.prismaField({
     type: AffectationRef,
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, gestionMembres: true } },
     args: {
       personneId: t.arg.id({ required: true }),
       perimetreId: t.arg.id({ required: true }),
@@ -1059,7 +1059,7 @@ builder.mutationFields(t => ({
   }),
 
   retirerAffectation: t.boolean({
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, gestionMembres: true } },
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, { id }, ctx) => {
       const affectation = await prisma.affectation.findFirst({
@@ -1131,7 +1131,7 @@ builder.mutationFields(t => ({
   // l'équipe de l'activité et découvre ses périmètres. Un admin de l'activité
   // rattache une personne de ses équipes ; un admin de l'organisation, tout membre.
   rattacherALActivite: t.boolean({
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, gestionMembres: true } },
     args: {
       userId: t.arg.id({ required: true }),
       activiteId: t.arg.id({ required: true }),
@@ -1178,7 +1178,7 @@ builder.mutationFields(t => ({
   // garde la personne dans l'équipe et lui laisse voir l'activité (ADR 0010). Hors
   // des activités administrées, rien ne change.
   retirerDeLActivite: t.boolean({
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, gestionMembres: true } },
     args: {
       userId: t.arg.id({ required: true }),
       activiteId: t.arg.id({ required: true }),
@@ -1336,7 +1336,7 @@ builder.mutationFields(t => ({
   // activités et les personnes de ses équipes. La personne reste membre de
   // l'organisation.
   definirAdminActivite: t.boolean({
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, gestionMembres: true } },
     args: {
       personneId: t.arg.id({ required: true }),
       activiteId: t.arg.id({ required: true }),

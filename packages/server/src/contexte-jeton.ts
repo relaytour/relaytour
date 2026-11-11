@@ -58,7 +58,12 @@ export async function contexteDeJetonAcces(
     `jeton-acces:${resolution.jeton.id}`,
     DEBIT_JETON_ACCES.max,
     DEBIT_JETON_ACCES.fenetreSecondes,
-    { libelle: 'la limite de débit d’un jeton d’accès' }
+    {
+      libelle: 'la limite de débit d’un jeton d’accès',
+      // Sans Redis, le débit d'un programme n'aurait plus de borne : le jeton reçoit
+      // la limite, et le programme réessaie. L'espace organisateur n'est pas touché.
+      siIndisponible: 'refuser',
+    }
   )
   if (!debitPermis) return anonyme(limiteDeDebit())
   await noterAcces(resolution.jeton.id, maintenant)

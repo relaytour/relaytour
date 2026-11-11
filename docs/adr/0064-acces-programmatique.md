@@ -36,10 +36,13 @@ L'API GraphQL contrôle déjà chaque champ selon la personne et son organisatio
   - la portée `LECTURE` refuse toute mutation avec le code `PORTEE_INSUFFISANTE` ; `LECTURE_ECRITURE` écrit avec les droits de la personne ;
   - une liste d'activités réduit chaque ensemble d'activités du contexte (administrées, visibles, découvertes) et les affectations lues. Une activité hors de la liste vaut une activité d'une autre organisation ;
   - un jeton limité à des activités ne porte pas le rôle d'admin de l'organisation. Il administre seulement les activités de sa liste que la personne administre ;
-  - la date de fin est obligatoire : un an par défaut, un an au plus.
+  - la date de fin est obligatoire : un an par défaut, un an au plus ;
+  - la gestion des membres est une dimension à part, désactivée par défaut (`gestionMembres`). Sans elle, le jeton n'invite, n'affecte, ne retire ni ne promeut personne : `inviterPersonne`, `accepterDemande`, `archiverPersonne`, `modifierPersonne`, `definirAdminActivite`, `rattacherALActivite`, `retirerDeLActivite`, `affecter`, `retirerAffectation`, `importerEquipe`, `relancerInvitation` et `retirerInvitation` répondent `PORTEE_INSUFFISANTE`. Un jeton fuité ne change donc pas l'équipe. Cette dimension ne crée aucun droit : elle en retire un par défaut, et la personne garde les siens. Un jeton de robot ne la reçoit jamais.
 - Une personne a au plus 10 jetons actifs par organisation. Le plafond se vérifie sous le verrou de l'organisation.
 - Un jeton n'ouvre jamais plus que la session de la personne. Le contrôle des champs reste celui de l'API : un jeton ne crée aucun droit.
 - Une requête porteuse d'un jeton lit ses bornes par `jetonCourant`.
+- La création d'un jeton se signale par mail à la personne au nom de qui il agit, avec sa portée et un lien de révocation signé (`/medias/jeton/revocation/`) qui coupe l'accès sans session. Le jeton d'un robot se signale à l'admin qui l'a créé. Une session volée ne crée donc pas un accès d'un an en silence.
+- Un admin de l'organisation lit les jetons de tous les membres et des robots (`jetonsAccesOrganisation`), sans leur valeur, et révoque chacun (`revoquerJetonOrganisation`). La porteuse l'apprend par mail, qui nomme l'admin. Une personne révoque tous ses jetons d'un geste (`revoquerMesJetonsAcces`).
 
 ### Les robots
 
@@ -59,7 +62,7 @@ L'API GraphQL contrôle déjà chaque champ selon la personne et son organisatio
 
 Un jeton ne remplace pas la session. Ces opérations exigent une session de l'espace organisateur :
 
-- la gestion des jetons : créer, lister, révoquer ;
+- la gestion des jetons : créer, lister, révoquer, pour soi comme pour l'organisation ;
 - les opérations du compte : choisir une organisation, accepter une invitation, changer son nom ou sa langue, lire les notifications des autres organisations ;
 - les secrets et les appareils : abonnements à l'agenda (ADR 0037), notifications push (ADR 0024), connexion au fournisseur cloud (ADR 0038) ;
 - les réglages personnels : préférences de notification, accord de l'organigramme (ADR 0036) ;
@@ -94,13 +97,15 @@ Les notifications de l'organisation ne passent pas par les activités. Un jeton 
 
 ### Sécurité
 
-- Un jeton accepté compte 120 requêtes par minute au plus. L'ouverture d'un flux des changements compte une requête, puis chaque relecture de ses droits en compte une autre.
+- Un jeton accepté compte 120 requêtes par minute au plus. L'ouverture d'un flux des changements compte une requête, puis chaque relecture de ses droits en compte une autre. Quand Redis ne répond pas, la limite refuse : un programme sait réessayer, et l'espace organisateur n'est pas touché.
 - Les jetons refusés se comptent par adresse : au-delà de 60 refus en un quart d'heure, l'adresse reçoit la limite de débit, même avec un jeton exact. La valeur reste haute, car un programme qui relaie plusieurs personnes appelle depuis une seule adresse.
 - Cette limite par adresse est un compromis assumé. Derrière un proxy ou un NAT partagé, un programme mal configuré peut fermer l'API aux autres programmes de la même adresse pendant un quart d'heure. Elle borne en échange une recherche de jetons à l'aveugle.
 - Le jeton n'entre jamais au journal (invariant 6). Le journal garde l'identifiant du jeton et l'événement : `jeton-acces-cree`, `jeton-acces-revoque`, `jeton-acces-refuse`.
 - Le dernier usage d'un jeton s'écrit au plus une fois par minute. La personne le lit à côté de chaque jeton.
 - L'archivage d'une personne dans une organisation révoque ses jetons dans la même transaction. Un rétablissement ne les rouvre pas.
-- Une personne ne révoque que ses propres jetons. Un identifiant d'un autre jeton ne fait rien et rend faux.
+- Une personne ne révoque que ses propres jetons, et un admin de l'organisation ceux de toute l'organisation. Un identifiant d'un autre jeton ne fait rien et rend faux. Une révocation par un admin note son auteur (`revoqueParId`) et se signale à la porteuse.
+- Les mails `jeton-cree` et `jeton-revoque` ne sont jamais reportés par le plafond quotidien. Le lien de révocation ne vaut que pour un jeton encore actif : révoqué ou expiré, il répond comme un lien non valide.
+- Le contrat `/api/v1/openapi.json`, lisible sans jeton, porte la version du contrat (`1.0.0`), jamais celle de l'installation.
 
 ## Options écartées
 
@@ -112,9 +117,9 @@ Les notifications de l'organisation ne passent pas par les activités. Un jeton 
 
 ## Conséquences
 
-- Deux migrations additives ajoutent cinq colonnes à `Organisation`, la table `JetonAcces` et la colonne `User.robot`. Après un retour à une version antérieure, les jetons cessent de répondre, un robot devient un compte ordinaire sans connexion, et aucune donnée ne se perd.
+- Deux migrations additives ajoutent cinq colonnes à `Organisation`, la table `JetonAcces` et la colonne `User.robot`. Une troisième ajoute `JetonAcces.gestionMembres` et `JetonAcces.revoqueParId`. Après un retour à une version antérieure, les jetons cessent de répondre, un robot devient un compte ordinaire sans connexion, et aucune donnée ne se perd.
 - Un admin de l'organisation qui n'active pas le module ne change rien à son organisation.
-- Une opération nouvelle qui touche au compte, à un secret ou à un appareil exige `session` dans ses `authScopes`. Une lecture nouvelle de toute l'organisation, hors des activités, exige `toutesActivites`.
+- Une opération nouvelle qui touche au compte, à un secret ou à un appareil exige `session` dans ses `authScopes`. Une lecture nouvelle de toute l'organisation, hors des activités, exige `toutesActivites`. Une opération nouvelle qui ajoute, retire ou promeut une personne exige `gestionMembres`. `schema/portees.test.ts` fige les trois listes : un champ qui entre ou sort se décide à la revue.
 - Une opération nouvelle qui reçoit un identifiant entre dans la table des refus croisés, comme aujourd'hui. Le garde-fou couvre `creerJetonAcces`, `revoquerJetonAcces`, `creerRobot`, `creerJetonRobot` et `revoquerJetonRobot`.
 - Toute nouvelle façon de faire entrer une personne par son adresse passe par `adresseValide`, qui refuse le domaine `.invalid`.
 - Les webhooks sortants restent hors de cette décision (feuille de route).
@@ -129,7 +134,10 @@ Les tests prouvent chaque contrôle par le refus (`jetons-acces.integration.test
 - un jeton d'un admin limité à une activité ne lit pas l'annuaire ;
 - un jeton n'ouvre ni la gestion des jetons, ni les opérations du compte, ni les secrets ;
 - un jeton révoqué, expiré, inconnu ou mal formé reçoit le même refus ;
-- une personne ne révoque pas le jeton d'une autre ;
+- une personne ne révoque pas le jeton d'une autre, un admin de l'organisation révoque celui d'un membre, et la porteuse en est prévenue (`jetons-acces.integration.test.ts`) ;
+- la création d'un jeton met en file un mail dont le lien signé révoque le jeton sans session, une seule fois ;
+- un jeton sans la dimension « gestion des membres » n'invite ni ne renomme personne, et la reçoit avec elle ;
+- les champs à portée `session` et `gestionMembres` sont ceux de la liste figée (`portees.test.ts`) ;
 - la suspension et l'archivage révoquent les jetons ;
 - le journal ne reçoit jamais un jeton ;
 - la route GraphQL répond 401, 403 ou 429 avant toute exécution ;

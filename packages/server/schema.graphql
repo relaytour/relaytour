@@ -1543,6 +1543,11 @@ type JetonAcces {
   creeLe: DateTime!
   dernierAccesLe: DateTime
   expireLe: DateTime!
+
+  """
+  Le jeton ouvre la gestion des membres : inviter, retirer et promouvoir une personne, dans la limite des droits de sa personne. Faux par défaut, et toujours pour un robot.
+  """
+  gestionMembres: Boolean!
   id: ID!
   nom: String!
   portee: PorteeJeton!
@@ -1556,6 +1561,11 @@ type JetonCourant {
   """Nul : toutes les activités que la personne voit."""
   activiteIds: [ID!]
   expireLe: DateTime!
+
+  """
+  Vrai quand le jeton ouvre la gestion des membres : inviter, retirer et promouvoir une personne.
+  """
+  gestionMembres: Boolean!
   portee: PorteeJeton!
 }
 
@@ -1565,6 +1575,19 @@ Un jeton qui vient d’être créé. `jeton` est sa valeur, rendue cette seule f
 type JetonCree {
   jeton: String!
   jetonAcces: JetonAcces!
+}
+
+"""
+Un jeton d’accès de l’organisation, vu par un admin : ses bornes et sa porteuse, jamais sa valeur.
+"""
+type JetonOrganisation {
+  jeton: JetonAcces!
+  porteur: PorteurDeJeton!
+
+  """
+  Le nom de l’admin qui a révoqué le jeton. Nul quand la porteuse l’a révoqué elle-même, par l’écran ou par le lien de son mail.
+  """
+  revoquePar: String
 }
 
 """
@@ -2022,7 +2045,17 @@ type Mutation {
   """
   Crée un jeton d’accès pour la personne connectée, dans l’organisation active. Sa valeur n’est rendue qu’ici.
   """
-  creerJetonAcces(activiteIds: [ID!], expireLe: DateTime, nom: String!, portee: PorteeJeton!): JetonCree!
+  creerJetonAcces(
+    activiteIds: [ID!]
+    expireLe: DateTime
+
+    """
+    Ouvre au jeton la gestion des membres : inviter, retirer et promouvoir une personne, dans la limite des droits de la personne. Faux par défaut.
+    """
+    gestionMembres: Boolean
+    nom: String!
+    portee: PorteeJeton!
+  ): JetonCree!
 
   """
   Crée un jeton d’accès pour un robot. Ses activités se vérifient contre celles que le robot voit. Cinq jetons actifs au plus par robot.
@@ -2668,9 +2701,19 @@ type Mutation {
   revoquerJetonAcces(id: ID!): Boolean!
 
   """
+  Révoque un jeton d’accès de l’organisation, au nom d’un admin. La porteuse l’apprend par mail. Rend faux pour un jeton inconnu, d’une autre organisation ou déjà révoqué.
+  """
+  revoquerJetonOrganisation(id: ID!): Boolean!
+
+  """
   Révoque un jeton d’un robot de l’organisation. Rend faux pour un jeton inconnu, déjà révoqué ou qui n’appartient pas à un robot.
   """
   revoquerJetonRobot(id: ID!): Boolean!
+
+  """
+  Révoque tous les jetons d’accès actifs de la personne connectée dans l’organisation active. Rend leur nombre.
+  """
+  revoquerMesJetonsAcces: Int!
 
   """Révoque l’abonnement personnel : son adresse cesse de servir."""
   revoquerMonAbonnementAgenda: Boolean!
@@ -3215,6 +3258,13 @@ enum PorteeJeton {
   LECTURE_ECRITURE
 }
 
+"""La personne ou le robot au nom de qui un jeton agit."""
+type PorteurDeJeton {
+  id: ID!
+  nom: String!
+  robot: Boolean!
+}
+
 type PostesPerimetre {
   aPourvoir: Int!
   affectations: [Affectation!]!
@@ -3547,6 +3597,11 @@ type Query {
   Le jeton d’accès qui porte la requête. Nul pour une session de l’espace organisateur.
   """
   jetonCourant: JetonCourant
+
+  """
+  Les jetons d’accès de toute l’organisation, pour ses admins : les jetons actifs, puis ceux révoqués ou expirés depuis moins de 30 jours. La valeur d’un jeton ne se relit jamais.
+  """
+  jetonsAccesOrganisation: [JetonOrganisation!]!
 
   """Les lieux d’une activité, dans leur ordre d’affichage."""
   lieux(activiteId: ID!, inclureArchives: Boolean = false): [Lieu!]!

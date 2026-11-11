@@ -2074,6 +2074,7 @@ msgstr "Annulée"
 #: src/composants/GestionAcces.tsx
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/JalonTache.tsx
+#: src/composants/JetonsOrganisation.tsx
 #: src/composants/LienBenevole.tsx
 #: src/composants/LierTaches.tsx
 #: src/composants/LieuxFenetre.tsx
@@ -2395,6 +2396,10 @@ msgstr "Aucun doublon possible parmi les fiches."
 #: src/composants/GestionAcces.tsx
 msgid "Aucun groupe du fournisseur n’a de droit sur ce dossier."
 msgstr "Aucun groupe du fournisseur n’a de droit sur ce dossier."
+
+#: src/composants/JetonsOrganisation.tsx
+msgid "Aucun jeton d’accès n’a été créé dans l’organisation."
+msgstr "Aucun jeton d’accès n’a été créé dans l’organisation."
 
 #: src/pages/ImportBenevoles.tsx
 msgid "Aucun mail ne part à l’import. La première place d’une personne joignable lui envoie son lien personnel."
@@ -2893,6 +2898,10 @@ msgstr "Ce jalon ne lie encore aucune tâche."
 msgid "Ce jeton ne s’affichera plus. Copiez-le maintenant dans le programme qui l’utilise. Toute personne qui le détient agit en votre nom : ne le partagez pas et ne le publiez jamais."
 msgstr "Ce jeton ne s’affichera plus. Copiez-le maintenant dans le programme qui l’utilise. Toute personne qui le détient agit en votre nom : ne le partagez pas et ne le publiez jamais."
 
+#: src/composants/PreferenceJetons.tsx
+msgid "Ce jeton peut inviter, retirer et promouvoir des membres"
+msgstr "Ce jeton peut inviter, retirer et promouvoir des membres"
+
 #: src/pages/EspaceBenevole.tsx
 msgid "Ce lien n’est plus valable."
 msgstr "Ce lien n’est plus valable."
@@ -3208,6 +3217,10 @@ msgstr "Chaque carte porte les tâches faites, en retard et sans personne d’un
 #: src/composants/AssistantTableur.tsx
 msgid "Chaque colonne reçoit un champ, proposé d’après son en-tête et son contenu. Une colonne ignorée ne part pas."
 msgstr "Chaque colonne reçoit un champ, proposé d’après son en-tête et son contenu. Une colonne ignorée ne part pas."
+
+#: src/composants/PreferenceJetons.tsx
+msgid "Chaque création vous est signalée par mail, avec un lien pour révoquer le jeton."
+msgstr "Chaque création vous est signalée par mail, avec un lien pour révoquer le jeton."
 
 #: src/composants/EcrireMessage.tsx
 msgid "Chaque destinataire voit l’adresse des autres"
@@ -4042,6 +4055,10 @@ msgstr "Décliner dans d’autres périmètres"
 msgid "Décliner dans d’autres périmètres (facultatif)"
 msgstr "Décliner dans d’autres périmètres (facultatif)"
 
+#: src/composants/PreferenceJetons.tsx
+msgid "Décoché, le jeton garde vos autres droits, mais l’équipe ne change pas par son intermédiaire."
+msgstr "Décoché, le jeton garde vos autres droits, mais l’équipe ne change pas par son intermédiaire."
+
 #: src/composants/ConnexionEspace.tsx
 msgid "Déconnecter"
 msgstr "Déconnecter"
@@ -4196,6 +4213,7 @@ msgstr "Dernier jour de la phase"
 msgid "Dernier jour de la phase : aucun, la dernière phase reçoit tout ce qui suit"
 msgstr "Dernier jour de la phase : aucun, la dernière phase reçoit tout ce qui suit"
 
+#: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
 msgid "Dernier usage le {dernier}."
@@ -4868,11 +4886,13 @@ msgstr "Événement"
 msgid "Exemples"
 msgstr "Exemples"
 
+#: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
 msgid "Expiré"
 msgstr "Expiré"
 
+#: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
 msgid "Expiré le {fin}."
@@ -5242,6 +5262,11 @@ msgstr "Gérer les accès"
 #: src/lib/espace-fichiers.ts
 msgid "Gérer un groupe du fournisseur"
 msgstr "Gérer un groupe du fournisseur"
+
+#: src/composants/JetonsOrganisation.tsx
+#: src/composants/PreferenceJetons.tsx
+msgid "Gestion des membres"
+msgstr "Gestion des membres"
 
 #: src/lib/messagerie.ts
 msgid "Gmail s’ouvre dans un nouvel onglet, avec le compte Google connecté dans ce navigateur."
@@ -5654,6 +5679,7 @@ msgstr "Jalons seuls"
 msgid "Jamais"
 msgstr "Jamais"
 
+#: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
 msgid "Jamais utilisé."
@@ -5688,6 +5714,7 @@ msgstr "Je suis intéressé·e"
 msgid "Je suis intéressé·e par {nomPerimetre}"
 msgstr "Je suis intéressé·e par {nomPerimetre}"
 
+#: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 msgid "Jeton révoqué."
 msgstr "Jeton révoqué."
@@ -5695,6 +5722,10 @@ msgstr "Jeton révoqué."
 #: src/composants/PreferenceJetons.tsx
 msgid "Jetons actifs : {actifs} sur {JETONS_ACTIFS_MAX}."
 msgstr "Jetons actifs : {actifs} sur {JETONS_ACTIFS_MAX}."
+
+#: src/composants/JetonsOrganisation.tsx
+msgid "Jetons de l’organisation"
+msgstr "Jetons de l’organisation"
 
 #: src/composants/MenuCompte.tsx
 #: src/composants/PreferenceJetons.tsx
@@ -6600,10 +6631,15 @@ msgstr "Le groupe de la ligne ne porte ni nom, ni adresse, ni téléphone."
 msgid "Le gymnase ouvre à 8 h."
 msgstr "Le gymnase ouvre à 8 h."
 
+#: src/composants/JetonsOrganisation.tsx
+msgid "Le jeton cesse aussitôt de servir, et {porteur} en est prévenu par mail."
+msgstr "Le jeton cesse aussitôt de servir, et {porteur} en est prévenu par mail."
+
 #: src/composants/RobotsApi.tsx
 msgid "Le jeton cesse aussitôt de servir."
 msgstr "Le jeton cesse aussitôt de servir."
 
+#: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 msgid "Le jeton cesse aussitôt de servir. Le programme qui l’utilise perd son accès."
 msgstr "Le jeton cesse aussitôt de servir. Le programme qui l’utilise perd son accès."
@@ -6905,12 +6941,14 @@ msgstr "Le titre et le lien sont copiés."
 msgid "Lecture"
 msgstr "Lecture"
 
+#: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
 msgid "Lecture et écriture"
 msgstr "Lecture et écriture"
 
 #: src/composants/FichesConnexes.tsx
+#: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
 msgid "Lecture seule"
@@ -7087,6 +7125,10 @@ msgstr "Les fichiers déjà écrits restent chez le fournisseur cloud."
 #: src/lib/depot-fiches.ts
 msgid "Les fichiers déposés dépassent 20 Mo au total."
 msgstr "Les fichiers déposés dépassent 20 Mo au total."
+
+#: src/composants/JetonsOrganisation.tsx
+msgid "Les jetons d’accès de tous les membres et des robots, sans leur valeur : les jetons actifs, puis ceux révoqués ou expirés depuis moins de trente jours. Révoquez un jeton qui ne sert plus ou qui a fuité : la personne en est prévenue par mail."
+msgstr "Les jetons d’accès de tous les membres et des robots, sans leur valeur : les jetons actifs, puis ceux révoqués ou expirés depuis moins de trente jours. Révoquez un jeton qui ne sert plus ou qui a fuité : la personne en est prévenue par mail."
 
 #: src/composants/ModuleApi.tsx
 msgid "Les jetons de l’organisation ont été révoqués."
@@ -9901,17 +9943,24 @@ msgstr "Revenir à Mon espace"
 msgid "Revenir aux dossiers"
 msgstr "Revenir aux dossiers"
 
+#: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
 msgid "Révoqué"
 msgstr "Révoqué"
 
+#: src/composants/JetonsOrganisation.tsx
+msgid "Révoqué par {par}."
+msgstr "Révoqué par {par}."
+
+#: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
 msgid "Révoqué."
 msgstr "Révoqué."
 
 #: src/composants/AbonnementAgenda.tsx
+#: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
 msgid "Révoquer"
@@ -9929,6 +9978,18 @@ msgstr "Révoquer l’abonnement de l’activité ?"
 msgid "Révoquer le jeton « {libelle} » ?"
 msgstr "Révoquer le jeton « {libelle} » ?"
 
+#: src/composants/JetonsOrganisation.tsx
+msgid "Révoquer le jeton « {libelle} » de {porteur} ?"
+msgstr "Révoquer le jeton « {libelle} » de {porteur} ?"
+
+#: src/composants/PreferenceJetons.tsx
+msgid "Révoquer tous mes jetons"
+msgstr "Révoquer tous mes jetons"
+
+#: src/composants/PreferenceJetons.tsx
+msgid "Révoquer tous vos jetons ?"
+msgstr "Révoquer tous vos jetons ?"
+
 #: src/composants/AbonnementAgenda.tsx
 msgid "Révoquer votre abonnement ?"
 msgstr "Révoquer votre abonnement ?"
@@ -9937,6 +9998,7 @@ msgstr "Révoquer votre abonnement ?"
 msgid "Rien d’autre de vos périmètres."
 msgstr "Rien d’autre de vos périmètres."
 
+#: src/composants/JetonsOrganisation.tsx
 #: src/pages/admin/Personnes.tsx
 msgid "robot"
 msgstr "robot"
@@ -10820,6 +10882,10 @@ msgstr "Tous les périmètres ont leurs référentes et référents."
 msgid "Tous les périmètres que je lis"
 msgstr "Tous les périmètres que je lis"
 
+#: src/composants/PreferenceJetons.tsx
+msgid "Tous vos jetons sont révoqués."
+msgstr "Tous vos jetons sont révoqués."
+
 #: src/composants/GestionAcces.tsx
 msgid "Tout appliquer"
 msgstr "Tout appliquer"
@@ -10849,6 +10915,10 @@ msgstr "Tout lire"
 #: src/pages/admin/NotificationsAdmin.tsx
 msgid "Tout marquer comme lu"
 msgstr "Tout marquer comme lu"
+
+#: src/composants/PreferenceJetons.tsx
+msgid "Tout révoquer"
+msgstr "Tout révoquer"
 
 #: src/pages/admin/Organisation.tsx
 msgid "Toute adresse de ces domaines passe pour une adresse de rôle. Relaytour refuse les messageries grand public."
@@ -10931,6 +11001,10 @@ msgstr "Toutes mes activités"
 #: src/composants/VerificationAcces.tsx
 msgid "Toutes ont accès chez le fournisseur."
 msgstr "Toutes ont accès chez le fournisseur."
+
+#: src/composants/JetonsOrganisation.tsx
+msgid "Toutes ses activités"
+msgstr "Toutes ses activités"
 
 #: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/Demandes.tsx
@@ -11417,6 +11491,7 @@ msgstr "Utilisez le lien du dernier mail reçu, ou contactez l’organisation."
 msgid "Valable {jours} jours"
 msgstr "Valable {jours} jours"
 
+#: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
 msgid "Valable jusqu’au {fin}."
@@ -11573,6 +11648,10 @@ msgstr "Voir tous les périmètres"
 #: src/lib/guide-markdown.ts
 msgid "Volley"
 msgstr "Volley"
+
+#: src/composants/PreferenceJetons.tsx
+msgid "Vos {actifs} jetons actifs dans cette organisation cessent aussitôt de servir. Les programmes qui les utilisent perdent leur accès."
+msgstr "Vos {actifs} jetons actifs dans cette organisation cessent aussitôt de servir. Les programmes qui les utilisent perdent leur accès."
 
 #: src/composants/AvisRelecture.tsx
 msgid "Vos accès ont changé, ou votre session a pris fin."

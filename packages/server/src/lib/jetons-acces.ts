@@ -118,6 +118,11 @@ export interface JetonDuContexte {
   /** Activités ouvertes au jeton. Nul : toutes celles que la personne voit. */
   activites: Set<string> | null
   expireLe: Date
+  /**
+   * Le jeton ouvre la gestion des membres : inviter, retirer et promouvoir une
+   * personne, dans la limite des droits de la personne. Faux par défaut.
+   */
+  gestionMembres: boolean
 }
 
 export type ResolutionJeton =
@@ -160,6 +165,7 @@ export async function resoudreJetonAcces(
       activiteIds: true,
       expireLe: true,
       revoqueLe: true,
+      gestionMembres: true,
       organisation: {
         select: {
           slug: true,
@@ -208,6 +214,7 @@ export async function resoudreJetonAcces(
       portee: ligne.portee,
       activites: lireActivitesDuJeton(ligne.activiteIds),
       expireLe: ligne.expireLe,
+      gestionMembres: ligne.gestionMembres,
     },
   }
 }
@@ -263,6 +270,8 @@ export interface JetonACreer {
   portee: PorteeJeton
   activiteIds: string[] | null
   expireLe: Date
+  /** Le jeton ouvre la gestion des membres. Faux par défaut, jamais pour un robot. */
+  gestionMembres?: boolean
   /** Jetons actifs permis à la porteuse : 10 pour une personne, 5 pour un robot. */
   max?: number
 }
@@ -313,6 +322,7 @@ export async function creerJetonAcces(
           portee: donnees.portee,
           activiteIds: donnees.activiteIds ?? undefined,
           expireLe: donnees.expireLe,
+          gestionMembres: donnees.gestionMembres ?? false,
         },
       })
     }
@@ -344,4 +354,30 @@ export async function revoquerJetonsDeLOrganisation(
     data: { revoqueLe: maintenant },
   })
   return count
+}
+
+/**
+ * Révoque un jeton de l'organisation au nom d'un admin (ADR 0064). Rend la porteuse
+ * du jeton révoqué, ou null quand le jeton est inconnu, d'une autre organisation ou
+ * déjà révoqué : la réponse ne dit pas lequel.
+ */
+export async function revoquerJetonDeLOrganisation(
+  db: Client,
+  cible: { organisationId: string; id: string; parId: string },
+  maintenant = new Date()
+): Promise<{ userId: string; robot: boolean } | null> {
+  const { count } = await db.jetonAcces.updateMany({
+    where: {
+      id: cible.id,
+      organisationId: cible.organisationId,
+      revoqueLe: null,
+    },
+    data: { revoqueLe: maintenant, revoqueParId: cible.parId },
+  })
+  if (count === 0) return null
+  const jeton = await db.jetonAcces.findUniqueOrThrow({
+    where: { id: cible.id },
+    select: { userId: true, user: { select: { robot: true } } },
+  })
+  return { userId: jeton.userId, robot: jeton.user.robot }
 }

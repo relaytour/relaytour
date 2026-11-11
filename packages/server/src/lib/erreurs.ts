@@ -125,6 +125,19 @@ export function porteeInsuffisante(): GraphQLError {
   )
 }
 
+/**
+ * Refus d'une gestion des membres par un jeton qui ne l'ouvre pas (ADR 0064). Le
+ * jeton garde la portée de sa personne pour tout le reste.
+ */
+export function gestionMembresRefusee(): GraphQLError {
+  return new GraphQLError(
+    i18n._(
+      'Ce jeton d’accès n’ouvre pas la gestion des membres : il n’invite, n’affecte, ne retire ni ne promeut personne.'
+    ),
+    { extensions: { code: 'PORTEE_INSUFFISANTE' } }
+  )
+}
+
 /** Refus d'une requête au-delà de la limite de débit d'un jeton (ADR 0064). */
 export function limiteDeDebit(): GraphQLError {
   return new GraphQLError(

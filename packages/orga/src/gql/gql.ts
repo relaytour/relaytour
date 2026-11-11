@@ -48,6 +48,8 @@ type Documents = {
     "\n  mutation InviterDansLActivite(\n    $email: String!\n    $nom: String!\n    $activiteId: ID\n    $editionId: ID\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      activiteId: $activiteId\n      editionId: $editionId\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      enAttente\n    }\n  }\n": typeof types.InviterDansLActiviteDocument,
     "\n  mutation RelancerInvitation($id: ID!) {\n    relancerInvitation(id: $id)\n  }\n": typeof types.RelancerInvitationDocument,
     "\n  mutation RetirerInvitation($id: ID!) {\n    retirerInvitation(id: $id)\n  }\n": typeof types.RetirerInvitationDocument,
+    "\n  query JetonsAccesOrganisation {\n    jetonsAccesOrganisation {\n      jeton {\n        id\n        nom\n        apercu\n        portee\n        gestionMembres\n        activiteIds\n        expireLe\n        dernierAccesLe\n        revoqueLe\n      }\n      porteur {\n        id\n        nom\n        robot\n      }\n      revoquePar\n    }\n  }\n": typeof types.JetonsAccesOrganisationDocument,
+    "\n  mutation RevoquerJetonOrganisation($id: ID!) {\n    revoquerJetonOrganisation(id: $id)\n  }\n": typeof types.RevoquerJetonOrganisationDocument,
     "\n  mutation LienEspaceBenevole($benevoleId: ID!, $nouveau: Boolean) {\n    lienEspaceBenevole(benevoleId: $benevoleId, nouveau: $nouveau)\n  }\n": typeof types.LienEspaceBenevoleDocument,
     "\n  mutation RenvoyerLienBenevole($benevoleId: ID!) {\n    renvoyerLienBenevole(benevoleId: $benevoleId)\n  }\n": typeof types.RenvoyerLienBenevoleDocument,
     "\n  query LieuxTous($activiteId: ID!) {\n    lieux(activiteId: $activiteId, inclureArchives: true) {\n      id\n      nom\n      description\n      ordre\n      archive\n      sequences\n    }\n  }\n": typeof types.LieuxTousDocument,
@@ -64,9 +66,10 @@ type Documents = {
     "\n  mutation ActiverApi {\n    activerApi {\n      etat\n      suspensionMotif\n    }\n  }\n": typeof types.ActiverApiDocument,
     "\n  mutation DesactiverApi {\n    desactiverApi {\n      etat\n      suspensionMotif\n    }\n  }\n": typeof types.DesactiverApiDocument,
     "\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n": typeof types.CreerEditionDocument,
-    "\n  query MesJetonsAcces {\n    mesJetonsAcces {\n      id\n      nom\n      apercu\n      portee\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n    }\n  }\n": typeof types.MesJetonsAccesDocument,
-    "\n  mutation CreerJetonAcces(\n    $nom: String!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n    $expireLe: DateTime\n  ) {\n    creerJetonAcces(\n      nom: $nom\n      portee: $portee\n      activiteIds: $activiteIds\n      expireLe: $expireLe\n    ) {\n      jeton\n      jetonAcces {\n        id\n      }\n    }\n  }\n": typeof types.CreerJetonAccesDocument,
+    "\n  query MesJetonsAcces {\n    mesJetonsAcces {\n      id\n      nom\n      apercu\n      portee\n      gestionMembres\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n    }\n  }\n": typeof types.MesJetonsAccesDocument,
+    "\n  mutation CreerJetonAcces(\n    $nom: String!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n    $expireLe: DateTime\n    $gestionMembres: Boolean\n  ) {\n    creerJetonAcces(\n      nom: $nom\n      portee: $portee\n      activiteIds: $activiteIds\n      expireLe: $expireLe\n      gestionMembres: $gestionMembres\n    ) {\n      jeton\n      jetonAcces {\n        id\n      }\n    }\n  }\n": typeof types.CreerJetonAccesDocument,
     "\n  mutation RevoquerJetonAcces($id: ID!) {\n    revoquerJetonAcces(id: $id)\n  }\n": typeof types.RevoquerJetonAccesDocument,
+    "\n  mutation RevoquerMesJetonsAcces {\n    revoquerMesJetonsAcces\n  }\n": typeof types.RevoquerMesJetonsAccesDocument,
     "\n  mutation ModifierMaLangue($langue: String) {\n    modifierMaLangue(langue: $langue) {\n      id\n      langue\n    }\n  }\n": typeof types.ModifierMaLangueDocument,
     "\n  query MonAdresseVisible {\n    moi {\n      id\n      adresseVisible\n    }\n  }\n": typeof types.MonAdresseVisibleDocument,
     "\n  mutation ModifierMonAdresseVisible($visible: Boolean!) {\n    modifierMonAdresseVisible(visible: $visible)\n  }\n": typeof types.ModifierMonAdresseVisibleDocument,
@@ -341,6 +344,8 @@ const documents: Documents = {
     "\n  mutation InviterDansLActivite(\n    $email: String!\n    $nom: String!\n    $activiteId: ID\n    $editionId: ID\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      activiteId: $activiteId\n      editionId: $editionId\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      enAttente\n    }\n  }\n": types.InviterDansLActiviteDocument,
     "\n  mutation RelancerInvitation($id: ID!) {\n    relancerInvitation(id: $id)\n  }\n": types.RelancerInvitationDocument,
     "\n  mutation RetirerInvitation($id: ID!) {\n    retirerInvitation(id: $id)\n  }\n": types.RetirerInvitationDocument,
+    "\n  query JetonsAccesOrganisation {\n    jetonsAccesOrganisation {\n      jeton {\n        id\n        nom\n        apercu\n        portee\n        gestionMembres\n        activiteIds\n        expireLe\n        dernierAccesLe\n        revoqueLe\n      }\n      porteur {\n        id\n        nom\n        robot\n      }\n      revoquePar\n    }\n  }\n": types.JetonsAccesOrganisationDocument,
+    "\n  mutation RevoquerJetonOrganisation($id: ID!) {\n    revoquerJetonOrganisation(id: $id)\n  }\n": types.RevoquerJetonOrganisationDocument,
     "\n  mutation LienEspaceBenevole($benevoleId: ID!, $nouveau: Boolean) {\n    lienEspaceBenevole(benevoleId: $benevoleId, nouveau: $nouveau)\n  }\n": types.LienEspaceBenevoleDocument,
     "\n  mutation RenvoyerLienBenevole($benevoleId: ID!) {\n    renvoyerLienBenevole(benevoleId: $benevoleId)\n  }\n": types.RenvoyerLienBenevoleDocument,
     "\n  query LieuxTous($activiteId: ID!) {\n    lieux(activiteId: $activiteId, inclureArchives: true) {\n      id\n      nom\n      description\n      ordre\n      archive\n      sequences\n    }\n  }\n": types.LieuxTousDocument,
@@ -357,9 +362,10 @@ const documents: Documents = {
     "\n  mutation ActiverApi {\n    activerApi {\n      etat\n      suspensionMotif\n    }\n  }\n": types.ActiverApiDocument,
     "\n  mutation DesactiverApi {\n    desactiverApi {\n      etat\n      suspensionMotif\n    }\n  }\n": types.DesactiverApiDocument,
     "\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n": types.CreerEditionDocument,
-    "\n  query MesJetonsAcces {\n    mesJetonsAcces {\n      id\n      nom\n      apercu\n      portee\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n    }\n  }\n": types.MesJetonsAccesDocument,
-    "\n  mutation CreerJetonAcces(\n    $nom: String!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n    $expireLe: DateTime\n  ) {\n    creerJetonAcces(\n      nom: $nom\n      portee: $portee\n      activiteIds: $activiteIds\n      expireLe: $expireLe\n    ) {\n      jeton\n      jetonAcces {\n        id\n      }\n    }\n  }\n": types.CreerJetonAccesDocument,
+    "\n  query MesJetonsAcces {\n    mesJetonsAcces {\n      id\n      nom\n      apercu\n      portee\n      gestionMembres\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n    }\n  }\n": types.MesJetonsAccesDocument,
+    "\n  mutation CreerJetonAcces(\n    $nom: String!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n    $expireLe: DateTime\n    $gestionMembres: Boolean\n  ) {\n    creerJetonAcces(\n      nom: $nom\n      portee: $portee\n      activiteIds: $activiteIds\n      expireLe: $expireLe\n      gestionMembres: $gestionMembres\n    ) {\n      jeton\n      jetonAcces {\n        id\n      }\n    }\n  }\n": types.CreerJetonAccesDocument,
     "\n  mutation RevoquerJetonAcces($id: ID!) {\n    revoquerJetonAcces(id: $id)\n  }\n": types.RevoquerJetonAccesDocument,
+    "\n  mutation RevoquerMesJetonsAcces {\n    revoquerMesJetonsAcces\n  }\n": types.RevoquerMesJetonsAccesDocument,
     "\n  mutation ModifierMaLangue($langue: String) {\n    modifierMaLangue(langue: $langue) {\n      id\n      langue\n    }\n  }\n": types.ModifierMaLangueDocument,
     "\n  query MonAdresseVisible {\n    moi {\n      id\n      adresseVisible\n    }\n  }\n": types.MonAdresseVisibleDocument,
     "\n  mutation ModifierMonAdresseVisible($visible: Boolean!) {\n    modifierMonAdresseVisible(visible: $visible)\n  }\n": types.ModifierMonAdresseVisibleDocument,
@@ -753,6 +759,14 @@ export function graphql(source: "\n  mutation RetirerInvitation($id: ID!) {\n   
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  query JetonsAccesOrganisation {\n    jetonsAccesOrganisation {\n      jeton {\n        id\n        nom\n        apercu\n        portee\n        gestionMembres\n        activiteIds\n        expireLe\n        dernierAccesLe\n        revoqueLe\n      }\n      porteur {\n        id\n        nom\n        robot\n      }\n      revoquePar\n    }\n  }\n"): (typeof documents)["\n  query JetonsAccesOrganisation {\n    jetonsAccesOrganisation {\n      jeton {\n        id\n        nom\n        apercu\n        portee\n        gestionMembres\n        activiteIds\n        expireLe\n        dernierAccesLe\n        revoqueLe\n      }\n      porteur {\n        id\n        nom\n        robot\n      }\n      revoquePar\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevoquerJetonOrganisation($id: ID!) {\n    revoquerJetonOrganisation(id: $id)\n  }\n"): (typeof documents)["\n  mutation RevoquerJetonOrganisation($id: ID!) {\n    revoquerJetonOrganisation(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  mutation LienEspaceBenevole($benevoleId: ID!, $nouveau: Boolean) {\n    lienEspaceBenevole(benevoleId: $benevoleId, nouveau: $nouveau)\n  }\n"): (typeof documents)["\n  mutation LienEspaceBenevole($benevoleId: ID!, $nouveau: Boolean) {\n    lienEspaceBenevole(benevoleId: $benevoleId, nouveau: $nouveau)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -817,15 +831,19 @@ export function graphql(source: "\n  mutation CreerEdition(\n    $annee: Int!\n 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query MesJetonsAcces {\n    mesJetonsAcces {\n      id\n      nom\n      apercu\n      portee\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n    }\n  }\n"): (typeof documents)["\n  query MesJetonsAcces {\n    mesJetonsAcces {\n      id\n      nom\n      apercu\n      portee\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n    }\n  }\n"];
+export function graphql(source: "\n  query MesJetonsAcces {\n    mesJetonsAcces {\n      id\n      nom\n      apercu\n      portee\n      gestionMembres\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n    }\n  }\n"): (typeof documents)["\n  query MesJetonsAcces {\n    mesJetonsAcces {\n      id\n      nom\n      apercu\n      portee\n      gestionMembres\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation CreerJetonAcces(\n    $nom: String!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n    $expireLe: DateTime\n  ) {\n    creerJetonAcces(\n      nom: $nom\n      portee: $portee\n      activiteIds: $activiteIds\n      expireLe: $expireLe\n    ) {\n      jeton\n      jetonAcces {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CreerJetonAcces(\n    $nom: String!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n    $expireLe: DateTime\n  ) {\n    creerJetonAcces(\n      nom: $nom\n      portee: $portee\n      activiteIds: $activiteIds\n      expireLe: $expireLe\n    ) {\n      jeton\n      jetonAcces {\n        id\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  mutation CreerJetonAcces(\n    $nom: String!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n    $expireLe: DateTime\n    $gestionMembres: Boolean\n  ) {\n    creerJetonAcces(\n      nom: $nom\n      portee: $portee\n      activiteIds: $activiteIds\n      expireLe: $expireLe\n      gestionMembres: $gestionMembres\n    ) {\n      jeton\n      jetonAcces {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CreerJetonAcces(\n    $nom: String!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n    $expireLe: DateTime\n    $gestionMembres: Boolean\n  ) {\n    creerJetonAcces(\n      nom: $nom\n      portee: $portee\n      activiteIds: $activiteIds\n      expireLe: $expireLe\n      gestionMembres: $gestionMembres\n    ) {\n      jeton\n      jetonAcces {\n        id\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RevoquerJetonAcces($id: ID!) {\n    revoquerJetonAcces(id: $id)\n  }\n"): (typeof documents)["\n  mutation RevoquerJetonAcces($id: ID!) {\n    revoquerJetonAcces(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevoquerMesJetonsAcces {\n    revoquerMesJetonsAcces\n  }\n"): (typeof documents)["\n  mutation RevoquerMesJetonsAcces {\n    revoquerMesJetonsAcces\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

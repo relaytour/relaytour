@@ -1,0 +1,34 @@
+<mjml>
+  <mj-head>
+    <mj-title>[[Un jeton d’accès a été révoqué]]</mj-title>
+    <mj-preview>[[Le programme qui l’utilisait n’a plus accès à l’espace.]]</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="24px" color="#010101" padding="0 0 16px" />
+    </mj-attributes>
+  </mj-head>
+
+  <mj-body background-color="#040404" width="480px">
+    <mj-include path="./_entete.mjml" />
+
+    <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
+      <mj-column>
+        <mj-text font-size="20px" line-height="28px" font-weight="700">
+          [[Bonjour {{nom}},]]
+        </mj-text>
+        <mj-text>
+          {{intro}}
+        </mj-text>
+        <mj-text>
+          {{porteur}} {{droits}}
+        </mj-text>
+        <mj-text padding="0 0 4px" font-size="13px" line-height="20px">
+          [[Si ce programme vous sert encore, créez-lui un nouveau jeton depuis cet
+          écran : {{lienJetons}}]]
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-include path="./_pied.mjml" />
+  </mj-body>
+</mjml>

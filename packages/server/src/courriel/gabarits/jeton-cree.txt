@@ -1,0 +1,22 @@
+{{marque}}
+
+[[Bonjour {{nom}},]]
+
+{{intro}}
+
+{{porteur}} {{droits}}
+
+[[Si vous n’êtes pas à l’origine de cette création, révoquez ce jeton sans
+attendre. Le programme qui le détient perd aussitôt son accès.]]
+
+[[Révoquer ce jeton : {{lienRevocation}}]]
+
+[[Vous retrouvez tous les jetons, et pouvez les révoquer, depuis cet écran :
+{{lienJetons}}]]
+
+--
+[[Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
+organisateur de {{organisation}}.]] {{consigneReponse}}
+
+[[Cet espace est propulsé par Relaytour, logiciel libre.]]
+https://github.com/relaytour/relaytour

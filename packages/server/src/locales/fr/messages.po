@@ -1855,6 +1855,7 @@ msgstr "Vous ne recevrez plus les mails « {libelle} » de {organisation}."
 
 #. js-lingui-explicit-id
 #: src/lib/desabonnement.ts
+#: src/lib/revocation-jeton.ts
 msgid "Lien non valide"
 msgstr "Lien non valide"
 
@@ -1982,6 +1983,11 @@ msgstr "L’API de cette organisation est désactivée. Un admin de l’organisa
 #: src/lib/erreurs.ts
 msgid "Ce jeton d’accès n’autorise que la lecture."
 msgstr "Ce jeton d’accès n’autorise que la lecture."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Ce jeton d’accès n’ouvre pas la gestion des membres : il n’invite, n’affecte, ne retire ni ne promeut personne."
+msgstr "Ce jeton d’accès n’ouvre pas la gestion des membres : il n’invite, n’affecte, ne retire ni ne promeut personne."
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts
@@ -2670,6 +2676,47 @@ msgstr "Une réunion dure {max} jours au plus."
 #: src/lib/reunions.ts
 msgid "La fin de la réunion suit son début."
 msgstr "La fin de la réunion suit son début."
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Ce lien de révocation n’est pas valide, ou le jeton qu’il désigne ne répond déjà plus. Vous gérez vos jetons d’accès dans les préférences de l’espace organisateur."
+msgstr "Ce lien de révocation n’est pas valide, ou le jeton qu’il désigne ne répond déjà plus. Vous gérez vos jetons d’accès dans les préférences de l’espace organisateur."
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Jeton révoqué"
+msgstr "Jeton révoqué"
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Le jeton « {jeton} » ({apercu}) de {organisation} ne répond plus. Le programme qui le détenait a perdu son accès."
+msgstr "Le jeton « {jeton} » ({apercu}) de {organisation} ne répond plus. Le programme qui le détenait a perdu son accès."
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Révoquer un jeton d’accès"
+msgstr "Révoquer un jeton d’accès"
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Vous êtes sur le point de révoquer le jeton « {jeton} » ({apercu}) de {organisation}. Le programme qui le détient perdra aussitôt son accès."
+msgstr "Vous êtes sur le point de révoquer le jeton « {jeton} » ({apercu}) de {organisation}. Le programme qui le détient perdra aussitôt son accès."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+#: src/lib/revocation-jeton.ts
+msgid "Révoquer ce jeton"
+msgstr "Révoquer ce jeton"
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Gérer mes jetons d’accès"
+msgstr "Gérer mes jetons d’accès"
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Révocation d’un jeton d’accès"
+msgstr "Révocation d’un jeton d’accès"
 
 #. js-lingui-explicit-id
 #: src/lib/robots.ts
@@ -3398,6 +3445,46 @@ msgstr "Se connecter : {lienConnexion}"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
+msgid "Un jeton d’accès a été créé"
+msgstr "Un jeton d’accès a été créé"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Si vous n’êtes pas à l’origine de cette création, révoquez-le sans attendre."
+msgstr "Si vous n’êtes pas à l’origine de cette création, révoquez-le sans attendre."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Si vous n’êtes pas à l’origine de cette création, révoquez ce jeton sans attendre. Le programme qui le détient perd aussitôt son accès."
+msgstr "Si vous n’êtes pas à l’origine de cette création, révoquez ce jeton sans attendre. Le programme qui le détient perd aussitôt son accès."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous retrouvez tous les jetons, et pouvez les révoquer, depuis cet écran : {lienJetons}"
+msgstr "Vous retrouvez tous les jetons, et pouvez les révoquer, depuis cet écran : {lienJetons}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Révoquer ce jeton : {lienRevocation}"
+msgstr "Révoquer ce jeton : {lienRevocation}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Un jeton d’accès a été révoqué"
+msgstr "Un jeton d’accès a été révoqué"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Le programme qui l’utilisait n’a plus accès à l’espace."
+msgstr "Le programme qui l’utilisait n’a plus accès à l’espace."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Si ce programme vous sert encore, créez-lui un nouveau jeton depuis cet écran : {lienJetons}"
+msgstr "Si ce programme vous sert encore, créez-lui un nouveau jeton depuis cet écran : {lienJetons}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
 msgid "L’export de vos données"
 msgstr "L’export de vos données"
 
@@ -3664,6 +3751,16 @@ msgstr "{nomCourt} : l’adresse de votre espace"
 #: src/courriel/messages.ts
 msgid "{nomCourt} : l’export de vos données"
 msgstr "{nomCourt} : l’export de vos données"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{nomCourt} : un jeton d’accès a été créé"
+msgstr "{nomCourt} : un jeton d’accès a été créé"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{nomCourt} : un jeton d’accès a été révoqué"
+msgstr "{nomCourt} : un jeton d’accès a été révoqué"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
@@ -4060,6 +4157,61 @@ msgstr "Vous retrouvez vos places et leurs consignes dans votre espace."
 #: src/courriel/messages.ts
 msgid "Votre lien personnel reste le même."
 msgstr "Votre lien personnel reste le même."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Ce jeton agit au nom du robot « {robot} », avec ses droits."
+msgstr "Ce jeton agit au nom du robot « {robot} », avec ses droits."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Ce jeton agit en votre nom, avec vos droits."
+msgstr "Ce jeton agit en votre nom, avec vos droits."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "lecture seule"
+msgstr "lecture seule"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "lecture et écriture"
+msgstr "lecture et écriture"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "toutes les activités"
+msgstr "toutes les activités"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "certaines activités seulement"
+msgstr "certaines activités seulement"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "gestion des membres"
+msgstr "gestion des membres"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Portée : {droits}."
+msgstr "Portée : {droits}."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Le jeton d’accès « {jeton} » ({apercu}) vient d’être créé. Il reste valable jusqu’au {fin}."
+msgstr "Le jeton d’accès « {jeton} » ({apercu}) vient d’être créé. Il reste valable jusqu’au {fin}."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Le jeton d’accès « {jeton} » ({apercu}) a été révoqué par {par}. Le programme qui l’utilisait n’a plus accès à l’espace."
+msgstr "Le jeton d’accès « {jeton} » ({apercu}) a été révoqué par {par}. Le programme qui l’utilisait n’a plus accès à l’espace."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "un admin de l’organisation"
+msgstr "un admin de l’organisation"
 
 #. js-lingui-explicit-id
 #: src/api-rest/routeur.ts

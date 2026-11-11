@@ -15,6 +15,7 @@ import {
   ENTETE_ORGANISATION,
   type AppContext,
 } from './context.ts'
+import { VERSION_CONTRAT_API } from './api-rest/openapi.ts'
 import { routeurApiRest } from './api-rest/routeur.ts'
 import {
   contexteDeJetonAcces,
@@ -39,7 +40,6 @@ import { fermerLesFlux } from './lib/flux.ts'
 import { PREFIXE_JETON } from './lib/jetons-acces.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
-import { versionInstallation } from './lib/notes-de-version.ts'
 import { avecLangue, langueDe, languesDuNavigateur } from './lib/langue.ts'
 import { formaterErreur } from './lib/erreurs.ts'
 import { limiterParCle, rendreTentative } from './lib/limite.ts'
@@ -50,6 +50,13 @@ import {
 } from './lib/organisation.ts'
 import { writeSchemaFile } from './lib/print-schema.ts'
 import { requeteLocale } from './lib/requete-locale.ts'
+import {
+  CHEMIN_REVOCATION,
+  jetonARevoquer,
+  lireJetonRevocation,
+  pageRevocation,
+  revoquerParLien,
+} from './lib/revocation-jeton.ts'
 import { sonderDependances } from './lib/sante.ts'
 import { schema } from './schema/index.ts'
 
@@ -339,6 +346,71 @@ const servirDesabonnement =
 app.get(`${CHEMIN_DESABONNEMENT}/:jeton`, servirDesabonnement('GET'))
 app.post(`${CHEMIN_DESABONNEMENT}/:jeton`, servirDesabonnement('POST'))
 
+// Révocation d'un jeton d'accès par le lien de son mail de création (ADR 0064) : la
+// personne qui n'est pas à l'origine du jeton coupe l'accès sans se connecter. Le lien
+// signé suffit. Un GET affiche une confirmation et n'écrit rien ; le POST révoque.
+// Seuls les liens refusés s'accumulent, comme pour le désabonnement.
+const REFUS_DE_REVOCATION = { max: 30, fenetreSecondes: 15 * 60 }
+const servirRevocation =
+  (methode: 'GET' | 'POST') =>
+  (req: express.Request, res: express.Response) => {
+    res.set({
+      'Cache-Control': 'no-store',
+      'X-Robots-Tag': 'noindex, nofollow',
+      'Referrer-Policy': 'no-referrer',
+      'Content-Security-Policy':
+        "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+    })
+    const jeton = String(req.params.jeton)
+    const navigateur = languesDuNavigateur(req.get('accept-language'))
+    void (async () => {
+      const cleRefus = `revocation-jeton-refuse:${adresseClient(req)}`
+      const permis = await limiterParCle(
+        cleRefus,
+        REFUS_DE_REVOCATION.max,
+        REFUS_DE_REVOCATION.fenetreSecondes,
+        { libelle: 'la limite des révocations par lien' }
+      )
+      if (!permis) {
+        res.status(429).end()
+        return
+      }
+      const id = lireJetonRevocation(env.BETTER_AUTH_SECRET, jeton)
+      const cible = id === null ? null : await jetonARevoquer(prisma, id)
+      if (cible === null) {
+        res
+          .status(404)
+          .type('html')
+          .send(await pageRevocation(prisma, 'invalide', null, navigateur))
+        return
+      }
+      await rendreTentative(cleRefus)
+      if (methode === 'GET') {
+        res.type('html').send(await pageRevocation(prisma, 'confirmer', cible))
+        return
+      }
+      if (!(await revoquerParLien(prisma, cible.id))) {
+        res
+          .status(404)
+          .type('html')
+          .send(await pageRevocation(prisma, 'invalide', null, navigateur))
+        return
+      }
+      res.type('html').send(await pageRevocation(prisma, 'fait', cible))
+    })().catch((erreur: unknown) => {
+      journal.error(
+        {
+          evenement: 'revocation-jeton-en-echec',
+          message: (erreur as Error).message,
+        },
+        'Une révocation de jeton par lien n’a pas pu être traitée.'
+      )
+      res.status(503).end()
+    })
+  }
+app.get(`${CHEMIN_REVOCATION}/:jeton`, servirRevocation('GET'))
+app.post(`${CHEMIN_REVOCATION}/:jeton`, servirRevocation('POST'))
+
 // Better Auth lit lui-même le corps des requêtes : son routeur passe avant express.json().
 const gestionnaireAuth = toNodeHandler(auth)
 app.all('/api/auth/*splat', (req, res) => {
@@ -446,7 +518,8 @@ app.use(
     ),
   routeurApiRest({
     schema,
-    version: versionInstallation(),
+    // La version du contrat, pas celle de l'installation : le contrat se lit sans jeton.
+    version: VERSION_CONTRAT_API,
     contexte: (req, jeton) =>
       contexteDeJetonAcces(
         adresseClient(req),

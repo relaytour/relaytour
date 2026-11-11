@@ -1,7 +1,10 @@
 import SchemaBuilder from '@pothos/core'
 import ComplexityPlugin from '@pothos/plugin-complexity'
 import PrismaPlugin from '@pothos/plugin-prisma'
-import ScopeAuthPlugin from '@pothos/plugin-scope-auth'
+import ScopeAuthPlugin, {
+  AuthScopeFailureType,
+  type AuthFailure,
+} from '@pothos/plugin-scope-auth'
 import { getDatamodel, prisma, type PrismaTypes } from '@relaytour/database'
 import {
   DateResolver,
@@ -12,10 +15,25 @@ import {
 import type { AppContext } from '../context.ts'
 import {
   accesRefuse,
+  gestionMembresRefusee,
   organisationEnLectureSeule,
   porteeInsuffisante,
   requeteTropLourde,
 } from '../lib/erreurs.ts'
+
+/** Vrai quand l'échec d'autorisation porte, seul ou parmi d'autres, sur cette portée. */
+function echecDeLaPortee(echec: AuthFailure, portee: string): boolean {
+  if (echec.kind === AuthScopeFailureType.AuthScope) {
+    return echec.scope === portee
+  }
+  if (
+    echec.kind === AuthScopeFailureType.AllAuthScopes ||
+    echec.kind === AuthScopeFailureType.AnyAuthScopes
+  ) {
+    return echec.failures.some(f => echecDeLaPortee(f, portee))
+  }
+  return false
+}
 
 export const builder = new SchemaBuilder<{
   PrismaTypes: PrismaTypes
@@ -38,6 +56,7 @@ export const builder = new SchemaBuilder<{
     administration: boolean
     session: boolean
     toutesActivites: boolean
+    gestionMembres: boolean
   }
 }>({
   plugins: [ScopeAuthPlugin, ComplexityPlugin, PrismaPlugin],
@@ -79,8 +98,14 @@ export const builder = new SchemaBuilder<{
       // Une session, ou un jeton sans liste d'activités : pour les lectures de toute
       // l'organisation qui ne passent pas par les activités (notifications).
       toutesActivites: ctx.personne !== null && ctx.jeton?.activites == null,
+      // ADR 0064 : la gestion des membres (inviter, retirer, promouvoir) demande une
+      // session, ou un jeton créé avec cette dimension. Un jeton fuité ne change
+      // pas l'équipe par défaut.
+      gestionMembres:
+        ctx.personne !== null &&
+        (ctx.jeton === null || ctx.jeton.gestionMembres),
     }),
-    unauthorizedError: (_parent, ctx, info) => {
+    unauthorizedError: (_parent, ctx, info, resultat) => {
       // Un jeton d'accès refusé répond sa cause sur tout champ protégé.
       if (ctx.refus !== null) return ctx.refus
       if (info.parentType.name === 'Mutation') {
@@ -88,6 +113,15 @@ export const builder = new SchemaBuilder<{
           return organisationEnLectureSeule()
         }
         if (ctx.jeton?.portee === 'LECTURE') return porteeInsuffisante()
+      }
+      // Un jeton sans la gestion des membres apprend ce qui lui manque : la personne
+      // a ce droit, c'est son jeton qui ne l'ouvre pas.
+      if (
+        ctx.jeton !== null &&
+        !ctx.jeton.gestionMembres &&
+        echecDeLaPortee(resultat.failure, 'gestionMembres')
+      ) {
+        return gestionMembresRefusee()
       }
       return accesRefuse()
     },
