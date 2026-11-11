@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-11-11-orga-une-tache-s-ouvre-en-grand-et-se-partage-par-un-lien",
+          "date": "2026-11-11",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une tâche s'ouvre en grand et se partage par un lien",
+            "texte": "Le titre d'une tâche ouvre une fenêtre avec sa description complète, ses actions et ses commentaires à droite. L'adresse de la page désigne alors la tâche. Le menu « Autres actions » et la fenêtre proposent « Copier le lien » et « Copier le titre et le lien ». Le lien mène à la page du périmètre, tâche ouverte, et chaque personne y voit la tâche selon ses droits. Les fiches, les réunions et les séquences ont aussi un bouton « Partager ». Un soulignement pointillé signale les titres qui ouvrent une tâche ou un périmètre. L'écran « Notifications d'admin » s'appelle désormais « Notifications admin ».",
+            "migration": null
+          },
+          "en": {
+            "titre": "A task opens full size and can be shared by link",
+            "texte": "The title of a task opens a window with its full description, its actions and its comments on the right. The page address then points to the task. The “More actions” menu and the window offer “Copy link” and “Copy title and link”. The link leads to the area page with the task open, and each person sees the task according to their access. Sheets, meetings and slots also have a “Share” button. A dotted underline marks the titles that open a task or an area. The admin notifications screen keeps its English name, “Admin notifications”.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-11-09-orga-vos-jetons-d-acces-se-creent-dans-vos-preferences",
           "date": "2026-11-09",
           "type": "fonctionnalite",

@@ -226,7 +226,7 @@ export default function Notifications() {
                 navigate(`/${activiteAdministree.slug}/admin/notifications`)
               }}
             >
-              <Trans>Notifications d’admin</Trans>
+              <Trans>Notifications admin</Trans>
               {nonLuesAdmin > 0 && (
                 <Badge
                   count={nonLuesAdmin}

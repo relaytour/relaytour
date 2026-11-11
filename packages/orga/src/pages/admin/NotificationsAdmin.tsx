@@ -37,7 +37,7 @@ export default function NotificationsAdmin() {
       <Titre
         sousTitre={t`Les nouvelles de vos rôles d’admin : demandes, invitations et équipe, rangées par activité puis par périmètre.`}
       >
-        <Trans>Notifications d’admin</Trans>
+        <Trans>Notifications admin</Trans>
       </Titre>
       {liste.loading && !liste.data ? (
         <Skeleton active />

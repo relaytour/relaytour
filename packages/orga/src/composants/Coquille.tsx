@@ -58,6 +58,7 @@ import { AvisHorsConnexion } from './HorsConnexion'
 import GardeSession from './GardeSession'
 import { Pictogramme, SignatureRelaytour } from './Marque'
 import MenuCompte from './MenuCompte'
+import ModaleTache from './ModaleTache'
 import Notifications from './Notifications'
 import Recherche from './Recherche'
 import { comparerTextes } from '../lib/langue'
@@ -277,7 +278,7 @@ function Mise({ session }: { session: Session }) {
                 icon: <NotificationOutlined />,
                 label: (
                   <span className="rt-entree-compteur">
-                    {t`Notifications d’admin`}
+                    {t`Notifications admin`}
                     <Badge
                       count={nonLuesAdmin}
                       size="small"
@@ -520,6 +521,8 @@ function Mise({ session }: { session: Session }) {
             />
           )}
           <Outlet />
+          {/* La fenêtre d'une tâche s'ouvre sur tout écran par l'adresse. */}
+          <ModaleTache />
         </main>
       </div>
     </div>

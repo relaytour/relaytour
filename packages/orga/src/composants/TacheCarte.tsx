@@ -24,6 +24,8 @@ import { useActivite } from '../lib/activite'
 import { enumerer } from '../lib/langue'
 import { useLibelleAjustement } from '../lib/priorites'
 import { useCommentairesDeLaPeriode } from '../lib/commentaires'
+import { useCopieLien, useEntreesPartage } from '../lib/copie-lien'
+import { cheminTache, useOuvrirTache } from '../lib/fenetre-tache'
 import type { ResumeDeclinaisons } from '../lib/declinaisons'
 import type { ResumeJalon } from '../lib/jalons'
 import { dateCourte } from '../lib/erreurs'
@@ -74,6 +76,7 @@ export default function TacheCarte({
   onPlanifierReunion,
   perimetresCibles,
   editionId,
+  detail = false,
 }: {
   // La page d'un périmètre lit en plus ce qui relie les tâches partagées : le
   // périmètre qui demande une déclinaison, et le résumé des déclinaisons.
@@ -116,6 +119,11 @@ export default function TacheCarte({
    * de commentaires s'y lit. Sans elle, la carte ne propose pas le fil.
    */
   editionId?: string
+  /**
+   * La carte s'affiche dans la fenêtre de la tâche : le titre n'ouvre plus rien,
+   * la description se lit en entier, et le fil s'affiche à côté de la carte.
+   */
+  detail?: boolean
 }) {
   const racine = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -123,6 +131,9 @@ export default function TacheCarte({
   }, [enEvidence])
   const { t } = useLingui()
   const executer = useActionTache()
+  const ouvrirTache = useOuvrirTache()
+  const copierLien = useCopieLien()
+  const entreesPartage = useEntreesPartage()
   const { message, modal } = App.useApp()
   const { lien } = useActivite()
   const [assigner, assignation] = useMutation(ASSIGNER_TACHE, {
@@ -149,7 +160,7 @@ export default function TacheCarte({
   const [aRattacher, setARattacher] = useState(false)
   // Le fil s'ouvre quand la personne lit le périmètre de la tâche (ADR 0029).
   const commentaires = useCommentairesDeLaPeriode(editionId)
-  const filLisible = commentaires.lus.has(tache.perimetre.id)
+  const filLisible = !detail && commentaires.lus.has(tache.perimetre.id)
   const nombreCommentaires = commentaires.nombres.get(tache.id) ?? 0
   const [fil, setFil] = useState(filOuvert)
   // La page reste montée quand une notification change seulement l'adresse : le
@@ -277,6 +288,8 @@ export default function TacheCarte({
           },
         ]
       : []),
+    // La fenêtre de la tâche porte son propre bouton de partage.
+    ...(detail ? [] : entreesPartage),
     ...(ouverte
       ? [{ key: 'ABANDONNEE', label: t`Abandonner`, danger: true }]
       : []),
@@ -470,12 +483,33 @@ export default function TacheCarte({
       />
       <div className="rt-carte-tache-corps">
         <div className="rt-carte-tache-titre">
-          <Typography.Text
-            delete={tache.statut === 'ABANDONNEE'}
-            style={{ fontSize: 16, fontWeight: 600 }}
-          >
-            {tache.titre}
-          </Typography.Text>
+          {detail ? (
+            <Typography.Text
+              delete={tache.statut === 'ABANDONNEE'}
+              style={{ fontSize: 18, fontWeight: 600 }}
+            >
+              {tache.titre}
+            </Typography.Text>
+          ) : (
+            // Le titre ouvre la tâche en grand, avec son fil (lien de partage).
+            <a
+              href={lien(cheminTache(tache.id))}
+              className="rt-titre-lien"
+              onClick={e => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0)
+                  return
+                e.preventDefault()
+                ouvrirTache(tache.id)
+              }}
+            >
+              <Typography.Text
+                delete={tache.statut === 'ABANDONNEE'}
+                style={{ fontSize: 16, fontWeight: 600, color: 'inherit' }}
+              >
+                {tache.titre}
+              </Typography.Text>
+            </a>
+          )}
           {afficherPerimetre && (
             <EtiquettePerimetre
               nom={tache.perimetre.nom}
@@ -484,7 +518,12 @@ export default function TacheCarte({
             />
           )}
         </div>
-        {tache.description && (
+        {tache.description && detail && (
+          <Typography.Paragraph className="rt-description-tache">
+            {tache.description}
+          </Typography.Paragraph>
+        )}
+        {tache.description && !detail && (
           <Typography.Paragraph
             className="rt-description-tache"
             ellipsis={{
@@ -729,6 +768,10 @@ export default function TacheCarte({
                 items: autresActions,
                 onClick: ({ key }) => {
                   if (key === 'modifier') onModifier?.(tache)
+                  if (key === 'partage:lien')
+                    void copierLien(cheminTache(tache.id))
+                  if (key === 'partage:titre')
+                    void copierLien(cheminTache(tache.id), tache.titre)
                   if (key === 'decliner') setADecliner(true)
                   if (key === 'rattacher') setARattacher(true)
                   if (key === 'lier') setALier(true)

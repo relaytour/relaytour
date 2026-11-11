@@ -41,7 +41,9 @@ export default function CarteAvancement({
     <Card
       title={
         <Space wrap size={8}>
-          <Link to={versPerimetre}>{perimetre.nom}</Link>
+          <Link to={versPerimetre} className="rt-titre-lien">
+            {perimetre.nom}
+          </Link>
           <Tag>{groupe}</Tag>
         </Space>
       }

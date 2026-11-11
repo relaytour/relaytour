@@ -211,7 +211,10 @@ interface CommentairesPeriode {
   nombres: ReadonlyMap<string, number>
 }
 
-const VIDE: CommentairesPeriode = { lus: new Set(), nombres: new Map() }
+export const COMMENTAIRES_VIDES: CommentairesPeriode = {
+  lus: new Set(),
+  nombres: new Map(),
+}
 // Chaque carte lit la même réponse : elle se range une seule fois.
 const rangees = new WeakMap<
   CommentairesDeLaPeriodeQuery['commentairesDeLaPeriode'],
@@ -231,7 +234,7 @@ export function useCommentairesDeLaPeriode(
     skip: !editionId,
   })
   const reponse = data?.commentairesDeLaPeriode
-  if (!reponse) return VIDE
+  if (!reponse) return COMMENTAIRES_VIDES
   let rangee = rangees.get(reponse)
   if (rangee === undefined) {
     rangee = {

@@ -3150,6 +3150,11 @@ msgstr "Cette tâche a changé depuis votre lecture"
 msgid "Cette tâche est assignée à d’autres personnes"
 msgstr "Cette tâche est assignée à d’autres personnes"
 
+#: src/composants/ModaleTache.tsx
+#: src/pages/LienTache.tsx
+msgid "Cette tâche est introuvable."
+msgstr "Cette tâche est introuvable."
+
 #: src/lib/conflit.ts
 msgid "Cette tâche est maintenant « {statutCourant} ». « Écraser » applique quand même votre changement. « Recharger » affiche son état actuel."
 msgstr "Cette tâche est maintenant « {statutCourant} ». « Écraser » applique quand même votre changement. « Recharger » affiche son état actuel."
@@ -3584,6 +3589,10 @@ msgstr "Commander les médailles"
 msgid "Comment les points se calculent"
 msgstr "Comment les points se calculent"
 
+#: src/composants/FilTache.tsx
+msgid "Commentaires"
+msgstr "Commentaires"
+
 #: src/composants/TacheCarte.tsx
 msgid "Commenter"
 msgstr "Commenter"
@@ -3804,6 +3813,7 @@ msgid "Copier le jeton"
 msgstr "Copier le jeton"
 
 #: src/composants/LienBenevole.tsx
+#: src/lib/copie-lien.tsx
 msgid "Copier le lien"
 msgstr "Copier le lien"
 
@@ -3811,6 +3821,10 @@ msgstr "Copier le lien"
 #: src/composants/Messages.tsx
 msgid "Copier le texte"
 msgstr "Copier le texte"
+
+#: src/lib/copie-lien.tsx
+msgid "Copier le titre et le lien"
+msgstr "Copier le titre et le lien"
 
 #: src/composants/CopierAdresses.tsx
 msgid "Copier les adresses en Cc"
@@ -4568,6 +4582,11 @@ msgstr "Effectif souhaité pour {perimetre}"
 #: src/lib/editeur-visuel.ts
 msgid "Élément à cocher"
 msgstr "Élément à cocher"
+
+#: src/composants/ModaleTache.tsx
+#: src/pages/LienTache.tsx
+msgid "Elle n’existe pas, ou vous n’avez pas accès à son périmètre."
+msgstr "Elle n’existe pas, ou vous n’avez pas accès à son périmètre."
 
 #: src/pages/Fiche.tsx
 msgid "Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »)."
@@ -6091,6 +6110,10 @@ msgstr "La copie a échoué : sélectionnez l’adresse à la main."
 msgid "La copie a échoué : sélectionnez le jeton à la main."
 msgstr "La copie a échoué : sélectionnez le jeton à la main."
 
+#: src/lib/copie-lien.tsx
+msgid "La copie a échoué. Copiez l’adresse depuis la barre du navigateur."
+msgstr "La copie a échoué. Copiez l’adresse depuis la barre du navigateur."
+
 #: src/composants/CopierAdresses.tsx
 #: src/composants/EcrireMessage.tsx
 #: src/composants/Messages.tsx
@@ -6525,6 +6548,10 @@ msgstr "Le fichier s’appelle `planning-2027.xlsx`."
 msgid "Le fil affiche les {nombreAffiche} derniers commentaires sur {nombreTotal}."
 msgstr "Le fil affiche les {nombreAffiche} derniers commentaires sur {nombreTotal}."
 
+#: src/composants/ModaleTache.tsx
+msgid "Le fil de cette tâche se lit par les personnes affectées à son périmètre."
+msgstr "Le fil de cette tâche se lit par les personnes affectées à son périmètre."
+
 #: src/composants/FilTache.tsx
 msgid "Le fil n’a pas pu être chargé. Rechargez la page dans un instant."
 msgstr "Le fil n’a pas pu être chargé. Rechargez la page dans un instant."
@@ -6600,6 +6627,10 @@ msgstr "Le lien « Ouvrir dans {nomFournisseur} » fonctionne si votre compte {n
 #: src/composants/InstallerApplication.tsx
 msgid "Le lien du mail ouvre votre navigateur, pas l’application installée."
 msgstr "Le lien du mail ouvre votre navigateur, pas l’application installée."
+
+#: src/lib/copie-lien.tsx
+msgid "Le lien est copié."
+msgstr "Le lien est copié."
 
 #: src/lib/messagerie.ts
 msgid "Le lien ouvre l’application Gmail installée sur l’appareil. Google ne documente pas ce lien."
@@ -6865,6 +6896,10 @@ msgstr "Le titre dépasse 200 caractères."
 #: src/lib/import-taches.ts
 msgid "Le titre est vide."
 msgstr "Le titre est vide."
+
+#: src/lib/copie-lien.tsx
+msgid "Le titre et le lien sont copiés."
+msgstr "Le titre et le lien sont copiés."
 
 #: src/composants/GestionAcces.tsx
 msgid "Lecture"
@@ -8064,8 +8099,8 @@ msgstr "Notifications"
 #: src/composants/Coquille.tsx
 #: src/composants/Notifications.tsx
 #: src/pages/admin/NotificationsAdmin.tsx
-msgid "Notifications d’admin"
-msgstr "Notifications d’admin"
+msgid "Notifications admin"
+msgstr "Notifications admin"
 
 #: src/composants/PreferencePush.tsx
 msgid "Notifications sur cet appareil"
@@ -8480,6 +8515,10 @@ msgstr "Partage du dossier en lecture, ajouts automatiques"
 #: src/composants/ReconductionEdition.tsx
 msgid "partagée avec {n, plural, one {# périmètre} other {# périmètres}}"
 msgstr "partagée avec {n, plural, one {# périmètre} other {# périmètres}}"
+
+#: src/composants/BoutonPartage.tsx
+msgid "Partager"
+msgstr "Partager"
 
 #: src/composants/GestionAcces.tsx
 #: src/lib/espace-fichiers.ts
@@ -9852,6 +9891,10 @@ msgstr "Revenir à l’éditeur"
 #: src/composants/AssistantTableur.tsx
 msgid "Revenir à la vérification"
 msgstr "Revenir à la vérification"
+
+#: src/pages/LienTache.tsx
+msgid "Revenir à Mon espace"
+msgstr "Revenir à Mon espace"
 
 #: src/composants/ExplorateurDossier.tsx
 #: src/composants/ImportFiches.tsx

@@ -777,7 +777,9 @@ export default function Equipe() {
                     <Card
                       title={
                         <Space wrap size={8}>
-                          <Link to={versPerimetre}>{perimetre.nom}</Link>
+                          <Link to={versPerimetre} className="rt-titre-lien">
+                            {perimetre.nom}
+                          </Link>
                           <Tag>{libelleGroupe(perimetre.groupe)}</Tag>
                         </Space>
                       }
