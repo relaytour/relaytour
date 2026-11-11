@@ -5,7 +5,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { composer } from '../courriel/messages.ts'
 import { env } from '../env.ts'
-import { genererRappels, prioritesAEnvoyer } from '../jobs/planification.ts'
+import {
+  genererRappels,
+  personnesAResumer,
+  prioritesAEnvoyer,
+} from '../jobs/planification.ts'
 import { activiteParDefaut } from '../test/contexte.ts'
 
 import {
@@ -413,6 +417,85 @@ describe('mail des priorités', () => {
     expect(message?.texte).toMatch(
       /- « Vérifier les tâches des pôles », pour le [^\n]+\n {8}· Déclinaisons : 1 en retard sur 1/
     )
+  })
+
+  it('porte les nouvelles du résumé hebdomadaire, qui ne part plus le lundi suivant', async () => {
+    const tache = await prisma.tache.findFirstOrThrow({
+      where: { editionId: ids.edition, titre: 'Signer la convention' },
+      select: { id: true, perimetreId: true },
+    })
+    const nouvelle = await prisma.notification.create({
+      data: {
+        organisationId: ORGANISATION,
+        userId: ids.membre,
+        type: 'TACHE_MODIFIEE',
+        acteurId: ids.coord,
+        tacheId: tache.id,
+        perimetreId: tache.perimetreId,
+      },
+    })
+    try {
+      const message = await composer(prisma, {
+        sorte: 'priorites',
+        userId: ids.membre,
+        organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
+        editionId: ids.edition,
+      })
+      expect(message?.texte).toContain('Vos nouvelles · ')
+      expect(message?.texte).toContain(
+        'a modifié la tâche « Signer la convention »'
+      )
+      await message?.apresEnvoi?.()
+      expect(
+        (
+          await prisma.notification.findUniqueOrThrow({
+            where: { id: nouvelle.id },
+          })
+        ).resumeeLe
+      ).not.toBeNull()
+      // Le lundi 14 juin 4021, le mail des priorités du vendredi a remplacé le
+      // résumé de la semaine (ADR 0065) ; celui du lundi précédent, non.
+      const lundi = new Date('4021-06-14T05:00:00Z')
+      const resumeLe = async (dernierResumeLe: Date) => {
+        await prisma.preferenceOrganisation.update({
+          where: {
+            userId_organisationId: {
+              userId: ids.membre,
+              organisationId: ORGANISATION,
+            },
+          },
+          data: { dernierResumeLe, frequenceResume: 'HEBDOMADAIRE' },
+        })
+        return (await personnesAResumer(prisma, planifiee(), lundi)).includes(
+          ids.membre
+        )
+      }
+      expect(await resumeLe(new Date('4021-06-11T05:00:00Z'))).toBe(false)
+      expect(await resumeLe(new Date('4021-06-07T05:05:00Z'))).toBe(true)
+    } finally {
+      await prisma.notification.delete({ where: { id: nouvelle.id } })
+    }
+  })
+
+  it('ne porte pas les nouvelles d’une personne au résumé quotidien', async () => {
+    await prisma.preferenceOrganisation.update({
+      where: {
+        userId_organisationId: {
+          userId: ids.coord,
+          organisationId: ORGANISATION,
+        },
+      },
+      data: { frequenceResume: 'QUOTIDIEN' },
+    })
+    const message = await composer(prisma, {
+      sorte: 'priorites',
+      userId: ids.coord,
+      organisationId: ORGANISATION,
+      activiteId: ACTIVITE,
+      editionId: ids.edition,
+    })
+    expect(message?.texte ?? '').not.toContain('Vos nouvelles')
   })
 
   it('n’envoie rien sans choix, ni à une personne sans place', async () => {

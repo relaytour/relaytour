@@ -29,6 +29,7 @@ import {
 import {
   avecOrganisation,
   composerNotifications,
+  fusionnerParTache,
   grouperParActivite,
   SELECTION_NOTIFICATION,
 } from '../lib/composition-notifications.ts'
@@ -37,6 +38,10 @@ import {
   jetonDesabonnement,
   type MailDesabonnable,
 } from '../lib/desabonnement.ts'
+import {
+  libelleModele,
+  propositionModele,
+} from '../lib/modeles-notification.ts'
 import { preferencesDe } from '../lib/notifications.ts'
 import { lirePrioritesDeLaPeriode } from '../lib/priorites-periode.ts'
 import { filtreNotificationsAdmin } from '../lib/notifications-admin.ts'
@@ -129,6 +134,9 @@ function activiteDuSujet(
 // Un mail demandé par la personne elle-même ne reçoit pas de réponse : l'équipe
 // d'organisation n'en est pas à l'origine (ADR 0054). Le lien d'export part d'une
 // installation en sommeil, dont l'équipe ne lit peut-être plus le contact (ADR 0057).
+/** Le nombre de nouvelles de la cloche qu'un résumé reprend au plus. */
+const LIMITE_RESUME = 30
+
 const SANS_REPONSE = new Set<SorteCourriel>([
   'essai',
   'code-connexion',
@@ -415,6 +423,24 @@ export async function composer(
       listeDesModesDEmploi(env, langueCourante()),
       role
     )
+    // Un nouveau rôle peut appeler un autre modèle de notifications (ADR 0065).
+    const proposition = await propositionModele(
+      prisma,
+      await preferencesDe(prisma, user.id, idOrganisation)
+    )
+    variables.propositionModele =
+      proposition === null
+        ? []
+        : [
+            {
+              paragraphe: i18n._(
+                'Le modèle de notifications « {modele} » correspond à votre rôle.',
+                { modele: libelleModele(proposition) }
+              ),
+              libelleLien: i18n._('Appliquer ce modèle dans vos préférences'),
+              lien: lienPreferences,
+            },
+          ]
   }
 
   if (job.sorte === 'demandes') {
@@ -691,6 +717,8 @@ export async function composer(
       resumeeLe: null,
       // Une notification de tâche en attente de sa fenêtre attend le résumé suivant.
       disponibleLe: null,
+      // Une notification déjà partie par mail immédiat ne se répète pas (ADR 0065).
+      envoyeeLe: null,
     }
     const [personne, notifications, notificationsAdmin, taches] =
       await Promise.all([
@@ -702,7 +730,7 @@ export async function composer(
           where: { ...nonResumees, niveau: 'REFERENT' },
           select: SELECTION_NOTIFICATION,
           orderBy: { createdAt: 'desc' },
-          take: 30,
+          take: LIMITE_RESUME,
         }),
         filtreAdmin === null
           ? []
@@ -747,9 +775,16 @@ export async function composer(
       taches.length === 0
     )
       return null
-    const [composees, composeesAdmin] = await Promise.all([
-      composerNotifications(prisma, notifications, userId),
+    // Les nouvelles d'une même tâche se regroupent (ADR 0065). Au-delà des 30
+    // dernières, le mail dit combien restent dans l'application.
+    const [composees, composeesAdmin, reste] = await Promise.all([
+      composerNotifications(prisma, fusionnerParTache(notifications), userId),
       composerNotifications(prisma, notificationsAdmin, userId),
+      notifications.length < LIMITE_RESUME
+        ? 0
+        : prisma.notification
+            .count({ where: { ...nonResumees, niveau: 'REFERENT' } })
+            .then(total => total - notifications.length),
     ])
     variables.nom = personne.name
     variables.introduction =
@@ -758,14 +793,29 @@ export async function composer(
         : i18n._('Voici les nouvelles de vos périmètres de la semaine.')
     // Les nouvelles se rangent par activité, puis viennent celles des rôles
     // d'admin, sous un intertitre qui le dit (ADR 0032 et 0033).
+    const prefixeAdmin = `${i18n._('Pour vos rôles d’admin')} · `
+    const nouvellesReferent = grouperParActivite(
+      composees,
+      configuration.nomCourt
+    )
     const groupes = [
-      ...grouperParActivite(composees, configuration.nomCourt),
+      ...nouvellesReferent,
       ...grouperParActivite(
         composeesAdmin,
         configuration.nomCourt,
-        `${i18n._('Pour vos rôles d’admin')} · `
+        prefixeAdmin
       ),
     ]
+    // Le décompte suit la dernière nouvelle de la cloche.
+    const dernier = nouvellesReferent.at(-1)
+    if (reste > 0 && dernier !== undefined) {
+      dernier.elements.push(
+        i18n._(
+          '{n, plural, one {et # autre nouvelle dans l’application} other {et # autres nouvelles dans l’application}}',
+          { n: reste }
+        )
+      )
+    }
     variables.nouvelles =
       groupes.length > 0 ? groupes : [i18n._('Aucune nouvelle.')]
     // Les échéances se rangent par activité, par périmètre, puis en retard et à
@@ -912,7 +962,46 @@ export async function composer(
         p.priorites.length > 0 &&
         (mode === 'ACTIVITE' || mesPerimetres.has(p.perimetre.id))
     )
-    if (retenus.length === 0) return null
+    // Une personne au résumé hebdomadaire reçoit ses nouvelles dans le mail des
+    // priorités, qui remplace alors le résumé du lundi (ADR 0065).
+    const avecNouvelles = preferences.frequenceResume === 'HEBDOMADAIRE'
+    const nouvellesLues = avecNouvelles
+      ? await prisma.notification.findMany({
+          where: {
+            userId,
+            organisationId: idOrganisation,
+            niveau: 'REFERENT',
+            lueLe: null,
+            resumeeLe: null,
+            disponibleLe: null,
+            envoyeeLe: null,
+            // Le mail d'une activité porte ses nouvelles, et celles qui ne
+            // concernent aucune activité : deux mails ne répètent pas une nouvelle.
+            OR: [
+              { activiteId: edition.activiteId },
+              { tache: { perimetre: { activiteId: edition.activiteId } } },
+              { fiche: { activiteId: edition.activiteId } },
+              { activiteId: null, tacheId: null, ficheId: null },
+            ],
+          },
+          select: SELECTION_NOTIFICATION,
+          orderBy: { createdAt: 'desc' },
+          take: LIMITE_RESUME,
+        })
+      : []
+    // Les nouvelles d'une même tâche se regroupent avant de compter : des nouvelles
+    // qui s'annulent ne font pas partir le mail.
+    const nouvelles = grouperParActivite(
+      await composerNotifications(
+        prisma,
+        fusionnerParTache(nouvellesLues),
+        userId
+      ),
+      configuration.nomCourt,
+      `${i18n._('Vos nouvelles')} · `
+    )
+    // Sans priorité ni nouvelle, aucun mail ne part.
+    if (retenus.length === 0 && nouvelles.length === 0) return null
     const jourPriorites = new Date(
       `${aujourdhui(maintenant, configuration.fuseauHoraire)}T00:00:00Z`
     )
@@ -986,7 +1075,15 @@ export async function composer(
           ]
         : taches
     })
-    variables.priorites = ranger(lignes)
+    variables.priorites =
+      lignes.length > 0
+        ? ranger(lignes)
+        : [
+            i18n._(
+              'Aucune priorité dans vos périmètres d’ici le prochain point.'
+            ),
+          ]
+    variables.nouvelles = nouvelles.length > 0 ? nouvelles : ''
     variables.introduction =
       lues.pointDebut === null
         ? i18n._(
@@ -1011,6 +1108,27 @@ export async function composer(
     variables.lienPriorites = lienVers(`/${edition.activite.slug}`)
     variables.lienPreferences = lienPreferences
     desabonnement = await lienDesabonnement('priorites', userId, idOrganisation)
+    if (avecNouvelles) {
+      apresEnvoi = async () => {
+        const envoi = new Date()
+        await prisma.notification.updateMany({
+          where: { id: { in: nouvellesLues.map(n => n.id) } },
+          data: { resumeeLe: envoi },
+        })
+        // Le résumé du lundi ne part pas en double (`personnesAResumer`).
+        await prisma.preferenceOrganisation.upsert({
+          where: {
+            userId_organisationId: { userId, organisationId: idOrganisation },
+          },
+          update: { dernierResumeLe: envoi },
+          create: {
+            userId,
+            organisationId: idOrganisation,
+            dernierResumeLe: envoi,
+          },
+        })
+      }
+    }
   }
 
   let icalEvent: MessageCompose['icalEvent']

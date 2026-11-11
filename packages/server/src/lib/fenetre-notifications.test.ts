@@ -112,4 +112,30 @@ describe('fenêtre de regroupement (ADR 0065)', () => {
       creation,
     ])
   })
+
+  it('un statut revenu ne laisse rien à qui n’a reçu que des statuts, malgré une retouche du contenu', () => {
+    const lignes = [
+      ligne('TACHE_STATUT', { statut: 'EN_COURS' }),
+      ligne('TACHE_STATUT', { statut: 'A_FAIRE' }),
+    ]
+    expect(lignesNettes(lignes, etat({ contenuModifie: true }))).toEqual([])
+  })
+
+  it('garde la modification qui porte le statut final, malgré une retouche après', () => {
+    const statut = ligne('TACHE_MODIFIEE', {
+      statut: 'EN_COURS',
+      mailEnAttente: true,
+    })
+    const retouche = ligne('TACHE_MODIFIEE', { mailEnAttente: true })
+    const nettes = lignesNettes(
+      [statut, retouche],
+      etat({
+        contenuModifie: true,
+        statutModifie: true,
+        statutApres: 'EN_COURS',
+      })
+    )
+    expect(nettes.map(l => l.id)).toEqual([statut.id])
+    expect(nettes[0]).toMatchObject({ changement: 'contenu' })
+  })
 })

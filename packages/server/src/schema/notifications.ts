@@ -16,9 +16,11 @@ import {
 } from '../lib/composition-notifications.ts'
 import { accesRefuse } from '../lib/erreurs.ts'
 import {
+  type Modele,
   MODELES,
   modeleDe,
   modeleRecommande,
+  propositionModele,
   REGLAGES_DES_MODELES,
 } from '../lib/modeles-notification.ts'
 import { preferencesDe } from '../lib/notifications.ts'
@@ -172,6 +174,7 @@ interface Preferences {
   suiviPerimetres: SuiviPerimetres
   detailContactPrincipal: boolean
   suiviAdmin: SuiviAdmin
+  modeleEcarte: Modele | null
   pushTaches: boolean
   pushEcheances: boolean
   pushDemandes: boolean
@@ -251,6 +254,13 @@ const PreferencesRef = builder
         description:
           'Le modèle du rôle le plus large de la personne dans l’organisation. La recommandation ne change aucun réglage (ADR 0065).',
         resolve: p => modeleRecommande(prisma, p.userId, p.organisationId),
+      }),
+      propositionModele: t.field({
+        type: ModeleNotificationEnum,
+        nullable: true,
+        description:
+          'Le modèle à proposer à la personne : celui de son rôle, quand ses réglages ne le suivent pas et qu’elle ne l’a pas refusé (ADR 0065).',
+        resolve: p => propositionModele(prisma, p),
       }),
     }),
   })
@@ -603,11 +613,40 @@ builder.mutationFields(t => ({
     resolve: async (_root, args, ctx) => {
       const userId = ctx.personne!.id
       const organisationId = ctx.organisation!.id
-      const donnees = REGLAGES_DES_MODELES[args.modele]
+      // Un modèle appliqué efface un refus passé (ADR 0065).
+      const donnees = {
+        ...REGLAGES_DES_MODELES[args.modele],
+        modeleEcarte: null,
+      }
       return prisma.preferenceOrganisation.upsert({
         where: { userId_organisationId: { userId, organisationId } },
         update: donnees,
         create: { userId, organisationId, ...donnees },
+      })
+    },
+  }),
+
+  ecarterPropositionModele: t.field({
+    type: PreferencesRef,
+    authScopes: { connecte: true },
+    description:
+      'Refuse le modèle proposé pour le rôle de la personne. La proposition revient avec une autre recommandation (ADR 0065).',
+    resolve: async (_root, _args, ctx) => {
+      const userId = ctx.personne!.id
+      const organisationId = ctx.organisation!.id
+      // Seule une proposition faite se refuse : des réglages déjà conformes ne
+      // retiennent aucun refus.
+      const modeleEcarte = await propositionModele(
+        prisma,
+        await preferencesDe(prisma, userId, organisationId)
+      )
+      if (modeleEcarte === null) {
+        return preferencesDe(prisma, userId, organisationId)
+      }
+      return prisma.preferenceOrganisation.upsert({
+        where: { userId_organisationId: { userId, organisationId } },
+        update: { modeleEcarte },
+        create: { userId, organisationId, modeleEcarte },
       })
     },
   }),

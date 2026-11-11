@@ -6,6 +6,8 @@
 
 {{priorites}}
 
+{{nouvelles}}
+
 [[Voir les priorités : {{lienPriorites}}]]
 
 [[Vous recevez ce mail parce que vous l’avez demandé. Vous pouvez le désactiver dans vos préférences :]] {{lienPreferences}}
