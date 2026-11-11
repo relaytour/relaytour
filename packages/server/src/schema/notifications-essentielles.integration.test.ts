@@ -390,7 +390,7 @@ describe('modèles de réglages', () => {
     ).toMatchObject({
       suiviPerimetres: 'SUIVI',
       detailContactPrincipal: true,
-      frequenceResume: 'QUOTIDIEN',
+      frequenceResume: 'HEBDOMADAIRE',
     })
     const modifie = await reussir(
       ids.zoe,

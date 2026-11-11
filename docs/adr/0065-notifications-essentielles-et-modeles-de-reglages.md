@@ -81,7 +81,7 @@ Un **modèle de notifications** remplit tous les réglages en un geste. La perso
 | Suivi de vos périmètres | Ce qui vous concerne | L'essentiel du périmètre | L'essentiel du périmètre | L'essentiel du périmètre |
 | Détail des périmètres de contact | Non | Non | Oui | Non |
 | Suivi d'admin | Les actions à mener | Les actions à mener | Les actions à mener | Tout le détail |
-| Résumé par mail | Hebdomadaire | Hebdomadaire | Quotidien | Quotidien |
+| Résumé par mail | Hebdomadaire | Hebdomadaire | Hebdomadaire | Hebdomadaire |
 | Mail des priorités (ADR 0063) | Mes périmètres | Mes périmètres | Mes périmètres | Toute l'activité |
 | Mails de vos tâches, échéances, demandes | Oui | Oui | Oui | Oui |
 | Push de l'équipe | Non | Non | Non | Oui |
@@ -90,6 +90,7 @@ Un **modèle de notifications** remplit tous les réglages en un geste. La perso
 - La page des préférences recommande le modèle du rôle le plus large de la personne dans l'organisation : Admin d'activité pour un admin, Contact principal pour un contact principal d'une période non archivée, Essentiel pour toute autre personne. Le modèle Référent·e reste un choix de la personne. La page n'applique pas ce modèle d'office.
 - Le serveur ne garde pas le nom du modèle. Il le déduit des réglages. Un changement dans la définition d'un modèle ne modifie donc les réglages de personne.
 - Les autres réglages (fréquence du résumé, mails immédiats, familles de push) gardent leur sens actuel.
+- Tous les modèles envoient le résumé par mail chaque semaine (décision de Quentin, 11/11). Dans la 0.30.0, les modèles Contact principal et Admin d'activité l'envoyaient chaque jour. Une personne restée au résumé quotidien depuis cette version a des réglages personnalisés, et la page lui propose le modèle de son rôle.
 
 ### La proposition du modèle du rôle
 
@@ -142,7 +143,7 @@ Un **modèle de notifications** remplit tous les réglages en un geste. La perso
   - tout autre membre reçoit le modèle Essentiel.
 - Le rattrapage vaut aussi pour les personnes qui ont déjà enregistré leurs préférences. Il applique les réglages du modèle, pour que la page affiche ce modèle.
 - Le rattrapage ne rallume jamais un mail coupé :
-  - un résumé réglé sur « Jamais » le reste, et un résumé hebdomadaire passe à chaque jour pour les modèles qui le demandent ;
+  - un résumé réglé sur « Jamais » le reste. La migration de la 0.30.0 a fait passer au résumé quotidien les admins et les contacts principaux qui avaient le résumé hebdomadaire ;
   - un mail immédiat coupé le reste ;
   - le mail des priorités prend la valeur du modèle seulement quand il valait « Aucun » avec un résumé hebdomadaire, c'est-à-dire les réglages par défaut d'avant cette décision.
 - Une personne qui avait coupé un de ces mails garde donc des réglages personnalisés.
