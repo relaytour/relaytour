@@ -455,6 +455,7 @@ export default function Programme() {
 
       <SequenceDetail
         sequence={ouverte ?? null}
+        editionId={editionId}
         // Un admin de l'activité lit les fiches, même sur une période archivée.
         lisible={gere || agendas.length > 0}
         onModifier={s => {

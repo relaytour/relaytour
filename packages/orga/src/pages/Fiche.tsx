@@ -17,6 +17,7 @@ import {
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 
+import BoutonPartage from '../composants/BoutonPartage'
 import EtiquettePerimetre from '../composants/EtiquettePerimetre'
 import ConnexionsFiche from '../composants/ConnexionsFiche'
 import Markdown from '../composants/Markdown'
@@ -123,6 +124,10 @@ export default function Fiche() {
         }
         actions={
           <>
+            <BoutonPartage
+              chemin={`/fiches/${fiche.slug}`}
+              titre={fiche.titre}
+            />
             {fiche.archive && (
               <Tag>
                 <Trans>Archivée</Trans>

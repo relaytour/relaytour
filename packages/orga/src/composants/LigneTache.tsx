@@ -6,6 +6,7 @@ import { Link } from 'react-router'
 
 import type { StatutTache } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
+import { PARAMETRE_DETAIL } from '../lib/fenetre-tache'
 import { dateCourte } from '../lib/erreurs'
 import { estOuverte, etatEcheance } from '../lib/taches'
 
@@ -50,7 +51,10 @@ export default function LigneTache({
   return (
     <li className="rt-ligne-tache-conteneur">
       <Link
-        to={lien(`/perimetres/${tache.perimetre.slug}?edition=${editionId}`)}
+        // La ligne mène au périmètre, avec la tâche ouverte en grand.
+        to={lien(
+          `/perimetres/${tache.perimetre.slug}?edition=${editionId}&tache=${tache.id}&${PARAMETRE_DETAIL}=${tache.id}`
+        )}
         className={`rt-verre rt-ligne-tache${tache.statut === 'ABANDONNEE' ? ' rt-abandonnee' : ''}`}
       >
         <span
