@@ -94,6 +94,24 @@
           "en": null
         },
         {
+          "id": "2026-11-09-orga-la-description-du-choix-jamais-du-resume-par-mail-est-corrig",
+          "date": "2026-11-09",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La description du choix « Jamais » du résumé par mail est corrigée en anglais",
+            "texte": "Dans les préférences en anglais, le choix « Jamais » du résumé par mail indique désormais que vous consultez l'espace vous-même. La traduction précédente donnait un autre sens à cette phrase.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The description of the “Never” email summary option is corrected in English",
+            "texte": "In the preferences, the “Never” option of the email summary now states that you check the workspace yourself. The previous translation gave this sentence a different meaning.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-11-09-orga-l-espace-propose-le-modele-de-notifications-de-votre-role",
           "date": "2026-11-09",
           "type": "fonctionnalite",
