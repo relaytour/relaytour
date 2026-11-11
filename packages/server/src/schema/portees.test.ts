@@ -84,12 +84,16 @@ describe('portée « gestion des membres »', () => {
   it('les mutations qui ajoutent, retirent ou promeuvent une personne sont celles-ci', () => {
     expect(champsAPortee(schema.getMutationType(), 'gestionMembres')).toEqual([
       'accepterDemande',
+      'affecter',
       'archiverPersonne',
       'definirAdminActivite',
       'importerEquipe',
       'inviterPersonne',
       'modifierPersonne',
+      'rattacherALActivite',
       'relancerInvitation',
+      'retirerAffectation',
+      'retirerDeLActivite',
       'retirerInvitation',
     ])
   })

@@ -660,6 +660,10 @@ describe('mail de création et lien de révocation', () => {
     expect(message).not.toBeNull()
     expect(message?.texte).toContain('jeton LECTURE')
     expect(message?.texte).toContain(CHEMIN_REVOCATION)
+    // Le lien des préférences a la forme des autres mails : l'organisation en
+    // paramètre, puis l'ancre du panneau.
+    expect(message?.texte).toContain(`/preferences?organisation=${slug}#jetons`)
+    expect(message?.texte).not.toContain(`/${slug}/preferences`)
     expect(message?.texte).not.toContain(jeton)
     expect(message?.html).not.toContain(jeton)
   })

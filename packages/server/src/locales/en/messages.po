@@ -1986,8 +1986,8 @@ msgstr "This access token only allows reading."
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts
-msgid "Ce jeton d’accès n’ouvre pas la gestion des membres : il n’invite, ne retire ni ne promeut personne."
-msgstr "This access token does not open member management: it invites, removes or promotes no one."
+msgid "Ce jeton d’accès n’ouvre pas la gestion des membres : il n’invite, n’affecte, ne retire ni ne promeut personne."
+msgstr "This access token does not open member management: it invites, assigns, removes or promotes no one."
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts

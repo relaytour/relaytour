@@ -1986,8 +1986,8 @@ msgstr "Ce jeton d’accès n’autorise que la lecture."
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts
-msgid "Ce jeton d’accès n’ouvre pas la gestion des membres : il n’invite, ne retire ni ne promeut personne."
-msgstr "Ce jeton d’accès n’ouvre pas la gestion des membres : il n’invite, ne retire ni ne promeut personne."
+msgid "Ce jeton d’accès n’ouvre pas la gestion des membres : il n’invite, n’affecte, ne retire ni ne promeut personne."
+msgstr "Ce jeton d’accès n’ouvre pas la gestion des membres : il n’invite, n’affecte, ne retire ni ne promeut personne."
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts

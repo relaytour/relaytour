@@ -1466,9 +1466,11 @@ export async function composer(
     variables.droits = i18n._('Portée : {droits}.', {
       droits: droits.join(', '),
     })
+    // Les liens suivent la forme des autres mails : l'organisation en paramètre, que
+    // l'espace organisateur choisit à l'ouverture (ADR 0032).
     variables.lienJetons = jeton.user.robot
-      ? `${origine}/${configuration.slug}/admin/organisation`
-      : `${origine}/${configuration.slug}/preferences#jetons`
+      ? lienVers('/admin/organisation')
+      : `${lienPreferences}#jetons`
     if (job.sorte === 'jeton-cree') {
       variables.intro = i18n._(
         'Le jeton d’accès « {jeton} » ({apercu}) vient d’être créé. Il reste valable jusqu’au {fin}.',

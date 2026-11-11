@@ -132,7 +132,7 @@ export function porteeInsuffisante(): GraphQLError {
 export function gestionMembresRefusee(): GraphQLError {
   return new GraphQLError(
     i18n._(
-      'Ce jeton d’accès n’ouvre pas la gestion des membres : il n’invite, ne retire ni ne promeut personne.'
+      'Ce jeton d’accès n’ouvre pas la gestion des membres : il n’invite, n’affecte, ne retire ni ne promeut personne.'
     ),
     { extensions: { code: 'PORTEE_INSUFFISANTE' } }
   )
