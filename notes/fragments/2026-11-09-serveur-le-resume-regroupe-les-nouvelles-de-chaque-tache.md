@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.30.0
 fr:
   titre: >-
     Le résumé regroupe les nouvelles de chaque tâche

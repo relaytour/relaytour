@@ -3,6 +3,7 @@ cible: serveur
 type: rupture
 audience: public
 etat: prevu
+version: 0.30.0
 fr:
   titre: >-
     Le relais transmet /api/v1/* à l'API

@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.30.0
 fr:
   titre: >-
     Les notifications ne gardent par défaut que ce qui vous concerne

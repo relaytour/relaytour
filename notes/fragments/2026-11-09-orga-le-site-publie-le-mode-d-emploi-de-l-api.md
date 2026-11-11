@@ -3,6 +3,7 @@ cible: orga
 type: interne
 audience: interne
 etat: prevu
+version: 0.30.0
 fr:
   titre: >-
     Le site publie le mode d'emploi de l'API
