@@ -61,6 +61,7 @@
 | [0057](0057-export-pour-un-admin-d-une-installation-en-sommeil.md) | Export pour un admin d'une installation en sommeil | Proposée |
 | [0058](0058-limite-de-membres-d-une-organisation.md) | Limite de membres d'une organisation | Proposée |
 | [0059](0059-priorites-d-une-periode.md) | Priorités d'une période | Proposée |
+| [0060](0060-evenements-suivis-par-une-periode.md) | Événements suivis par une période | Proposée |
 | [0061](0061-rattacher-une-tache-existante-a-une-tache-partagee.md) | Rattacher une tâche existante à une tâche partagée | Proposée |
 | [0062](0062-jalons.md) | Jalons | Acceptée, réalisée |
 | [0063](0063-mails-de-suivi-hierarchises.md) | Mails de suivi hiérarchisés | Proposée |
