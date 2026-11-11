@@ -7,6 +7,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildContext, type AppContext } from '../context.ts'
 import { calculerScores } from '../lib/score.ts'
 
+import { consoliderLesFenetres } from '../test/fenetre.ts'
+
 import { schema } from './index.ts'
 
 // Tâches partagées (ADR 0026) : une tâche d'un périmètre se décline dans d'autres
@@ -60,6 +62,8 @@ async function executer(
     { query, variables },
     { contextValue: await buildContext('127.0.0.1', userId, slug) }
   )
+  // La fenêtre de regroupement se termine tout de suite (ADR 0065).
+  await consoliderLesFenetres()
   if (r.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
   return r.body.singleResult
@@ -184,6 +188,35 @@ const nombreDeTaches = () =>
   prisma.tache.count({
     where: { perimetre: { organisationId: ids.organisation } },
   })
+
+// Ces tests décrivent le suivi détaillé : chaque compte du test suit tout le détail
+// de ses périmètres et de ses rôles d'admin (ADR 0065). Le défaut, « Ce qui vous
+// concerne », a ses propres tests.
+async function suivreToutLeDetail(organisations: string[]) {
+  const comptes = await prisma.user.findMany({
+    where: {
+      id: {
+        in: Object.values(ids).filter(
+          (v): v is string => typeof v === 'string'
+        ),
+      },
+    },
+    select: { id: true },
+  })
+  for (const organisationId of organisations) {
+    for (const { id: userId } of comptes) {
+      const detail = {
+        suiviPerimetres: 'DETAIL' as const,
+        suiviAdmin: 'DETAIL' as const,
+      }
+      await prisma.preferenceOrganisation.upsert({
+        where: { userId_organisationId: { userId, organisationId } },
+        update: detail,
+        create: { userId, organisationId, ...detail },
+      })
+    }
+  }
+}
 
 beforeAll(async () => {
   await apollo.start()
@@ -332,6 +365,7 @@ beforeAll(async () => {
       },
     ],
   })
+  await suivreToutLeDetail([ids.organisation])
 })
 
 afterAll(async () => {

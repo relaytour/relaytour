@@ -43,9 +43,19 @@ export interface GroupeDeListe {
   sousGroupes?: SousGroupeDeListe[]
 }
 
+/**
+ * Un paragraphe facultatif terminé par un lien : la proposition d'un modèle de
+ * notifications (ADR 0065). Une liste vide n'écrit rien, pas même une ligne.
+ */
+export interface ParagrapheAvecLien {
+  paragraphe: string
+  libelleLien: string
+  lien: string
+}
+
 export type Variables = Record<
   string,
-  string | ElementDeListe[] | GroupeDeListe[]
+  string | ElementDeListe[] | GroupeDeListe[] | ParagrapheAvecLien[]
 >
 
 const GRIS = '#5B6670'
@@ -90,7 +100,16 @@ export function rendre(
     )
   }
   for (const [cle, valeur] of Object.entries(variables)) {
-    if (typeof valeur !== 'string') continue
+    if (Array.isArray(valeur)) {
+      for (const p of valeur.filter(estParagraphe)) {
+        if (!LIEN_ATTENDU.test(p.lien)) {
+          throw new Error(
+            `Gabarit « ${nom} » : le lien de « ${cle} » doit être une adresse https.`
+          )
+        }
+      }
+      continue
+    }
     if (/lien|url/i.test(cle) && !LIEN_ATTENDU.test(valeur)) {
       throw new Error(
         `Gabarit « ${nom} » : la variable « ${cle} » doit être une adresse https.`
@@ -129,7 +148,7 @@ export function rendre(
   )
   const textes = gabarit.textes(valeursTexte)
   const estGroupee = (
-    v: ElementDeListe[] | GroupeDeListe[]
+    v: ElementDeListe[] | GroupeDeListe[] | ParagrapheAvecLien[]
   ): v is GroupeDeListe[] =>
     v.length > 0 &&
     typeof v[0] !== 'string' &&
@@ -139,7 +158,8 @@ export function rendre(
     source: string,
     texte: (v: string) => string,
     liste: (v: ElementDeListe[]) => string,
-    groupes: (v: GroupeDeListe[]) => string
+    groupes: (v: GroupeDeListe[]) => string,
+    paragraphes: (v: ParagrapheAvecLien[]) => string
   ): string =>
     source.replaceAll(/\{\{(\w+|§\d+)\}\}/g, (_m, cle: string) => {
       if (cle.startsWith('§')) return texte(textes[Number(cle.slice(1))] ?? '')
@@ -147,17 +167,51 @@ export function rendre(
         return texte === echapperHtml ? marque : organisation.organisation
       const valeur = toutes[cle] ?? ''
       if (typeof valeur === 'string') return texte(valeur)
+      if (valeur.length === 0) return ''
+      if (valeur.every(estParagraphe)) return paragraphes(valeur)
       return estGroupee(valeur) ? groupes(valeur) : liste(valeur)
     })
   return {
-    html: poser(gabarit.html, echapperHtml, listeHtml, groupesHtml),
+    html: poser(
+      gabarit.html,
+      echapperHtml,
+      listeHtml,
+      groupesHtml,
+      // La couleur est vérifiée plus haut (#RRGGBB).
+      p => paragraphesHtml(p, organisation.couleurPrimaire)
+    ),
     texte: poser(
       gabarit.texte,
       v => v,
       e => listeTexte(e, ''),
-      groupesTexte
+      groupesTexte,
+      paragraphesTexte
     ),
   }
+}
+
+function estParagraphe(v: unknown): v is ParagrapheAvecLien {
+  return typeof v === 'object' && v !== null && 'paragraphe' in v
+}
+
+// Le paragraphe suit le contenu qui le précède dans le même bloc : sans
+// proposition, le gabarit ne garde aucun espace vide.
+function paragraphesHtml(
+  paragraphes: ParagrapheAvecLien[],
+  couleurLien: string
+): string {
+  return paragraphes
+    .map(
+      p =>
+        `<p style="margin:16px 0 0">${echapperHtml(p.paragraphe)} <a href="${echapperHtml(p.lien)}" style="color:${couleurLien};font-weight:600">${echapperHtml(p.libelleLien)}</a></p>`
+    )
+    .join('')
+}
+
+function paragraphesTexte(paragraphes: ParagrapheAvecLien[]): string {
+  return paragraphes
+    .map(p => `\n\n${p.paragraphe}\n${p.libelleLien} : ${p.lien}`)
+    .join('')
 }
 
 // Chaque texte s'échappe séparément ; les styles sont fixes et ne viennent jamais

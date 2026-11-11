@@ -203,6 +203,35 @@ const AFFECTER = `mutation ($u: ID!, $p: ID!, $e: ID!) {
   affecter(personneId: $u, perimetreId: $p, editionId: $e) { id }
 }`
 
+// Ces tests décrivent le suivi détaillé : chaque compte du test suit tout le détail
+// de ses périmètres et de ses rôles d'admin (ADR 0065). Le défaut, « Ce qui vous
+// concerne », a ses propres tests.
+async function suivreToutLeDetail(organisations: string[]) {
+  const comptes = await prisma.user.findMany({
+    where: {
+      id: {
+        in: Object.values(ids).filter(
+          (v): v is string => typeof v === 'string'
+        ),
+      },
+    },
+    select: { id: true },
+  })
+  for (const organisationId of organisations) {
+    for (const { id: userId } of comptes) {
+      const detail = {
+        suiviPerimetres: 'DETAIL' as const,
+        suiviAdmin: 'DETAIL' as const,
+      }
+      await prisma.preferenceOrganisation.upsert({
+        where: { userId_organisationId: { userId, organisationId } },
+        update: detail,
+        create: { userId, organisationId, ...detail },
+      })
+    }
+  }
+}
+
 beforeAll(async () => {
   ids.orgA = (
     await prisma.organisation.create({
@@ -264,6 +293,7 @@ beforeAll(async () => {
       { userId: ids.hugo, perimetreId: ids.basketA1, editionId: ids.editionA1 },
     ],
   })
+  await suivreToutLeDetail([ids.orgA, ids.orgB])
 })
 
 afterAll(async () => {
@@ -419,8 +449,10 @@ describe('notifications d’admin (ADR 0033)', () => {
     expect(lues.notifications).toContainEqual({
       type: 'PLACE_MODIFIEE',
       niveau: 'REFERENT',
-      message: 'Votre place dans l’équipe a changé.',
-      lien: `/rencontres-${s}`,
+      // Le lien mène aux préférences, pour adapter le modèle au rôle (ADR 0065).
+      message:
+        'Votre place dans l’équipe a changé. Vous pouvez adapter vos notifications à votre rôle dans vos préférences.',
+      lien: `/rencontres-${s}/preferences`,
       activite: { id: ids.a1, nom: 'Rencontres' },
       perimetre: null,
     })
@@ -460,18 +492,18 @@ describe('notifications d’admin (ADR 0033)', () => {
     }
   })
 
-  it('prévient les admins d’un souhait, et respecte le réglage « équipe »', async () => {
+  it('prévient les admins d’un souhait, même en suivi des actions à mener', async () => {
     await prisma.activite.update({
       where: { id: ids.a1 },
       data: { souhaitsOuverts: true },
     })
-    // Arnaud coupe les nouvelles d'équipe dans A.
-    await prisma.preferenceOrganisation.create({
-      data: {
-        userId: ids.arnaud,
-        organisationId: ids.orgA,
-        applicationEquipe: false,
+    // Arnaud ne suit que les actions à mener dans A : un souhait en est une
+    // (ADR 0065).
+    await prisma.preferenceOrganisation.update({
+      where: {
+        userId_organisationId: { userId: ids.arnaud, organisationId: ids.orgA },
       },
+      data: { suiviAdmin: 'ACTIONS' },
     })
     const r = await executer(
       ids.double,
@@ -484,7 +516,7 @@ describe('notifications d’admin (ADR 0033)', () => {
         where: { userId, type: 'SOUHAIT_FORMULE', perimetreId: ids.basketA1 },
       })
     expect(await pour(ids.adele)).toBe(1)
-    expect(await pour(ids.arnaud)).toBe(0)
+    expect(await pour(ids.arnaud)).toBe(1)
     expect(await pour(ids.double)).toBe(0)
   })
 
@@ -506,8 +538,15 @@ describe('notifications d’admin (ADR 0033)', () => {
     ).toBe(0)
   })
 
-  it('prévient les autres admins de l’organisation d’un archivage', async () => {
+  it('prévient les autres admins de l’organisation d’un archivage, s’ils suivent le détail', async () => {
     const autre = await creerCompte('Odile', [
+      { organisationId: ids.orgA, role: 'ADMIN' },
+    ])
+    await prisma.preferenceOrganisation.create({
+      data: { userId: autre, organisationId: ids.orgA, suiviAdmin: 'DETAIL' },
+    })
+    // Un admin resté sur le défaut ne suit que les actions à mener (ADR 0065).
+    const parDefaut = await creerCompte('Omer', [
       { organisationId: ids.orgA, role: 'ADMIN' },
     ])
     const r = await executer(
@@ -533,6 +572,11 @@ describe('notifications d’admin (ADR 0033)', () => {
       `mutation ($id: ID!) { archiverPersonne(id: $id, archive: false) { id } }`,
       { id: ids.hugo }
     )
+    expect(
+      await prisma.notification.count({
+        where: { userId: parDefaut, type: 'PERSONNE_ARCHIVEE' },
+      })
+    ).toBe(0)
   })
 })
 

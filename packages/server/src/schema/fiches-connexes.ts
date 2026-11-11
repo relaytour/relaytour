@@ -250,6 +250,8 @@ builder.mutationFields(t => ({
           editionId: null,
           acteurId,
           ficheId: fiche.id,
+          // Une fiche qui concerne désormais le périmètre est un suivi (ADR 0065).
+          importance: 'SUIVI',
         })
       }
       publierFiche(

@@ -29,6 +29,8 @@ import {
   type Changement,
 } from '../lib/flux.ts'
 
+import { consoliderLesFenetres } from '../test/fenetre.ts'
+
 import { schema } from './index.ts'
 
 // Flux des changements (ADR 0017). Un signal ne porte aucune donnée, mais il dit
@@ -535,6 +537,19 @@ describe('signal d’une écriture', () => {
   })
 
   it('publie la tâche modifiée et la notification de sa référente', async () => {
+    // Alice suit tout le détail de son périmètre : un statut intermédiaire lui
+    // parvient (ADR 0065).
+    await prisma.preferenceOrganisation.upsert({
+      where: {
+        userId_organisationId: { userId: ids.alice, organisationId: ids.org },
+      },
+      update: { suiviPerimetres: 'DETAIL' },
+      create: {
+        userId: ids.alice,
+        organisationId: ids.org,
+        suiviPerimetres: 'DETAIL',
+      },
+    })
     const flux = await ouvrirLeFlux(await contexte(ids.alice), {
       relireLeContexte: () => contexte(ids.alice),
     })
@@ -548,6 +563,8 @@ describe('signal d’une écriture', () => {
     expect(
       reponse.body.kind === 'single' && reponse.body.singleResult.errors
     ).toBeUndefined()
+    // La fenêtre de regroupement se termine tout de suite (ADR 0065).
+    await consoliderLesFenetres()
     // Alice, référente du périmètre, reçoit le signal de la tâche et celui de sa
     // cloche, dans un ordre libre.
     const recus = [

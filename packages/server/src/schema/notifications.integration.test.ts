@@ -11,6 +11,8 @@ import { env } from '../env.ts'
 import { lireJetonDesabonnement } from '../lib/desabonnement.ts'
 import { genererRappels, personnesAResumer } from '../jobs/planification.ts'
 
+import { consoliderLesFenetres } from '../test/fenetre.ts'
+
 import { schema } from './index.ts'
 import {
   notifierLePerimetre,
@@ -71,6 +73,8 @@ async function executer(
     { query, variables },
     { contextValue: await contexteDeTest(userId) }
   )
+  // La fenêtre de regroupement se termine tout de suite (ADR 0065).
+  await consoliderLesFenetres()
   if (r.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
   if (r.body.singleResult.errors)
@@ -89,6 +93,35 @@ let ACTIVITE = ''
 
 /** L'organisation par défaut, telle que le worker la planifie. */
 const planifiee = () => ({ id: ORGANISATION, fuseauHoraire: 'Europe/Paris' })
+
+// Ces tests décrivent le suivi détaillé : chaque compte du test suit tout le détail
+// de ses périmètres et de ses rôles d'admin (ADR 0065). Le défaut, « Ce qui vous
+// concerne », a ses propres tests.
+async function suivreToutLeDetail(organisations: string[]) {
+  const comptes = await prisma.user.findMany({
+    where: {
+      id: {
+        in: Object.values(ids).filter(
+          (v): v is string => typeof v === 'string'
+        ),
+      },
+    },
+    select: { id: true },
+  })
+  for (const organisationId of organisations) {
+    for (const { id: userId } of comptes) {
+      const detail = {
+        suiviPerimetres: 'DETAIL' as const,
+        suiviAdmin: 'DETAIL' as const,
+      }
+      await prisma.preferenceOrganisation.upsert({
+        where: { userId_organisationId: { userId, organisationId } },
+        update: detail,
+        create: { userId, organisationId, ...detail },
+      })
+    }
+  }
+}
 
 beforeAll(async () => {
   ORGANISATION = await organisationParDefaut()
@@ -165,6 +198,7 @@ beforeAll(async () => {
       { userId: ids.alice, perimetreId: ids.natation, editionId: ids.archivee },
     ],
   })
+  await suivreToutLeDetail([ORGANISATION])
 })
 
 afterAll(async () => {
@@ -380,12 +414,14 @@ describe('rappels d’échéance', () => {
       userId: ids.bruno,
     })
 
-    await prisma.preferenceOrganisation.create({
-      data: {
-        organisationId: ORGANISATION,
-        userId: ids.bruno,
-        mailEcheance: false,
+    await prisma.preferenceOrganisation.update({
+      where: {
+        userId_organisationId: {
+          organisationId: ORGANISATION,
+          userId: ids.bruno,
+        },
       },
+      data: { mailEcheance: false },
     })
     expect(
       await composer(prisma, {
@@ -548,6 +584,7 @@ describe('activité du périmètre pour les autres référent·es', () => {
           editionId: ids.edition,
           acteurId: ids.alice,
           tacheId,
+          importance: 'MOI',
         },
         maintenant
       )
@@ -664,25 +701,25 @@ describe('activité du périmètre pour les autres référent·es', () => {
   })
 
   it('ne prévient pas une personne qui a coupé ces notifications', async () => {
-    const REGLER = `mutation ($a: Boolean) {
-      modifierPreferencesNotification(frequenceResume: HEBDOMADAIRE, mailModification: true, mailEcheance: true, applicationPerimetre: $a) { applicationPerimetre }
+    const REGLER = `mutation ($a: SuiviPerimetres) {
+      modifierPreferencesNotification(frequenceResume: HEBDOMADAIRE, mailModification: true, mailEcheance: true, suiviPerimetres: $a) { suiviPerimetres }
     }`
     expect(
       (
         await executer(
           ids.chloe,
-          `{ mesPreferencesNotification { applicationPerimetre } }`
+          `{ mesPreferencesNotification { suiviPerimetres } }`
         )
       ).mesPreferencesNotification
-    ).toEqual({ applicationPerimetre: true })
+    ).toEqual({ suiviPerimetres: 'DETAIL' })
     expect(
-      (await executer(ids.chloe, REGLER, { a: false }))
+      (await executer(ids.chloe, REGLER, { a: 'MOI' }))
         .modifierPreferencesNotification
-    ).toEqual({ applicationPerimetre: false })
+    ).toEqual({ suiviPerimetres: 'MOI' })
     // Une requête sans cette valeur ne change pas le réglage.
     expect(
       (await executer(ids.chloe, REGLER)).modifierPreferencesNotification
-    ).toEqual({ applicationPerimetre: false })
+    ).toEqual({ suiviPerimetres: 'MOI' })
 
     const data = await executer(
       ids.alice,
@@ -700,6 +737,6 @@ describe('activité du périmètre pour les autres référent·es', () => {
       'TACHE_CREEE',
       'TACHE_STATUT',
     ])
-    await executer(ids.chloe, REGLER, { a: true })
+    await executer(ids.chloe, REGLER, { a: 'DETAIL' })
   })
 })

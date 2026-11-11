@@ -96,16 +96,25 @@ export async function notifierPlace(
     publierNotification(organisationId, userId)
   } catch (erreur) {
     // P2002 : la personne est déjà prévenue pour cette fenêtre.
-    if ((erreur as { code?: string }).code === 'P2002') return
-    journal.error(
-      {
-        evenement: 'notification-echouee',
-        type: 'PLACE_MODIFIEE',
-        message: (erreur as Error).message,
-      },
-      'Une notification n’a pas pu être créée.'
-    )
+    if ((erreur as { code?: string }).code !== 'P2002') {
+      journal.error(
+        {
+          evenement: 'notification-echouee',
+          type: 'PLACE_MODIFIEE',
+          message: (erreur as Error).message,
+        },
+        'Une notification n’a pas pu être créée.'
+      )
+    }
   }
+  // Un nouveau rôle peut appeler un autre modèle : un refus passé ne compte plus
+  // (ADR 0065).
+  await prisma.preferenceOrganisation
+    .updateMany({
+      where: { userId, organisationId, modeleEcarte: { not: null } },
+      data: { modeleEcarte: null },
+    })
+    .catch(() => undefined)
 }
 
 /** « Football (Rencontres 2027) : le tournoi à 7 contre 7… », ou le nom seul. */

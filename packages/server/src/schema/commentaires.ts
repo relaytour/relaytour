@@ -411,8 +411,8 @@ builder.mutationFields(t => ({
       )
       signaler(tache)
       // Les personnes assignées sont prévenues à chaque commentaire, dans
-      // l'application et en push. Les autres référentes et référents l'apprennent
-      // dans l'application, une fois par tranche de dix minutes.
+      // l'application et en push. Les autres référentes et référents qui suivent le
+      // détail l'apprennent dans l'application, une fois par tranche de dix minutes.
       const assignees = tache.assignations.map(a => a.userId)
       await notifier(prisma, {
         type: 'TACHE_COMMENTEE',
@@ -428,6 +428,8 @@ builder.mutationFields(t => ({
         acteurId: acteur.id,
         tacheId: tache.id,
         sauf: assignees,
+        // Un commentaire sur la tâche d'une autre personne est du détail (ADR 0065).
+        importance: 'DETAIL',
       })
       return lireLeFil(ctx, tache.id)
     },
