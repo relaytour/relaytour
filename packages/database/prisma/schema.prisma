@@ -1614,24 +1614,27 @@ enum TypeJournal {
 // Journal : qui a fait quoi, et quand. Il alimente les notifications et le score
 // de participation. Nommé Activite jusqu'à l'ADR 0008, qui donne ce mot aux activités.
 model Journal {
-  id            String              @id @default(cuid())
-  type          TypeJournal
-  acteurId      String
+  id              String              @id @default(cuid())
+  type            TypeJournal
+  acteurId        String
   // Nuls pour une action sur une fiche commune, qui n'appartient à aucun périmètre ni édition.
-  editionId     String?
-  perimetreId   String?
-  tacheId       String?
-  ficheId       String?
+  editionId       String?
+  perimetreId     String?
+  tacheId         String?
+  ficheId         String?
   // Pour TACHE_ASSIGNEE et TACHE_DESASSIGNEE : la personne concernée.
-  personneId    String?
+  personneId      String?
   // Pour TACHE_STATUT : le nouveau statut.
-  statut        StatutTache?
-  realiseeParId String?
+  statut          StatutTache?
+  // Pour TACHE_STATUT : le statut d'avant, que la fenêtre de regroupement compare
+  // au statut final (ADR 0065).
+  statutPrecedent StatutTache?
+  realiseeParId   String?
   // Pour TACHE_PRIORITE : le niveau posé, null quand l'ajustement est retiré.
-  ajustement    AjustementPriorite?
+  ajustement      AjustementPriorite?
   // Pour TACHE_LIEE et TACHE_DELIEE : la tâche liée (ADR 0062).
-  tacheLieeId   String?
-  createdAt     DateTime            @default(now())
+  tacheLieeId     String?
+  createdAt       DateTime            @default(now())
 
   acteur    User       @relation("JournalActeur", fields: [acteurId], references: [id], onDelete: Restrict)
   edition   Edition?   @relation(fields: [editionId], references: [id], onDelete: Restrict)
@@ -1903,6 +1906,11 @@ model Notification {
   envoyeeLe      DateTime?
   // Date d'inclusion dans un résumé par mail.
   resumeeLe      DateTime?
+  // Fin de la fenêtre de regroupement d'une notification de tâche (ADR 0065). La
+  // notification reste invisible jusqu'à sa consolidation, qui remet la date à nul.
+  disponibleLe   DateTime?
+  // La notification attend sa consolidation pour partir par mail immédiat.
+  mailEnAttente  Boolean            @default(false)
   createdAt      DateTime           @default(now())
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
@@ -1923,6 +1931,7 @@ model Notification {
   @@index([userId, resumeeLe])
   @@index([organisationId])
   @@index([userId, organisationId, niveau, lueLe])
+  @@index([tacheId, disponibleLe])
 }
 
 // Mail des priorités d'une période (ADR 0063) : aucun, celles des périmètres où la
@@ -1939,6 +1948,14 @@ enum SuiviPerimetres {
   MOI
   SUIVI
   DETAIL
+}
+
+// Modèle de réglages des notifications (ADR 0065).
+enum ModeleNotification {
+  ESSENTIEL
+  REFERENT
+  CONTACT_PRINCIPAL
+  ADMIN_ACTIVITE
 }
 
 // Ce qu'un admin suit de ses rôles d'admin (ADR 0065).
@@ -1992,38 +2009,41 @@ model PreferenceNotification {
 // `PreferenceNotification`, gardée sans écriture pour un retour à une version
 // antérieure.
 model PreferenceOrganisation {
-  userId               String
-  organisationId       String
-  frequenceResume      FrequenceResume @default(HEBDOMADAIRE)
+  userId                 String
+  organisationId         String
+  frequenceResume        FrequenceResume     @default(HEBDOMADAIRE)
   // Vos tâches et vos périmètres.
-  mailModification     Boolean         @default(true)
-  mailEcheance         Boolean         @default(true)
+  mailModification       Boolean             @default(true)
+  mailEcheance           Boolean             @default(true)
   // Remplacé par suiviPerimetres (ADR 0065) : la colonne reste pour un retour
   // arrière et n'est plus écrite.
-  applicationPerimetre Boolean         @default(true)
-  pushTaches           Boolean         @default(true)
-  pushEcheances        Boolean         @default(true)
+  applicationPerimetre   Boolean             @default(true)
+  pushTaches             Boolean             @default(true)
+  pushEcheances          Boolean             @default(true)
   // Vos rôles d'admin : demandes et invitations.
-  mailDemandes         Boolean         @default(true)
-  pushDemandes         Boolean         @default(true)
+  mailDemandes           Boolean             @default(true)
+  pushDemandes           Boolean             @default(true)
   // Vos rôles d'admin : équipe (ADR 0033).
   // Remplacé par suiviAdmin (ADR 0065) : la colonne reste pour un retour arrière et
   // n'est plus écrite.
-  applicationEquipe    Boolean         @default(true)
-  pushEquipe           Boolean         @default(false)
+  applicationEquipe      Boolean             @default(true)
+  pushEquipe             Boolean             @default(false)
   // La section « Pour vos rôles d'admin » du résumé.
-  resumeAdmin          Boolean         @default(true)
+  resumeAdmin            Boolean             @default(true)
   // Vos réunions : convocation, modification, annulation (ADR 0037).
-  pushAgenda           Boolean         @default(true)
+  pushAgenda             Boolean             @default(true)
   // Mail des priorités, la veille de chaque point d'équipe, ou le lundi sans point
   // dans la semaine (ADR 0063).
-  mailPriorites        MailPriorites   @default(MES_PERIMETRES)
+  mailPriorites          MailPriorites       @default(MES_PERIMETRES)
   // Suivi des périmètres et suivi d'admin (ADR 0065).
-  suiviPerimetres        SuiviPerimetres @default(MOI)
-  detailContactPrincipal Boolean         @default(false)
-  suiviAdmin             SuiviAdmin      @default(ACTIONS)
-  dernierResumeLe      DateTime?
-  updatedAt            DateTime        @updatedAt
+  suiviPerimetres        SuiviPerimetres     @default(MOI)
+  detailContactPrincipal Boolean             @default(false)
+  suiviAdmin             SuiviAdmin          @default(ACTIONS)
+  // Le modèle recommandé que la personne a refusé : la proposition ne revient
+  // qu'avec une autre recommandation (ADR 0065).
+  modeleEcarte           ModeleNotification?
+  dernierResumeLe        DateTime?
+  updatedAt              DateTime            @updatedAt
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)

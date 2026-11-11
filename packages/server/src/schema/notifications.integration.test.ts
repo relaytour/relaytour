@@ -11,6 +11,8 @@ import { env } from '../env.ts'
 import { lireJetonDesabonnement } from '../lib/desabonnement.ts'
 import { genererRappels, personnesAResumer } from '../jobs/planification.ts'
 
+import { consoliderLesFenetres } from '../test/fenetre.ts'
+
 import { schema } from './index.ts'
 import {
   notifierLePerimetre,
@@ -71,6 +73,8 @@ async function executer(
     { query, variables },
     { contextValue: await contexteDeTest(userId) }
   )
+  // La fenêtre de regroupement se termine tout de suite (ADR 0065).
+  await consoliderLesFenetres()
   if (r.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
   if (r.body.singleResult.errors)

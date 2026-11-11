@@ -102,6 +102,16 @@ export interface NotificationLue {
   sondage?: { id: string; titre: string; editionId: string } | null
   sequence?: { id: string; titre: string; editionId: string } | null
   benevole?: { nom: string } | null
+  /**
+   * Pour une assignation regroupée dans un résumé : la personne que la nouvelle
+   * personne remplace sur la tâche (ADR 0065).
+   */
+  remplaceId?: string | null
+  /**
+   * Pour un commentaire regroupé dans un résumé : le nombre de commentaires de la
+   * tâche, et le nombre d'autres personnes qui l'ont commentée (ADR 0065).
+   */
+  commentaires?: { nombre: number; autresAuteurs: number }
 }
 
 export interface ActiviteDeNotification {
@@ -187,7 +197,7 @@ async function lireContexte(
     ...new Set(valeurs.filter((v): v is string => v !== null)),
   ]
   const personnes = uniques(
-    notifications.flatMap(n => [n.acteurId, n.personneId])
+    notifications.flatMap(n => [n.acteurId, n.personneId, n.remplaceId ?? null])
   )
   const activites = uniques(notifications.map(activiteIdDe))
   // Le périmètre de la notification, et celui de sa tâche pour le lien : une
@@ -377,10 +387,13 @@ function phrase(
         acteur,
         personne,
       })
+    // Le lien mène aux préférences : un nouveau rôle peut appeler un autre modèle
+    // de notifications (ADR 0065).
     case 'PLACE_MODIFIEE':
-      return i18n._('Votre place dans l’équipe a changé{activite}', {
-        activite,
-      })
+      return i18n._(
+        'Votre place dans l’équipe a changé{activite}. Vous pouvez adapter vos notifications à votre rôle dans vos préférences',
+        { activite }
+      )
     case 'REUNION_CONVOQUEE':
     case 'REUNION_MODIFIEE':
     case 'REUNION_ANNULEE': {
@@ -513,12 +526,53 @@ function phrase(
       })
     // Le texte du commentaire ne figure jamais dans une notification (ADR 0029).
     case 'TACHE_COMMENTEE':
+      if (n.commentaires && n.commentaires.nombre > 1) {
+        const { nombre, autresAuteurs: autres } = n.commentaires
+        return autres === 0
+          ? i18n._(
+              '{acteur} a laissé {nombre} commentaires sur la tâche « {titre} »{lieu}',
+              { acteur, titre, lieu, nombre }
+            )
+          : i18n._(
+              '{autres, plural, one {{acteur} et une autre personne ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}} other {{acteur} et # autres personnes ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}}}',
+              { acteur, titre, lieu, nombre, autres }
+            )
+      }
       return i18n._('{acteur} a commenté la tâche « {titre} »{lieu}', {
         acteur,
         titre,
         lieu,
       })
     case 'TACHE_ASSIGNEE':
+      // Une personne remplacée lit « à votre place » (ADR 0065).
+      if (n.remplaceId && n.remplaceId === moiId) {
+        return n.personneId === n.acteurId
+          ? i18n._(
+              '{acteur} s’occupe de la tâche « {titre} »{lieu} à votre place',
+              { acteur, titre, lieu }
+            )
+          : i18n._(
+              '{acteur} a assigné la tâche « {titre} »{lieu} à {personne} à votre place',
+              { acteur, titre, lieu, personne }
+            )
+      }
+      if (n.remplaceId) {
+        const ancien = c.noms.get(n.remplaceId) ?? i18n._('une personne')
+        return n.personneId === n.acteurId
+          ? i18n._(
+              '{acteur} s’occupe de la tâche « {titre} »{lieu} à la place de {ancien}',
+              { acteur, titre, lieu, ancien }
+            )
+          : n.personneId === moiId
+            ? i18n._(
+                '{acteur} vous a assigné la tâche « {titre} »{lieu} à la place de {ancien}',
+                { acteur, titre, lieu, ancien }
+              )
+            : i18n._(
+                '{acteur} a assigné la tâche « {titre} »{lieu} à {personne} à la place de {ancien}',
+                { acteur, titre, lieu, personne, ancien }
+              )
+      }
       return n.personneId === n.acteurId
         ? i18n._('{acteur} s’occupe de la tâche « {titre} »{lieu}', {
             acteur,
@@ -656,7 +710,7 @@ function lien(n: NotificationLue, c: Contexte): string {
     case 'ACCES_FOURNISSEUR_A_VALIDER':
       return `/${slug}/admin/espace-fichiers?onglet=acces`
     case 'PLACE_MODIFIEE':
-      return `/${slug}`
+      return `/${slug}/preferences`
     case 'FICHE_CREEE':
     case 'FICHE_MODIFIEE':
       return n.fiche ? `/${slug}/fiches/${n.fiche.slug}` : `/${slug}`
@@ -821,4 +875,102 @@ async function fichesConnexesIllisibles(
     if (!(await lisible)) illisibles.add(n.id)
   }
   return illisibles
+}
+
+const ASSIGNATIONS: ReadonlySet<TypeNotification> = new Set([
+  'TACHE_ASSIGNEE',
+  'TACHE_DESASSIGNEE',
+])
+const CHANGEMENTS: ReadonlySet<TypeNotification> = new Set([
+  'TACHE_MODIFIEE',
+  'TACHE_STATUT',
+])
+
+/**
+ * Regroupe les nouvelles d'une même tâche pour un résumé (ADR 0065). Les
+ * notifications arrivent de la plus récente à la plus ancienne, et repartent dans
+ * cet ordre.
+ * - Une personne retirée puis remise, ou ajoutée puis retirée, disparaît.
+ * - Plusieurs modifications ou statuts d'une tâche gardent la plus récente.
+ * - Un retrait et un ajout faits par la même personne forment une seule ligne :
+ *   « Léa s'occupe de la tâche … à la place de Paul ».
+ * - Les commentaires d'une tâche forment une seule ligne, à la place du plus
+ *   récent : « Léa et 2 autres personnes ont laissé 4 commentaires sur la tâche … ».
+ */
+export function fusionnerParTache<T extends NotificationLue>(
+  recentesDabord: readonly T[]
+): T[] {
+  const chrono = [...recentesDabord].reverse()
+  const retirees = new Set<T>()
+  const remplacements = new Map<T, string>()
+  const assignations = new Map<string, T[]>()
+  const changements = new Map<string, T[]>()
+  const commentaires = new Map<string, T[]>()
+  for (const n of chrono) {
+    const tacheId = n.tache?.id
+    if (tacheId === undefined) continue
+    if (ASSIGNATIONS.has(n.type)) {
+      const cle = `${tacheId}|${n.personneId ?? ''}`
+      assignations.set(cle, [...(assignations.get(cle) ?? []), n])
+    } else if (CHANGEMENTS.has(n.type)) {
+      changements.set(tacheId, [...(changements.get(tacheId) ?? []), n])
+    } else if (n.type === 'TACHE_COMMENTEE') {
+      commentaires.set(tacheId, [...(commentaires.get(tacheId) ?? []), n])
+    }
+  }
+  const regroupes = new Map<T, NonNullable<NotificationLue['commentaires']>>()
+  for (const suite of commentaires.values()) {
+    if (suite.length < 2) continue
+    for (const n of suite.slice(0, -1)) retirees.add(n)
+    const dernier = suite.at(-1)!
+    const auteurs = new Set(suite.map(n => n.acteurId))
+    auteurs.delete(dernier.acteurId)
+    regroupes.set(dernier, {
+      nombre: suite.length,
+      autresAuteurs: auteurs.size,
+    })
+  }
+  for (const suite of changements.values()) {
+    for (const n of suite.slice(0, -1)) retirees.add(n)
+  }
+  // L'état net de chaque personne : la dernière ligne, si l'état a changé.
+  const nettes = new Map<string, { retraits: T[]; ajouts: T[] }>()
+  for (const suite of assignations.values()) {
+    for (const n of suite.slice(0, -1)) retirees.add(n)
+    const derniere = suite.at(-1)!
+    const assigneeAvant = suite[0]!.type === 'TACHE_DESASSIGNEE'
+    const assigneeApres = derniere.type === 'TACHE_ASSIGNEE'
+    if (assigneeAvant === assigneeApres) {
+      retirees.add(derniere)
+      continue
+    }
+    const tacheId = derniere.tache!.id
+    const net = nettes.get(tacheId) ?? { retraits: [], ajouts: [] }
+    if (assigneeApres) net.ajouts.push(derniere)
+    else net.retraits.push(derniere)
+    nettes.set(tacheId, net)
+  }
+  for (const { retraits, ajouts } of nettes.values()) {
+    const [retrait] = retraits
+    const [ajout] = ajouts
+    if (
+      retraits.length === 1 &&
+      ajouts.length === 1 &&
+      retrait!.acteurId !== null &&
+      retrait!.acteurId === ajout!.acteurId &&
+      retrait!.personneId !== null
+    ) {
+      retirees.add(retrait!)
+      remplacements.set(ajout!, retrait!.personneId)
+    }
+  }
+  return recentesDabord
+    .filter(n => !retirees.has(n))
+    .map(n =>
+      remplacements.has(n)
+        ? { ...n, remplaceId: remplacements.get(n)! }
+        : regroupes.has(n)
+          ? { ...n, commentaires: regroupes.get(n)! }
+          : n
+    )
 }

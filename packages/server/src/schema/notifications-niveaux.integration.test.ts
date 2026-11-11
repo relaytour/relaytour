@@ -449,8 +449,10 @@ describe('notifications d’admin (ADR 0033)', () => {
     expect(lues.notifications).toContainEqual({
       type: 'PLACE_MODIFIEE',
       niveau: 'REFERENT',
-      message: 'Votre place dans l’équipe a changé.',
-      lien: `/rencontres-${s}`,
+      // Le lien mène aux préférences, pour adapter le modèle au rôle (ADR 0065).
+      message:
+        'Votre place dans l’équipe a changé. Vous pouvez adapter vos notifications à votre rôle dans vos préférences.',
+      lien: `/rencontres-${s}/preferences`,
       activite: { id: ids.a1, nom: 'Rencontres' },
       perimetre: null,
     })

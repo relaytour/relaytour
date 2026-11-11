@@ -1403,6 +1403,8 @@ builder.mutationFields(t => ({
             perimetreId: tache.perimetreId,
             tacheId: tache.id,
             statut: args.statut,
+            // La fenêtre de regroupement compare ce statut au statut final (ADR 0065).
+            statutPrecedent: tache.statut,
             // Le journal ne porte qu'une personne : il la nomme quand elle est seule.
             // La liste complète vit dans `TacheRealisation`.
             realiseeParId: realisateurs.length === 1 ? realisateurs[0] : null,
@@ -1436,7 +1438,9 @@ builder.mutationFields(t => ({
           tacheId: tache.id,
           perimetreId: tache.perimetreId,
           changement: 'statut',
-          ...(faite ? { statut: 'FAITE' as const } : {}),
+          // Le statut distingue, dans la fenêtre de regroupement, une modification
+          // née d'un changement de statut (ADR 0065).
+          statut: args.statut,
         },
         { mailImmediat: true }
       )

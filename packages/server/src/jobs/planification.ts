@@ -52,6 +52,7 @@ export interface RappelsParPersonne {
  * Les destinataires sont les personnes assignées. Sans personne assignée, ce sont
  * les contacts principaux du périmètre, ou à défaut toute son équipe, pour que rien
  * ne passe inaperçu (ADR 0065).
+ *
  * Une déclinaison en retard prévient en plus les personnes assignées à sa tâche
  * partagée, sauf celles qui sont aussi assignées à la déclinaison (ADR 0063).
  */
@@ -225,7 +226,8 @@ export async function genererRappels(
 /**
  * Les membres d'une organisation qui reçoivent son résumé aujourd'hui : fréquence
  * quotidienne, ou hebdomadaire le lundi (valeur par défaut), et pas déjà servis
- * aujourd'hui pour cette organisation. Le jour et le lundi se lisent dans le fuseau
+ * aujourd'hui pour cette organisation. Le résumé hebdomadaire ne part pas quand un
+ * mail des priorités a porté les nouvelles dans les six derniers jours (ADR 0065). Le jour et le lundi se lisent dans le fuseau
  * de l'organisation.
  */
 export async function personnesAResumer(
@@ -257,10 +259,16 @@ export async function personnesAResumer(
       if (frequence === 'AUCUN') return false
       if (frequence === 'HEBDOMADAIRE' && !lundi) return false
       const dernier = preferences?.dernierResumeLe ?? null
-      return (
-        dernier === null ||
-        aujourdhui(dernier, organisation.fuseauHoraire) !== jour
-      )
+      if (dernier === null) return true
+      // Un mail des priorités des six derniers jours a porté les nouvelles de la
+      // semaine : le résumé du lundi ne part pas en double (ADR 0065).
+      if (
+        frequence === 'HEBDOMADAIRE' &&
+        maintenant.getTime() - dernier.getTime() < 6 * 24 * 3600 * 1000
+      ) {
+        return false
+      }
+      return aujourdhui(dernier, organisation.fuseauHoraire) !== jour
     })
     .map(p => p.id)
 }
