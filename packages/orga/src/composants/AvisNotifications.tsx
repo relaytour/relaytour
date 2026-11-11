@@ -44,9 +44,15 @@ export default function AvisNotifications() {
   const precedent = useRef<number | undefined>(undefined)
   // Les actions changent d'identité à chaque navigation : l'effet les lit par une
   // référence, pour qu'une navigation n'annule pas une lecture en cours.
-  const actions = useRef({ notification, naviguer, marquer, t })
+  // Les textes se composent ici, où la macro de Lingui les transforme : un `t`
+  // relu dans une référence ne serait ni extrait ni traduit.
+  const textes = {
+    plusieurs: (nombre: number) => t`${nombre} nouvelles notifications`,
+    une: () => t`Nouvelle notification`,
+  }
+  const actions = useRef({ notification, naviguer, marquer, textes })
   useEffect(() => {
-    actions.current = { notification, naviguer, marquer, t }
+    actions.current = { notification, naviguer, marquer, textes }
   })
 
   useEffect(() => {
@@ -56,7 +62,7 @@ export default function AvisNotifications() {
     const premiere = vues.current === null
     // Une baisse du nombre (une lecture) n'annonce rien.
     if (!premiere && avant !== undefined && nonLues <= avant) return
-    const { notification, naviguer, marquer, t } = actions.current
+    const { notification, naviguer, marquer, textes } = actions.current
     void client
       .query({ query: DERNIERES, fetchPolicy: 'no-cache' })
       .then(({ data: lues }) => {
@@ -75,7 +81,7 @@ export default function AvisNotifications() {
             key: 'notifications-nouvelles',
             placement: 'bottomRight',
             duration: DUREE,
-            title: t`${nombre} nouvelles notifications`,
+            title: textes.plusieurs(nombre),
             actions: (
               <Button
                 size="small"
@@ -104,7 +110,7 @@ export default function AvisNotifications() {
             duration: DUREE,
             title:
               [n.activite?.nom, n.perimetre?.nom].filter(Boolean).join(' · ') ||
-              t`Nouvelle notification`,
+              textes.une(),
             description: n.message,
             onClick: () => void ouvrir(),
             style: { cursor: 'pointer' },
