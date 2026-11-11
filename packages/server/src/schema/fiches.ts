@@ -216,6 +216,8 @@ async function prevenirLePerimetre(
     editionId: null,
     acteurId,
     ficheId,
+    // Une fiche écrite par une autre personne est du détail (ADR 0065).
+    importance: 'DETAIL',
   })
 }
 

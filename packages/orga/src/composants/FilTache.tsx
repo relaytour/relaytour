@@ -17,6 +17,7 @@ import {
   type Fil,
 } from '../lib/commentaires'
 import { messageErreur } from '../lib/erreurs'
+import { useModificationEnCours } from '../lib/modifications-en-cours'
 import { decouperLiens } from '../lib/liens'
 
 import { Avatar } from './Personne'
@@ -65,11 +66,14 @@ export default function FilTache({
   moiId,
   ouvert,
   onFermer,
+  integre = false,
 }: {
   tache: { id: string; titre: string }
   moiId: string
   ouvert: boolean
   onFermer: () => void
+  /** Le fil s'affiche dans la page (fenêtre d'une tâche), sans volet. */
+  integre?: boolean
 }) {
   const { t } = useLingui()
   const { message, modal } = App.useApp()
@@ -101,17 +105,25 @@ export default function FilTache({
 
   const [texte, setTexte] = useState('')
   const [enEdition, setEnEdition] = useState<{ id: string; texte: string }>()
+  // Un commentaire en cours d'écriture demande confirmation avant de quitter la
+  // page pour une notification (ADR 0065).
+  useModificationEnCours(texte.trim() !== '' || enEdition !== undefined)
   const [avecHistorique, setAvecHistorique] = useState(true)
   const fil = data?.filTache
   const elements = fil ? composerFil(fil, avecHistorique) : []
   const fin = useRef<HTMLDivElement>(null)
+  const zone = useRef<HTMLDivElement>(null)
   const nombreAffiche = fil?.commentaires.length
   const nombreTotal = fil?.nombreCommentaires
   const nombre = elements.length
   // Le fil s'ouvre sur son dernier élément, et y revient à chaque ajout.
+  // Dans la page, seule la zone du fil défile : la fenêtre reste en place.
   useEffect(() => {
-    if (ouvert && nombre > 0) fin.current?.scrollIntoView({ block: 'end' })
-  }, [ouvert, nombre])
+    if (!ouvert || nombre === 0) return
+    if (integre && zone.current)
+      zone.current.scrollTop = zone.current.scrollHeight
+    else fin.current?.scrollIntoView({ block: 'end' })
+  }, [ouvert, nombre, integre])
 
   const publier = async () => {
     const propre = texte.trim()
@@ -159,6 +171,211 @@ export default function FilTache({
     }
   }
 
+  const bascule = (
+    <PuceBascule actif={avecHistorique} onChange={setAvecHistorique}>
+      <Trans>Historique</Trans>
+    </PuceBascule>
+  )
+  const pied = fil?.peutCommenter ? (
+    <form
+      className="rt-fil-saisie"
+      onSubmit={e => {
+        e.preventDefault()
+        void publier()
+      }}
+    >
+      <Input.TextArea
+        value={texte}
+        onChange={e => setTexte(e.target.value)}
+        // Ctrl+Entrée ou Cmd+Entrée publie ; Entrée seule passe à la ligne.
+        onKeyDown={e => {
+          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault()
+            void publier()
+          }
+        }}
+        autoSize={{ minRows: 2, maxRows: 8 }}
+        maxLength={COMMENTAIRE_MAX}
+        placeholder={t`Écrire un commentaire : un compte rendu, une information, une question.`}
+        aria-label={t`Votre commentaire`}
+      />
+      <Button
+        type="primary"
+        htmlType="submit"
+        loading={envoi.loading}
+        disabled={texte.trim() === ''}
+      >
+        <Trans>Publier</Trans>
+      </Button>
+    </form>
+  ) : fil ? (
+    <p className="rt-note" style={{ margin: 0 }}>
+      <Trans>Vous lisez ce fil sans pouvoir y écrire.</Trans>
+    </p>
+  ) : undefined
+
+  const corps =
+    fil === undefined ? (
+      error ? (
+        <p className="rt-note">
+          <Trans>
+            Le fil n’a pas pu être chargé. Rechargez la page dans un instant.
+          </Trans>
+        </p>
+      ) : (
+        loading && <Skeleton active />
+      )
+    ) : (
+      <>
+        {fil.nombreCommentaires > fil.commentaires.length && (
+          <p className="rt-note">
+            <Trans>
+              Le fil affiche les {nombreAffiche} derniers commentaires sur{' '}
+              {nombreTotal}.
+            </Trans>
+          </p>
+        )}
+        {elements.length === 0 ? (
+          <p className="rt-note">
+            <Trans>Aucun commentaire pour l’instant.</Trans>
+            {fil.peutCommenter &&
+              ` ${t`Notez ici où vous en êtes : toute l’équipe du périmètre le lira.`}`}
+          </p>
+        ) : (
+          <ol className="rt-fil">
+            {elements.map(element =>
+              element.sorte === 'evenement' ? (
+                <li key={element.evenement.id} className="rt-fil-evenement">
+                  <span>{texteEvenement(element.evenement, moiId)}</span>
+                  <time dateTime={element.le}>{instantDuFil(element.le)}</time>
+                </li>
+              ) : (
+                <li key={element.commentaire.id} className="rt-fil-commentaire">
+                  <Avatar
+                    nom={element.commentaire.auteur?.nom ?? '?'}
+                    taille={30}
+                  />
+                  <div className="rt-fil-commentaire-corps">
+                    <p className="rt-fil-commentaire-tete">
+                      <strong>
+                        {element.commentaire.auteur === null
+                          ? t`Compte supprimé`
+                          : element.commentaire.auteur.id === moiId
+                            ? t`Vous`
+                            : element.commentaire.auteur.nom}
+                      </strong>
+                      <time dateTime={element.le}>
+                        {instantDuFil(element.le)}
+                      </time>
+                      {element.commentaire.modifieLe && (
+                        <span
+                          title={titreModification(
+                            element.commentaire.modifieLe
+                          )}
+                        >
+                          {t({
+                            message: 'modifié',
+                            comment:
+                              'Mention sur un commentaire modifié après sa publication',
+                          })}
+                        </span>
+                      )}
+                    </p>
+                    {enEdition?.id === element.commentaire.id ? (
+                      <div className="rt-fil-edition">
+                        <Input.TextArea
+                          autoFocus
+                          value={enEdition.texte}
+                          onChange={e =>
+                            setEnEdition({
+                              id: enEdition.id,
+                              texte: e.target.value,
+                            })
+                          }
+                          autoSize={{ minRows: 2, maxRows: 10 }}
+                          maxLength={COMMENTAIRE_MAX}
+                          aria-label={t`Modifier votre commentaire`}
+                        />
+                        <div className="rt-fil-actions">
+                          <Button
+                            size="small"
+                            type="primary"
+                            loading={modification.loading}
+                            disabled={enEdition.texte.trim() === ''}
+                            onClick={() => void enregistrer()}
+                          >
+                            <Trans>Enregistrer</Trans>
+                          </Button>
+                          <Button
+                            size="small"
+                            onClick={() => setEnEdition(undefined)}
+                          >
+                            <Trans>Annuler</Trans>
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <TexteCommentaire texte={element.commentaire.texte} />
+                        {(element.commentaire.peutModifier ||
+                          element.commentaire.peutSupprimer) && (
+                          <div className="rt-fil-actions">
+                            {element.commentaire.peutModifier && (
+                              <Button
+                                size="small"
+                                type="link"
+                                onClick={() =>
+                                  setEnEdition({
+                                    id: element.commentaire.id,
+                                    texte: element.commentaire.texte,
+                                  })
+                                }
+                              >
+                                <Trans>Modifier</Trans>
+                              </Button>
+                            )}
+                            {element.commentaire.peutSupprimer && (
+                              <Button
+                                size="small"
+                                type="link"
+                                danger
+                                onClick={() =>
+                                  void retirer(element.commentaire)
+                                }
+                              >
+                                <Trans>Supprimer</Trans>
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </li>
+              )
+            )}
+          </ol>
+        )}
+        <div ref={fin} />
+      </>
+    )
+
+  if (integre)
+    return (
+      <section className="rt-fil-integre" aria-label={t`Commentaires`}>
+        <header className="rt-fil-integre-tete">
+          <h2>
+            <Trans>Commentaires</Trans>
+          </h2>
+          {bascule}
+        </header>
+        <div ref={zone} className="rt-fil-integre-corps">
+          {corps}
+        </div>
+        {pied && <div className="rt-fil-integre-pied">{pied}</div>}
+      </section>
+    )
+
   return (
     <Drawer
       open={ouvert}
@@ -166,200 +383,10 @@ export default function FilTache({
       title={tache.titre}
       size={460}
       className="rt-fil-volet"
-      extra={
-        <PuceBascule actif={avecHistorique} onChange={setAvecHistorique}>
-          <Trans>Historique</Trans>
-        </PuceBascule>
-      }
-      footer={
-        fil?.peutCommenter ? (
-          <form
-            className="rt-fil-saisie"
-            onSubmit={e => {
-              e.preventDefault()
-              void publier()
-            }}
-          >
-            <Input.TextArea
-              value={texte}
-              onChange={e => setTexte(e.target.value)}
-              // Ctrl+Entrée ou Cmd+Entrée publie ; Entrée seule passe à la ligne.
-              onKeyDown={e => {
-                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                  e.preventDefault()
-                  void publier()
-                }
-              }}
-              autoSize={{ minRows: 2, maxRows: 8 }}
-              maxLength={COMMENTAIRE_MAX}
-              placeholder={t`Écrire un commentaire : un compte rendu, une information, une question.`}
-              aria-label={t`Votre commentaire`}
-            />
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={envoi.loading}
-              disabled={texte.trim() === ''}
-            >
-              <Trans>Publier</Trans>
-            </Button>
-          </form>
-        ) : fil ? (
-          <p className="rt-note" style={{ margin: 0 }}>
-            <Trans>Vous lisez ce fil sans pouvoir y écrire.</Trans>
-          </p>
-        ) : undefined
-      }
+      extra={bascule}
+      footer={pied}
     >
-      {fil === undefined ? (
-        error ? (
-          <p className="rt-note">
-            <Trans>
-              Le fil n’a pas pu être chargé. Rechargez la page dans un instant.
-            </Trans>
-          </p>
-        ) : (
-          loading && <Skeleton active />
-        )
-      ) : (
-        <>
-          {fil.nombreCommentaires > fil.commentaires.length && (
-            <p className="rt-note">
-              <Trans>
-                Le fil affiche les {nombreAffiche} derniers commentaires sur{' '}
-                {nombreTotal}.
-              </Trans>
-            </p>
-          )}
-          {elements.length === 0 ? (
-            <p className="rt-note">
-              <Trans>Aucun commentaire pour l’instant.</Trans>
-              {fil.peutCommenter &&
-                ` ${t`Notez ici où vous en êtes : toute l’équipe du périmètre le lira.`}`}
-            </p>
-          ) : (
-            <ol className="rt-fil">
-              {elements.map(element =>
-                element.sorte === 'evenement' ? (
-                  <li key={element.evenement.id} className="rt-fil-evenement">
-                    <span>{texteEvenement(element.evenement, moiId)}</span>
-                    <time dateTime={element.le}>
-                      {instantDuFil(element.le)}
-                    </time>
-                  </li>
-                ) : (
-                  <li
-                    key={element.commentaire.id}
-                    className="rt-fil-commentaire"
-                  >
-                    <Avatar
-                      nom={element.commentaire.auteur?.nom ?? '?'}
-                      taille={30}
-                    />
-                    <div className="rt-fil-commentaire-corps">
-                      <p className="rt-fil-commentaire-tete">
-                        <strong>
-                          {element.commentaire.auteur === null
-                            ? t`Compte supprimé`
-                            : element.commentaire.auteur.id === moiId
-                              ? t`Vous`
-                              : element.commentaire.auteur.nom}
-                        </strong>
-                        <time dateTime={element.le}>
-                          {instantDuFil(element.le)}
-                        </time>
-                        {element.commentaire.modifieLe && (
-                          <span
-                            title={titreModification(
-                              element.commentaire.modifieLe
-                            )}
-                          >
-                            {t({
-                              message: 'modifié',
-                              comment:
-                                'Mention sur un commentaire modifié après sa publication',
-                            })}
-                          </span>
-                        )}
-                      </p>
-                      {enEdition?.id === element.commentaire.id ? (
-                        <div className="rt-fil-edition">
-                          <Input.TextArea
-                            autoFocus
-                            value={enEdition.texte}
-                            onChange={e =>
-                              setEnEdition({
-                                id: enEdition.id,
-                                texte: e.target.value,
-                              })
-                            }
-                            autoSize={{ minRows: 2, maxRows: 10 }}
-                            maxLength={COMMENTAIRE_MAX}
-                            aria-label={t`Modifier votre commentaire`}
-                          />
-                          <div className="rt-fil-actions">
-                            <Button
-                              size="small"
-                              type="primary"
-                              loading={modification.loading}
-                              disabled={enEdition.texte.trim() === ''}
-                              onClick={() => void enregistrer()}
-                            >
-                              <Trans>Enregistrer</Trans>
-                            </Button>
-                            <Button
-                              size="small"
-                              onClick={() => setEnEdition(undefined)}
-                            >
-                              <Trans>Annuler</Trans>
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <TexteCommentaire texte={element.commentaire.texte} />
-                          {(element.commentaire.peutModifier ||
-                            element.commentaire.peutSupprimer) && (
-                            <div className="rt-fil-actions">
-                              {element.commentaire.peutModifier && (
-                                <Button
-                                  size="small"
-                                  type="link"
-                                  onClick={() =>
-                                    setEnEdition({
-                                      id: element.commentaire.id,
-                                      texte: element.commentaire.texte,
-                                    })
-                                  }
-                                >
-                                  <Trans>Modifier</Trans>
-                                </Button>
-                              )}
-                              {element.commentaire.peutSupprimer && (
-                                <Button
-                                  size="small"
-                                  type="link"
-                                  danger
-                                  onClick={() =>
-                                    void retirer(element.commentaire)
-                                  }
-                                >
-                                  <Trans>Supprimer</Trans>
-                                </Button>
-                              )}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </li>
-                )
-              )}
-            </ol>
-          )}
-          <div ref={fin} />
-        </>
-      )}
+      {corps}
     </Drawer>
   )
 }

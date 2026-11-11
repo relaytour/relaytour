@@ -659,6 +659,10 @@ msgstr "{nombre, plural, one {Jalon : # tâche liée reste ouverte} other {Jalon
 msgid "{nombre, plural, one {Reprise dans # autre périmètre} other {Reprise dans # autres périmètres}}"
 msgstr "{nombre, plural, one {Reprise dans # autre périmètre} other {Reprise dans # autres périmètres}}"
 
+#: src/composants/AvisNotifications.tsx
+msgid "{nombre} nouvelles notifications"
+msgstr "{nombre} nouvelles notifications"
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "{nombreAAccepter} à accepter"
 msgstr "{nombreAAccepter} à accepter"
@@ -1680,10 +1684,6 @@ msgstr "Activité à importer"
 msgid "Activité créée."
 msgstr "Activité créée."
 
-#: src/pages/Preferences.tsx
-msgid "Activité de vos périmètres"
-msgstr "Activité de vos périmètres"
-
 #: src/composants/DescriptionActivite.tsx
 #: src/pages/admin/Activites.tsx
 msgid "Activité enregistrée."
@@ -1711,10 +1711,18 @@ msgstr "Activités du robot"
 msgid "Actuelle"
 msgstr "Actuelle"
 
+#: src/composants/PropositionModele.tsx
+msgid "Adapter vos notifications à votre rôle"
+msgstr "Adapter vos notifications à votre rôle"
+
 #. Rôle d’une personne dans une activité, en liste
 #: src/pages/admin/Personnes.tsx
 msgid "admin"
 msgstr "admin"
+
+#: src/composants/modeles-notification.ts
+msgid "Admin d’activité"
+msgstr "Admin d’activité"
 
 #: src/composants/ListeNotifications.tsx
 #: src/pages/admin/Personnes.tsx
@@ -2177,6 +2185,7 @@ msgid "Applications (à essayer)"
 msgstr "Applications (à essayer)"
 
 #: src/composants/GestionAcces.tsx
+#: src/composants/PropositionModele.tsx
 msgid "Appliquer"
 msgstr "Appliquer"
 
@@ -2681,6 +2690,10 @@ msgstr "Aucune vérification pour l’instant. Relaytour vérifie aussi chaque n
 msgid "Aujourd’hui"
 msgstr "Aujourd’hui"
 
+#: src/pages/Preferences.tsx
+msgid "Aussi les affectations, les nominations, les archivages et les demandes traitées par un autre admin."
+msgstr "Aussi les affectations, les nominations, les archivages et les demandes traitées par un autre admin."
+
 #: src/composants/PreferencePush.tsx
 msgid "Autorisez-les dans les réglages de votre navigateur ou de votre téléphone, puis revenez sur cet écran."
 msgstr "Autorisez-les dans les réglages de votre navigateur ou de votre téléphone, puis revenez sur cet écran."
@@ -2932,6 +2945,18 @@ msgstr "Ce que la personne aime faire ou sait faire"
 msgid "Ce que vous aimez faire ou savez faire"
 msgstr "Ce que vous aimez faire ou savez faire"
 
+#: src/pages/Preferences.tsx
+msgid "Ce qui vous concerne"
+msgstr "Ce qui vous concerne"
+
+#: src/composants/modeles-notification.ts
+msgid "Ce qui vous concerne : vos tâches, vos échéances, vos réunions et les demandes à traiter. Le mail des priorités remplace le résumé de la semaine."
+msgstr "Ce qui vous concerne : vos tâches, vos échéances, vos réunions et les demandes à traiter. Le mail des priorités remplace le résumé de la semaine."
+
+#: src/pages/Preferences.tsx
+msgid "Ce qui vous concerne s’affiche toujours dans la cloche : vos tâches, vos échéances, vos réunions et les décisions qui vous attendent."
+msgstr "Ce qui vous concerne s’affiche toujours dans la cloche : vos tâches, vos échéances, vos réunions et les décisions qui vous attendent."
+
 #: src/pages/Rejoindre.tsx
 msgid "Ce qui vous intéresse (plusieurs choix possibles)"
 msgstr "Ce qui vous intéresse (plusieurs choix possibles)"
@@ -3125,6 +3150,11 @@ msgstr "Cette tâche a changé depuis votre lecture"
 msgid "Cette tâche est assignée à d’autres personnes"
 msgstr "Cette tâche est assignée à d’autres personnes"
 
+#: src/composants/ModaleTache.tsx
+#: src/pages/LienTache.tsx
+msgid "Cette tâche est introuvable."
+msgstr "Cette tâche est introuvable."
+
 #: src/lib/conflit.ts
 msgid "Cette tâche est maintenant « {statutCourant} ». « Écraser » applique quand même votre changement. « Recharger » affiche son état actuel."
 msgstr "Cette tâche est maintenant « {statutCourant} ». « Écraser » applique quand même votre changement. « Recharger » affiche son état actuel."
@@ -3202,6 +3232,10 @@ msgstr "Chaque jour"
 #: src/pages/Preferences.tsx
 msgid "Chaque lundi"
 msgstr "Chaque lundi"
+
+#: src/pages/Preferences.tsx
+msgid "Chaque modification, assignation et commentaire des tâches et des fiches de vos périmètres."
+msgstr "Chaque modification, assignation et commentaire des tâches et des fiches de vos périmètres."
 
 #: src/composants/ChampsActivite.tsx
 msgid "Chaque périmètre appartient à un groupe : un sport, un pôle, une équipe, une commission…"
@@ -3555,6 +3589,10 @@ msgstr "Commander les médailles"
 msgid "Comment les points se calculent"
 msgstr "Comment les points se calculent"
 
+#: src/composants/FilTache.tsx
+msgid "Commentaires"
+msgstr "Commentaires"
+
 #: src/composants/TacheCarte.tsx
 msgid "Commenter"
 msgstr "Commenter"
@@ -3708,6 +3746,7 @@ msgstr "Contact de l’activité"
 msgid "Contact de l’organisation (facultatif)"
 msgstr "Contact de l’organisation (facultatif)"
 
+#: src/composants/modeles-notification.ts
 #: src/composants/Personne.tsx
 #: src/pages/admin/ImportEquipe.tsx
 #: src/pages/Organigramme.tsx
@@ -3774,6 +3813,7 @@ msgid "Copier le jeton"
 msgstr "Copier le jeton"
 
 #: src/composants/LienBenevole.tsx
+#: src/lib/copie-lien.tsx
 msgid "Copier le lien"
 msgstr "Copier le lien"
 
@@ -3781,6 +3821,10 @@ msgstr "Copier le lien"
 #: src/composants/Messages.tsx
 msgid "Copier le texte"
 msgstr "Copier le texte"
+
+#: src/lib/copie-lien.tsx
+msgid "Copier le titre et le lien"
+msgstr "Copier le titre et le lien"
 
 #: src/composants/CopierAdresses.tsx
 msgid "Copier les adresses en Cc"
@@ -3910,10 +3954,6 @@ msgstr "Dans chaque groupe, les périmètres se rangent par ordre croissant, pui
 #: src/composants/AbonnementAgenda.tsx
 msgid "Dans Google Agenda, choisissez « Autres agendas », puis « À partir de l’URL ». Dans Outlook, choisissez « Ajouter un agenda », puis « S’abonner à partir du web ». Votre agenda relit l’adresse à son rythme, parfois une seule fois par jour."
 msgstr "Dans Google Agenda, choisissez « Autres agendas », puis « À partir de l’URL ». Dans Outlook, choisissez « Ajouter un agenda », puis « S’abonner à partir du web ». Votre agenda relit l’adresse à son rythme, parfois une seule fois par jour."
-
-#: src/pages/Preferences.tsx
-msgid "Dans l’espace organisateur"
-msgstr "Dans l’espace organisateur"
 
 #: src/composants/ConnexionEspace.tsx
 msgid "Dans la console Google Cloud de l’association, créez un projet et activez l’API Google Drive."
@@ -4543,6 +4583,11 @@ msgstr "Effectif souhaité pour {perimetre}"
 msgid "Élément à cocher"
 msgstr "Élément à cocher"
 
+#: src/composants/ModaleTache.tsx
+#: src/pages/LienTache.tsx
+msgid "Elle n’existe pas, ou vous n’avez pas accès à son périmètre."
+msgstr "Elle n’existe pas, ou vous n’avez pas accès à son périmètre."
+
 #: src/pages/Fiche.tsx
 msgid "Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »)."
 msgstr "Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »)."
@@ -4742,7 +4787,6 @@ msgid "Équipe de l’activité"
 msgstr "Équipe de l’activité"
 
 #: src/composants/PreferencePush.tsx
-#: src/pages/Preferences.tsx
 msgid "Équipe de vos activités"
 msgstr "Équipe de vos activités"
 
@@ -4769,6 +4813,10 @@ msgstr "Essayer"
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Essayez cette application avant d’enregistrer : elle ne répond pas sur tous les appareils."
 msgstr "Essayez cette application avant d’enregistrer : elle ne répond pas sur tous les appareils."
+
+#: src/composants/modeles-notification.ts
+msgid "Essentiel"
+msgstr "Essentiel"
 
 #: src/pages/ImportBenevoles.tsx
 msgid "Et {nbAutresEcartees} autres lignes, dans le fichier à télécharger."
@@ -5913,6 +5961,14 @@ msgstr "L’espace organisateur, vos mails et vos notifications s’affichent da
 msgid "L’essai a réussi"
 msgstr "L’essai a réussi"
 
+#: src/pages/Preferences.tsx
+msgid "L’essentiel du périmètre"
+msgstr "L’essentiel du périmètre"
+
+#: src/composants/modeles-notification.ts
+msgid "L’essentiel, et le suivi de vos périmètres : tâches à prendre, tâches faites, déclinaisons."
+msgstr "L’essentiel, et le suivi de vos périmètres : tâches à prendre, tâches faites, déclinaisons."
+
 #: src/pages/admin/Organisation.tsx
 msgid "L’export a échoué."
 msgstr "L’export a échoué."
@@ -6053,6 +6109,10 @@ msgstr "La copie a échoué : sélectionnez l’adresse à la main."
 #: src/composants/PreferenceJetons.tsx
 msgid "La copie a échoué : sélectionnez le jeton à la main."
 msgstr "La copie a échoué : sélectionnez le jeton à la main."
+
+#: src/lib/copie-lien.tsx
+msgid "La copie a échoué. Copiez l’adresse depuis la barre du navigateur."
+msgstr "La copie a échoué. Copiez l’adresse depuis la barre du navigateur."
 
 #: src/composants/CopierAdresses.tsx
 #: src/composants/EcrireMessage.tsx
@@ -6488,6 +6548,10 @@ msgstr "Le fichier s’appelle `planning-2027.xlsx`."
 msgid "Le fil affiche les {nombreAffiche} derniers commentaires sur {nombreTotal}."
 msgstr "Le fil affiche les {nombreAffiche} derniers commentaires sur {nombreTotal}."
 
+#: src/composants/ModaleTache.tsx
+msgid "Le fil de cette tâche se lit par les personnes affectées à son périmètre."
+msgstr "Le fil de cette tâche se lit par les personnes affectées à son périmètre."
+
 #: src/composants/FilTache.tsx
 msgid "Le fil n’a pas pu être chargé. Rechargez la page dans un instant."
 msgstr "Le fil n’a pas pu être chargé. Rechargez la page dans un instant."
@@ -6563,6 +6627,10 @@ msgstr "Le lien « Ouvrir dans {nomFournisseur} » fonctionne si votre compte {n
 #: src/composants/InstallerApplication.tsx
 msgid "Le lien du mail ouvre votre navigateur, pas l’application installée."
 msgstr "Le lien du mail ouvre votre navigateur, pas l’application installée."
+
+#: src/lib/copie-lien.tsx
+msgid "Le lien est copié."
+msgstr "Le lien est copié."
 
 #: src/lib/messagerie.ts
 msgid "Le lien ouvre l’application Gmail installée sur l’appareil. Google ne documente pas ce lien."
@@ -6647,6 +6715,10 @@ msgstr "Le mode « places directes » exige au moins une colonne associée à un
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Le mode d’emploi décrit chaque choix."
 msgstr "Le mode d’emploi décrit chaque choix."
+
+#: src/composants/PropositionModele.tsx
+msgid "Le modèle « {titre} » correspond à votre rôle. Il règle vos mails et vos notifications en un geste."
+msgstr "Le modèle « {titre} » correspond à votre rôle. Il règle vos mails et vos notifications en un geste."
 
 #: src/composants/ModeleDeDepart.tsx
 msgid "Le modèle décrit un rassemblement sportif fictif. Vous renommez, archivez ou complétez ensuite chaque élément comme le vôtre."
@@ -6753,6 +6825,14 @@ msgstr "Le sondage n’a pas pu être rechargé. Votre saisie reste à l’écra
 msgid "Le statut de cette tâche a changé"
 msgstr "Le statut de cette tâche a changé"
 
+#: src/composants/modeles-notification.ts
+msgid "Le suivi de vos périmètres, tout le détail des périmètres dont vous êtes contact principal et un résumé chaque matin."
+msgstr "Le suivi de vos périmètres, tout le détail des périmètres dont vous êtes contact principal et un résumé chaque matin."
+
+#: src/composants/modeles-notification.ts
+msgid "Le suivi de vos périmètres, toutes les nouvelles de l’équipe, les priorités de toute l’activité et un résumé chaque matin."
+msgstr "Le suivi de vos périmètres, toutes les nouvelles de l’équipe, les priorités de toute l’activité et un résumé chaque matin."
+
 #: src/lib/guide-markdown.ts
 msgid "Le tarif réduit{etoile} s’applique aux moins de 18 ans."
 msgstr "Le tarif réduit{etoile} s’applique aux moins de 18 ans."
@@ -6817,6 +6897,10 @@ msgstr "Le titre dépasse 200 caractères."
 msgid "Le titre est vide."
 msgstr "Le titre est vide."
 
+#: src/lib/copie-lien.tsx
+msgid "Le titre et le lien sont copiés."
+msgstr "Le titre et le lien sont copiés."
+
 #: src/composants/GestionAcces.tsx
 msgid "Lecture"
 msgstr "Lecture"
@@ -6835,6 +6919,10 @@ msgstr "Lecture seule"
 #: src/composants/CopierAdresses.tsx
 msgid "Les {nombre} adresses sont copiées."
 msgstr "Les {nombre} adresses sont copiées."
+
+#: src/pages/Preferences.tsx
+msgid "Les actions à mener"
+msgstr "Les actions à mener"
 
 #: src/pages/Benevoles.tsx
 msgid "Les admins de l’activité et les personnes affectées à un de ses périmètres les lisent."
@@ -6923,6 +7011,10 @@ msgstr "Les dates clés et les jours de chaque période"
 #: src/composants/DeclinaisonsTache.tsx
 msgid "Les déclinaisons n’ont pas pu être chargées. Rechargez la page dans un instant."
 msgstr "Les déclinaisons n’ont pas pu être chargées. Rechargez la page dans un instant."
+
+#: src/pages/Preferences.tsx
+msgid "Les demandes, les candidatures, les souhaits et les accès à valider."
+msgstr "Les demandes, les candidatures, les souhaits et les accès à valider."
 
 #: src/composants/Messages.tsx
 msgid "Les destinataires sont trop nombreux pour le lien vers la messagerie"
@@ -7029,8 +7121,8 @@ msgid "Les moments où nous avons besoin de vous"
 msgstr "Les moments où nous avons besoin de vous"
 
 #: src/pages/Preferences.tsx
-msgid "Les notifications d’admin ont leur écran, à part de la cloche. Les demandes et les invitations s’y affichent toujours."
-msgstr "Les notifications d’admin ont leur écran, à part de la cloche. Les demandes et les invitations s’y affichent toujours."
+msgid "Les notifications d’admin ont leur écran, à part de la cloche. Les actions à mener s’y affichent toujours."
+msgstr "Les notifications d’admin ont leur écran, à part de la cloche. Les actions à mener s’y affichent toujours."
 
 #: src/pages/Preferences.tsx
 msgid "Les notifications dans l’espace"
@@ -7149,6 +7241,10 @@ msgstr "Les tâches {dePeriode} sont rangées par phase, puis par périmètre."
 #: src/pages/Retroplanning.tsx
 msgid "Les tâches {dePeriode} sont regroupées par mois, de la plus proche à la plus lointaine."
 msgstr "Les tâches {dePeriode} sont regroupées par mois, de la plus proche à la plus lointaine."
+
+#: src/pages/Preferences.tsx
+msgid "Les tâches à prendre, les tâches faites, les déclinaisons et les fiches qui concernent vos périmètres."
+msgstr "Les tâches à prendre, les tâches faites, les déclinaisons et les fiches qui concernent vos périmètres."
 
 #: src/composants/LierTaches.tsx
 msgid "Les tâches choisies comptent dans le décompte du jalon. Elles ne changent pas, et leur périmètre voit le jalon qu’elles servent. Choisissez un périmètre, puis une ou plusieurs tâches."
@@ -7646,6 +7742,15 @@ msgstr "Mise en forme"
 msgid "Modèle"
 msgstr "Modèle"
 
+#: src/composants/PropositionModele.tsx
+#: src/pages/Preferences.tsx
+msgid "Modèle appliqué."
+msgstr "Modèle appliqué."
+
+#: src/pages/Preferences.tsx
+msgid "Modèle de notifications"
+msgstr "Modèle de notifications"
+
 #: src/pages/admin/ImportEquipe.tsx
 msgid "modele-equipe.csv"
 msgstr "modele-equipe.csv"
@@ -7831,6 +7936,10 @@ msgstr "Navigation principale"
 msgid "Ne pas ajouter"
 msgstr "Ne pas ajouter"
 
+#: src/composants/PropositionModele.tsx
+msgid "Ne plus proposer"
+msgstr "Ne plus proposer"
+
 #: src/composants/ConnexionEspace.tsx
 msgid "Nextcloud est connecté."
 msgstr "Nextcloud est connecté."
@@ -7990,8 +8099,8 @@ msgstr "Notifications"
 #: src/composants/Coquille.tsx
 #: src/composants/Notifications.tsx
 #: src/pages/admin/NotificationsAdmin.tsx
-msgid "Notifications d’admin"
-msgstr "Notifications d’admin"
+msgid "Notifications admin"
+msgstr "Notifications admin"
 
 #: src/composants/PreferencePush.tsx
 msgid "Notifications sur cet appareil"
@@ -8083,6 +8192,10 @@ msgstr "Nouvelle fiche commune à tous les périmètres"
 #: src/pages/FicheEditeur.tsx
 msgid "Nouvelle fiche du périmètre {nomPerimetre}"
 msgstr "Nouvelle fiche du périmètre {nomPerimetre}"
+
+#: src/composants/AvisNotifications.tsx
+msgid "Nouvelle notification"
+msgstr "Nouvelle notification"
 
 #: src/composants/ReunionFormulaire.tsx
 #: src/pages/Agenda.tsx
@@ -8234,6 +8347,7 @@ msgid "Ouvrez le dossier qui range les fiches de l’activité. Relaytour y cher
 msgstr "Ouvrez le dossier qui range les fiches de l’activité. Relaytour y cherche un sous-dossier par périmètre, à son nom, et un sous-dossier « communes » pour les fiches communes."
 
 #. En-tête masqué de la colonne du bouton d’ouverture
+#: src/composants/AvisNotifications.tsx
 #: src/composants/Tableau.tsx
 msgid "Ouvrir"
 msgstr "Ouvrir"
@@ -8402,6 +8516,10 @@ msgstr "Partage du dossier en lecture, ajouts automatiques"
 msgid "partagée avec {n, plural, one {# périmètre} other {# périmètres}}"
 msgstr "partagée avec {n, plural, one {# périmètre} other {# périmètres}}"
 
+#: src/composants/BoutonPartage.tsx
+msgid "Partager"
+msgstr "Partager"
+
 #: src/composants/GestionAcces.tsx
 #: src/lib/espace-fichiers.ts
 msgid "Partager le dossier"
@@ -8531,6 +8649,10 @@ msgstr "Périmètres de l’abonnement"
 msgid "Périmètres demandés"
 msgstr "Périmètres demandés"
 
+#: src/pages/Preferences.tsx
+msgid "Périmètres dont vous êtes contact principal"
+msgstr "Périmètres dont vous êtes contact principal"
+
 #: src/pages/admin/ImportTaches.tsx
 msgid "Périmètres inconnus"
 msgstr "Périmètres inconnus"
@@ -8564,6 +8686,10 @@ msgstr "Période"
 #: src/pages/Charge.tsx
 msgid "Période de lecture"
 msgstr "Période de lecture"
+
+#: src/pages/Preferences.tsx
+msgid "Personnalisé : vos réglages ne suivent aucun modèle."
+msgstr "Personnalisé : vos réglages ne suivent aucun modèle."
 
 #: src/composants/SequenceFormulaire.tsx
 #: src/pages/admin/Admins.tsx
@@ -9020,9 +9146,17 @@ msgstr "Question complémentaire"
 msgid "Quitter « {titre} » ?"
 msgstr "Quitter « {titre} » ?"
 
+#: src/composants/navigation-protegee.ts
+msgid "Quitter cette page ?"
+msgstr "Quitter cette page ?"
+
 #: src/pages/EspaceBenevole.tsx
 msgid "Quitter cette place"
 msgstr "Quitter cette place"
+
+#: src/composants/navigation-protegee.ts
+msgid "Quitter la page"
+msgstr "Quitter la page"
 
 #: src/pages/EspaceBenevole.tsx
 msgid "Quittez d’abord vos places à venir pour supprimer vos informations."
@@ -9129,6 +9263,10 @@ msgstr "Rechercher une tâche, une fiche ou une personne"
 msgid "Rechercher une tâche, une fiche, une personne"
 msgstr "Rechercher une tâche, une fiche, une personne"
 
+#: src/pages/Preferences.tsx
+msgid "Recommandé pour vous"
+msgstr "Recommandé pour vous"
+
 #: src/composants/ConnexionEspace.tsx
 msgid "Reconnecter {nomFournisseur}"
 msgstr "Reconnecter {nomFournisseur}"
@@ -9163,6 +9301,7 @@ msgid "Réessayer"
 msgstr "Réessayer"
 
 #. Rôle d’une personne
+#: src/composants/modeles-notification.ts
 #: src/pages/admin/Personnes.tsx
 msgid "Référent·e"
 msgstr "Référent·e"
@@ -9509,6 +9648,10 @@ msgstr "Restaurer"
 msgid "Restaurer cette version ?"
 msgstr "Restaurer cette version ?"
 
+#: src/composants/navigation-protegee.ts
+msgid "Rester sur la page"
+msgstr "Rester sur la page"
+
 #: src/pages/FicheEditeur.tsx
 msgid "Résumé de la modification (facultatif)"
 msgstr "Résumé de la modification (facultatif)"
@@ -9749,6 +9892,10 @@ msgstr "Revenir à l’éditeur"
 msgid "Revenir à la vérification"
 msgstr "Revenir à la vérification"
 
+#: src/pages/LienTache.tsx
+msgid "Revenir à Mon espace"
+msgstr "Revenir à Mon espace"
+
 #: src/composants/ExplorateurDossier.tsx
 #: src/composants/ImportFiches.tsx
 msgid "Revenir aux dossiers"
@@ -9785,6 +9932,10 @@ msgstr "Révoquer le jeton « {libelle} » ?"
 #: src/composants/AbonnementAgenda.tsx
 msgid "Révoquer votre abonnement ?"
 msgstr "Révoquer votre abonnement ?"
+
+#: src/pages/Preferences.tsx
+msgid "Rien d’autre de vos périmètres."
+msgstr "Rien d’autre de vos périmètres."
 
 #: src/pages/admin/Personnes.tsx
 msgid "robot"
@@ -10238,6 +10389,10 @@ msgstr "Statut des tâches"
 msgid "Suivant"
 msgstr "Suivant"
 
+#: src/pages/Preferences.tsx
+msgid "Suivi de vos périmètres"
+msgstr "Suivi de vos périmètres"
+
 #: src/composants/MenuCompte.tsx
 msgid "Support"
 msgstr "Support"
@@ -10669,6 +10824,14 @@ msgstr "Tous les périmètres que je lis"
 msgid "Tout appliquer"
 msgstr "Tout appliquer"
 
+#: src/pages/Preferences.tsx
+msgid "Tout le détail"
+msgstr "Tout le détail"
+
+#: src/pages/Preferences.tsx
+msgid "Tout le détail de ces périmètres, quel que soit le choix ci-dessus. Aucun mail immédiat ne part."
+msgstr "Tout le détail de ces périmètres, quel que soit le choix ci-dessus. Aucun mail immédiat ne part."
+
 #: src/composants/ReunionFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
 msgid "Tout le périmètre"
@@ -10954,6 +11117,10 @@ msgstr "Un message sans texte préparé."
 msgid "Un message se prépare ici, puis part de la messagerie de son auteur. L’application n’envoie rien : l’état de chaque message est celui que son auteur a déclaré."
 msgstr "Un message se prépare ici, puis part de la messagerie de son auteur. L’application n’envoie rien : l’état de chaque message est celui que son auteur a déclaré."
 
+#: src/pages/Preferences.tsx
+msgid "Un modèle règle vos mails et vos notifications en un geste. Vous pouvez ensuite changer chaque réglage ci-dessous."
+msgstr "Un modèle règle vos mails et vos notifications en un geste. Vous pouvez ensuite changer chaque réglage ci-dessous."
+
 #: src/composants/ChampsActivite.tsx
 msgid "Un module désactivé quitte le menu de toute l’équipe. Ses données restent enregistrées et réapparaissent quand vous le réactivez."
 msgstr "Un module désactivé quitte le menu de toute l’équipe. Ses données restent enregistrées et réapparaissent quand vous le réactivez."
@@ -11158,14 +11325,6 @@ msgstr "Une mention ne partage pas la fiche. À l’enregistrement, l’éditeur
 msgid "Une mention s’affiche comme une étiquette. Celle d’un groupe liste ses périmètres au survol ou à l’appui. Dans l’éditeur, une arobase propose les périmètres et les groupes de l’activité."
 msgstr "Une mention s’affiche comme une étiquette. Celle d’un groupe liste ses périmètres au survol ou à l’appui. Dans l’éditeur, une arobase propose les périmètres et les groupes de l’activité."
 
-#: src/pages/Preferences.tsx
-msgid "Une notification quand un autre admin affecte, retire ou nomme une personne, ou quand une personne formule un souhait. Aucun mail ne part."
-msgstr "Une notification quand un autre admin affecte, retire ou nomme une personne, ou quand une personne formule un souhait. Aucun mail ne part."
-
-#: src/pages/Preferences.tsx
-msgid "Une notification quand une autre personne crée, modifie ou termine une tâche ou une fiche de vos périmètres. Aucun mail ne part."
-msgstr "Une notification quand une autre personne crée, modifie ou termine une tâche ou une fiche de vos périmètres. Aucun mail ne part."
-
 #: src/pages/Fiche.tsx
 msgid "Une nouvelle version est créée : l’historique reste complet."
 msgstr "Une nouvelle version est créée : l’historique reste complet."
@@ -11213,6 +11372,10 @@ msgstr "Une personne vous convoque à une réunion, ou une de vos réunions chan
 #: src/composants/ReunionFormulaire.tsx
 msgid "Une réunion lie 20 tâches au plus."
 msgstr "Une réunion lie 20 tâches au plus."
+
+#: src/composants/navigation-protegee.ts
+msgid "Une saisie en cours n’est pas enregistrée. Elle sera perdue si vous quittez la page."
+msgstr "Une saisie en cours n’est pas enregistrée. Elle sera perdue si vous quittez la page."
 
 #: src/composants/AppelsBenevoles.tsx
 msgid "Une séquence"
@@ -11359,6 +11522,10 @@ msgstr "Visuel"
 msgid "Voir"
 msgstr "Voir"
 
+#: src/composants/AvisNotifications.tsx
+msgid "Voir dans la cloche"
+msgstr "Voir dans la cloche"
+
 #: src/composants/ReunionsDuPerimetre.tsx
 msgid "Voir l’agenda"
 msgstr "Voir l’agenda"
@@ -11394,6 +11561,10 @@ msgstr "Voir les noms"
 #: src/composants/VersPremiersPas.tsx
 msgid "Voir les premiers pas"
 msgstr "Voir les premiers pas"
+
+#: src/composants/PropositionModele.tsx
+msgid "Voir mes préférences"
+msgstr "Voir mes préférences"
 
 #: src/composants/Priorites.tsx
 msgid "Voir tous les périmètres"

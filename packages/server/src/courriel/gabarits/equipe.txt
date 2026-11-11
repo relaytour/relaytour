@@ -4,7 +4,7 @@
 
 [[Votre place dans l’équipe d’organisation a changé.]]
 
-{{changements}}
+{{changements}}{{propositionModele}}
 
 [[Vos périmètres, vos tâches et leurs fiches méthode vous attendent dans l’espace organisateur.]]
 

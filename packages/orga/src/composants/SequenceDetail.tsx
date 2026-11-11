@@ -10,6 +10,7 @@ import { libelleJours } from '../lib/agenda'
 import { messageErreur } from '../lib/erreurs'
 import { BENEVOLES } from '../lib/requetes'
 
+import BoutonPartage from './BoutonPartage'
 import { EtatPlace, Jauge } from './Jauge'
 import PastillePerimetre from './PastillePerimetre'
 import type { SequenceSaisie } from './SequenceFormulaire'
@@ -50,11 +51,14 @@ function saisieDe(s: SequenceLue): SequenceSaisie {
  */
 export default function SequenceDetail({
   sequence,
+  editionId,
   lisible,
   onModifier,
   onFermer,
 }: {
   sequence: SequenceLue | null
+  /** La période affichée : le lien de partage la garde. */
+  editionId?: string
   /**
    * Vrai si la personne lit la liste des fiches : un admin de l'activité, ou une
    * personne qui écrit dans l'activité.
@@ -123,20 +127,28 @@ export default function SequenceDetail({
       title={sequence?.titre ?? t`Séquence`}
       size={460}
       extra={
-        sequence?.peutModifier && (
+        sequence && (
           <span style={{ display: 'inline-flex', gap: 6 }}>
-            <Button
-              icon={<EditOutlined />}
-              onClick={() => onModifier(saisieDe(sequence))}
-            >
-              <Trans>Modifier</Trans>
-            </Button>
-            <Button
-              danger
-              icon={<DeleteOutlined />}
-              aria-label={t`Supprimer la séquence`}
-              onClick={confirmerSuppression}
+            <BoutonPartage
+              chemin={`/programme?${editionId ? `edition=${editionId}&` : ''}vue=liste&jour=${sequence.jour}&sequence=${sequence.id}`}
+              titre={sequence.titre}
             />
+            {sequence.peutModifier && (
+              <>
+                <Button
+                  icon={<EditOutlined />}
+                  onClick={() => onModifier(saisieDe(sequence))}
+                >
+                  <Trans>Modifier</Trans>
+                </Button>
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  aria-label={t`Supprimer la séquence`}
+                  onClick={confirmerSuppression}
+                />
+              </>
+            )}
           </span>
         )
       }

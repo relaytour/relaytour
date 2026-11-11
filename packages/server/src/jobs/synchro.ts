@@ -14,8 +14,10 @@ import { planificationQueue, type TachePlanifiee } from './queues.ts'
 
 export const HEURES = {
   rappels: '30 6 * * *',
-  resumes: '0 7 * * *',
-  // Le mail des priorités part avec les résumés (ADR 0063).
+  // Le résumé part après le mail des priorités, qui le remplace quand il porte les
+  // nouvelles de la semaine (ADR 0065).
+  resumes: '5 7 * * *',
+  // Le mail des priorités part à 7 h (ADR 0063).
   priorites: '0 7 * * *',
 } as const
 

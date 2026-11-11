@@ -2246,6 +2246,27 @@ button.rt-ligne-declinaisons {
     var(--rt-ombre-interne);
 }
 
+/* Le texte d'une carte se replie dans sa colonne, sans passer sous la suivante. */
+.rt-choix .ant-radio-wrapper,
+.rt-choix .ant-checkbox-wrapper,
+.rt-choix .ant-radio-label,
+.rt-choix .ant-checkbox-label {
+  min-width: 0;
+}
+
+/* Cartes au texte long (modèles de notifications) : deux colonnes au plus. */
+.rt-choix-large .ant-radio-group {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(max(240px, calc((100% - 10px) / 2)), 1fr)
+  );
+}
+
+.rt-choix-etiquette {
+  display: block;
+  margin-top: 6px;
+}
+
 .rt-choix-titre {
   display: block;
   font-size: 14.5px;
@@ -2948,7 +2969,12 @@ button.rt-ligne-declinaisons {
 .rt-entree-compteur {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+}
+/* Une entrée du menu avec compteur garde la place de sa pastille, sans rogner
+   « Notifications admin ». */
+.ant-menu .ant-menu-item.ant-menu-item:has(.rt-entree-compteur) {
+  padding-inline-end: 8px;
 }
 
 /* Les groupes de notifications (ADR 0032 et 0033) : le contenu d'un groupe ne se
@@ -4174,20 +4200,15 @@ button.rt-carte-fiche {
   color: var(--rt-encre-70);
 }
 
-/* Un bouton qui se lit comme un texte : un nom, un titre de séquence. */
+/* Un bouton qui se lit comme un texte : un nom, un titre de séquence. Son
+   soulignement discret est celui de `.rt-titre-lien`. */
 .rt-lien-texte {
   padding: 0;
   border: 0;
   background: none;
-  color: inherit;
   font: inherit;
   text-align: start;
   cursor: pointer;
-}
-.rt-lien-texte:hover,
-.rt-lien-texte:focus-visible {
-  color: var(--rt-primaire);
-  text-decoration: underline;
 }
 .rt-liste-simple {
   margin: 0;
@@ -4741,4 +4762,85 @@ button.rt-carte-fiche {
   display: inline-flex;
   align-items: center;
   gap: 2px;
+}
+
+/*
+ * Un titre qui ouvre un objet (une tâche, un périmètre) : un soulignement
+ * pointillé et léger le signale sans charger la carte. Il devient plein, dans la
+ * couleur primaire, au survol et au focus.
+ */
+.rt-titre-lien,
+.rt-lien-texte {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--rt-encre-40);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.rt-titre-lien:hover,
+.rt-titre-lien:focus-visible,
+.rt-lien-texte:hover,
+.rt-lien-texte:focus-visible {
+  color: var(--rt-primaire);
+  text-decoration-style: solid;
+  text-decoration-color: currentColor;
+}
+
+/* La fenêtre d'une tâche : la carte à gauche, le fil à droite. */
+.rt-fenetre-tache-tete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-inline-end: 32px;
+}
+.rt-fenetre-tache-corps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  gap: 20px;
+  align-items: start;
+}
+.rt-fenetre-tache-carte {
+  min-width: 0;
+}
+.rt-fil-integre {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  max-height: min(70vh, 640px);
+  padding-inline-start: 20px;
+  border-inline-start: 1px solid var(--rt-encre-14);
+}
+.rt-fil-integre-tete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.rt-fil-integre-tete h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.rt-fil-integre-corps {
+  flex: 1 1 auto;
+  min-height: 120px;
+  overflow-y: auto;
+}
+@media (max-width: 767px) {
+  .rt-fenetre-tache-corps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rt-fil-integre {
+    max-height: none;
+    padding-inline-start: 0;
+    padding-block-start: 16px;
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--rt-encre-14);
+  }
+  .rt-fil-integre-corps {
+    overflow-y: visible;
+  }
 }

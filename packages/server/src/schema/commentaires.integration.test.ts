@@ -97,6 +97,35 @@ const notifications = (userId: string, tacheId: string) =>
 
 let ORGANISATION = ''
 
+// Ces tests décrivent le suivi détaillé : chaque compte du test suit tout le détail
+// de ses périmètres et de ses rôles d'admin (ADR 0065). Le défaut, « Ce qui vous
+// concerne », a ses propres tests.
+async function suivreToutLeDetail(organisations: string[]) {
+  const comptes = await prisma.user.findMany({
+    where: {
+      id: {
+        in: Object.values(ids).filter(
+          (v): v is string => typeof v === 'string'
+        ),
+      },
+    },
+    select: { id: true },
+  })
+  for (const organisationId of organisations) {
+    for (const { id: userId } of comptes) {
+      const detail = {
+        suiviPerimetres: 'DETAIL' as const,
+        suiviAdmin: 'DETAIL' as const,
+      }
+      await prisma.preferenceOrganisation.upsert({
+        where: { userId_organisationId: { userId, organisationId } },
+        update: detail,
+        create: { userId, organisationId, ...detail },
+      })
+    }
+  }
+}
+
 beforeAll(async () => {
   ORGANISATION = await organisationParDefaut()
   const activiteId = await activiteParDefaut()
@@ -184,6 +213,7 @@ beforeAll(async () => {
       },
     })
   ).id
+  await suivreToutLeDetail([ORGANISATION])
 })
 
 afterAll(async () => {

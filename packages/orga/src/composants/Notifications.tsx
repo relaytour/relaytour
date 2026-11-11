@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { useActivite } from '../lib/activite'
+import { ecouterLaCloche } from '../lib/cloche'
 import { estInstallee } from '../lib/installation'
 import { useOrganisation } from '../lib/organisation'
 import { poserPastille } from '../lib/push'
@@ -22,6 +23,7 @@ import {
 import { choisirOrganisation } from '../lib/selection'
 
 import ListeNotifications from './ListeNotifications'
+import { useNavigationProtegee } from './navigation-protegee'
 
 /**
  * Cloche de l'en-tête (ADR 0032) : le nombre de notifications non lues de
@@ -45,6 +47,9 @@ export default function Notifications() {
     : activites.find(a => a.estAdministree)
   const organisation = useOrganisation()
   const [ouvert, setOuvert] = useState(false)
+  // L'avis d'une nouvelle notification ouvre la cloche (ADR 0065).
+  useEffect(() => ecouterLaCloche(() => setOuvert(true)), [])
+  const naviguer = useNavigationProtegee()
   // Les notifications viennent d'autres personnes : la coquille relit les nombres
   // chaque minute, avec les écrans (lib/rafraichissement.ts).
   const { data: nombre } = useQuery(NOMBRE_NOTIFICATIONS)
@@ -221,7 +226,7 @@ export default function Notifications() {
                 navigate(`/${activiteAdministree.slug}/admin/notifications`)
               }}
             >
-              <Trans>Notifications d’admin</Trans>
+              <Trans>Notifications admin</Trans>
               {nonLuesAdmin > 0 && (
                 <Badge
                   count={nonLuesAdmin}
@@ -259,9 +264,13 @@ export default function Notifications() {
               sansActivite={organisation.nom}
               activiteCourante={activite}
               onOuvrir={n => {
-                if (!n.lue) void marquer({ variables: { ids: [n.id] } })
-                setOuvert(false)
-                navigate(n.lien)
+                // Une saisie en cours demande confirmation avant de quitter la
+                // page (ADR 0065).
+                void naviguer(n.lien).then(ouverte => {
+                  if (!ouverte) return
+                  if (!n.lue) void marquer({ variables: { ids: [n.id] } })
+                  setOuvert(false)
+                })
               }}
               onMarquer={cible =>
                 void marquer({

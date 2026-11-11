@@ -48,6 +48,8 @@ import {
 } from '../lib/volets'
 import { ContexteSession, type Session } from '../lib/session'
 
+import AvisNotifications from './AvisNotifications'
+import PropositionModele from './PropositionModele'
 import AvisMiseAJour from './AvisMiseAJour'
 import AvisRelecture from './AvisRelecture'
 import ChoixActivite from './ChoixActivite'
@@ -56,6 +58,7 @@ import { AvisHorsConnexion } from './HorsConnexion'
 import GardeSession from './GardeSession'
 import { Pictogramme, SignatureRelaytour } from './Marque'
 import MenuCompte from './MenuCompte'
+import ModaleTache from './ModaleTache'
 import Notifications from './Notifications'
 import Recherche from './Recherche'
 import { comparerTextes } from '../lib/langue'
@@ -275,7 +278,7 @@ function Mise({ session }: { session: Session }) {
                 icon: <NotificationOutlined />,
                 label: (
                   <span className="rt-entree-compteur">
-                    {t`Notifications d’admin`}
+                    {t`Notifications admin`}
                     <Badge
                       count={nonLuesAdmin}
                       size="small"
@@ -494,6 +497,10 @@ function Mise({ session }: { session: Session }) {
           )}
         </header>
         <main className="rt-contenu">
+          {/* Le modèle de notifications du rôle (ADR 0065). */}
+          <PropositionModele organisation={active.slug} />
+          {/* Chaque nouvelle notification s'annonce par un avis (ADR 0065). */}
+          <AvisNotifications />
           <AvisMiseAJour />
           <AvisHorsConnexion />
           <AvisRelecture />
@@ -514,6 +521,8 @@ function Mise({ session }: { session: Session }) {
             />
           )}
           <Outlet />
+          {/* La fenêtre d'une tâche s'ouvre sur tout écran par l'adresse. */}
+          <ModaleTache />
         </main>
       </div>
     </div>

@@ -19,6 +19,7 @@ import { libelleJours } from '../lib/agenda'
 import { messageErreur } from '../lib/erreurs'
 import { PERIMETRES } from '../lib/requetes'
 
+import BoutonPartage from './BoutonPartage'
 import PastillePerimetre from './PastillePerimetre'
 import ReunionFormulaire, {
   type AgendaEcrit,
@@ -205,17 +206,25 @@ export default function ReunionDetail({
         title={reunion?.titre ?? t`Réunion`}
         size={460}
         extra={
-          reunion?.peutModifier && (
+          reunion && (
             <span style={{ display: 'inline-flex', gap: 6 }}>
-              <Button icon={<EditOutlined />} onClick={modifier}>
-                <Trans>Modifier</Trans>
-              </Button>
-              <Button
-                danger
-                icon={<StopOutlined />}
-                aria-label={t`Annuler la réunion`}
-                onClick={confirmerAnnulation}
+              <BoutonPartage
+                chemin={`/agenda?edition=${reunion.editionId}&reunion=${reunion.id}`}
+                titre={reunion.titre}
               />
+              {reunion.peutModifier && (
+                <>
+                  <Button icon={<EditOutlined />} onClick={modifier}>
+                    <Trans>Modifier</Trans>
+                  </Button>
+                  <Button
+                    danger
+                    icon={<StopOutlined />}
+                    aria-label={t`Annuler la réunion`}
+                    onClick={confirmerAnnulation}
+                  />
+                </>
+              )}
             </span>
           )
         }

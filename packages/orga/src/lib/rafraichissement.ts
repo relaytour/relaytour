@@ -55,6 +55,8 @@ export const VUES_TACHES = [
   // Commentaires (ADR 0029) : le nombre par tâche, et le fil quand il est ouvert.
   'CommentairesDeLaPeriode',
   'FilTache',
+  // La fenêtre d'une tâche ouverte par son titre ou son lien de partage.
+  'TacheDetail',
   // L'agenda montre les échéances des tâches (ADR 0037).
   'Agenda',
   'Reunions',

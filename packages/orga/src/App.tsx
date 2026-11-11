@@ -29,6 +29,7 @@ import EspaceBenevole from './pages/EspaceBenevole'
 import Fiche from './pages/Fiche'
 import FicheEditeur from './pages/FicheEditeur'
 import Fiches from './pages/Fiches'
+import LienTache from './pages/LienTache'
 import MonEspace from './pages/MonEspace'
 import Organigramme from './pages/Organigramme'
 import Perimetre from './pages/Perimetre'
@@ -89,6 +90,8 @@ const routeur = createBrowserRouter([
             ],
           },
           { path: 'perimetres/:slug', element: <Perimetre /> },
+          // Le lien de partage d'une tâche mène à son périmètre, tâche ouverte.
+          { path: 'taches/:id', element: <LienTache /> },
           { path: 'fiches', element: <Fiches /> },
           { path: 'fiches/nouvelle', element: <FicheEditeur /> },
           { path: 'fiches/:slug', element: <Fiche /> },
