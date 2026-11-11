@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.30.0
 fr:
   titre: >-
     Une API REST v1 documentée par OpenAPI

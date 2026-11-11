@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.30.0
 fr:
   titre: >-
     Une tâche s'ouvre en grand et se partage par un lien

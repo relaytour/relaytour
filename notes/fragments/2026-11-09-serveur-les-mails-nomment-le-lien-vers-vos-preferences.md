@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.30.0
 fr:
   titre: >-
     Les mails nomment le lien vers vos préférences

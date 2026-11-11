@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.30.0
 fr:
   titre: >-
     Les programmes tiers accèdent à l'API avec un jeton d'accès

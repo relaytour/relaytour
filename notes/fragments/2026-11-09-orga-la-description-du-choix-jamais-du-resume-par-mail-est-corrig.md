@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.30.0
 fr:
   titre: >-
     La description du choix « Jamais » du résumé par mail est corrigée en anglais

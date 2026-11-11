@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-organisation
 etat: prevu
+version: 0.30.0
 fr:
   titre: >-
     Des robots pour les automatisations de l'organisation
