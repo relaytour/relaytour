@@ -42,6 +42,18 @@ export default function AvisNotifications() {
   const nonLues = data?.nombreNotificationsNonLues
   const vues = useRef<Set<string> | null>(null)
   const precedent = useRef<number | undefined>(undefined)
+  // Les actions changent d'identité à chaque navigation : l'effet les lit par une
+  // référence, pour qu'une navigation n'annule pas une lecture en cours.
+  // Les textes se composent ici, où la macro de Lingui les transforme : un `t`
+  // relu dans une référence ne serait ni extrait ni traduit.
+  const textes = {
+    plusieurs: (nombre: number) => t`${nombre} nouvelles notifications`,
+    une: () => t`Nouvelle notification`,
+  }
+  const actions = useRef({ notification, naviguer, marquer, textes })
+  useEffect(() => {
+    actions.current = { notification, naviguer, marquer, textes }
+  })
 
   useEffect(() => {
     if (nonLues === undefined) return
@@ -50,11 +62,11 @@ export default function AvisNotifications() {
     const premiere = vues.current === null
     // Une baisse du nombre (une lecture) n'annonce rien.
     if (!premiere && avant !== undefined && nonLues <= avant) return
-    let annule = false
+    const { notification, naviguer, marquer, textes } = actions.current
     void client
       .query({ query: DERNIERES, fetchPolicy: 'no-cache' })
       .then(({ data: lues }) => {
-        if (annule || !lues) return
+        if (!lues) return
         const recues = lues.notifications
         if (vues.current === null) {
           // L'ouverture de l'espace retient les notifications déjà là.
@@ -69,7 +81,7 @@ export default function AvisNotifications() {
             key: 'notifications-nouvelles',
             placement: 'bottomRight',
             duration: DUREE,
-            title: t`${nombre} nouvelles notifications`,
+            title: textes.plusieurs(nombre),
             actions: (
               <Button
                 size="small"
@@ -98,7 +110,7 @@ export default function AvisNotifications() {
             duration: DUREE,
             title:
               [n.activite?.nom, n.perimetre?.nom].filter(Boolean).join(' · ') ||
-              t`Nouvelle notification`,
+              textes.une(),
             description: n.message,
             onClick: () => void ouvrir(),
             style: { cursor: 'pointer' },
@@ -132,10 +144,7 @@ export default function AvisNotifications() {
       .catch(() => {
         // Un avis manqué n'empêche rien : la cloche garde la notification.
       })
-    return () => {
-      annule = true
-    }
-  }, [nonLues, client, notification, naviguer, marquer, t])
+  }, [nonLues, client])
 
   return null
 }

@@ -79,4 +79,23 @@ describe('fusion des nouvelles d’une tâche (ADR 0065)', () => {
     const fiche = { ...notif('FICHE_MODIFIEE'), tache: null }
     expect(fusionnerParTache([fiche])).toEqual([fiche])
   })
+
+  it('regroupe les commentaires d’une tâche sur le plus récent', () => {
+    const a = notif('TACHE_COMMENTEE', { acteurId: 'lea' })
+    const b = notif('TACHE_COMMENTEE', { acteurId: 'paul' })
+    const c = notif('TACHE_COMMENTEE', { acteurId: 'lea' })
+    const autre = notif('TACHE_COMMENTEE', { tacheId: 't2' })
+    expect(fusionnerParTache(recentesDabord(a, autre, b, c))).toEqual([
+      { ...c, commentaires: { nombre: 3, autresAuteurs: 1 } },
+      autre,
+    ])
+  })
+
+  it('compte les commentaires d’une seule personne sans autre auteur', () => {
+    const a = notif('TACHE_COMMENTEE', { acteurId: 'lea' })
+    const b = notif('TACHE_COMMENTEE', { acteurId: 'lea' })
+    expect(fusionnerParTache(recentesDabord(a, b))).toEqual([
+      { ...b, commentaires: { nombre: 2, autresAuteurs: 0 } },
+    ])
+  })
 })

@@ -68,10 +68,15 @@ export default function TacheFormulaire({
   const [form] = Form.useForm<Valeurs>()
   // Un formulaire modifié demande confirmation avant de quitter la page pour une
   // notification (ADR 0065).
-  // La saisie touchée se rattache à la tâche ouverte : une autre ouverture repart
-  // d'une saisie vierge.
-  const [touchee, setTouchee] = useState<typeof tache>(null)
-  useModificationEnCours(tache !== null && touchee === tache)
+  // La saisie touchée se rattache à la tâche ouverte, par son identifiant : une
+  // relecture de la tâche ne la perd pas. La fermeture la remet à zéro.
+  const cle = tache === null ? null : tache === 'nouvelle' ? tache : tache.id
+  const [touchee, setTouchee] = useState<string | null>(null)
+  useModificationEnCours(cle !== null && touchee === cle)
+  const fermer = () => {
+    setTouchee(null)
+    onFermer()
+  }
   const cibles = Form.useWatch('cibles', form) ?? []
   const executer = useActionTache()
   const [creer, creation] = useMutation(CREER_TACHE, {
@@ -160,7 +165,10 @@ export default function TacheFormulaire({
               { apresRechargement: onFermer }
             )
           : false
-    if (ok) onEnregistree()
+    if (ok) {
+      setTouchee(null)
+      onEnregistree()
+    }
   }
 
   return (
@@ -171,7 +179,7 @@ export default function TacheFormulaire({
       cancelText={t`Annuler`}
       confirmLoading={creation.loading || modification.loading}
       onOk={() => form.submit()}
-      onCancel={onFermer}
+      onCancel={fermer}
       destroyOnHidden
       rootClassName="rt-modale-pleine"
     >
@@ -179,7 +187,7 @@ export default function TacheFormulaire({
         form={form}
         layout="vertical"
         onFinish={v => void enregistrer(v)}
-        onValuesChange={() => setTouchee(tache)}
+        onValuesChange={() => setTouchee(cle)}
         requiredMark={false}
       >
         <Form.Item

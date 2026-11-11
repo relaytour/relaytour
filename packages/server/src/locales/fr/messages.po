@@ -1653,8 +1653,28 @@ msgstr "{acteur} a modifié la tâche « {titre} »{lieu}"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
+msgid "{acteur} a laissé {nombre} commentaires sur la tâche « {titre} »{lieu}"
+msgstr "{acteur} a laissé {nombre} commentaires sur la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{autres, plural, one {{acteur} et une autre personne ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}} other {{acteur} et # autres personnes ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}}}"
+msgstr "{autres, plural, one {{acteur} et une autre personne ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}} other {{acteur} et # autres personnes ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}}}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
 msgid "{acteur} a commenté la tâche « {titre} »{lieu}"
 msgstr "{acteur} a commenté la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} s’occupe de la tâche « {titre} »{lieu} à votre place"
+msgstr "{acteur} s’occupe de la tâche « {titre} »{lieu} à votre place"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a assigné la tâche « {titre} »{lieu} à {personne} à votre place"
+msgstr "{acteur} a assigné la tâche « {titre} »{lieu} à {personne} à votre place"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
@@ -3581,8 +3601,13 @@ msgstr "Vous faites partie de l’équipe de ces périmètres :"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
-msgid "Le modèle de notifications « {modele} » correspond à votre rôle. Vous pouvez l’appliquer dans vos préférences : {lien}"
-msgstr "Le modèle de notifications « {modele} » correspond à votre rôle. Vous pouvez l’appliquer dans vos préférences : {lien}"
+msgid "Le modèle de notifications « {modele} » correspond à votre rôle."
+msgstr "Le modèle de notifications « {modele} » correspond à votre rôle."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Appliquer ce modèle dans vos préférences"
+msgstr "Appliquer ce modèle dans vos préférences"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
@@ -3666,6 +3691,11 @@ msgstr "Aucune échéance."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
+msgid "Vos nouvelles"
+msgstr "Vos nouvelles"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
 msgid "à prendre"
 msgstr "à prendre"
 
@@ -3693,11 +3723,6 @@ msgstr "{n, plural, one {et # autre priorité} other {et # autres priorités}}"
 #: src/courriel/messages.ts
 msgid "Aucune priorité dans vos périmètres d’ici le prochain point."
 msgstr "Aucune priorité dans vos périmètres d’ici le prochain point."
-
-#. js-lingui-explicit-id
-#: src/courriel/messages.ts
-msgid "Vos nouvelles"
-msgstr "Vos nouvelles"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
