@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client/react'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Modal, Result, Skeleton } from 'antd'
-import { useSearchParams } from 'react-router'
+import { useLocation, useNavigate, useSearchParams } from 'react-router'
 
 import { graphql } from '../gql'
 import { useActivite } from '../lib/activite'
@@ -9,7 +9,7 @@ import {
   COMMENTAIRES_VIDES,
   useCommentairesDeLaPeriode,
 } from '../lib/commentaires'
-import { cheminTache, PARAMETRE_DETAIL } from '../lib/fenetre-tache'
+import { cheminTache, ouverteIci, PARAMETRE_DETAIL } from '../lib/fenetre-tache'
 import { MOI } from '../lib/requetes'
 
 import BoutonPartage from './BoutonPartage'
@@ -57,11 +57,18 @@ const REFERENTS_TACHE = graphql(`
  * La fenêtre d'une tâche : la carte à gauche, avec sa description entière et ses
  * actions, et le fil à droite (ADR 0029). Elle s'ouvre par le titre d'une carte
  * ou par le lien de partage, et le serveur vérifie la lecture de la tâche.
+ *
+ * La fenêtre porte les actions de la carte qui ne demandent que la tâche :
+ * statut, assignation, priorité, partage. Modifier la tâche, la décliner ou
+ * planifier une réunion restent sur la page du périmètre, que l'étiquette de
+ * l'en-tête ouvre.
  */
 export default function ModaleTache() {
   const { t } = useLingui()
   const { lien, gere } = useActivite()
   const [parametres, setParametres] = useSearchParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const id = parametres.get(PARAMETRE_DETAIL)
   const { data: session } = useQuery(MOI)
   const { data, error, loading } = useQuery(TACHE_DETAIL, {
@@ -77,15 +84,20 @@ export default function ModaleTache() {
   const commentaires = useCommentairesDeLaPeriode(editionId)
   const moiId = session?.moi?.id ?? ''
 
+  // Une fenêtre ouverte depuis l'écran se ferme par un retour arrière : la page
+  // et l'historique reviennent à leur état d'avant. Une fenêtre ouverte par un
+  // lien retire seulement le paramètre de l'adresse.
   const fermer = () =>
-    setParametres(
-      courants => {
-        const suite = new URLSearchParams(courants)
-        suite.delete(PARAMETRE_DETAIL)
-        return suite
-      },
-      { replace: true }
-    )
+    ouverteIci(location.state)
+      ? void navigate(-1)
+      : setParametres(
+          courants => {
+            const suite = new URLSearchParams(courants)
+            suite.delete(PARAMETRE_DETAIL)
+            return suite
+          },
+          { replace: true }
+        )
 
   // Une ancienne réponse reste en cache quand une autre tâche s'ouvre : seule la
   // tâche demandée s'affiche.
