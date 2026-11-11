@@ -4,6 +4,8 @@ import {
   NiveauNotification,
   prisma,
   type Prisma,
+  SuiviAdmin,
+  SuiviPerimetres,
   TypeNotification,
 } from '@relaytour/database'
 
@@ -13,6 +15,14 @@ import {
   SELECTION_NOTIFICATION,
 } from '../lib/composition-notifications.ts'
 import { accesRefuse } from '../lib/erreurs.ts'
+import {
+  type Modele,
+  MODELES,
+  modeleDe,
+  modeleRecommande,
+  propositionModele,
+  REGLAGES_DES_MODELES,
+} from '../lib/modeles-notification.ts'
 import { preferencesDe } from '../lib/notifications.ts'
 import { filtreNotificationsAdmin } from '../lib/notifications-admin.ts'
 
@@ -28,6 +38,24 @@ const NiveauNotificationEnum = builder.enumType(NiveauNotification, {
 })
 const FrequenceResumeEnum = builder.enumType(FrequenceResume, {
   name: 'FrequenceResume',
+})
+
+const SuiviPerimetresEnum = builder.enumType(SuiviPerimetres, {
+  name: 'SuiviPerimetres',
+  description:
+    'Ce que la personne suit de ses périmètres (ADR 0065) : ce qui la concerne, l’essentiel du périmètre, ou tout le détail.',
+})
+
+const SuiviAdminEnum = builder.enumType(SuiviAdmin, {
+  name: 'SuiviAdmin',
+  description:
+    'Ce qu’un admin suit de ses rôles d’admin (ADR 0065) : les actions à mener, ou tout le détail.',
+})
+
+const ModeleNotificationEnum = builder.enumType('ModeleNotification', {
+  values: MODELES,
+  description:
+    'Modèle de réglages des notifications (ADR 0065) : Essentiel, Référent·e, Contact principal ou Admin d’activité.',
 })
 
 const MailPrioritesEnum = builder.enumType(MailPriorites, {
@@ -137,15 +165,19 @@ const NonLuesActiviteRef = builder
   })
 
 interface Preferences {
+  userId: string
+  organisationId: string
   frequenceResume: FrequenceResume
   mailModification: boolean
   mailEcheance: boolean
   mailDemandes: boolean
-  applicationPerimetre: boolean
+  suiviPerimetres: SuiviPerimetres
+  detailContactPrincipal: boolean
+  suiviAdmin: SuiviAdmin
+  modeleEcarte: Modele | null
   pushTaches: boolean
   pushEcheances: boolean
   pushDemandes: boolean
-  applicationEquipe: boolean
   pushEquipe: boolean
   pushAgenda: boolean
   resumeAdmin: boolean
@@ -167,9 +199,19 @@ const PreferencesRef = builder
         description:
           'Mail regroupé par heure quand une activité que la personne administre reçoit des demandes pour rejoindre son équipe.',
       }),
-      applicationPerimetre: t.exposeBoolean('applicationPerimetre', {
+      suiviPerimetres: t.expose('suiviPerimetres', {
+        type: SuiviPerimetresEnum,
         description:
-          'Notification dans l’application quand une autre personne agit sur une tâche ou une fiche d’un périmètre où la personne est affectée.',
+          'Ce que la personne reçoit de l’activité de ses périmètres, au-delà de ce qui la concerne (ADR 0065).',
+      }),
+      detailContactPrincipal: t.exposeBoolean('detailContactPrincipal', {
+        description:
+          'Tout le détail des périmètres dont la personne est contact principal (ADR 0065).',
+      }),
+      suiviAdmin: t.expose('suiviAdmin', {
+        type: SuiviAdminEnum,
+        description:
+          'Les notifications d’admin reçues : les actions à mener, ou tout le détail (ADR 0065).',
       }),
       pushTaches: t.exposeBoolean('pushTaches', {
         description:
@@ -182,10 +224,6 @@ const PreferencesRef = builder
       pushDemandes: t.exposeBoolean('pushDemandes', {
         description:
           'Notification push pour les demandes et les invitations des activités que la personne administre.',
-      }),
-      applicationEquipe: t.exposeBoolean('applicationEquipe', {
-        description:
-          'Notifications d’admin sur l’équipe : affectations, souhaits, nominations et archivages (ADR 0033).',
       }),
       pushEquipe: t.exposeBoolean('pushEquipe', {
         description:
@@ -204,6 +242,26 @@ const PreferencesRef = builder
         description:
           'Mail des priorités, la veille de chaque point d’équipe ou le lundi sans point dans la semaine (ADR 0063).',
       }),
+      modele: t.field({
+        type: ModeleNotificationEnum,
+        nullable: true,
+        description:
+          'Le modèle que les réglages reproduisent, ou null pour des réglages personnalisés (ADR 0065).',
+        resolve: p => modeleDe(p),
+      }),
+      modeleRecommande: t.field({
+        type: ModeleNotificationEnum,
+        description:
+          'Le modèle du rôle le plus large de la personne dans l’organisation. La recommandation ne change aucun réglage (ADR 0065).',
+        resolve: p => modeleRecommande(prisma, p.userId, p.organisationId),
+      }),
+      propositionModele: t.field({
+        type: ModeleNotificationEnum,
+        nullable: true,
+        description:
+          'Le modèle à proposer à la personne : celui de son rôle, quand ses réglages ne le suivent pas et qu’elle ne l’a pas refusé (ADR 0065).',
+        resolve: p => propositionModele(prisma, p),
+      }),
     }),
   })
 
@@ -216,7 +274,8 @@ async function filtreDuNiveau(
   organisationId: string,
   admin: boolean
 ): Promise<Prisma.NotificationWhereInput | null> {
-  const base = { userId, organisationId }
+  // Une notification de tâche en attente de sa fenêtre ne s'affiche pas (ADR 0065).
+  const base = { userId, organisationId, disponibleLe: null }
   if (!admin) return { ...base, niveau: 'REFERENT' }
   const filtre = await filtreNotificationsAdmin(prisma, userId, organisationId)
   return filtre === null ? null : { ...base, ...filtre }
@@ -389,6 +448,7 @@ builder.queryFields(t => ({
               userId,
               organisationId: organisation.id,
               lueLe: null,
+              disponibleLe: null,
               OR: [
                 { niveau: 'REFERENT' },
                 ...(filtreAdmin === null ? [] : [filtreAdmin]),
@@ -470,7 +530,15 @@ builder.mutationFields(t => ({
       mailDemandes: t.arg.boolean({
         description: 'Sans valeur, ce réglage ne change pas.',
       }),
-      applicationPerimetre: t.arg.boolean({
+      suiviPerimetres: t.arg({
+        type: SuiviPerimetresEnum,
+        description: 'Sans valeur, ce réglage ne change pas.',
+      }),
+      detailContactPrincipal: t.arg.boolean({
+        description: 'Sans valeur, ce réglage ne change pas.',
+      }),
+      suiviAdmin: t.arg({
+        type: SuiviAdminEnum,
         description: 'Sans valeur, ce réglage ne change pas.',
       }),
       pushTaches: t.arg.boolean({
@@ -480,9 +548,6 @@ builder.mutationFields(t => ({
         description: 'Sans valeur, ce réglage ne change pas.',
       }),
       pushDemandes: t.arg.boolean({
-        description: 'Sans valeur, ce réglage ne change pas.',
-      }),
-      applicationEquipe: t.arg.boolean({
         description: 'Sans valeur, ce réglage ne change pas.',
       }),
       pushEquipe: t.arg.boolean({
@@ -502,11 +567,10 @@ builder.mutationFields(t => ({
     resolve: async (_root, args, ctx) => {
       const facultatifs = [
         'mailDemandes',
-        'applicationPerimetre',
+        'detailContactPrincipal',
         'pushTaches',
         'pushEcheances',
         'pushDemandes',
-        'applicationEquipe',
         'pushEquipe',
         'pushAgenda',
         'resumeAdmin',
@@ -523,6 +587,10 @@ builder.mutationFields(t => ({
         mailEcheance: args.mailEcheance,
         ...reglages,
         ...(args.mailPriorites ? { mailPriorites: args.mailPriorites } : {}),
+        ...(args.suiviPerimetres
+          ? { suiviPerimetres: args.suiviPerimetres }
+          : {}),
+        ...(args.suiviAdmin ? { suiviAdmin: args.suiviAdmin } : {}),
       }
       const userId = ctx.personne!.id
       const organisationId = ctx.organisation!.id
@@ -530,6 +598,55 @@ builder.mutationFields(t => ({
         where: { userId_organisationId: { userId, organisationId } },
         update: donnees,
         create: { userId, organisationId, ...donnees },
+      })
+    },
+  }),
+
+  appliquerModeleNotification: t.field({
+    type: PreferencesRef,
+    authScopes: { connecte: true },
+    description:
+      'Applique un modèle de réglages aux préférences de la personne dans l’organisation active (ADR 0065). Les familles de push autres que l’équipe ne changent pas.',
+    args: {
+      modele: t.arg({ type: ModeleNotificationEnum, required: true }),
+    },
+    resolve: async (_root, args, ctx) => {
+      const userId = ctx.personne!.id
+      const organisationId = ctx.organisation!.id
+      // Un modèle appliqué efface un refus passé (ADR 0065).
+      const donnees = {
+        ...REGLAGES_DES_MODELES[args.modele],
+        modeleEcarte: null,
+      }
+      return prisma.preferenceOrganisation.upsert({
+        where: { userId_organisationId: { userId, organisationId } },
+        update: donnees,
+        create: { userId, organisationId, ...donnees },
+      })
+    },
+  }),
+
+  ecarterPropositionModele: t.field({
+    type: PreferencesRef,
+    authScopes: { connecte: true },
+    description:
+      'Refuse le modèle proposé pour le rôle de la personne. La proposition revient avec une autre recommandation (ADR 0065).',
+    resolve: async (_root, _args, ctx) => {
+      const userId = ctx.personne!.id
+      const organisationId = ctx.organisation!.id
+      // Seule une proposition faite se refuse : des réglages déjà conformes ne
+      // retiennent aucun refus.
+      const modeleEcarte = await propositionModele(
+        prisma,
+        await preferencesDe(prisma, userId, organisationId)
+      )
+      if (modeleEcarte === null) {
+        return preferencesDe(prisma, userId, organisationId)
+      }
+      return prisma.preferenceOrganisation.upsert({
+        where: { userId_organisationId: { userId, organisationId } },
+        update: { modeleEcarte },
+        create: { userId, organisationId, modeleEcarte },
       })
     },
   }),

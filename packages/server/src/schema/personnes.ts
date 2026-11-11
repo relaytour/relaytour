@@ -1260,6 +1260,8 @@ builder.mutationFields(t => ({
         },
         select: {
           id: true,
+          userId: true,
+          contactPrincipal: true,
           perimetreId: true,
           editionId: true,
           perimetre: { select: { activiteId: true } },
@@ -1275,6 +1277,18 @@ builder.mutationFields(t => ({
       }
       // Une édition archivée reste en lecture seule.
       await exigerEcriture(ctx, affectation.perimetreId, affectation.editionId)
+      // Le contact principal qui perd ce rôle l'apprend aussi (ADR 0065).
+      const remplaces = args.contactPrincipal
+        ? await prisma.affectation.findMany({
+            where: {
+              perimetreId: affectation.perimetreId,
+              editionId: affectation.editionId,
+              contactPrincipal: true,
+              NOT: { id: affectation.id },
+            },
+            select: { userId: true },
+          })
+        : []
       await prisma.$transaction([
         ...(args.contactPrincipal
           ? [
@@ -1297,6 +1311,22 @@ builder.mutationFields(t => ({
       publierPourPerimetre('EQUIPE', affectation.perimetreId, {
         editionId: affectation.editionId,
       })
+      // La personne apprend son nouveau rôle dans l'application, sans mail
+      // (ADR 0012) : son modèle de notifications peut changer (ADR 0065).
+      if (affectation.contactPrincipal !== args.contactPrincipal) {
+        const instant = new Date()
+        for (const userId of [
+          affectation.userId,
+          ...remplaces.map(r => r.userId),
+        ]) {
+          if (userId === ctx.personne!.id) continue
+          await notifierPlace(userId, {
+            organisationId: ctx.organisation!.id,
+            activiteId: affectation.perimetre.activiteId,
+            instant,
+          })
+        }
+      }
       return true
     },
   }),

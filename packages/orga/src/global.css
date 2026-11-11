@@ -2246,6 +2246,27 @@ button.rt-ligne-declinaisons {
     var(--rt-ombre-interne);
 }
 
+/* Le texte d'une carte se replie dans sa colonne, sans passer sous la suivante. */
+.rt-choix .ant-radio-wrapper,
+.rt-choix .ant-checkbox-wrapper,
+.rt-choix .ant-radio-label,
+.rt-choix .ant-checkbox-label {
+  min-width: 0;
+}
+
+/* Cartes au texte long (modèles de notifications) : deux colonnes au plus. */
+.rt-choix-large .ant-radio-group {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(max(240px, calc((100% - 10px) / 2)), 1fr)
+  );
+}
+
+.rt-choix-etiquette {
+  display: block;
+  margin-top: 6px;
+}
+
 .rt-choix-titre {
   display: block;
   font-size: 14.5px;
