@@ -1508,6 +1508,16 @@ const CAS: Cas[] = [
       sansEffet: data => expect(data).toEqual({ revoquerJetonRobot: false }),
     },
   },
+  // Un admin d'une autre organisation ne révoque pas un jeton de A.
+  {
+    operation: 'revoquerJetonOrganisation',
+    query: 'mutation ($id: ID!) { revoquerJetonOrganisation(id: $id) }',
+    variables: () => ({ id: a.jeton }),
+    attente: {
+      sansEffet: data =>
+        expect(data).toEqual({ revoquerJetonOrganisation: false }),
+    },
+  },
   {
     operation: 'creerJetonAcces',
     query:

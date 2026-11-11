@@ -1,0 +1,43 @@
+<mjml>
+  <mj-head>
+    <mj-title>[[Un jeton d’accès a été créé]]</mj-title>
+    <mj-preview>[[Si vous n’êtes pas à l’origine de cette création, révoquez-le sans attendre.]]</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="24px" color="#010101" padding="0 0 16px" />
+    </mj-attributes>
+  </mj-head>
+
+  <mj-body background-color="#040404" width="480px">
+    <mj-include path="./_entete.mjml" />
+
+    <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
+      <mj-column>
+        <mj-text font-size="20px" line-height="28px" font-weight="700">
+          [[Bonjour {{nom}},]]
+        </mj-text>
+        <mj-text>
+          {{intro}}
+        </mj-text>
+        <mj-text>
+          {{porteur}} {{droits}}
+        </mj-text>
+        <mj-text>
+          [[Si vous n’êtes pas à l’origine de cette création, révoquez ce jeton sans
+          attendre. Le programme qui le détient perd aussitôt son accès.]]
+        </mj-text>
+        <mj-button href="{{lienRevocation}}" background-color="#030303" color="#FFFFFF"
+                   border-radius="10px" font-size="15px" font-weight="700"
+                   padding="8px 0 16px" inner-padding="13px 24px">
+          [[Révoquer ce jeton]]
+        </mj-button>
+        <mj-text padding="0 0 4px" font-size="13px" line-height="20px">
+          [[Vous retrouvez tous les jetons, et pouvez les révoquer, depuis cet écran :
+          {{lienJetons}}]]
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-include path="./_pied.mjml" />
+  </mj-body>
+</mjml>

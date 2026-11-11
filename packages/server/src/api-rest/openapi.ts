@@ -21,6 +21,12 @@ import {
 
 import { OPERATIONS_REST, type OperationRest } from './operations.ts'
 
+/**
+ * La version du contrat : celle de l'API REST v1, pas celle de l'installation. Le
+ * contrat se lit sans jeton : il ne dit pas quelle version du logiciel tourne.
+ */
+export const VERSION_CONTRAT_API = '1.0.0'
+
 // Contrat OpenAPI de l'API REST v1 (ADR 0064).
 //
 // Le contrat se calcule à partir des documents GraphQL des routes : une réponse

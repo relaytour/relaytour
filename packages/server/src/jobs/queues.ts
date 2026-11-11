@@ -33,6 +33,10 @@ export type SorteCourriel =
   | 'lien-export'
   // Priorités d'une période, la veille d'un point d'équipe ou le lundi (ADR 0063).
   | 'priorites'
+  // Jetons d'accès (ADR 0064) : la création d'un jeton, et sa révocation par un
+  // admin de l'organisation. Ces mails de sécurité ne sont jamais reportés.
+  | 'jeton-cree'
+  | 'jeton-revoque'
 
 // La charge utile ne contient ni corps de mail ni jeton. Le processeur relit l'adresse
 // en base au moment de l'envoi. `destinataire` sert seulement quand aucun compte n'existe.
@@ -78,6 +82,9 @@ export interface CourrielJobData {
   // Pour `priorites` (ADR 0063) : la période, dont les priorités se calculent à
   // l'envoi.
   editionId?: string
+  // Pour `jeton-cree` et `jeton-revoque` (ADR 0064) : le jeton, relu à l'envoi. La
+  // charge utile ne porte jamais la valeur du jeton.
+  jetonAccesId?: string
 }
 
 export const courrielQueue = new Queue<CourrielJobData>(COURRIEL_QUEUE, {

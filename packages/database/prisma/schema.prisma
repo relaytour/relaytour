@@ -407,6 +407,7 @@ model User {
   abonnementsCrees        AbonnementAgenda[]       @relation("AbonnementAuteur")
   jetonsAcces             JetonAcces[]             @relation("JetonPorteur")
   jetonsAccesCrees        JetonAcces[]             @relation("JetonAuteur")
+  jetonsAccesRevoques     JetonAcces[]             @relation("JetonRevocateur")
   sondagesCrees           Sondage[]                @relation("SondageAuteur")
   participationsSondage   ParticipantSondage[]
   reponsesSondage         ReponseSondage[]
@@ -1626,12 +1627,19 @@ model JetonAcces {
   // Dernier usage, posé au plus une fois par minute.
   dernierAccesLe DateTime?
   revoqueLe      DateTime?
+  // L'admin de l'organisation qui a révoqué le jeton, nommé à sa porteuse (ADR 0064).
+  // Nul quand la porteuse l'a révoqué elle-même, ou par le lien du mail de création.
+  revoqueParId   String?
+  // Le jeton ouvre la gestion des membres : inviter, retirer et promouvoir une
+  // personne. Désactivé par défaut : un jeton fuité ne change pas l'équipe (ADR 0064).
+  gestionMembres Boolean     @default(false)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
   user         User         @relation("JetonPorteur", fields: [userId], references: [id], onDelete: Cascade)
   creePar      User?        @relation("JetonAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+  revoquePar   User?        @relation("JetonRevocateur", fields: [revoqueParId], references: [id], onDelete: SetNull)
 
   // L'empreinte est unique dans son organisation (invariant 18) ; le jeton ne porte
   // pas l'organisation, d'où l'index sur l'empreinte seule.
@@ -1640,6 +1648,7 @@ model JetonAcces {
   @@index([organisationId, userId])
   @@index([userId])
   @@index([creeParId])
+  @@index([revoqueParId])
 }
 
 enum TypeJournal {

@@ -431,7 +431,7 @@ builder.mutationFields(t => ({
   // ensemble. Une demande s'accepte sans périmètre.
   accepterDemande: t.prismaField({
     type: DemandeRef,
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, gestionMembres: true } },
     args: {
       id: t.arg.id({ required: true }),
       affecter: t.arg.idList({ required: true }),

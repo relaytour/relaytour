@@ -462,7 +462,7 @@ const InvitationEnvoyeeRef = builder
 builder.mutationFields(t => ({
   inviterPersonne: t.field({
     type: InvitationEnvoyeeRef,
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, gestionMembres: true } },
     args: {
       email: t.arg.string({ required: true }),
       nom: t.arg.string({ required: true }),
@@ -771,7 +771,7 @@ builder.mutationFields(t => ({
 
   modifierPersonne: t.prismaField({
     type: PersonneRef,
-    authScopes: { admin: true },
+    authScopes: { $all: { admin: true, gestionMembres: true } },
     args: {
       id: t.arg.id({ required: true }),
       nom: t.arg.string({ required: true }),
@@ -903,7 +903,7 @@ builder.mutationFields(t => ({
 
   archiverPersonne: t.prismaField({
     type: PersonneRef,
-    authScopes: { admin: true },
+    authScopes: { $all: { admin: true, gestionMembres: true } },
     args: {
       id: t.arg.id({ required: true }),
       archive: t.arg.boolean({ required: true }),
@@ -1336,7 +1336,7 @@ builder.mutationFields(t => ({
   // activités et les personnes de ses équipes. La personne reste membre de
   // l'organisation.
   definirAdminActivite: t.boolean({
-    authScopes: { gestion: true },
+    authScopes: { $all: { gestion: true, gestionMembres: true } },
     args: {
       personneId: t.arg.id({ required: true }),
       activiteId: t.arg.id({ required: true }),

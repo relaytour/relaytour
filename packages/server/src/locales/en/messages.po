@@ -1855,6 +1855,7 @@ msgstr "You will no longer receive “{libelle}” emails from {organisation}."
 
 #. js-lingui-explicit-id
 #: src/lib/desabonnement.ts
+#: src/lib/revocation-jeton.ts
 msgid "Lien non valide"
 msgstr "Invalid link"
 
@@ -1982,6 +1983,11 @@ msgstr "The API of this organization is turned off. An organization admin can tu
 #: src/lib/erreurs.ts
 msgid "Ce jeton d’accès n’autorise que la lecture."
 msgstr "This access token only allows reading."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Ce jeton d’accès n’ouvre pas la gestion des membres : il n’invite, ne retire ni ne promeut personne."
+msgstr "This access token does not open member management: it invites, removes or promotes no one."
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts
@@ -2670,6 +2676,47 @@ msgstr "A meeting lasts {max} days at most."
 #: src/lib/reunions.ts
 msgid "La fin de la réunion suit son début."
 msgstr "The meeting must end after it starts."
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Ce lien de révocation n’est pas valide, ou le jeton qu’il désigne ne répond déjà plus. Vous gérez vos jetons d’accès dans les préférences de l’espace organisateur."
+msgstr "This revocation link is not valid, or the token it designates no longer responds. You manage your access tokens in the preferences of the organizer workspace."
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Jeton révoqué"
+msgstr "Token revoked"
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Le jeton « {jeton} » ({apercu}) de {organisation} ne répond plus. Le programme qui le détenait a perdu son accès."
+msgstr "The token “{jeton}” ({apercu}) of {organisation} no longer responds. The program that held it has lost its access."
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Révoquer un jeton d’accès"
+msgstr "Revoke an access token"
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Vous êtes sur le point de révoquer le jeton « {jeton} » ({apercu}) de {organisation}. Le programme qui le détient perdra aussitôt son accès."
+msgstr "You are about to revoke the token “{jeton}” ({apercu}) of {organisation}. The program that holds it will lose its access immediately."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+#: src/lib/revocation-jeton.ts
+msgid "Révoquer ce jeton"
+msgstr "Revoke this token"
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Gérer mes jetons d’accès"
+msgstr "Manage my access tokens"
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Révocation d’un jeton d’accès"
+msgstr "Access token revocation"
 
 #. js-lingui-explicit-id
 #: src/lib/robots.ts
@@ -3398,6 +3445,46 @@ msgstr "Sign in: {lienConnexion}"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
+msgid "Un jeton d’accès a été créé"
+msgstr "An access token has been created"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Si vous n’êtes pas à l’origine de cette création, révoquez-le sans attendre."
+msgstr "If you did not create it, revoke it right away."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Si vous n’êtes pas à l’origine de cette création, révoquez ce jeton sans attendre. Le programme qui le détient perd aussitôt son accès."
+msgstr "If you did not create it, revoke this token right away. The program that holds it loses its access immediately."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous retrouvez tous les jetons, et pouvez les révoquer, depuis cet écran : {lienJetons}"
+msgstr "You can see all tokens, and revoke them, from this screen: {lienJetons}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Révoquer ce jeton : {lienRevocation}"
+msgstr "Revoke this token: {lienRevocation}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Un jeton d’accès a été révoqué"
+msgstr "An access token has been revoked"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Le programme qui l’utilisait n’a plus accès à l’espace."
+msgstr "The program that used it no longer has access to the workspace."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Si ce programme vous sert encore, créez-lui un nouveau jeton depuis cet écran : {lienJetons}"
+msgstr "If you still use this program, create a new token for it from this screen: {lienJetons}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
 msgid "L’export de vos données"
 msgstr "Your data export"
 
@@ -3664,6 +3751,16 @@ msgstr "{nomCourt}: the address of your workspace"
 #: src/courriel/messages.ts
 msgid "{nomCourt} : l’export de vos données"
 msgstr "{nomCourt}: your data export"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{nomCourt} : un jeton d’accès a été créé"
+msgstr "{nomCourt}: an access token has been created"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{nomCourt} : un jeton d’accès a été révoqué"
+msgstr "{nomCourt}: an access token has been revoked"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
@@ -4060,6 +4157,61 @@ msgstr "You will find your places and their instructions on your volunteer page.
 #: src/courriel/messages.ts
 msgid "Votre lien personnel reste le même."
 msgstr "Your personal link stays the same."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Ce jeton agit au nom du robot « {robot} », avec ses droits."
+msgstr "This token acts on behalf of the robot “{robot}”, with its rights."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Ce jeton agit en votre nom, avec vos droits."
+msgstr "This token acts on your behalf, with your rights."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "lecture seule"
+msgstr "read only"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "lecture et écriture"
+msgstr "read and write"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "toutes les activités"
+msgstr "all activities"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "certaines activités seulement"
+msgstr "some activities only"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "gestion des membres"
+msgstr "member management"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Portée : {droits}."
+msgstr "Scope: {droits}."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Le jeton d’accès « {jeton} » ({apercu}) vient d’être créé. Il reste valable jusqu’au {fin}."
+msgstr "The access token “{jeton}” ({apercu}) has just been created. It remains valid until {fin}."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Le jeton d’accès « {jeton} » ({apercu}) a été révoqué par {par}. Le programme qui l’utilisait n’a plus accès à l’espace."
+msgstr "The access token “{jeton}” ({apercu}) has been revoked by {par}. The program that used it no longer has access to the workspace."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "un admin de l’organisation"
+msgstr "an organization admin"
 
 #. js-lingui-explicit-id
 #: src/api-rest/routeur.ts

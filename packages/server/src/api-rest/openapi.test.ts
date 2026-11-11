@@ -14,7 +14,12 @@ import { describe, expect, it } from 'vitest'
 
 import { schema } from '../schema/index.ts'
 
-import { analyser, contratOpenApi, parametresDuChemin } from './openapi.ts'
+import {
+  analyser,
+  contratOpenApi,
+  parametresDuChemin,
+  VERSION_CONTRAT_API,
+} from './openapi.ts'
 import { OPERATIONS_REST } from './operations.ts'
 import { statutDuCode } from './routeur.ts'
 
@@ -101,7 +106,7 @@ describe('routes de l’API REST', () => {
 })
 
 describe('contrat OpenAPI', () => {
-  const contrat = contratOpenApi(schema, '0.0.0-contrat')
+  const contrat = contratOpenApi(schema, VERSION_CONTRAT_API)
 
   it('décrit chaque route, avec le jeton comme sécurité', () => {
     const decrites = Object.entries(contrat.paths).flatMap(([chemin, ops]) =>

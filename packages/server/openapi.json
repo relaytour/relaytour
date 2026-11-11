@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Relaytour",
-    "version": "0.0.0-contrat",
+    "version": "1.0.0",
     "description": "API REST v1 de Relaytour (ADR 0064). Chaque requête porte un jeton d’accès dans l’en-tête « Authorization: Bearer ». Le jeton agit au nom d’une personne, dans une seule organisation, avec ses droits. L’API GraphQL `/graphql` accepte le même jeton et ouvre toutes les opérations.",
     "license": {
       "name": "AGPL-3.0-only"
@@ -157,6 +157,10 @@
                         "LECTURE_ECRITURE"
                       ]
                     },
+                    "gestionMembres": {
+                      "type": "boolean",
+                      "description": "Vrai quand le jeton ouvre la gestion des membres : inviter, retirer et promouvoir une personne."
+                    },
                     "activiteIds": {
                       "type": "array",
                       "items": {
@@ -172,6 +176,7 @@
                   },
                   "required": [
                     "portee",
+                    "gestionMembres",
                     "expireLe"
                   ],
                   "nullable": true

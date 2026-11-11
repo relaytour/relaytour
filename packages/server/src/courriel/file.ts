@@ -43,6 +43,8 @@ export async function mettreEnFile(
     // Regroupement glissant : un mail de même identifiant, ajouté pendant son
     // délai, remplace le mail en attente et repousse son départ (ADR 0041).
     regroupement?: string
+    // Pour `jeton-cree` et `jeton-revoque` (ADR 0064) : le jeton, relu à l'envoi.
+    jetonAccesId?: string
   } = {}
 ): Promise<boolean> {
   try {
@@ -77,6 +79,9 @@ export async function mettreEnFile(
       ...(options.editionId === undefined
         ? {}
         : { editionId: options.editionId }),
+      ...(options.jetonAccesId === undefined
+        ? {}
+        : { jetonAccesId: options.jetonAccesId }),
     }
     await avecDelai(
       courrielQueue.add(sorte, data, {

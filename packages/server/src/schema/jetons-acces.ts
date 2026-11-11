@@ -1,6 +1,7 @@
 import { PorteeJeton, prisma, type JetonAcces } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
+import { mettreEnFile } from '../courriel/file.ts'
 import { apiInactive, erreurSaisie } from '../lib/erreurs.ts'
 import {
   apiOuverte,
@@ -9,6 +10,8 @@ import {
   etatApi,
   finDuJeton,
   NOM_JETON_MAX,
+  revoquerJetonDeLOrganisation,
+  revoquerJetonsDe,
   type EtatApi,
 } from '../lib/jetons-acces.ts'
 import { journal } from '../lib/journal.ts'
@@ -21,8 +24,11 @@ import { builder } from './builder.ts'
 //
 // Une personne crée ses jetons depuis l'espace organisateur, avec sa session : un
 // jeton ne crée, ne lit ni ne révoque aucun jeton. Le jeton s'affiche une seule
-// fois. Un admin de l'organisation active ou désactive le module ; l'administration
-// de l'installation l'autorise, l'impose ou le suspend (schema/installation.ts).
+// fois, et sa création se signale par un mail qui porte un lien de révocation. Un
+// admin de l'organisation voit les jetons de tous les membres et les révoque ; la
+// porteuse l'apprend par mail. Un admin active ou désactive le module ;
+// l'administration de l'installation l'autorise, l'impose ou le suspend
+// (schema/installation.ts).
 
 /** Une personne choisit 50 activités au plus pour un jeton. */
 const ACTIVITES_MAX = 50
@@ -42,32 +48,72 @@ export const EtatApiEnum = builder.enumType('EtatApi', {
 const activitesDe = (j: Pick<JetonAcces, 'activiteIds'>) =>
   Array.isArray(j.activiteIds) ? (j.activiteIds as unknown[]).map(String) : null
 
-export const JetonAccesRef = builder.objectRef<JetonAcces>('JetonAcces').implement({
-  description:
-    'Un jeton d’accès d’un programme tiers. Sa valeur ne se relit pas : elle s’affiche une seule fois, à sa création.',
-  fields: t => ({
-    id: t.exposeID('id'),
-    nom: t.exposeString('nom'),
-    apercu: t.exposeString('apercu', {
-      description:
-        'Les huit caractères qui suivent « rt_ », pour reconnaître le jeton.',
+export const JetonAccesRef = builder
+  .objectRef<JetonAcces>('JetonAcces')
+  .implement({
+    description:
+      'Un jeton d’accès d’un programme tiers. Sa valeur ne se relit pas : elle s’affiche une seule fois, à sa création.',
+    fields: t => ({
+      id: t.exposeID('id'),
+      nom: t.exposeString('nom'),
+      apercu: t.exposeString('apercu', {
+        description:
+          'Les huit caractères qui suivent « rt_ », pour reconnaître le jeton.',
+      }),
+      portee: t.expose('portee', { type: PorteeJetonEnum }),
+      gestionMembres: t.exposeBoolean('gestionMembres', {
+        description:
+          'Le jeton ouvre la gestion des membres : inviter, retirer et promouvoir une personne, dans la limite des droits de sa personne. Faux par défaut, et toujours pour un robot.',
+      }),
+      activiteIds: t.idList({
+        nullable: true,
+        description:
+          'Les activités ouvertes au jeton. Nul : toutes celles que la personne voit.',
+        resolve: activitesDe,
+      }),
+      expireLe: t.expose('expireLe', { type: 'DateTime' }),
+      dernierAccesLe: t.expose('dernierAccesLe', {
+        type: 'DateTime',
+        nullable: true,
+      }),
+      revoqueLe: t.expose('revoqueLe', { type: 'DateTime', nullable: true }),
+      creeLe: t.expose('createdAt', { type: 'DateTime' }),
     }),
-    portee: t.expose('portee', { type: PorteeJetonEnum }),
-    activiteIds: t.idList({
-      nullable: true,
-      description:
-        'Les activités ouvertes au jeton. Nul : toutes celles que la personne voit.',
-      resolve: activitesDe,
+  })
+
+/** Un jeton de l'organisation, avec sa porteuse et l'admin qui l'a révoqué. */
+type JetonDeLOrganisation = JetonAcces & {
+  user: { id: string; name: string; robot: boolean }
+  revoquePar: { name: string } | null
+}
+
+const PorteurDeJetonRef = builder
+  .objectRef<JetonDeLOrganisation['user']>('PorteurDeJeton')
+  .implement({
+    description: 'La personne ou le robot au nom de qui un jeton agit.',
+    fields: t => ({
+      id: t.exposeID('id'),
+      nom: t.exposeString('name'),
+      robot: t.exposeBoolean('robot'),
     }),
-    expireLe: t.expose('expireLe', { type: 'DateTime' }),
-    dernierAccesLe: t.expose('dernierAccesLe', {
-      type: 'DateTime',
-      nullable: true,
+  })
+
+const JetonOrganisationRef = builder
+  .objectRef<JetonDeLOrganisation>('JetonOrganisation')
+  .implement({
+    description:
+      'Un jeton d’accès de l’organisation, vu par un admin : ses bornes et sa porteuse, jamais sa valeur.',
+    fields: t => ({
+      jeton: t.field({ type: JetonAccesRef, resolve: j => j }),
+      porteur: t.field({ type: PorteurDeJetonRef, resolve: j => j.user }),
+      revoquePar: t.string({
+        nullable: true,
+        description:
+          'Le nom de l’admin qui a révoqué le jeton. Nul quand la porteuse l’a révoqué elle-même, par l’écran ou par le lien de son mail.',
+        resolve: j => j.revoquePar?.name ?? null,
+      }),
     }),
-    revoqueLe: t.expose('revoqueLe', { type: 'DateTime', nullable: true }),
-    creeLe: t.expose('createdAt', { type: 'DateTime' }),
-  }),
-})
+  })
 
 export const JetonCreeRef = builder
   .objectRef<{ jeton: string; jetonAcces: JetonAcces }>('JetonCree')
@@ -108,6 +154,10 @@ const JetonCourantRef = builder
       'Les bornes du jeton qui porte la requête : un programme tiers les lit pour savoir ce qu’il peut faire.',
     fields: t => ({
       portee: t.expose('portee', { type: PorteeJetonEnum }),
+      gestionMembres: t.exposeBoolean('gestionMembres', {
+        description:
+          'Vrai quand le jeton ouvre la gestion des membres : inviter, retirer et promouvoir une personne.',
+      }),
       activiteIds: t.idList({
         nullable: true,
         description: 'Nul : toutes les activités que la personne voit.',
@@ -189,6 +239,31 @@ builder.queryFields(t => ({
     },
   }),
 
+  jetonsAccesOrganisation: t.field({
+    type: [JetonOrganisationRef],
+    authScopes: { $all: { admin: true, session: true } },
+    description:
+      'Les jetons d’accès de toute l’organisation, pour ses admins : les jetons actifs, puis ceux révoqués ou expirés depuis moins de 30 jours. La valeur d’un jeton ne se relit jamais.',
+    resolve: (_root, _args, ctx) => {
+      const recents = new Date(Date.now() - 30 * 86_400_000)
+      return prisma.jetonAcces.findMany({
+        where: {
+          organisationId: ctx.organisation!.id,
+          OR: [
+            { revoqueLe: null, expireLe: { gt: recents } },
+            { revoqueLe: { gt: recents } },
+          ],
+        },
+        include: {
+          user: { select: { id: true, name: true, robot: true } },
+          revoquePar: { select: { name: true } },
+        },
+        orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+        take: 200,
+      })
+    },
+  }),
+
   apiOrganisation: t.field({
     type: ApiOrganisationRef,
     authScopes: { connecte: true },
@@ -220,6 +295,10 @@ builder.mutationFields(t => ({
       portee: t.arg({ type: PorteeJetonEnum, required: true }),
       activiteIds: t.arg.idList(),
       expireLe: t.arg({ type: 'DateTime' }),
+      gestionMembres: t.arg.boolean({
+        description:
+          'Ouvre au jeton la gestion des membres : inviter, retirer et promouvoir une personne, dans la limite des droits de la personne. Faux par défaut.',
+      }),
     },
     resolve: async (_root, args, ctx) => {
       const organisationId = ctx.organisation!.id
@@ -245,6 +324,7 @@ builder.mutationFields(t => ({
         portee: args.portee,
         activiteIds,
         expireLe: finDuJeton(args.expireLe),
+        gestionMembres: args.gestionMembres ?? false,
       })
       journal.info(
         {
@@ -253,10 +333,82 @@ builder.mutationFields(t => ({
           organisationId,
           userId: ctx.personne!.id,
           portee: ligne.portee,
+          gestionMembres: ligne.gestionMembres,
         },
         'Un jeton d’accès a été créé.'
       )
+      // La personne apprend la création par mail, avec un lien de révocation : une
+      // session volée ne crée pas un accès d'un an en silence.
+      await mettreEnFile(
+        'jeton-cree',
+        { userId: ctx.personne!.id },
+        { organisationId, jetonAccesId: ligne.id }
+      )
       return { jeton, jetonAcces: ligne }
+    },
+  }),
+
+  revoquerMesJetonsAcces: t.int({
+    authScopes: { $all: { connecte: true, session: true } },
+    // Des jetons compromis se révoquent même dans une organisation en lecture seule.
+    skipTypeScopes: true,
+    description:
+      'Révoque tous les jetons d’accès actifs de la personne connectée dans l’organisation active. Rend leur nombre.',
+    resolve: async (_root, _args, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const nombre = await revoquerJetonsDe(prisma, {
+        organisationId,
+        userId: ctx.personne!.id,
+      })
+      if (nombre > 0) {
+        journal.info(
+          {
+            evenement: 'jetons-acces-revoques',
+            organisationId,
+            userId: ctx.personne!.id,
+            nombre,
+          },
+          'Une personne a révoqué tous ses jetons d’accès.'
+        )
+      }
+      return nombre
+    },
+  }),
+
+  revoquerJetonOrganisation: t.boolean({
+    authScopes: { $all: { admin: true, session: true } },
+    // Un jeton compromis se révoque même dans une organisation en lecture seule.
+    skipTypeScopes: true,
+    description:
+      'Révoque un jeton d’accès de l’organisation, au nom d’un admin. La porteuse l’apprend par mail. Rend faux pour un jeton inconnu, d’une autre organisation ou déjà révoqué.',
+    args: { id: t.arg.id({ required: true }) },
+    resolve: async (_root, args, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const id = String(args.id)
+      const revoque = await revoquerJetonDeLOrganisation(prisma, {
+        organisationId,
+        id,
+        parId: ctx.personne!.id,
+      })
+      if (revoque === null) return false
+      journal.info(
+        {
+          evenement: 'jeton-acces-revoque',
+          jetonId: id,
+          organisationId,
+          par: ctx.personne!.id,
+        },
+        'Un jeton d’accès a été révoqué par un admin de l’organisation.'
+      )
+      // Un robot ne lit pas de mail, et un admin qui révoque son propre jeton le sait.
+      if (!revoque.robot && revoque.userId !== ctx.personne!.id) {
+        await mettreEnFile(
+          'jeton-revoque',
+          { userId: revoque.userId },
+          { organisationId, jetonAccesId: id }
+        )
+      }
+      return true
     },
   }),
 

@@ -1,6 +1,7 @@
 import { prisma, type JetonAcces } from '@relaytour/database'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { mettreEnFile } from '../courriel/file.ts'
 import { accesRefuse, apiInactive, erreurSaisie } from '../lib/erreurs.ts'
 import {
   apiOuverte,
@@ -237,6 +238,13 @@ builder.mutationFields(t => ({
         },
         'Un jeton d’accès de robot a été créé.'
       )
+      // L'admin qui crée le jeton l'apprend aussi par mail, avec un lien de
+      // révocation : un robot ne lit pas de mail.
+      await mettreEnFile(
+        'jeton-cree',
+        { userId: ctx.personne!.id },
+        { organisationId: organisation.id, jetonAccesId: ligne.id }
+      )
       return { jeton, jetonAcces: ligne }
     },
   }),
@@ -256,7 +264,7 @@ builder.mutationFields(t => ({
           revoqueLe: null,
           user: { robot: true },
         },
-        data: { revoqueLe: new Date() },
+        data: { revoqueLe: new Date(), revoqueParId: ctx.personne!.id },
       })
       if (count > 0) {
         journal.info(

@@ -14,6 +14,9 @@ import { limiterParCle, rendreTentative } from './limite.ts'
 export const SORTES_JAMAIS_REPORTEES: ReadonlySet<string> = new Set([
   'code-connexion',
   'lien-export',
+  // Un jeton créé ou révoqué se signale sans délai (ADR 0064).
+  'jeton-cree',
+  'jeton-revoque',
 ])
 
 // Le compteur d'un jour garde sa clé deux jours : il couvre le jour entier, quel
