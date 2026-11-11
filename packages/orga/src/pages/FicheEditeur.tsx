@@ -54,6 +54,7 @@ import {
 } from '../lib/concerne'
 import { useMentions } from '../lib/useMentions'
 import { useActivite } from '../lib/activite'
+import { useModificationEnCours } from '../lib/modifications-en-cours'
 import { useSansRafraichissement } from '../lib/rafraichissement'
 import { organisationChoisie } from '../lib/selection'
 
@@ -202,6 +203,8 @@ function Formulaire({
   })
   const titre = Form.useWatch('titre', form) ?? fiche?.titre ?? ''
   const modifie = contenu !== depart || titre !== (fiche?.titre ?? '')
+  // Une notification ouverte depuis un avis demande confirmation (ADR 0065).
+  useModificationEnCours(modifie)
   // La saisie est enregistrée ou abandonnée : une écriture différée du brouillon ne
   // le recrée pas avant que l'écran ne soit quitté.
   const termine = useRef(false)

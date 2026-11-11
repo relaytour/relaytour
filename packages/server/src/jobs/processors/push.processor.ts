@@ -92,6 +92,7 @@ export async function pushProcessor(job: Job<PushJobData>): Promise<void> {
         userId: n.userId,
         organisationId: n.organisationId,
         lueLe: null,
+        disponibleLe: null,
         OR: [
           { niveau: 'REFERENT' },
           ...(filtreAdmin === null ? [] : [filtreAdmin]),

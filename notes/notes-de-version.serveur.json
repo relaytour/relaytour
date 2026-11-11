@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-11-09-serveur-une-correction-rapide-d-une-tache-ne-notifie-plus-personne",
+          "date": "2026-11-09",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une correction rapide d'une tâche ne notifie plus personne",
+            "texte": "Les notifications d'une tâche attendent la fin d'une fenêtre de dix minutes. Une personne retirée puis remise sur la tâche, ou un statut revenu à sa valeur de départ, ne notifie plus personne. Plusieurs modifications de la même tâche donnent une seule notification et un seul mail. Le push et le mail d'une tâche partent donc au plus dix minutes après l'action. Un commentaire reste annoncé tout de suite.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A quick correction to a task no longer notifies anyone",
+            "texte": "Task notifications wait for the end of a ten-minute window. A person removed and then put back on the task, or a status set back to its starting value, no longer notifies anyone. Several changes to the same task give a single notification and a single email. Task push notifications and emails therefore go out at most ten minutes after the action. A comment is still announced straight away.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-11-09-serveur-une-api-rest-v1-documentee-par-openapi",
           "date": "2026-11-09",
           "type": "fonctionnalite",
@@ -40,6 +58,24 @@
           "en": {
             "titre": "Third-party programs access the API with an access token",
             "texte": "Each organization has an \"API\" module, off by default. Once an admin turns it on, a person creates access tokens that act on their behalf, with their rights. A token can be limited to reading and to some activities, and it expires after one year at most. The GraphQL API accepts these tokens as `Authorization: Bearer`. The instance administration can forbid, enforce or suspend the module.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-11-09-serveur-le-resume-regroupe-les-nouvelles-de-chaque-tache",
+          "date": "2026-11-09",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le résumé regroupe les nouvelles de chaque tâche",
+            "texte": "Le résumé par mail regroupe les nouvelles d'une même tâche sur une ligne : « Léa s'occupe de la tâche à la place de Paul ». Les commentaires d'une tâche tiennent aussi sur une ligne : « Léa et une autre personne ont laissé 3 commentaires sur la tâche ». Il ne répète plus une modification déjà annoncée par un mail immédiat. Au-delà de trente nouvelles, il indique combien restent dans l'application. Avec le résumé hebdomadaire, le mail des priorités reprend vos nouvelles et remplace le résumé du lundi. Les nouvelles arrivées après ce mail partent avec le mail des priorités suivant.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The summary groups the updates of each task",
+            "texte": "The email summary groups the updates of a single task on one line: \"Léa is taking care of the task instead of Paul\". The comments on a task also fit on one line: \"Léa and one other person left 3 comments on the task\". It no longer repeats a change already announced by an immediate email. Beyond thirty updates, it says how many remain in the app. With the weekly summary, the priorities email includes your updates and replaces the Monday summary. Updates that arrive after this email go out with the next priorities email.",
             "migration": null
           }
         },

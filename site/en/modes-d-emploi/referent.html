@@ -361,11 +361,19 @@
 
         <article class="verre ecran" id="e-preferences">
           <div class="ecran-tete"><h3>Preferences</h3><span class="route">/&lt;activity&gt;/preferences</span></div>
-          <p>You choose the emails you receive, and the notifications for your areas. The notifications for your tasks stay visible in the workspace, whatever you choose for emails.</p>
+          <p>You choose the emails you receive, and the notifications for your areas. The page opens on the <strong>notification preset</strong>, which sets everything in one step. You can then change each setting; the page then shows “Custom”.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Essential</span></span><span>What concerns you: your tasks, your deadlines, your meetings and the decisions waiting for you. The priorities email replaces the weekly summary. This is the default preset.</span></li>
+            <li><span><span class="libelle">Coordinator</span></span><span>The essentials, plus follow-up of your areas: tasks to take, completed tasks, derived tasks.</span></li>
+            <li><span><span class="libelle">Main contact</span></span><span>Follow-up of your areas, every detail of the areas where you are the main contact, and a summary every morning.</span></li>
+            <li><span><span class="libelle">Activity admin</span></span><span>Follow-up of your areas, all team news, the priorities of the whole activity and a summary every morning.</span></li>
+          </ul>
+          <p>The “Recommended for you” tag marks the preset for your role. When your role changes, your settings stay the same: a notice at the bottom of the screen suggests the preset for your new role, at most once a day. You apply it, open your preferences, or decline the suggestion.</p>
+          <p class="note">The notifications for your tasks stay visible in the workspace, whatever you choose for emails. The “Following your areas” setting adds the essentials or every detail of the activity in your areas.</p>
           <p class="note">Your preferences apply to the displayed organization. If you belong to several organizations, each keeps its own settings.</p>
           <p class="note">Admins also find the “Your mail app” panel there, described in the user guide <a href="messagerie.html">“Choose your mail app”</a>.</p>
           <figure>
-            <img src="../captures/preferences.webp" data-mobile="../captures/mobile/preferences.webp" width="1440" height="900" loading="lazy" alt="Preferences screen: the choice of email digest, the settings for immediate emails and the one for notifications of your areas." />
+            <img src="../captures/preferences.webp" data-mobile="../captures/mobile/preferences.webp" width="1440" height="900" loading="lazy" alt="Preferences screen: the choice of notification preset, then the email summary, the priorities email, immediate emails and following your areas." />
             <figcaption>Preferences screen, on the sample organization.</figcaption>
           </figure>
           <figure>
@@ -457,9 +465,10 @@
             <figcaption>The bell drawer, on the sample organization. The people are fictional.</figcaption>
           </figure>
           <p class="note">If you belong to several organizations, the box “You have other notifications in your organizations” lists those with news. Each opens in a new tab, and the original tab keeps its own. In the installed app, the organization changes in the same window.</p>
-          <p>When another person creates, edits, starts, completes or abandons a task in your area, you receive a notification. You also receive one when they create or edit a sheet of the area. A click on a task notification opens the area and highlights that task.</p>
-          <p class="note">For a sheet, or for a task that is not assigned to you, no email is sent. The “Activity in your areas” setting, in your <a href="#e-preferences">Preferences</a>, turns off these notifications.</p>
-          <p class="note">A task assigned to you keeps its notification, whatever this setting. An email also informs you when another person edits it or changes its status, depending on the “Changes to your tasks” setting.</p>
+          <p>By default, the bell keeps what concerns you: a task assigned to you or removed from you, a change or a comment on your tasks, your deadlines, your meetings. The main contact of an area also receives derived tasks to approve and overdue tasks with nobody assigned. A click on a task notification opens the area and highlights that task.</p>
+          <p class="note">The “Following your areas” setting, in your <a href="#e-preferences">Preferences</a>, adds the area essentials (tasks to take, completed tasks, derived tasks) or every detail (each change, assignment and comment). For a sheet, or for a task that is not assigned to you, no email is sent.</p>
+          <p class="note">A task notification arrives at most ten minutes after the action. A person removed and then put back on the task, or a status set back to its starting value, notifies nobody. Several changes to the same task give a single notification and a single email.</p>
+          <p>A notification that arrives while the space is open also shows up as a discreet notice at the bottom of the screen. A click on the notice opens the task or item concerned. “See in the bell” opens the bell. If you are writing a sheet, a task or a comment, the space asks you to confirm before leaving the page.</p>
           <p class="note">A completed task is announced without a name: only the person who checked it and the admins know who completed it.</p>
         </article>
       </section>

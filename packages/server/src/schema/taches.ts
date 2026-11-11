@@ -26,6 +26,12 @@ import {
 } from '../lib/declinaisons.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourPerimetre } from '../lib/flux.ts'
+import {
+  importanceAssignation,
+  importanceChangement,
+  importanceCreation,
+  importanceDemandeAccord,
+} from '../lib/importance-notifications.ts'
 import { publierJalonsDe } from '../lib/jalons.ts'
 import {
   notifier,
@@ -1063,11 +1069,16 @@ async function annoncerDeclinaisons(
     })
     await notifier(prisma, {
       type: declinaison.acceptee ? 'TACHE_CREEE' : 'DECLINAISON_PROPOSEE',
+      // Une déclinaison proposée attend un accord : les contacts principaux la
+      // reçoivent en premier (ADR 0065).
       destinataires: await referentsAPrevenir(
         prisma,
         declinaison.id,
         editionId,
-        acteurId
+        acteurId,
+        declinaison.acceptee
+          ? importanceCreation(false)
+          : importanceDemandeAccord
       ),
       acteurId,
       tacheId: declinaison.tacheId,
@@ -1163,11 +1174,14 @@ builder.mutationFields(t => ({
       // Règle n° 3 : les autres référent·es du périmètre le voient dans leur résumé.
       await notifier(prisma, {
         type: 'TACHE_CREEE',
+        // Une tâche sans personne est à prendre : un suivi. Assignée à son
+        // autrice ou son auteur, elle reste du détail (ADR 0065).
         destinataires: await referentsAPrevenir(
           prisma,
           perimetreId,
           editionId,
-          acteur.id
+          acteur.id,
+          importanceCreation(args.mAssigner ?? false)
         ),
         acteurId: acteur.id,
         tacheId: creee.id,
@@ -1295,6 +1309,7 @@ builder.mutationFields(t => ({
         acteurId: acteur.id,
         tacheId: tache.id,
         sauf: autres,
+        importance: importanceChangement(),
       })
       return relire()
     },
@@ -1388,6 +1403,8 @@ builder.mutationFields(t => ({
             perimetreId: tache.perimetreId,
             tacheId: tache.id,
             statut: args.statut,
+            // La fenêtre de regroupement compare ce statut au statut final (ADR 0065).
+            statutPrecedent: tache.statut,
             // Le journal ne porte qu'une personne : il la nomme quand elle est seule.
             // La liste complète vit dans `TacheRealisation`.
             realiseeParId: realisateurs.length === 1 ? realisateurs[0] : null,
@@ -1421,7 +1438,9 @@ builder.mutationFields(t => ({
           tacheId: tache.id,
           perimetreId: tache.perimetreId,
           changement: 'statut',
-          ...(faite ? { statut: 'FAITE' as const } : {}),
+          // Le statut distingue, dans la fenêtre de regroupement, une modification
+          // née d'un changement de statut (ADR 0065).
+          statut: args.statut,
         },
         { mailImmediat: true }
       )
@@ -1435,6 +1454,7 @@ builder.mutationFields(t => ({
         tacheId: tache.id,
         statut: args.statut,
         sauf: autres,
+        importance: importanceChangement(args.statut),
       })
       // Le périmètre de la tâche partagée suit l'avancement de ses déclinaisons
       // (ADR 0026). Ses écrans se relisent à chaque changement ; ses référentes et
@@ -1453,6 +1473,7 @@ builder.mutationFields(t => ({
             tacheId: tache.id,
             statut: args.statut,
             sauf: autres,
+            importance: importanceChangement(args.statut),
           })
         }
       }
@@ -1527,11 +1548,17 @@ builder.mutationFields(t => ({
         await notifier(prisma, {
           type: args.assigne ? 'TACHE_ASSIGNEE' : 'TACHE_DESASSIGNEE',
           destinataires: [
+            // La personne concernée l'apprend toujours ; les autres personnes
+            // assignées en suivi, le reste du périmètre en détail (ADR 0065).
             ...(await referentsAPrevenir(
               prisma,
               tache.perimetreId,
               tache.editionId,
-              acteur.id
+              acteur.id,
+              importanceAssignation(
+                personneId,
+                new Set(tache.assignations.map(a => a.userId))
+              )
             )),
             personneId,
           ],
@@ -1698,7 +1725,8 @@ builder.mutationFields(t => ({
             prisma,
             tache.origine.perimetreId,
             tache.editionId,
-            acteur.id
+            acteur.id,
+            'SUIVI'
           )),
           ...(tache.creeParId === null ? [] : [tache.creeParId]),
         ],
@@ -1715,7 +1743,8 @@ builder.mutationFields(t => ({
             prisma,
             tache.perimetreId,
             tache.editionId,
-            acteur.id
+            acteur.id,
+            importanceCreation(false)
           ),
           acteurId: acteur.id,
           tacheId: tache.id,
@@ -1794,7 +1823,8 @@ builder.mutationFields(t => ({
           prisma,
           tache.perimetreId,
           tache.editionId,
-          acteur.id
+          acteur.id,
+          importanceCreation(false)
         ),
         acteurId: acteur.id,
         tacheId: tache.id,

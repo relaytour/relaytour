@@ -1,7 +1,7 @@
 import { EditOutlined, LogoutOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { App, Button, Form, Input, Radio, Skeleton, Switch } from 'antd'
+import { App, Button, Form, Input, Radio, Skeleton, Switch, Tag } from 'antd'
 import { useState } from 'react'
 
 import { PreferenceAgenda } from '../composants/AbonnementAgenda'
@@ -13,8 +13,15 @@ import PreferenceOrganigramme from '../composants/PreferenceOrganigramme'
 import PreferencePush from '../composants/PreferencePush'
 import { Avatar } from '../composants/Personne'
 import Titre from '../composants/Titre'
+import { useModelesNotification } from '../composants/modeles-notification'
 import { graphql } from '../gql'
-import type { FrequenceResume, MailPriorites } from '../gql/graphql'
+import type {
+  FrequenceResume,
+  MailPriorites,
+  ModeleNotification,
+  SuiviAdmin,
+  SuiviPerimetres,
+} from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
 import { useOrganisation } from '../lib/organisation'
@@ -28,15 +35,27 @@ const PREFERENCES = graphql(`
       mailModification
       mailEcheance
       mailDemandes
-      applicationPerimetre
+      suiviPerimetres
+      detailContactPrincipal
+      suiviAdmin
       pushTaches
       pushEcheances
       pushDemandes
       pushEquipe
       pushAgenda
-      applicationEquipe
       resumeAdmin
       mailPriorites
+      modele
+      modeleRecommande
+    }
+  }
+`)
+
+// Un modèle remplit les réglages en un geste (ADR 0065).
+const APPLIQUER_MODELE = graphql(`
+  mutation AppliquerModeleNotification($modele: ModeleNotification!) {
+    appliquerModeleNotification(modele: $modele) {
+      modele
     }
   }
 `)
@@ -47,8 +66,9 @@ const MODIFIER = graphql(`
     $mailModification: Boolean!
     $mailEcheance: Boolean!
     $mailDemandes: Boolean
-    $applicationPerimetre: Boolean
-    $applicationEquipe: Boolean
+    $suiviPerimetres: SuiviPerimetres
+    $detailContactPrincipal: Boolean
+    $suiviAdmin: SuiviAdmin
     $resumeAdmin: Boolean
     $mailPriorites: MailPriorites
   ) {
@@ -57,8 +77,9 @@ const MODIFIER = graphql(`
       mailModification: $mailModification
       mailEcheance: $mailEcheance
       mailDemandes: $mailDemandes
-      applicationPerimetre: $applicationPerimetre
-      applicationEquipe: $applicationEquipe
+      suiviPerimetres: $suiviPerimetres
+      detailContactPrincipal: $detailContactPrincipal
+      suiviAdmin: $suiviAdmin
       resumeAdmin: $resumeAdmin
       mailPriorites: $mailPriorites
     ) {
@@ -66,10 +87,12 @@ const MODIFIER = graphql(`
       mailModification
       mailEcheance
       mailDemandes
-      applicationPerimetre
-      applicationEquipe
+      suiviPerimetres
+      detailContactPrincipal
+      suiviAdmin
       resumeAdmin
       mailPriorites
+      modele
     }
   }
 `)
@@ -90,10 +113,11 @@ interface Valeurs {
   mailPriorites: MailPriorites
   mailModification: boolean
   mailEcheance: boolean
-  applicationPerimetre: boolean
+  suiviPerimetres: SuiviPerimetres
+  detailContactPrincipal: boolean
   // Présents pour les personnes qui administrent seulement (ADR 0033).
   mailDemandes?: boolean
-  applicationEquipe?: boolean
+  suiviAdmin?: SuiviAdmin
   resumeAdmin?: boolean
 }
 
@@ -112,6 +136,11 @@ export default function Preferences() {
   const { data } = useQuery(PREFERENCES)
   const [modifier, modification] = useMutation(MODIFIER, {
     refetchQueries: [PREFERENCES],
+  })
+
+  const [appliquer, application] = useMutation(APPLIQUER_MODELE, {
+    refetchQueries: [PREFERENCES],
+    awaitRefetchQueries: true,
   })
 
   const [renommer, renommage] = useMutation(MODIFIER_MON_NOM, {
@@ -136,7 +165,7 @@ export default function Preferences() {
         variables: {
           ...v,
           mailDemandes: v.mailDemandes ?? null,
-          applicationEquipe: v.applicationEquipe ?? null,
+          suiviAdmin: v.suiviAdmin ?? null,
           resumeAdmin: v.resumeAdmin ?? null,
         },
       })
@@ -145,6 +174,17 @@ export default function Preferences() {
       message.error(messageErreur(e))
     }
   }
+
+  const appliquerModele = async (modele: ModeleNotification) => {
+    try {
+      await appliquer({ variables: { modele } })
+      message.success(t`Modèle appliqué.`)
+    } catch (e) {
+      message.error(messageErreur(e))
+    }
+  }
+
+  const modeles = useModelesNotification()
 
   return (
     <>
@@ -254,7 +294,51 @@ export default function Preferences() {
             </>
           }
         >
+          <Panneau titre={t`Modèle de notifications`}>
+            <p className="rt-texte-secondaire" style={{ margin: 0 }}>
+              <Trans>
+                Un modèle règle vos mails et vos notifications en un geste. Vous
+                pouvez ensuite changer chaque réglage ci-dessous.
+              </Trans>
+            </p>
+            <div className="rt-choix rt-choix-large">
+              <Radio.Group
+                value={data.mesPreferencesNotification.modele ?? null}
+                disabled={application.loading}
+                onChange={e =>
+                  void appliquerModele(e.target.value as ModeleNotification)
+                }
+              >
+                {modeles.map(m => (
+                  <Radio key={m.valeur} value={m.valeur}>
+                    <span className="rt-choix-titre">
+                      {m.titre}
+                      {data.mesPreferencesNotification.modeleRecommande ===
+                        m.valeur && (
+                        <span className="rt-choix-etiquette">
+                          <Tag>
+                            <Trans>Recommandé pour vous</Trans>
+                          </Tag>
+                        </span>
+                      )}
+                    </span>
+                    <span className="rt-choix-detail">{m.detail}</span>
+                  </Radio>
+                ))}
+              </Radio.Group>
+            </div>
+            {!data.mesPreferencesNotification.modele && (
+              <p className="rt-note" style={{ margin: 0 }}>
+                <Trans>
+                  Personnalisé : vos réglages ne suivent aucun modèle.
+                </Trans>
+              </p>
+            )}
+          </Panneau>
           <Form
+            // Un modèle appliqué change les réglages : le formulaire repart des
+            // valeurs relues.
+            key={JSON.stringify(data.mesPreferencesNotification)}
             className="rt-verre rt-panneau"
             style={{ gap: 0, padding: '26px 30px' }}
             layout="vertical"
@@ -392,27 +476,66 @@ export default function Preferences() {
               }}
             >
               <span style={{ fontSize: 16, fontWeight: 600 }}>
-                <Trans>Dans l’espace organisateur</Trans>
+                <Trans>Suivi de vos périmètres</Trans>
               </span>
+              <Form.Item
+                className="rt-choix"
+                name="suiviPerimetres"
+                style={{ marginBottom: 0 }}
+                extra={t`Ce qui vous concerne s’affiche toujours dans la cloche : vos tâches, vos échéances, vos réunions et les décisions qui vous attendent.`}
+              >
+                <Radio.Group>
+                  <Radio value="MOI">
+                    <span className="rt-choix-titre">
+                      <Trans>Ce qui vous concerne</Trans>
+                    </span>
+                    <span className="rt-choix-detail">
+                      <Trans>Rien d’autre de vos périmètres.</Trans>
+                    </span>
+                  </Radio>
+                  <Radio value="SUIVI">
+                    <span className="rt-choix-titre">
+                      <Trans>L’essentiel du périmètre</Trans>
+                    </span>
+                    <span className="rt-choix-detail">
+                      <Trans>
+                        Les tâches à prendre, les tâches faites, les
+                        déclinaisons et les fiches qui concernent vos
+                        périmètres.
+                      </Trans>
+                    </span>
+                  </Radio>
+                  <Radio value="DETAIL">
+                    <span className="rt-choix-titre">
+                      <Trans>Tout le détail</Trans>
+                    </span>
+                    <span className="rt-choix-detail">
+                      <Trans>
+                        Chaque modification, assignation et commentaire des
+                        tâches et des fiches de vos périmètres.
+                      </Trans>
+                    </span>
+                  </Radio>
+                </Radio.Group>
+              </Form.Item>
               <div className="rt-reglage">
-                <label htmlFor="applicationPerimetre">
+                <label htmlFor="detailContactPrincipal">
                   <span className="rt-choix-titre">
-                    <Trans>Activité de vos périmètres</Trans>
+                    <Trans>Périmètres dont vous êtes contact principal</Trans>
                   </span>
                   <span className="rt-choix-detail">
                     <Trans>
-                      Une notification quand une autre personne crée, modifie ou
-                      termine une tâche ou une fiche de vos périmètres. Aucun
-                      mail ne part.
+                      Tout le détail de ces périmètres, quel que soit le choix
+                      ci-dessus. Aucun mail immédiat ne part.
                     </Trans>
                   </span>
                 </label>
                 <Form.Item
-                  name="applicationPerimetre"
+                  name="detailContactPrincipal"
                   valuePropName="checked"
                   noStyle
                 >
-                  <Switch id="applicationPerimetre" />
+                  <Switch id="detailContactPrincipal" />
                 </Form.Item>
               </div>
             </div>
@@ -432,8 +555,7 @@ export default function Preferences() {
                 <p className="rt-texte-secondaire" style={{ margin: 0 }}>
                   <Trans>
                     Les notifications d’admin ont leur écran, à part de la
-                    cloche. Les demandes et les invitations s’y affichent
-                    toujours.
+                    cloche. Les actions à mener s’y affichent toujours.
                   </Trans>
                 </p>
                 <div className="rt-reglage">
@@ -456,27 +578,37 @@ export default function Preferences() {
                     <Switch id="mailDemandes" />
                   </Form.Item>
                 </div>
-                <div className="rt-reglage">
-                  <label htmlFor="applicationEquipe">
-                    <span className="rt-choix-titre">
-                      <Trans>Équipe de vos activités</Trans>
-                    </span>
-                    <span className="rt-choix-detail">
-                      <Trans>
-                        Une notification quand un autre admin affecte, retire ou
-                        nomme une personne, ou quand une personne formule un
-                        souhait. Aucun mail ne part.
-                      </Trans>
-                    </span>
-                  </label>
-                  <Form.Item
-                    name="applicationEquipe"
-                    valuePropName="checked"
-                    noStyle
-                  >
-                    <Switch id="applicationEquipe" />
-                  </Form.Item>
-                </div>
+                <Form.Item
+                  className="rt-choix"
+                  name="suiviAdmin"
+                  style={{ marginBottom: 0 }}
+                >
+                  <Radio.Group>
+                    <Radio value="ACTIONS">
+                      <span className="rt-choix-titre">
+                        <Trans>Les actions à mener</Trans>
+                      </span>
+                      <span className="rt-choix-detail">
+                        <Trans>
+                          Les demandes, les candidatures, les souhaits et les
+                          accès à valider.
+                        </Trans>
+                      </span>
+                    </Radio>
+                    <Radio value="DETAIL">
+                      <span className="rt-choix-titre">
+                        <Trans>Tout le détail</Trans>
+                      </span>
+                      <span className="rt-choix-detail">
+                        <Trans>
+                          Aussi les affectations, les nominations, les
+                          archivages et les demandes traitées par un autre
+                          admin.
+                        </Trans>
+                      </span>
+                    </Radio>
+                  </Radio.Group>
+                </Form.Item>
                 <div className="rt-reglage">
                   <label htmlFor="resumeAdmin">
                     <span className="rt-choix-titre">

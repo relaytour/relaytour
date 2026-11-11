@@ -9,6 +9,7 @@ import type {
 
 import { adminsAPrevenir } from './demandes.ts'
 import { publierNotification } from './flux.ts'
+import { couvreAdmin } from './importance-notifications.ts'
 import { journal } from './journal.ts'
 import {
   niveauxDes,
@@ -19,34 +20,6 @@ import { pousser } from './push-file.ts'
 
 // Notifications d'admin (ADR 0033). Elles quittent la cloche pour l'écran
 // « Notifications d'admin », rangé par activité puis par périmètre.
-
-/** Les familles de notifications d'admin, que la personne règle à part. */
-export type FamilleAdmin = 'demandes' | 'equipe'
-
-/** La famille d'un type de notification d'admin. */
-export function familleAdmin(type: TypeNotification): FamilleAdmin | null {
-  switch (type) {
-    case 'DEMANDE_RECUE':
-    case 'DEMANDE_ACCEPTEE':
-    case 'DEMANDE_REFUSEE':
-    case 'INVITATION_ACCEPTEE':
-    case 'CANDIDATURE_RECUE':
-      return 'demandes'
-    case 'AFFECTATION_AJOUTEE':
-    case 'AFFECTATION_RETIREE':
-    case 'SOUHAIT_FORMULE':
-    case 'ADMIN_ACTIVITE_NOMME':
-    case 'ADMIN_ACTIVITE_RETIRE':
-    case 'ADMIN_ORGANISATION_NOMME':
-    case 'ADMIN_ORGANISATION_RETIRE':
-    case 'PERSONNE_ARCHIVEE':
-    case 'PERSONNE_RETABLIE':
-    case 'ACCES_FOURNISSEUR_A_VALIDER':
-      return 'equipe'
-    default:
-      return null
-  }
-}
 
 /** Les niveaux des notifications d'admin. */
 export const NIVEAUX_ADMIN: NiveauNotification[] = [
@@ -91,8 +64,9 @@ export interface NotificationAdmin {
 /**
  * Prévient les admins d'une action de gestion (ADR 0033) : les admins de
  * l'activité, sinon ceux de l'organisation. Une même action répétée dans la tranche
- * de dix minutes ne prévient qu'une fois. La famille « équipe » se coupe dans les
- * préférences de chaque organisation. Ne lève jamais.
+ * de dix minutes ne prévient qu'une fois. Le détail se coupe dans les
+ * préférences de chaque organisation : le suivi d'admin ne garde par défaut que les
+ * actions à mener (ADR 0065). Ne lève jamais.
  */
 export async function notifierLesAdmins(
   prisma: PrismaClient,
@@ -110,12 +84,14 @@ export async function notifierLesAdmins(
     const destinataires = [...new Set(candidats)].filter(id => id !== acteurId)
     if (destinataires.length === 0) return
     const niveaux = await niveauxDes(prisma, destinataires, activiteId)
-    const famille = familleAdmin(type)
     const tranche = Math.floor(maintenant / TRANCHE_PERIMETRE_MS)
     for (const userId of destinataires) {
+      // Le suivi d'admin garde les actions à mener, ou tout le détail (ADR 0065).
       if (
-        famille === 'equipe' &&
-        !(await preferencesDe(prisma, userId, organisationId)).applicationEquipe
+        !couvreAdmin(
+          (await preferencesDe(prisma, userId, organisationId)).suiviAdmin,
+          type
+        )
       ) {
         continue
       }

@@ -1579,8 +1579,8 @@ msgstr "{acteur} restored {personne} in the organization"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
-msgid "Votre place dans l’équipe a changé{activite}"
-msgstr "Your place in the team changed{activite}"
+msgid "Votre place dans l’équipe a changé{activite}. Vous pouvez adapter vos notifications à votre rôle dans vos préférences"
+msgstr "Your place in the team has changed{activite}. You can adapt your notifications to your role in your preferences"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
@@ -1699,8 +1699,43 @@ msgstr "{acteur} edited the task “{titre}”{lieu}"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
+msgid "{acteur} a laissé {nombre} commentaires sur la tâche « {titre} »{lieu}"
+msgstr "{acteur} left {nombre} comments on the task “{titre}”{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{autres, plural, one {{acteur} et une autre personne ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}} other {{acteur} et # autres personnes ont laissé {nombre} commentaires sur la tâche « {titre} »{lieu}}}"
+msgstr "{autres, plural, one {{acteur} and one other person left {nombre} comments on the task “{titre}”{lieu}} other {{acteur} and # other people left {nombre} comments on the task “{titre}”{lieu}}}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
 msgid "{acteur} a commenté la tâche « {titre} »{lieu}"
 msgstr "{acteur} commented on the task “{titre}”{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} s’occupe de la tâche « {titre} »{lieu} à votre place"
+msgstr "{acteur} is taking care of the task “{titre}”{lieu} in your place"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a assigné la tâche « {titre} »{lieu} à {personne} à votre place"
+msgstr "{acteur} assigned the task “{titre}”{lieu} to {personne} in your place"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} s’occupe de la tâche « {titre} »{lieu} à la place de {ancien}"
+msgstr "{acteur} is taking care of the task “{titre}”{lieu} instead of {ancien}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} vous a assigné la tâche « {titre} »{lieu} à la place de {ancien}"
+msgstr "{acteur} assigned you the task “{titre}”{lieu} instead of {ancien}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a assigné la tâche « {titre} »{lieu} à {personne} à la place de {ancien}"
+msgstr "{acteur} assigned the task “{titre}”{lieu} to {personne} instead of {ancien}"
 
 #. js-lingui-explicit-id
 #: src/lib/composition-notifications.ts
@@ -2327,6 +2362,26 @@ msgstr "Choose at least one person."
 #: src/lib/messages.ts
 msgid "Un message compte {max} destinataires au plus."
 msgstr "A message can have at most {max} recipients."
+
+#. js-lingui-explicit-id
+#: src/lib/modeles-notification.ts
+msgid "Essentiel"
+msgstr "Essential"
+
+#. js-lingui-explicit-id
+#: src/lib/modeles-notification.ts
+msgid "Référent·e"
+msgstr "Coordinator"
+
+#. js-lingui-explicit-id
+#: src/lib/modeles-notification.ts
+msgid "Contact principal"
+msgstr "Main contact"
+
+#. js-lingui-explicit-id
+#: src/lib/modeles-notification.ts
+msgid "Admin d’activité"
+msgstr "Activity admin"
 
 #. Rôle de la personne, dans « Le mode d’emploi … présente vos écrans et vos actions. »
 #. js-lingui-explicit-id
@@ -3667,6 +3722,16 @@ msgstr "You are part of the team for these areas:"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
+msgid "Le modèle de notifications « {modele} » correspond à votre rôle."
+msgstr "The “{modele}” notification preset matches your role."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Appliquer ce modèle dans vos préférences"
+msgstr "Apply this preset in your preferences"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
 msgid "{n, plural, one {Une demande pour rejoindre l’équipe de l’activité {activite} attend votre décision.} other {# demandes pour rejoindre l’équipe de l’activité {activite} attendent votre décision.}}"
 msgstr "{n, plural, one {A request to join the team of the activity {activite} is waiting for your decision.} other {# requests to join the team of the activity {activite} are waiting for your decision.}}"
 
@@ -3727,6 +3792,11 @@ msgstr "For your admin roles"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
+msgid "{n, plural, one {et # autre nouvelle dans l’application} other {et # autres nouvelles dans l’application}}"
+msgstr "{n, plural, one {and # more update in the app} other {and # more updates in the app}}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
 msgid "Aucune nouvelle."
 msgstr "No news."
 
@@ -3739,6 +3809,11 @@ msgstr "“{titre}”, due {date}"
 #: src/courriel/messages.ts
 msgid "Aucune échéance."
 msgstr "No due dates."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Vos nouvelles"
+msgstr "Your updates"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
@@ -3764,6 +3839,11 @@ msgstr "“{titre}”, due {date} · {qui}"
 #: src/courriel/messages.ts
 msgid "{n, plural, one {et # autre priorité} other {et # autres priorités}}"
 msgstr "{n, plural, one {and # other priority} other {and # other priorities}}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Aucune priorité dans vos périmètres d’ici le prochain point."
+msgstr "No priorities in your areas before the next check-in."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
