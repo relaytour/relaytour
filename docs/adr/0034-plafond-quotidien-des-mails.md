@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: mails-et-messagerie
+  parent: 16
+---
+
 # ADR 0034 — Plafond quotidien des mails d'une installation
 
 - **Statut** : acceptée

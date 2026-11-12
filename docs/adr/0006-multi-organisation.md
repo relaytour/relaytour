@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: organisations-et-cloisonnement
+  parent: 8
+---
+
 # ADR 0006 — Plusieurs organisations dans une même installation
 
 - **Statut** : acceptée ; lot commun réalisé le 19 septembre 2026, lot multi à venir

@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: fiches-et-fichiers
+  parent: 9
+---
+
 # ADR 0043 — Dossiers liés à plusieurs lecteurs et documents liés d'une fiche partagée
 
 - **Statut** : acceptée

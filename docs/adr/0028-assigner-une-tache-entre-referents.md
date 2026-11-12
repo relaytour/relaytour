@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: taches
+  parent: 25
+---
+
 # ADR 0028 — Assigner une tâche entre référentes et référents
 
 - **Statut** : acceptée

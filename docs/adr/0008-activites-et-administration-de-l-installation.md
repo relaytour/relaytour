@@ -1,3 +1,8 @@
+---
+compadr:
+  feature: organisations-et-cloisonnement
+---
+
 # ADR 0008 — Activités d'une organisation et administration de l'installation
 
 - **Statut** : acceptée ; réalisée le 22 septembre 2026, en huit PR empilées (#10 à #17)

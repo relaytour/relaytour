@@ -1,3 +1,8 @@
+---
+compadr:
+  feature: flux-temps-reel
+---
+
 # ADR 0017 — Flux des changements poussé par le serveur
 
 - **Statut** : acceptée

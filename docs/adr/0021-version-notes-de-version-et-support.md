@@ -1,3 +1,8 @@
+---
+compadr:
+  feature: application-langues-et-versions
+---
+
 # ADR 0021 — Version, notes de version et support dans l'espace organisateur
 
 - **Statut** : acceptée

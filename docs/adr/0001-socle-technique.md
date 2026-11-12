@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: socle-licence-exploitation
+  parent: 4
+---
+
 # ADR 0001 — Socle technique
 
 - **Statut** : acceptée

@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: fiches-et-fichiers
+  parent: 9
+---
+
 # ADR 0038 — Fiches et espace de fichiers d'une organisation
 
 - **Statut** : acceptée

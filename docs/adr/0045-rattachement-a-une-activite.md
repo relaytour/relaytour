@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: organisations-et-cloisonnement
+  parent: 8
+---
+
 # ADR 0045 — Rattachement à une activité et visibilité limitée à ses activités
 
 - **Statut** : acceptée

@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: taches
+  parent: 25
+---
+
 # ADR 0026 — Tâches partagées entre périmètres
 
 - **Statut** : acceptée

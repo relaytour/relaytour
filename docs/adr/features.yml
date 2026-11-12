@@ -1,0 +1,39 @@
+# Features of the decision records. Each record names its feature in
+# compadr.feature, and a detail decision names the main decision in
+# compadr.parent.
+socle-licence-exploitation:
+  label: Socle, licence, exploitation
+  main: 4
+connexion:
+  label: Connexion
+  main: 2
+organisations-et-cloisonnement:
+  label: Organisations et cloisonnement
+  main: 8
+droits-admins-et-equipe:
+  label: Droits, admins et équipe
+  main: 10
+mails-et-messagerie:
+  label: Mails et messagerie
+  main: 16
+notifications:
+  label: Notifications
+  main: 24
+taches:
+  label: Tâches
+  main: 25
+fiches-et-fichiers:
+  label: Fiches et fichiers
+  main: 9
+benevoles:
+  label: Bénévoles
+  main: 40
+agenda:
+  label: Agenda
+  main: 37
+application-langues-et-versions:
+  label: Application, langues et versions
+  main: 21
+flux-temps-reel:
+  label: Flux temps réel
+  main: 17

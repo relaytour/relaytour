@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: benevoles
+  parent: 40
+---
+
 # ADR 0046 — Appel à bénévoles indiqué sur le formulaire de l'équipe
 
 - **Statut** : acceptée

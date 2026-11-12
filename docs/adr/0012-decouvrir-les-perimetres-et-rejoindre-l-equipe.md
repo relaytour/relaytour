@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: droits-admins-et-equipe
+  parent: 10
+---
+
 # ADR 0012 — Découvrir les périmètres et rejoindre l'équipe
 
 - **Statut** : acceptée

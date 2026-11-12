@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: organisations-et-cloisonnement
+  parent: 8
+---
+
 # ADR 0031 — Archivage par organisation et nom tenu par la personne
 
 - **Statut** : acceptée

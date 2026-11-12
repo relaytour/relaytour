@@ -1,3 +1,9 @@
+---
+compadr:
+  feature: droits-admins-et-equipe
+  parent: 10
+---
+
 # ADR 0018 — Personnes d'une activité
 
 - **Statut** : acceptée
