@@ -147,10 +147,14 @@ export function plusFort(a: Niveau | null, b: Niveau | null): Niveau | null {
 
 /**
  * Les lignes d'un fichier réunies par personne : deux lignes vont ensemble quand
- * elles ont la même adresse, le même téléphone ou le même nom. Les groupes
- * gardent l'ordre de leur première ligne.
+ * elles ont la même adresse, le même téléphone, le même nom ou le même
+ * identifiant externe. Deux lignes aux identifiants externes différents restent
+ * deux personnes : deux billets d'un même acheteur partagent son adresse. Les
+ * groupes gardent l'ordre de leur première ligne.
  */
-export function regrouper<T extends Identite>(lignes: readonly T[]): T[][] {
+export function regrouper<T extends Identite & { refExterne?: string | null }>(
+  lignes: readonly T[]
+): T[][] {
   const parent = lignes.map((_, i) => i)
   const racine = (i: number): number => {
     while (parent[i] !== i) {
@@ -159,9 +163,23 @@ export function regrouper<T extends Identite>(lignes: readonly T[]): T[][] {
     }
     return i
   }
+  // L'identifiant externe de chaque groupe, porté par sa racine.
+  const refDe = lignes.map(l => {
+    const ref = (l.refExterne ?? '').trim()
+    return ref === '' ? null : ref
+  })
+  const unir = (i: number, j: number) => {
+    const a = racine(i)
+    const b = racine(j)
+    if (a === b) return
+    if (refDe[a] !== null && refDe[b] !== null && refDe[a] !== refDe[b]) return
+    parent[a] = b
+    refDe[b] ??= refDe[a]!
+  }
   const vues = new Map<string, number>()
   lignes.forEach((ligne, i) => {
     const cles = [
+      refDe[i] === null ? null : `ref:${refDe[i]}`,
       cleCourriel(ligne.courriel),
       cleTelephone(ligne.telephone),
       nomVide(ligne.nom) ? null : `nom:${cleNom(ligne.nom)}`,
@@ -170,7 +188,7 @@ export function regrouper<T extends Identite>(lignes: readonly T[]): T[][] {
       if (cle === null || cle === 'nom:') continue
       const deja = vues.get(cle)
       if (deja === undefined) vues.set(cle, i)
-      else parent[racine(i)] = racine(deja)
+      else unir(i, deja)
     }
   })
   const groupes = new Map<number, T[]>()

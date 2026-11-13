@@ -251,6 +251,7 @@
             <li><span><span class="libelle">To place</span></span><span>Each person becomes an application to process, in a call specific to the source. The “Accept all” option accepts the matched slots in one step.</span></li>
             <li><span><span class="libelle">Direct placements</span></span><span>Each person receives their record and their places in the matched slots. This mode requires at least one matched slot.</span></li>
             <li><span><span class="libelle">Notify by email</span></span><span>Send the personal link at a person’s first place. Uncheck the option if your team contacts its volunteers itself.</span></li>
+            <li><span><span class="libelle">Update</span></span><span>Complete the people already imported, found by their external ID. This option is reserved for the activity admins.</span></li>
           </ul>
           <figure>
             <img src="../captures/import-apercu.webp" data-mobile="../captures/mobile/import-apercu.webp" width="1440" height="900" loading="lazy" alt="Preview step of the import: four people to import, one row set aside, two records joined, then similar records with the choice Join or Create a volunteer record." />
@@ -258,7 +259,9 @@
           </figure>
           <p>The preview changes nothing. It counts the people to import, those already imported, and the rows set aside. A row with no name, no email address, and no phone is set aside, like a batch of anonymous tickets.</p>
           <p>A person with the email address of an existing record joins it automatically. For the same phone number or a similar name, you choose “Join” or “Create a volunteer record”. The rows set aside can be downloaded as CSV.</p>
-          <p class="note">No email is sent on import. An external ID, such as a ticket number, makes the import repeatable: an updated file adds only the new people. The consent date is the import date, unless a column is matched.</p>
+          <p class="note">No email is sent on import. An external ID, such as a ticket number, makes the import repeatable: an updated file adds only the new people. Two tickets from the same buyer stay two people, even with the same email address. The consent date is the import date, unless a column is matched.</p>
+          <p>With the “Update” option, a person already imported receives the values from the file that they lack: email address, phone, notes and availability. Their new slots are added. A value already present stays in place, and the preview reports it. No place is removed.</p>
+          <p class="note">An update sends no email. When an update adds an email address, the record’s “Notify by email” option stays unchecked: check it on the record, then send the link with the “Resend by email” button.</p>
         </article>
 
         <article class="verre ecran" id="e-doublons">
@@ -331,7 +334,7 @@
       </section>
 
       <footer>
-        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. This user guide is up to date with version 0.29.0.
+        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. This user guide is up to date with version 0.30.0.
       </footer>
     </main>
     <script src="../../bascule.js"></script>

@@ -105,6 +105,7 @@ const COULEURS: Record<EtatLigneImport, string> = {
   A_IMPORTER: 'blue',
   IMPORTEE: 'green',
   DEJA_IMPORTEE: 'default',
+  MISE_A_JOUR: 'cyan',
   ECARTEE: 'warning',
 }
 
@@ -250,6 +251,7 @@ export default function AssistantTableur<
     A_IMPORTER: t`À importer`,
     IMPORTEE: t`Importée`,
     DEJA_IMPORTEE: t`Déjà importée`,
+    MISE_A_JOUR: t`Mise à jour`,
     ECARTEE: t`Écartée`,
   }
 

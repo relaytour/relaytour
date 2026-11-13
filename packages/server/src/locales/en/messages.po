@@ -2119,6 +2119,11 @@ msgstr "This source is already used for another call. Choose another source."
 
 #. js-lingui-explicit-id
 #: src/lib/import-benevoles.ts
+msgid "Seuls les admins de l’activité mettent à jour les personnes déjà importées."
+msgstr "Only the activity admins can update people already imported."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
 msgid "La fiche à rattacher n’existe plus."
 msgstr "The volunteer record to attach no longer exists."
 

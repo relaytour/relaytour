@@ -82,6 +82,21 @@ describe('regrouper', () => {
   it('ne réunit pas deux lignes sans nom ni coordonnée', () => {
     expect(regrouper([{ nom: '#1' }, { nom: '#2' }])).toHaveLength(2)
   })
+
+  it('garde deux billets d’un même acheteur, et réunit les lignes d’un même billet', () => {
+    const lignes = [
+      { nom: 'Lina Morel', courriel: 'parent@exemple.org', refExterne: 'B-1' },
+      { nom: 'Noé Morel', courriel: 'parent@exemple.org', refExterne: 'B-2' },
+      { nom: 'Lina Morel', courriel: null, refExterne: 'B-1' },
+      { nom: 'noé MOREL', courriel: null, refExterne: null },
+    ]
+    expect(regrouper(lignes).map(g => g.map(l => l.refExterne ?? '-'))).toEqual(
+      [
+        ['B-1', 'B-1'],
+        ['B-2', '-'],
+      ]
+    )
+  })
 })
 
 describe('pairesRapprochees', () => {

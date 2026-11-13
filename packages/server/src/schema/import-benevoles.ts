@@ -38,6 +38,18 @@ const NiveauEnum = builder.enumType('NiveauRapprochement', {
   values: ['FORT', 'MOYEN', 'FAIBLE'] as const,
 })
 
+const ChampImportEnum = builder.enumType('ChampImport', {
+  description:
+    'Un champ d’une personne déjà importée : SEQUENCES désigne les séquences choisies.',
+  values: [
+    'COURRIEL',
+    'TELEPHONE',
+    'PRECISIONS',
+    'PLAGES',
+    'SEQUENCES',
+  ] as const,
+})
+
 const CoteEnum = builder.enumType('CoteFusion', {
   description: 'La fiche dont une valeur est gardée.',
   values: ['GARDEE', 'AUTRE'] as const,
@@ -99,6 +111,17 @@ const LigneRef = builder.objectRef<LigneRapport>('LigneImport').implement({
       description:
         'Vrai si l’adresse est celle d’un compte de l’organisation. Toujours faux hors des admins de l’activité.',
     }),
+    champs: t.field({
+      type: [ChampImportEnum],
+      description: 'Les champs qu’une mise à jour complète.',
+      resolve: l => l.champs,
+    }),
+    conflits: t.field({
+      type: [ChampImportEnum],
+      description:
+        'Les champs déjà remplis d’une autre valeur : la mise à jour garde la valeur de la fiche.',
+      resolve: l => l.conflits,
+    }),
   }),
 })
 
@@ -121,6 +144,8 @@ const RapportRef = builder
       personnes: t.exposeInt('personnes'),
       aImporter: t.exposeInt('aImporter'),
       dejaImportees: t.exposeInt('dejaImportees'),
+      misesAJour: t.exposeInt('misesAJour'),
+      conflits: t.exposeInt('conflits'),
       ecartees: t.exposeInt('ecartees'),
       fichesCreees: t.exposeInt('fichesCreees'),
       fichesRattachees: t.exposeInt('fichesRattachees'),
@@ -149,6 +174,11 @@ const ARGUMENTS_IMPORT = builder.args(t => ({
   mode: t.field({ type: ModeImportEnum, required: true }),
   prevenirParMail: t.boolean({ defaultValue: true }),
   accepterTout: t.boolean({ defaultValue: false }),
+  mettreAJour: t.boolean({
+    defaultValue: false,
+    description:
+      'Vrai : met à jour les personnes déjà importées, retrouvées par leur identifiant externe. Les champs vides se complètent et les nouvelles séquences s’ajoutent, sans mail. Réservé aux admins de l’activité.',
+  }),
   accord: t.boolean({
     required: true,
     description: 'Vrai : les personnes du fichier ont donné leur accord.',
@@ -248,6 +278,7 @@ builder.queryFields(t => ({
           ...args,
           prevenirParMail: args.prevenirParMail ?? true,
           accepterTout: args.accepterTout ?? false,
+          mettreAJour: args.mettreAJour ?? false,
         },
         false
       ),
@@ -310,12 +341,43 @@ builder.queryFields(t => ({
       const ecartees = new Set(
         distinctes.map(p => `${p.benevoleAId}:${p.benevoleBId}`)
       )
+      // Deux fiches nées de deux lignes d'un même import, aux identifiants
+      // externes différents, désignent deux personnes : deux billets d'un même
+      // acheteur partagent une adresse sans être des doublons.
+      const lignesDe = new Map<string, Map<string, Set<string>>>()
+      for (const c of await prisma.candidature.findMany({
+        where: {
+          activiteId,
+          origine: 'IMPORT',
+          refExterne: { not: null },
+          benevoleId: { not: null },
+        },
+        select: { appelId: true, refExterne: true, benevoleId: true },
+      })) {
+        const parAppel =
+          lignesDe.get(c.benevoleId!) ?? new Map<string, Set<string>>()
+        const refs = parAppel.get(c.appelId) ?? new Set<string>()
+        refs.add(c.refExterne!)
+        parAppel.set(c.appelId, refs)
+        lignesDe.set(c.benevoleId!, parAppel)
+      }
+      const lignesDistinctes = (a: string, b: string) => {
+        const deA = lignesDe.get(a)
+        const deB = lignesDe.get(b)
+        if (!deA || !deB) return false
+        for (const [appelId, refsA] of deA) {
+          const refsB = deB.get(appelId)
+          if (refsB && ![...refsA].some(r => refsB.has(r))) return true
+        }
+        return false
+      }
       const paires = pairesRapprochees(fiches)
         .map(p => {
           const [a, b] = [p.a, p.b].sort((x, y) => x.id.localeCompare(y.id))
           return { a: a!, b: b!, niveau: p.niveau }
         })
         .filter(p => !ecartees.has(`${p.a.id}:${p.b.id}`))
+        .filter(p => !lignesDistinctes(p.a.id, p.b.id))
         .slice(0, DOUBLONS_MAX)
       return Promise.all(
         paires.map(async p => ({
@@ -341,6 +403,7 @@ builder.mutationFields(t => ({
           ...args,
           prevenirParMail: args.prevenirParMail ?? true,
           accepterTout: args.accepterTout ?? false,
+          mettreAJour: args.mettreAJour ?? false,
         },
         true
       ),

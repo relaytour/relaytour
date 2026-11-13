@@ -543,6 +543,10 @@ msgid "{nbComptes, plural, one {# adresse est celle d’un compte de l’organis
 msgstr "{nbComptes, plural, one {# adresse est celle d’un compte de l’organisation.} other {# adresses sont celles d’un compte de l’organisation.}}"
 
 #: src/pages/ImportBenevoles.tsx
+msgid "{nbConflits} conflits"
+msgstr "{nbConflits} conflits"
+
+#: src/pages/ImportBenevoles.tsx
 msgid "{nbDejaImportees} déjà importées"
 msgstr "{nbDejaImportees} déjà importées"
 
@@ -585,6 +589,14 @@ msgstr "{nbInvitations, plural, one {# invitation attend un accord} other {# inv
 #: src/pages/ImportBenevoles.tsx
 msgid "{nbLignesLues} lignes et {nbColonnesLues} colonnes lues."
 msgstr "{nbLignesLues} lignes et {nbColonnesLues} colonnes lues."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbMisesAJour} mises à jour"
+msgstr "{nbMisesAJour} mises à jour"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbMisesAJourFinal} personnes mises à jour."
+msgstr "{nbMisesAJourFinal} personnes mises à jour."
 
 #: src/pages/Charge.tsx
 msgid "{nbPersonnes, plural, one {# personne} other {# personnes}}"
@@ -1764,6 +1776,11 @@ msgstr "Admins de l’organisation"
 #: src/pages/admin/Activites.tsx
 msgid "Admins et contacts principaux"
 msgstr "Admins et contacts principaux"
+
+#. Champ d’une fiche bénévole dont la valeur diffère du fichier importé
+#: src/pages/ImportBenevoles.tsx
+msgid "adresse"
+msgstr "adresse"
 
 #. Adresse de courriel d’une fiche bénévole à fusionner
 #. Colonne : adresse de courriel d’une fiche bénévole
@@ -3041,6 +3058,10 @@ msgstr "Ces fichiers ne s’importent pas."
 #: src/pages/AppelBenevoles.tsx
 msgid "Ces moments se chevauchent : {listeConflits}. L’équipe choisira avec vous."
 msgstr "Ces moments se chevauchent : {listeConflits}. L’équipe choisira avec vous."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Ces personnes ont déjà une autre valeur dans Relaytour. L’import garde cette valeur. Modifiez la fiche à la main si la valeur du fichier est la bonne."
+msgstr "Ces personnes ont déjà une autre valeur dans Relaytour. L’import garde cette valeur. Modifiez la fiche à la main si la valeur du fichier est la bonne."
 
 #: src/composants/PreferencePush.tsx
 msgid "Ces réglages valent pour tous vos appareils, dans cette organisation. Vos mails ne changent pas."
@@ -4349,6 +4370,11 @@ msgstr "Disponibilité"
 #: src/pages/ImportBenevoles.tsx
 msgid "Disponibilité seulement"
 msgstr "Disponibilité seulement"
+
+#. Champ d’une fiche bénévole dont la valeur diffère du fichier importé
+#: src/pages/ImportBenevoles.tsx
+msgid "disponibilités"
+msgstr "disponibilités"
 
 #: src/pages/Benevoles.tsx
 msgid "Disponibilités, compétences, taille de t-shirt…"
@@ -7488,6 +7514,10 @@ msgid "Ligne"
 msgstr "Ligne"
 
 #: src/pages/ImportBenevoles.tsx
+msgid "Ligne {lignesPersonne} · {champsEnConflit}"
+msgstr "Ligne {lignesPersonne} · {champsEnConflit}"
+
+#: src/pages/ImportBenevoles.tsx
 msgid "Ligne {lignesPersonne} · fiche « {nomFiche} »"
 msgstr "Ligne {lignesPersonne} · fiche « {nomFiche} »"
 
@@ -7744,6 +7774,10 @@ msgstr "Messageries en ligne"
 msgid "Messages"
 msgstr "Messages"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Mettre à jour les personnes déjà importées : Relaytour les retrouve par leur identifiant externe, complète leurs champs vides et ajoute leurs nouvelles séquences, sans aucun mail."
+msgstr "Mettre à jour les personnes déjà importées : Relaytour les retrouve par leur identifiant externe, complète leurs champs vides et ajoute leurs nouvelles séquences, sans aucun mail."
+
 #: src/composants/ReglagePerimetre.tsx
 #: src/pages/admin/Activites.tsx
 #: src/pages/FicheEditeur.tsx
@@ -7758,6 +7792,10 @@ msgstr "Minuscules, chiffres et tirets. Il ne change plus après la création."
 #: src/pages/admin/Activites.tsx
 msgid "Minuscules, chiffres, tirets."
 msgstr "Minuscules, chiffres, tirets."
+
+#: src/composants/AssistantTableur.tsx
+msgid "Mise à jour"
+msgstr "Mise à jour"
 
 #: src/pages/Fiches.tsx
 msgid "Mise à jour le {date}"
@@ -8991,6 +9029,11 @@ msgstr "Précisions"
 #: src/pages/AppelBenevoles.tsx
 msgid "Précisions (facultatives)"
 msgstr "Précisions (facultatives)"
+
+#. Champ d’une fiche bénévole dont la valeur diffère du fichier importé
+#: src/pages/ImportBenevoles.tsx
+msgid "précisions de disponibilité"
+msgstr "précisions de disponibilité"
 
 #: src/lib/import-benevoles.ts
 msgid "Précisions de disponibilité"
@@ -10284,6 +10327,11 @@ msgstr "Séquence supprimée"
 msgid "Séquence supprimée."
 msgstr "Séquence supprimée."
 
+#. Champ d’une fiche bénévole dont la valeur diffère du fichier importé
+#: src/pages/ImportBenevoles.tsx
+msgid "séquences"
+msgstr "séquences"
+
 #. Colonne : nombre de places d’une fiche bénévole
 #. Troisième étape de l’assistant d’import de bénévoles
 #: src/pages/Benevoles.tsx
@@ -10705,6 +10753,11 @@ msgstr "Télécharger le modèle"
 #: src/pages/ImportBenevoles.tsx
 msgid "Télécharger les lignes écartées"
 msgstr "Télécharger les lignes écartées"
+
+#. Champ d’une fiche bénévole dont la valeur diffère du fichier importé
+#: src/pages/ImportBenevoles.tsx
+msgid "téléphone"
+msgstr "téléphone"
 
 #. Champ d’une fiche bénévole à fusionner
 #. Champ à associer à une colonne d’un fichier
@@ -11399,6 +11452,10 @@ msgstr "Une mention ne partage pas la fiche. À l’enregistrement, l’éditeur
 msgid "Une mention s’affiche comme une étiquette. Celle d’un groupe liste ses périmètres au survol ou à l’appui. Dans l’éditeur, une arobase propose les périmètres et les groupes de l’activité."
 msgstr "Une mention s’affiche comme une étiquette. Celle d’un groupe liste ses périmètres au survol ou à l’appui. Dans l’éditeur, une arobase propose les périmètres et les groupes de l’activité."
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Une mise à jour n’envoie aucun mail. Après l’ajout d’une adresse par une mise à jour, l’option « Prévenir par mail » de la fiche reste décochée."
+msgstr "Une mise à jour n’envoie aucun mail. Après l’ajout d’une adresse par une mise à jour, l’option « Prévenir par mail » de la fiche reste décochée."
+
 #: src/pages/Fiche.tsx
 msgid "Une nouvelle version est créée : l’historique reste complet."
 msgstr "Une nouvelle version est créée : l’historique reste complet."
@@ -11504,6 +11561,10 @@ msgstr "Valable six mois"
 #: src/composants/PreferenceJetons.tsx
 msgid "Valable un an"
 msgstr "Valable un an"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Valeurs gardées"
+msgstr "Valeurs gardées"
 
 #: src/pages/ImportBenevoles.tsx
 msgid "Valeurs qui signifient « non »"

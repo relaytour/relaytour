@@ -489,10 +489,19 @@ export async function accepterSurSequence(
   await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${sequenceId} FOR UPDATE`
   const candidature = await tx.candidature.findUniqueOrThrow({
     where: { id: candidatureId },
-    include: { plages: true },
+    include: { plages: true, appel: { select: { perimetreId: true } } },
   })
+  // Une candidature importée avec un identifiant externe désigne une ligne du
+  // fichier, comme un billet : l'adresse d'un acheteur peut couvrir plusieurs
+  // billets, donc plusieurs personnes. Elle ne rejoint pas une fiche par son
+  // adresse (ADR 0042).
+  const importee = candidature.origine === 'IMPORT'
   let benevoleId = candidature.benevoleId
-  if (benevoleId === null && candidature.courriel !== null) {
+  if (
+    benevoleId === null &&
+    candidature.courriel !== null &&
+    !(importee && candidature.refExterne !== null)
+  ) {
     const existante = await tx.benevole.findFirst({
       where: {
         activiteId: candidature.activiteId,
@@ -523,7 +532,18 @@ export async function accepterSurSequence(
           courriel: candidature.courriel,
           telephone: candidature.telephone,
           accordLe: candidature.accordLe,
-          origine: 'CANDIDATURE',
+          // Une fiche née d'une candidature importée garde l'origine, la source,
+          // le périmètre et l'option « Prévenir par mail » de son import : sans
+          // ce report, elle deviendrait joignable sans choix explicite.
+          ...(importee
+            ? {
+                origine: 'IMPORT' as const,
+                sourceImport: candidature.sourceImport,
+                perimetreImportId: candidature.appel.perimetreId,
+                prevenirParMail: candidature.prevenirParMail ?? false,
+                precisionsDisponibilite: candidature.precisionsDisponibilite,
+              }
+            : { origine: 'CANDIDATURE' as const }),
           creeParId: acteurId,
         },
         select: { id: true },

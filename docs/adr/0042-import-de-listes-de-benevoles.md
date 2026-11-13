@@ -2,6 +2,7 @@
 
 - **Statut** : acceptée
 - **Date** : 2026-10-22
+- **Amendée** : 2026-11-13 (mise à jour d'un import et identifiant externe, voir « Amendement du 2026-11-13 »)
 - Complète l'ADR 0041 (appels à bénévoles, candidatures et répartition) et l'ADR 0040 (fiches bénévoles).
 
 ## Contexte
@@ -115,7 +116,7 @@ Dans les deux modes :
 - La date de l'accord est la date de l'import. Une colonne de date du fichier, comme la date de commande, la remplace quand la personne l'associe.
 - Une fiche créée par un import a l'origine `IMPORT`. Elle garde le périmètre de l'import, qui borne la lecture de ses plages dans la vue « Répartition ».
 - Les mails suivent l'ADR 0041. L'import n'envoie rien. La première place d'une fiche joignable envoie le lien personnel. L'option « Prévenir par mail » de l'import, cochée par défaut, se reporte sur chaque fiche créée.
-- Une colonne d'identifiant externe rend l'import rejouable. Une ligne déjà importée dans le même appel d'import est ignorée : un fichier mis à jour n'ajoute que les nouvelles personnes.
+- Une colonne d'identifiant externe rend l'import rejouable. Une ligne déjà importée dans le même appel d'import est ignorée : un fichier mis à jour n'ajoute que les nouvelles personnes. L'option « Mettre à jour les personnes déjà importées » complète ces personnes (amendement du 2026-11-13).
 - Le serveur revalide tout. Une simulation rend le rapport sans rien écrire, comme `orga:importer --simulation`. L'écriture se fait ensuite par lots de 500 personnes, chacun dans une transaction.
 - Un import ne dépasse pas le plafond de 2 000 fiches par activité (ADR 0040). La simulation l'annonce.
 
@@ -159,3 +160,53 @@ Dans les deux modes :
 - Une personne qui écrit dans un périmètre n'importe que pour ses séquences. Elle n'apprend rien des comptes de l'organisation.
 - L'import n'envoie aucun mail. Un fichier qui contient des adresses erronées ne déclenche d'envoi qu'à la première place d'une fiche, après une décision de l'équipe.
 - La fusion est réservée aux admins de l'activité et laisse une trace au journal.
+
+## Amendement du 2026-11-13
+
+### Contexte
+
+Une association a importé un export de billetterie : une ligne par billet, le numéro de billet comme identifiant externe, la colonne de l'adresse de l'acheteur ignorée. L'équipe veut ensuite compléter les fiches avec cette adresse, sans aucun mail. La règle « une ligne déjà importée est ignorée » l'empêchait.
+
+L'étude a montré trois autres défauts :
+
+- L'adresse d'un acheteur couvre parfois plusieurs billets, donc plusieurs personnes. Le navigateur réunissait ces lignes en une seule personne, et le serveur tenait la seconde pour déjà importée.
+- Une candidature importée et acceptée plus tard créait une fiche avec l'option « Prévenir par mail » cochée, quelle que soit l'option de l'import. Une adresse sur la candidature suffisait alors à envoyer le lien personnel.
+- L'acceptation d'une candidature importée rejoignait la fiche de même adresse, donc parfois la fiche d'un autre billet du même acheteur.
+
+### Décision
+
+**Une ligne à identifiant externe désigne une personne.**
+
+- Deux lignes aux identifiants externes différents restent deux personnes, même avec la même adresse, le même téléphone ou le même nom. La règle s'applique dans le navigateur, y compris dans un groupe de la forme 3.
+- Le serveur reconnaît une ligne déjà importée par son seul identifiant externe. L'adresse ne sert qu'aux lignes sans identifiant.
+- Une ligne à identifiant externe ne se rapproche pas d'une fiche liée à une autre ligne du même appel d'import.
+- L'acceptation d'une candidature importée avec un identifiant externe ne rejoint pas une fiche par l'adresse.
+- Le panneau « Doublons possibles » ne propose pas deux fiches liées à deux identifiants externes différents d'un même appel d'import.
+
+**L'option « Prévenir par mail » suit la personne importée.**
+
+- La candidature importée garde l'option de son import. La fiche née de son acceptation la reçoit, avec l'origine `IMPORT`, la source et le périmètre de l'import.
+- Une candidature importée avant cet amendement n'a pas gardé l'option : sa fiche naît sans « Prévenir par mail ».
+
+**Mise à jour d'un import.**
+
+- Une case, décochée par défaut, demande de « Mettre à jour les personnes déjà importées ». Elle est réservée aux admins de l'activité : la mise à jour touche des fiches que d'autres personnes ont créées.
+- La personne déjà importée se retrouve par son identifiant externe, dans l'appel d'import de la source. Sa fiche est celle de sa candidature ; sans fiche, la candidature elle-même se met à jour.
+- Une adresse, un téléphone ou des précisions de disponibilité vides se complètent. Une valeur différente déjà présente reste en place, et le rapport la signale en conflit.
+- Le nom ne change pas. Les plages se réunissent avec les plages existantes.
+- Une séquence que la candidature n'a pas encore choisie s'ajoute à ses choix. Le mode « places directes » ou « Accepter tout » l'accepte aussitôt. Une séquence déjà choisie ne revient pas, même refusée.
+- Une candidature retirée, ou refusée sans fiche, ne change pas.
+- Aucune place n'est retirée.
+- L'aperçu et le rapport comptent les personnes mises à jour et les conflits. Une ligne mise à jour porte l'état `MISE_A_JOUR` et la liste des champs complétés.
+
+**Une mise à jour n'envoie aucun mail.**
+
+- Une place ajoutée par une mise à jour n'est pas annoncée, même à une fiche joignable.
+- Une adresse ajoutée par une mise à jour décoche l'option « Prévenir par mail » de la fiche ou de la candidature. L'équipe la coche fiche par fiche, puis envoie le lien depuis la fiche.
+
+### Conséquences
+
+- Une migration additive ajoute à `Candidature` la colonne `prevenirParMail`, nulle hors import.
+- Une candidature importée avec un identifiant externe ne remplit pas `courrielEnAttente` : deux billets d'un même acheteur attendent ensemble dans l'appel.
+- L'état `MISE_A_JOUR` rejoint les états communs des imports de tableurs (ADR 0049). Les autres imports ne l'emploient pas.
+- L'annulation d'un billet et son remplacement par un autre billet restent hors de cet amendement.
