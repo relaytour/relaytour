@@ -319,6 +319,30 @@ describe('commande de plusieurs personnes', () => {
   })
 })
 
+describe('billets d’un même acheteur', () => {
+  it('garde une personne par billet, même avec l’adresse de l’acheteur', () => {
+    const tableau: Tableau = {
+      entetes: ['Commande', 'Billet', 'Nom complet', 'Email acheteur'],
+      lignes: [
+        ['C-7', 'B-1', 'Lina Morel', 'parent@exemple.org'],
+        ['C-7', 'B-2', 'Noé Morel', 'parent@exemple.org'],
+        ['C-8', 'B-3', 'Lina Morel', 'parent@exemple.org'],
+      ],
+    }
+    const { personnes } = construirePersonnes(
+      tableau,
+      ['REGROUPEMENT', 'REF_EXTERNE', 'NOM_COMPLET', 'COURRIEL'],
+      new Map(),
+      { valeursNon: [], jour: null }
+    )
+    expect(personnes.map(p => [p.refExterne, p.nom, p.lignes])).toEqual([
+      ['B-1', 'Lina Morel', [2]],
+      ['B-2', 'Noé Morel', [3]],
+      ['B-3', 'Lina Morel', [4]],
+    ])
+  })
+})
+
 describe('lots', () => {
   it('découpe une liste en lots de 500', () => {
     expect(

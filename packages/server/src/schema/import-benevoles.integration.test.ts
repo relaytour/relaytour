@@ -75,6 +75,8 @@ const h = (heure: string, jour = '2027-06-05') =>
 interface Rapport {
   aImporter: number
   dejaImportees: number
+  misesAJour: number
+  conflits: number
   ecartees: number
   fichesCreees: number
   fichesRattachees: number
@@ -87,12 +89,14 @@ interface Rapport {
     rapprochement: { benevoleId: string; niveau: string } | null
     rattacheeA: string | null
     compte: boolean
+    champs: string[]
+    conflits: string[]
   }[]
 }
 
-const CHAMPS = `aImporter dejaImportees ecartees fichesCreees fichesRattachees places depassements { sequenceId renforts } lignes { cle etat motif rapprochement { benevoleId niveau } rattacheeA compte }`
-const SIGNATURE = `$e: ID!, $p: ID, $src: String!, $m: ModeImport!, $pm: Boolean, $at: Boolean, $ok: Boolean!, $l: [PersonneImportInput!]!`
-const APPEL = `editionId: $e, perimetreId: $p, source: $src, mode: $m, prevenirParMail: $pm, accepterTout: $at, accord: $ok, personnes: $l`
+const CHAMPS = `aImporter dejaImportees misesAJour conflits ecartees fichesCreees fichesRattachees places depassements { sequenceId renforts } lignes { cle etat motif rapprochement { benevoleId niveau } rattacheeA compte champs conflits }`
+const SIGNATURE = `$e: ID!, $p: ID, $src: String!, $m: ModeImport!, $pm: Boolean, $at: Boolean, $mj: Boolean, $ok: Boolean!, $l: [PersonneImportInput!]!`
+const APPEL = `editionId: $e, perimetreId: $p, source: $src, mode: $m, prevenirParMail: $pm, accepterTout: $at, mettreAJour: $mj, accord: $ok, personnes: $l`
 const SIMULER = `query (${SIGNATURE}) { simulerImportBenevoles(${APPEL}) { ${CHAMPS} } }`
 const IMPORTER = `mutation (${SIGNATURE}) { importerBenevoles(${APPEL}) { ${CHAMPS} } }`
 
@@ -742,6 +746,428 @@ describe('correspondances d’import', () => {
         )
       )
     ).toBe('FORBIDDEN')
+  })
+})
+
+describe('mise à jour d’un import', () => {
+  // Un export de billetterie fictif : une ligne par billet, l'adresse de
+  // l'acheteur commune à deux billets, ignorée au premier import.
+  const parent = `parent-${s}@exemple.fr`
+
+  it('complète deux fiches d’un même acheteur sans les fusionner, ni les rendre joignables, ni envoyer de mail', async () => {
+    const src = `billets ${s}`
+    donnees(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src,
+          m: 'PLACES_DIRECTES',
+          pm: false,
+          l: [
+            {
+              cle: '1',
+              nom: 'Lina Morel',
+              refExterne: 'T-1',
+              sequenceIds: [ids.finales],
+            },
+            {
+              cle: '2',
+              nom: 'Noé Morel',
+              refExterne: 'T-2',
+              sequenceIds: [ids.finales],
+            },
+          ],
+        })
+      ),
+      'importerBenevoles'
+    )
+    // Le second fichier porte l'adresse de l'acheteur, un téléphone et une
+    // séquence de plus. « Prévenir par mail » reste coché, comme par défaut.
+    const fichier = [
+      {
+        cle: '1',
+        nom: 'Lina Morel',
+        refExterne: 'T-1',
+        courriel: parent,
+        telephone: '06 11 22 33 44',
+        sequenceIds: [ids.finales],
+      },
+      {
+        cle: '2',
+        nom: 'Noé Morel',
+        refExterne: 'T-2',
+        courriel: parent,
+        sequenceIds: [ids.finales, ids.relais],
+      },
+    ]
+    const sansOption = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        SIMULER,
+        variables({ src, m: 'PLACES_DIRECTES', pm: true, l: fichier })
+      ),
+      'simulerImportBenevoles'
+    )
+    expect(sansOption).toMatchObject({
+      aImporter: 0,
+      dejaImportees: 2,
+      misesAJour: 0,
+    })
+    const simule = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        SIMULER,
+        variables({ src, m: 'PLACES_DIRECTES', pm: true, mj: true, l: fichier })
+      ),
+      'simulerImportBenevoles'
+    )
+    expect(simule).toMatchObject({
+      aImporter: 0,
+      misesAJour: 2,
+      conflits: 0,
+      fichesCreees: 0,
+      places: 1,
+    })
+    expect(simule.lignes.map(l => [l.etat, l.champs])).toEqual([
+      ['MISE_A_JOUR', ['COURRIEL', 'TELEPHONE']],
+      ['MISE_A_JOUR', ['COURRIEL', 'SEQUENCES']],
+    ])
+    expect(simule.lignes.every(l => l.rapprochement === null)).toBe(true)
+
+    const rapport = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({ src, m: 'PLACES_DIRECTES', pm: true, mj: true, l: fichier })
+      ),
+      'importerBenevoles'
+    )
+    expect(rapport).toMatchObject({ aImporter: 0, misesAJour: 2, places: 1 })
+    expect(enFile).toEqual([])
+    const fiches = await prisma.benevole.findMany({
+      where: { activiteId: ids.activite, nom: { endsWith: 'Morel' } },
+      include: { places: true },
+      orderBy: { nom: 'asc' },
+    })
+    expect(
+      fiches.map(f => [
+        f.nom,
+        f.courriel,
+        f.telephone,
+        f.prevenirParMail,
+        f.places.length,
+      ])
+    ).toEqual([
+      ['Lina Morel', parent, '06 11 22 33 44', false, 1],
+      ['Noé Morel', parent, null, false, 2],
+    ])
+    // La place ajoutée est confirmée d'office : la fiche n'est pas joignable.
+    expect(fiches[1]!.places.every(p => p.confirmeeLe !== null)).toBe(true)
+
+    // Deux billets d'un même acheteur ne sont pas des doublons.
+    const paires = donnees<{ a: { id: string }; b: { id: string } }[]>(
+      await executer(
+        ids.admin,
+        `query ($a: ID!) { doublonsBenevoles(activiteId: $a) { a { id } b { id } } }`,
+        { a: ids.activite }
+      ),
+      'doublonsBenevoles'
+    )
+    const morel = fiches
+      .map(f => f.id)
+      .sort()
+      .join()
+    expect(paires.some(p => [p.a.id, p.b.id].sort().join() === morel)).toBe(
+      false
+    )
+
+    // Le même fichier, rejoué, ne change plus rien.
+    const rejoue = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({ src, m: 'PLACES_DIRECTES', pm: true, mj: true, l: fichier })
+      ),
+      'importerBenevoles'
+    )
+    expect(rejoue).toMatchObject({ misesAJour: 0, dejaImportees: 2 })
+
+    // Une autre adresse ne remplace pas celle de la fiche : le rapport la signale.
+    const conflit = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src,
+          m: 'PLACES_DIRECTES',
+          mj: true,
+          l: [{ ...fichier[0]!, courriel: `autre-${s}@exemple.fr` }],
+        })
+      ),
+      'importerBenevoles'
+    )
+    expect(conflit).toMatchObject({ misesAJour: 0, conflits: 1 })
+    expect(conflit.lignes[0]).toMatchObject({
+      etat: 'DEJA_IMPORTEE',
+      conflits: ['COURRIEL'],
+    })
+    expect(
+      (
+        await prisma.benevole.findUniqueOrThrow({
+          where: { id: fiches[0]!.id },
+        })
+      ).courriel
+    ).toBe(parent)
+    expect(enFile).toEqual([])
+  })
+
+  it('complète une candidature à répartir ; son acceptation crée une fiche non joignable, à part', async () => {
+    const src = `benevoles ${s}`
+    donnees(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src,
+          pm: false,
+          l: [
+            { cle: 'v1', nom: 'Rose Morel', refExterne: 'V-1' },
+            {
+              cle: 'v2',
+              nom: 'Paul Morel',
+              refExterne: 'V-2',
+              sequenceIds: [ids.buvette],
+            },
+          ],
+        })
+      ),
+      'importerBenevoles'
+    )
+    // L'équipe refuse le seul choix de Paul : sa candidature n'est plus à jour.
+    const choixPaul = await prisma.choixCandidature.findFirstOrThrow({
+      where: { candidature: { sourceImport: src, refExterne: 'V-2' } },
+    })
+    donnees(
+      await executer(
+        ids.admin,
+        `mutation ($id: ID!) { refuserChoixCandidature(id: $id) { id } }`,
+        { id: choixPaul.id }
+      ),
+      'refuserChoixCandidature'
+    )
+    const rapport = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src,
+          mj: true,
+          l: [
+            {
+              cle: 'v1',
+              nom: 'Rose Morel',
+              refExterne: 'V-1',
+              courriel: parent,
+              sequenceIds: [ids.buvette],
+              plages: [
+                { jour: '2027-06-05', heureDebut: '09:00', heureFin: '12:00' },
+              ],
+            },
+            {
+              cle: 'v2',
+              nom: 'Paul Morel',
+              refExterne: 'V-2',
+              courriel: parent,
+              sequenceIds: [ids.buvette],
+            },
+          ],
+        })
+      ),
+      'importerBenevoles'
+    )
+    expect(rapport.lignes.map(l => [l.cle, l.etat, l.champs])).toEqual([
+      ['v1', 'MISE_A_JOUR', ['COURRIEL', 'PLAGES', 'SEQUENCES']],
+      ['v2', 'DEJA_IMPORTEE', []],
+    ])
+    // La candidature refusée n'est ni écrite ni comptée.
+    expect(rapport).toMatchObject({ misesAJour: 1, fichesCreees: 0 })
+    expect(
+      await prisma.candidature.findFirstOrThrow({
+        where: { sourceImport: src, refExterne: 'V-2' },
+        include: { choix: true },
+      })
+    ).toMatchObject({ courriel: null, choix: [{ statut: 'REFUSE' }] })
+    const rose = await prisma.candidature.findFirstOrThrow({
+      where: { sourceImport: src, refExterne: 'V-1' },
+      include: { choix: true, plages: true },
+    })
+    expect(rose).toMatchObject({
+      courriel: parent,
+      courrielEnAttente: null,
+      prevenirParMail: false,
+      benevoleId: null,
+      statut: 'EN_ATTENTE',
+    })
+    expect(rose.choix.map(c => c.statut)).toEqual(['EN_ATTENTE'])
+    expect(rose.plages).toHaveLength(1)
+
+    // L'acceptation crée la fiche de Rose, sans rejoindre la fiche de Lina qui
+    // porte la même adresse d'acheteur, et sans mail.
+    donnees(
+      await executer(
+        ids.admin,
+        `mutation ($id: ID!) { accepterChoixCandidature(id: $id) { id } }`,
+        { id: rose.choix[0]!.id }
+      ),
+      'accepterChoixCandidature'
+    )
+    const ficheRose = await prisma.benevole.findFirstOrThrow({
+      where: { activiteId: ids.activite, nom: 'Rose Morel' },
+      include: { places: true },
+    })
+    expect(ficheRose).toMatchObject({
+      courriel: parent,
+      origine: 'IMPORT',
+      sourceImport: src,
+      prevenirParMail: false,
+    })
+    expect(ficheRose.places[0]!.confirmeeLe).not.toBeNull()
+    expect(enFile).toEqual([])
+  })
+
+  it('ne touche pas une candidature retirée', async () => {
+    const src = `retrait ${s}`
+    donnees(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src,
+          l: [{ cle: 'r', nom: 'Iris Faure', refExterne: 'R-1' }],
+        })
+      ),
+      'importerBenevoles'
+    )
+    await prisma.candidature.updateMany({
+      where: { sourceImport: src, refExterne: 'R-1' },
+      data: { statut: 'RETIREE' },
+    })
+    const rapport = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src,
+          mj: true,
+          l: [
+            {
+              cle: 'r',
+              nom: 'Iris Faure',
+              refExterne: 'R-1',
+              courriel: `iris-${s}@exemple.fr`,
+            },
+          ],
+        })
+      ),
+      'importerBenevoles'
+    )
+    expect(rapport).toMatchObject({ misesAJour: 0, dejaImportees: 1 })
+    expect(
+      (
+        await prisma.candidature.findFirstOrThrow({
+          where: { sourceImport: src, refExterne: 'R-1' },
+        })
+      ).courriel
+    ).toBeNull()
+  })
+
+  it('rejoint à l’acceptation une fiche de même adresse sans autre billet ; une candidature d’avant la migration crée une fiche non joignable', async () => {
+    const src = `acceptation ${s}`
+    const wendy = `wendy-${s}@exemple.fr`
+    const xavier = `xavier-${s}@exemple.fr`
+    donnees(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src,
+          pm: true,
+          l: [
+            {
+              cle: 'w',
+              nom: 'Wendy Blanc',
+              refExterne: 'W-1',
+              courriel: wendy,
+              sequenceIds: [ids.buvette],
+            },
+            {
+              cle: 'x',
+              nom: 'Xavier Blanc',
+              refExterne: 'X-1',
+              courriel: xavier,
+              sequenceIds: [ids.buvette],
+            },
+          ],
+        })
+      ),
+      'importerBenevoles'
+    )
+    // Une candidature importée avant la colonne n'a pas gardé l'option.
+    await prisma.candidature.updateMany({
+      where: { sourceImport: src },
+      data: { prevenirParMail: null },
+    })
+    // Une fiche saisie après l'import porte l'adresse de Wendy, sans billet.
+    const saisie = await prisma.benevole.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        nom: 'Wendy Blanc',
+        courriel: wendy,
+        prevenirParMail: false,
+        accordLe: new Date(),
+      },
+    })
+    for (const ref of ['W-1', 'X-1']) {
+      const choix = await prisma.choixCandidature.findFirstOrThrow({
+        where: { candidature: { sourceImport: src, refExterne: ref } },
+      })
+      donnees(
+        await executer(
+          ids.admin,
+          `mutation ($id: ID!) { accepterChoixCandidature(id: $id) { id } }`,
+          { id: choix.id }
+        ),
+        'accepterChoixCandidature'
+      )
+    }
+    const candidatures = await prisma.candidature.findMany({
+      where: { sourceImport: src },
+      orderBy: { refExterne: 'asc' },
+      include: { benevole: true },
+    })
+    expect(candidatures[0]!.benevoleId).toBe(saisie.id)
+    expect(candidatures[1]!.benevole).toMatchObject({
+      courriel: xavier,
+      origine: 'IMPORT',
+      prevenirParMail: false,
+    })
+    expect(enFile).toEqual([])
+  })
+
+  it('réserve la mise à jour aux admins de l’activité', async () => {
+    const r = await executer(
+      ids.referente,
+      SIMULER,
+      variables({
+        p: ids.natation,
+        src: `natation ${s}`,
+        mj: true,
+        l: [{ cle: '1', nom: 'Ana Diaz', refExterne: 'N-1' }],
+      })
+    )
+    expect(r.errors?.[0]?.message).toMatch(/admins de l’activité/)
   })
 })
 

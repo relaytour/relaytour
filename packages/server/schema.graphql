@@ -509,6 +509,17 @@ enum ChampDestinataires {
 }
 
 """
+Un champ d’une personne déjà importée : SEQUENCES désigne les séquences choisies.
+"""
+enum ChampImport {
+  COURRIEL
+  PLAGES
+  PRECISIONS
+  SEQUENCES
+  TELEPHONE
+}
+
+"""
 Signal qu’une chose a changé dans l’organisation active. Il ne porte aucune donnée : le client relit ses écrans.
 """
 type Changement {
@@ -1171,6 +1182,7 @@ enum EtatLigneImport {
   DEJA_IMPORTEE
   ECARTEE
   IMPORTEE
+  MISE_A_JOUR
 }
 
 """
@@ -1657,12 +1669,19 @@ input LigneEquipeImport {
 }
 
 type LigneImport {
+  """Les champs qu’une mise à jour complète."""
+  champs: [ChampImport!]!
   cle: String!
 
   """
   Vrai si l’adresse est celle d’un compte de l’organisation. Toujours faux hors des admins de l’activité.
   """
   compte: Boolean!
+
+  """
+  Les champs déjà remplis d’une autre valeur : la mise à jour garde la valeur de la fiche.
+  """
+  conflits: [ChampImport!]!
   etat: EtatLigneImport!
   motif: String
   rapprochement: RapprochementImport
@@ -2263,6 +2282,11 @@ type Mutation {
     """Vrai : les personnes du fichier ont donné leur accord."""
     accord: Boolean!
     editionId: ID!
+
+    """
+    Vrai : met à jour les personnes déjà importées, retrouvées par leur identifiant externe. Les champs vides se complètent et les nouvelles séquences s’ajoutent, sans mail. Réservé aux admins de l’activité.
+    """
+    mettreAJour: Boolean = false
     mode: ModeImport!
 
     """
@@ -3731,6 +3755,11 @@ type Query {
     """Vrai : les personnes du fichier ont donné leur accord."""
     accord: Boolean!
     editionId: ID!
+
+    """
+    Vrai : met à jour les personnes déjà importées, retrouvées par leur identifiant externe. Les champs vides se complètent et les nouvelles séquences s’ajoutent, sans mail. Réservé aux admins de l’activité.
+    """
+    mettreAJour: Boolean = false
     mode: ModeImport!
 
     """
@@ -3834,6 +3863,7 @@ type RapportExport {
 
 type RapportImportBenevoles {
   aImporter: Int!
+  conflits: Int!
   dejaImportees: Int!
   depassements: [DepassementImport!]!
   ecartees: Int!
@@ -3841,6 +3871,7 @@ type RapportImportBenevoles {
   fichesRattachees: Int!
   fichesRestantes: Int!
   lignes: [LigneImport!]!
+  misesAJour: Int!
   personnes: Int!
   places: Int!
   simulation: Boolean!

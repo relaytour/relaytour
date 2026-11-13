@@ -477,13 +477,16 @@ export function construirePersonnes(
       continue
     }
     const deja = parGroupe.get(l.groupe)
-    // Deux adresses différentes dans un même groupe désignent deux personnes :
-    // une commande de deux billets, par exemple.
+    // Deux adresses, ou deux identifiants externes, différents dans un même
+    // groupe désignent deux personnes : une commande de deux billets, par exemple.
     if (
       deja &&
-      deja.courriel !== null &&
-      l.courriel !== null &&
-      deja.courriel.toLowerCase() !== l.courriel.toLowerCase()
+      ((deja.courriel !== null &&
+        l.courriel !== null &&
+        deja.courriel.toLowerCase() !== l.courriel.toLowerCase()) ||
+        (deja.refExterne !== null &&
+          l.refExterne !== null &&
+          deja.refExterne !== l.refExterne))
     ) {
       seules.push(l)
     } else if (deja) fusionner(deja, l)

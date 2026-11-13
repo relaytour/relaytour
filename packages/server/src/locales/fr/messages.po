@@ -2119,6 +2119,11 @@ msgstr "Cette source sert déjà à un autre appel. Choisissez une autre source.
 
 #. js-lingui-explicit-id
 #: src/lib/import-benevoles.ts
+msgid "Seuls les admins de l’activité mettent à jour les personnes déjà importées."
+msgstr "Seuls les admins de l’activité mettent à jour les personnes déjà importées."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
 msgid "La fiche à rattacher n’existe plus."
 msgstr "La fiche à rattacher n’existe plus."
 

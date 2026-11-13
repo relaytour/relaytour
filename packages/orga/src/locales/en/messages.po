@@ -543,6 +543,10 @@ msgid "{nbComptes, plural, one {# adresse est celle d’un compte de l’organis
 msgstr "{nbComptes, plural, one {# address belongs to an organization account.} other {# addresses belong to organization accounts.}}"
 
 #: src/pages/ImportBenevoles.tsx
+msgid "{nbConflits} conflits"
+msgstr "{nbConflits} conflicts"
+
+#: src/pages/ImportBenevoles.tsx
 msgid "{nbDejaImportees} déjà importées"
 msgstr "{nbDejaImportees} already imported"
 
@@ -585,6 +589,14 @@ msgstr "{nbInvitations, plural, one {# invitation awaits approval} other {# invi
 #: src/pages/ImportBenevoles.tsx
 msgid "{nbLignesLues} lignes et {nbColonnesLues} colonnes lues."
 msgstr "{nbLignesLues} rows and {nbColonnesLues} columns read."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbMisesAJour} mises à jour"
+msgstr "{nbMisesAJour} updates"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbMisesAJourFinal} personnes mises à jour."
+msgstr "{nbMisesAJourFinal} people updated."
 
 #: src/pages/Charge.tsx
 msgid "{nbPersonnes, plural, one {# personne} other {# personnes}}"
@@ -1764,6 +1776,11 @@ msgstr "Organization admins"
 #: src/pages/admin/Activites.tsx
 msgid "Admins et contacts principaux"
 msgstr "Admins and main contacts"
+
+#. Champ d’une fiche bénévole dont la valeur diffère du fichier importé
+#: src/pages/ImportBenevoles.tsx
+msgid "adresse"
+msgstr "email address"
 
 #. Adresse de courriel d’une fiche bénévole à fusionner
 #. Colonne : adresse de courriel d’une fiche bénévole
@@ -3041,6 +3058,10 @@ msgstr "These files are not imported."
 #: src/pages/AppelBenevoles.tsx
 msgid "Ces moments se chevauchent : {listeConflits}. L’équipe choisira avec vous."
 msgstr "These events overlap: {listeConflits}. The team will choose with you."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Ces personnes ont déjà une autre valeur dans Relaytour. L’import garde cette valeur. Modifiez la fiche à la main si la valeur du fichier est la bonne."
+msgstr "These people already have a different value in Relaytour. The import keeps that value. Edit the record by hand if the value in the file is the right one."
 
 #: src/composants/PreferencePush.tsx
 msgid "Ces réglages valent pour tous vos appareils, dans cette organisation. Vos mails ne changent pas."
@@ -4349,6 +4370,11 @@ msgstr "Availability"
 #: src/pages/ImportBenevoles.tsx
 msgid "Disponibilité seulement"
 msgstr "Availability only"
+
+#. Champ d’une fiche bénévole dont la valeur diffère du fichier importé
+#: src/pages/ImportBenevoles.tsx
+msgid "disponibilités"
+msgstr "availability"
 
 #: src/pages/Benevoles.tsx
 msgid "Disponibilités, compétences, taille de t-shirt…"
@@ -7488,6 +7514,10 @@ msgid "Ligne"
 msgstr "Row"
 
 #: src/pages/ImportBenevoles.tsx
+msgid "Ligne {lignesPersonne} · {champsEnConflit}"
+msgstr "Line {lignesPersonne} · {champsEnConflit}"
+
+#: src/pages/ImportBenevoles.tsx
 msgid "Ligne {lignesPersonne} · fiche « {nomFiche} »"
 msgstr "Row {lignesPersonne} · record “{nomFiche}”"
 
@@ -7744,6 +7774,10 @@ msgstr "Webmail"
 msgid "Messages"
 msgstr "Messages"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Mettre à jour les personnes déjà importées : Relaytour les retrouve par leur identifiant externe, complète leurs champs vides et ajoute leurs nouvelles séquences, sans aucun mail."
+msgstr "Update people already imported: Relaytour finds them by their external ID, fills in their empty fields and adds their new slots, without sending any email."
+
 #: src/composants/ReglagePerimetre.tsx
 #: src/pages/admin/Activites.tsx
 #: src/pages/FicheEditeur.tsx
@@ -7758,6 +7792,10 @@ msgstr "Lowercase letters, numbers and hyphens. It can’t be changed after crea
 #: src/pages/admin/Activites.tsx
 msgid "Minuscules, chiffres, tirets."
 msgstr "Lowercase letters, numbers, hyphens."
+
+#: src/composants/AssistantTableur.tsx
+msgid "Mise à jour"
+msgstr "Updated"
 
 #: src/pages/Fiches.tsx
 msgid "Mise à jour le {date}"
@@ -8991,6 +9029,11 @@ msgstr "Details"
 #: src/pages/AppelBenevoles.tsx
 msgid "Précisions (facultatives)"
 msgstr "Details (optional)"
+
+#. Champ d’une fiche bénévole dont la valeur diffère du fichier importé
+#: src/pages/ImportBenevoles.tsx
+msgid "précisions de disponibilité"
+msgstr "availability details"
 
 #: src/lib/import-benevoles.ts
 msgid "Précisions de disponibilité"
@@ -10284,6 +10327,11 @@ msgstr "Slot deleted"
 msgid "Séquence supprimée."
 msgstr "Slot deleted."
 
+#. Champ d’une fiche bénévole dont la valeur diffère du fichier importé
+#: src/pages/ImportBenevoles.tsx
+msgid "séquences"
+msgstr "slots"
+
 #. Colonne : nombre de places d’une fiche bénévole
 #. Troisième étape de l’assistant d’import de bénévoles
 #: src/pages/Benevoles.tsx
@@ -10705,6 +10753,11 @@ msgstr "Download the template"
 #: src/pages/ImportBenevoles.tsx
 msgid "Télécharger les lignes écartées"
 msgstr "Download the skipped rows"
+
+#. Champ d’une fiche bénévole dont la valeur diffère du fichier importé
+#: src/pages/ImportBenevoles.tsx
+msgid "téléphone"
+msgstr "phone"
 
 #. Champ d’une fiche bénévole à fusionner
 #. Champ à associer à une colonne d’un fichier
@@ -11399,6 +11452,10 @@ msgstr "A mention does not share the sheet. When you save, the editor offers to 
 msgid "Une mention s’affiche comme une étiquette. Celle d’un groupe liste ses périmètres au survol ou à l’appui. Dans l’éditeur, une arobase propose les périmètres et les groupes de l’activité."
 msgstr "A mention appears as a label. A group’s mention lists its areas on hover or tap. In the editor, typing an at sign suggests the activity’s areas and groups."
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Une mise à jour n’envoie aucun mail. Après l’ajout d’une adresse par une mise à jour, l’option « Prévenir par mail » de la fiche reste décochée."
+msgstr "An update sends no email. When an update adds an email address, the record’s “Notify by email” option stays unchecked."
+
 #: src/pages/Fiche.tsx
 msgid "Une nouvelle version est créée : l’historique reste complet."
 msgstr "A new version is created: the history remains complete."
@@ -11504,6 +11561,10 @@ msgstr "Valid for six months"
 #: src/composants/PreferenceJetons.tsx
 msgid "Valable un an"
 msgstr "Valid for one year"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Valeurs gardées"
+msgstr "Values kept"
 
 #: src/pages/ImportBenevoles.tsx
 msgid "Valeurs qui signifient « non »"

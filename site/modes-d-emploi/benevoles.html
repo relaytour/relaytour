@@ -251,6 +251,7 @@
             <li><span><span class="libelle">À répartir</span></span><span>Chaque personne devient une candidature à traiter, dans un appel propre à la source. L'option « Accepter tout » accepte d'un geste les séquences associées.</span></li>
             <li><span><span class="libelle">Places directes</span></span><span>Chaque personne reçoit sa fiche et ses places dans les séquences associées. Ce mode exige au moins une séquence associée.</span></li>
             <li><span><span class="libelle">Prévenir par mail</span></span><span>Envoyer le lien personnel à la première place d'une personne. Décochez l'option si votre équipe contacte ses bénévoles elle-même.</span></li>
+            <li><span><span class="libelle">Mettre à jour</span></span><span>Compléter les personnes déjà importées, retrouvées par leur identifiant externe. Cette option est réservée aux admins de l'activité.</span></li>
           </ul>
           <figure>
             <img src="../captures/import-apercu.webp" data-mobile="../captures/mobile/import-apercu.webp" width="1440" height="900" loading="lazy" alt="Étape Aperçu de l'import : quatre personnes à importer, une ligne écartée, deux fiches rejointes, puis les fiches proches avec le choix Rejoindre ou Créer une fiche." />
@@ -258,7 +259,9 @@
           </figure>
           <p>L'aperçu ne modifie rien. Il compte les personnes à importer, celles déjà importées et les lignes écartées. Une ligne sans nom, sans adresse et sans téléphone est écartée, comme un lot de billets anonymes.</p>
           <p>Une personne qui porte l'adresse d'une fiche existante la rejoint d'office. Pour un même téléphone ou un nom proche, vous choisissez « Rejoindre » ou « Créer une fiche ». Les lignes écartées se téléchargent en CSV.</p>
-          <p class="note">Aucun mail ne part à l'import. Un identifiant externe, comme un numéro de billet, rend l'import rejouable : un fichier mis à jour n'ajoute que les nouvelles personnes. La date de l'accord vaut la date de l'import, sauf colonne associée.</p>
+          <p class="note">Aucun mail ne part à l'import. Un identifiant externe, comme un numéro de billet, rend l'import rejouable : un fichier mis à jour n'ajoute que les nouvelles personnes. Deux billets d'un même acheteur restent deux personnes, même avec la même adresse. La date de l'accord vaut la date de l'import, sauf colonne associée.</p>
+          <p>Avec l'option « Mettre à jour », une personne déjà importée reçoit les valeurs du fichier qui lui manquent : adresse, téléphone, précisions et disponibilités. Ses nouvelles séquences s'ajoutent. Une valeur déjà présente reste en place, et l'aperçu la signale. Aucune place n'est retirée.</p>
+          <p class="note">Une mise à jour n'envoie aucun mail. Après l'ajout d'une adresse, l'option « Prévenir par mail » de la fiche reste décochée : cochez-la sur la fiche, puis envoyez le lien par le bouton « Renvoyer par mail ».</p>
         </article>
 
         <article class="verre ecran" id="e-doublons">
@@ -331,7 +334,7 @@
       </section>
 
       <footer>
-        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.29.0.
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.30.0.
       </footer>
     </main>
     <script src="../bascule.js"></script>

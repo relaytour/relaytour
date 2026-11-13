@@ -70,6 +70,38 @@ type Ligne =
   SimulerImportBenevolesQuery['simulerImportBenevoles']['lignes'][number]
 type Decision = 'RATTACHER' | 'CREER'
 
+/** Le nom d'un champ qu'une mise à jour garde en conflit. */
+const LIBELLES_CHAMP_IMPORT: Record<
+  'COURRIEL' | 'TELEPHONE' | 'PRECISIONS' | 'PLAGES' | 'SEQUENCES',
+  MessageDescriptor
+> = {
+  COURRIEL: msg({
+    message: 'adresse',
+    comment:
+      'Champ d’une fiche bénévole dont la valeur diffère du fichier importé',
+  }),
+  TELEPHONE: msg({
+    message: 'téléphone',
+    comment:
+      'Champ d’une fiche bénévole dont la valeur diffère du fichier importé',
+  }),
+  PRECISIONS: msg({
+    message: 'précisions de disponibilité',
+    comment:
+      'Champ d’une fiche bénévole dont la valeur diffère du fichier importé',
+  }),
+  PLAGES: msg({
+    message: 'disponibilités',
+    comment:
+      'Champ d’une fiche bénévole dont la valeur diffère du fichier importé',
+  }),
+  SEQUENCES: msg({
+    message: 'séquences',
+    comment:
+      'Champ d’une fiche bénévole dont la valeur diffère du fichier importé',
+  }),
+}
+
 const LIBELLES_NIVEAU: Record<
   'FORT' | 'MOYEN' | 'FAIBLE',
   { libelle: MessageDescriptor; couleur: string }
@@ -124,6 +156,8 @@ const ETAPES: MessageDescriptor[] = [
 interface Bilan {
   aImporter: number
   dejaImportees: number
+  misesAJour: number
+  conflits: number
   ecartees: number
   fichesCreees: number
   fichesRattachees: number
@@ -133,6 +167,8 @@ interface Bilan {
 const BILAN_VIDE: Bilan = {
   aImporter: 0,
   dejaImportees: 0,
+  misesAJour: 0,
+  conflits: 0,
   ecartees: 0,
   fichesCreees: 0,
   fichesRattachees: 0,
@@ -142,6 +178,8 @@ const BILAN_VIDE: Bilan = {
 const additionner = (a: Bilan, b: Bilan): Bilan => ({
   aImporter: a.aImporter + b.aImporter,
   dejaImportees: a.dejaImportees + b.dejaImportees,
+  misesAJour: a.misesAJour + b.misesAJour,
+  conflits: a.conflits + b.conflits,
   ecartees: a.ecartees + b.ecartees,
   fichesCreees: a.fichesCreees + b.fichesCreees,
   fichesRattachees: a.fichesRattachees + b.fichesRattachees,
@@ -232,6 +270,7 @@ export default function ImportBenevoles() {
   const [mode, setMode] = useState<Mode>('A_REPARTIR')
   const [accepterTout, setAccepterTout] = useState(false)
   const [prevenirParMail, setPrevenirParMail] = useState(true)
+  const [mettreAJour, setMettreAJour] = useState(false)
   // Les champs changent d'objet à chaque rendu : leur clé garde les calculs.
   const cleChamps = champs.join(',')
   const choix = useMemo(
@@ -300,6 +339,7 @@ export default function ImportBenevoles() {
     mode,
     prevenirParMail,
     accepterTout: mode === 'A_REPARTIR' && accepterTout,
+    mettreAJour: gere && mettreAJour,
   }
 
   const versSaisie = (p: PersonneLue): PersonneImportInput => {
@@ -543,6 +583,9 @@ export default function ImportBenevoles() {
   const comptes = lues.personnes.filter(
     p => simulation?.lignes.get(p.cle)?.compte
   )
+  const enConflit = lues.personnes.filter(
+    p => (simulation?.lignes.get(p.cle)?.conflits.length ?? 0) > 0
+  )
   const placesDirectesSansSequence =
     mode === 'PLACES_DIRECTES' &&
     !lues.personnes.some(p => p.sequenceIds.length > 0)
@@ -559,6 +602,8 @@ export default function ImportBenevoles() {
   const bilanSimule = simulation?.bilan
   const nbAImporter = bilanSimule?.aImporter ?? 0
   const nbDejaImportees = bilanSimule?.dejaImportees ?? 0
+  const nbMisesAJour = bilanSimule?.misesAJour ?? 0
+  const nbConflits = bilanSimule?.conflits ?? 0
   const nbEcarteesTotal = (bilanSimule?.ecartees ?? 0) + nbEcarteesNavigateur
   const nbFichesCreees = bilanSimule?.fichesCreees ?? 0
   const nbFichesRattachees = bilanSimule?.fichesRattachees ?? 0
@@ -572,6 +617,7 @@ export default function ImportBenevoles() {
   const nbFichesRattacheesFinal = resultat?.fichesRattachees ?? 0
   const nbPlacesFinal = resultat?.places ?? 0
   const nbDejaImporteesFinal = resultat?.dejaImportees ?? 0
+  const nbMisesAJourFinal = resultat?.misesAJour ?? 0
   const libelleLigne = (numero: number) => t`Ligne ${numero}`
   const libelleChampColonne = (entete: string) =>
     t`Champ de la colonne ${entete}`
@@ -923,6 +969,18 @@ export default function ImportBenevoles() {
               son lien personnel.
             </Trans>
           </Checkbox>
+          {gere && (
+            <Checkbox
+              checked={mettreAJour}
+              onChange={e => setMettreAJour(e.target.checked)}
+            >
+              <Trans>
+                Mettre à jour les personnes déjà importées : Relaytour les
+                retrouve par leur identifiant externe, complète leurs champs
+                vides et ajoute leurs nouvelles séquences, sans aucun mail.
+              </Trans>
+            </Checkbox>
+          )}
           <Space>
             <Button onClick={() => setEtape(1)}>
               <Trans>Précédent</Trans>
@@ -973,6 +1031,16 @@ export default function ImportBenevoles() {
                 <li>
                   <Trans>{nbDejaImportees} déjà importées</Trans>
                 </li>
+                {mettreAJour && gere && (
+                  <li>
+                    <Trans>{nbMisesAJour} mises à jour</Trans>
+                  </li>
+                )}
+                {nbConflits > 0 && (
+                  <li>
+                    <Trans>{nbConflits} conflits</Trans>
+                  </li>
+                )}
                 <li>
                   <Trans>{nbEcarteesTotal} écartées</Trans>
                 </li>
@@ -1055,6 +1123,35 @@ export default function ImportBenevoles() {
                   </ul>
                 </>
               )}
+              {enConflit.length > 0 && (
+                <>
+                  <h2 className="rt-intertitre">
+                    <Trans>Valeurs gardées</Trans>
+                  </h2>
+                  <p className="rt-note">
+                    <Trans>
+                      Ces personnes ont déjà une autre valeur dans Relaytour.
+                      L’import garde cette valeur. Modifiez la fiche à la main
+                      si la valeur du fichier est la bonne.
+                    </Trans>
+                  </p>
+                  <ul className="rt-import-ecartees">
+                    {enConflit.map(p => {
+                      const lignesPersonne = p.lignes.join(', ')
+                      const champsEnConflit = simulation.lignes
+                        .get(p.cle)!
+                        .conflits.map(c => t(LIBELLES_CHAMP_IMPORT[c]))
+                        .join(', ')
+                      return (
+                        <li key={p.cle}>
+                          <strong>{p.nom}</strong>{' '}
+                          {t`Ligne ${lignesPersonne} · ${champsEnConflit}`}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </>
+              )}
               {gere && comptes.length > 0 && (
                 <Alert
                   type="info"
@@ -1108,7 +1205,8 @@ export default function ImportBenevoles() {
               disabled={
                 !simulation ||
                 !accord ||
-                simulation.bilan.aImporter === 0 ||
+                simulation.bilan.aImporter + simulation.bilan.misesAJour ===
+                  0 ||
                 simulation.bilan.fichesCreees > simulation.fichesRestantes
               }
               onClick={() => void lancer()}
@@ -1148,6 +1246,8 @@ export default function ImportBenevoles() {
                     </span>
                   )}
                   {t`${nbImportees} personnes importées, ${nbFichesCreeesFinal} fiches créées, ${nbFichesRattacheesFinal} fiches rejointes, ${nbPlacesFinal} places, ${nbDejaImporteesFinal} déjà importées.`}
+                  {nbMisesAJourFinal > 0 &&
+                    ` ${t`${nbMisesAJourFinal} personnes mises à jour.`}`}
                 </>
               }
               extra={[
@@ -1175,7 +1275,14 @@ export default function ImportBenevoles() {
             <Trans>
               Aucun mail ne part à l’import. La première place d’une personne
               joignable lui envoie son lien personnel.
-            </Trans>
+            </Trans>{' '}
+            {mettreAJour && gere && (
+              <Trans>
+                Une mise à jour n’envoie aucun mail. Après l’ajout d’une adresse
+                par une mise à jour, l’option « Prévenir par mail » de la fiche
+                reste décochée.
+              </Trans>
+            )}
           </Typography.Paragraph>
         </section>
       )}

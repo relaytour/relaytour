@@ -1370,6 +1370,10 @@ model Candidature {
   origine                 OrigineCandidature @default(PUBLIC)
   sourceImport            String?            @db.VarChar(120)
   refExterne              String?            @db.VarChar(120)
+  // L'option « Prévenir par mail » de l'import, que reçoit la fiche née d'une
+  // acceptation ultérieure. Null hors import ; une candidature importée avant
+  // cette colonne vaut faux : sa fiche n'est pas joignable sans un choix explicite.
+  prevenirParMail         Boolean?
   // La fiche créée ou rattachée par la première acceptation.
   benevoleId              String?
   createdAt               DateTime           @default(now())
