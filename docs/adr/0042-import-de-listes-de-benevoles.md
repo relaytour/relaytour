@@ -2,7 +2,7 @@
 
 - **Statut** : acceptée
 - **Date** : 2026-10-22
-- **Amendée** : 2026-11-13 (mise à jour d'un import et identifiant externe, voir « Amendement du 2026-11-13 »)
+- **Amendée** : 2026-11-13 (mise à jour d'un import et identifiant externe, voir « Amendement du 2026-11-13 » ; billets annulés, voir « Second amendement du 2026-11-13 »)
 - Complète l'ADR 0041 (appels à bénévoles, candidatures et répartition) et l'ADR 0040 (fiches bénévoles).
 
 ## Contexte
@@ -209,4 +209,49 @@ L'étude a montré trois autres défauts :
 - Une migration additive ajoute à `Candidature` la colonne `prevenirParMail`, nulle hors import.
 - Une candidature importée avec un identifiant externe ne remplit pas `courrielEnAttente` : deux billets d'un même acheteur attendent ensemble dans l'appel.
 - L'état `MISE_A_JOUR` rejoint les états communs des imports de tableurs (ADR 0049). Les autres imports ne l'emploient pas.
-- L'annulation d'un billet et son remplacement par un autre billet restent hors de cet amendement.
+- L'annulation d'un billet et son remplacement par un autre billet relèvent du second amendement.
+
+## Second amendement du 2026-11-13
+
+### Contexte
+
+Un export de billetterie garde parfois les billets annulés, avec une colonne de statut. Une personne qui change d'équipe annule aussi son billet et en prend un autre, sous un nouvel identifiant externe. Sans règle, le nouveau billet devenait une seconde personne, et l'ancien billet gardait ses places.
+
+### Décision
+
+**Un champ « Annulation du billet ».**
+
+- Une colonne s'associe au champ « Annulation du billet ». La personne qui importe déclare les valeurs qui signifient « annulé », comme les valeurs « non » de la forme 2 : « annulé », « remboursé », « cancelled » par défaut.
+- Seul un en-tête explicite propose ce champ (« Statut du billet », « Annulation », « Ticket status »). Un en-tête « Statut » ou « Order status » reste à associer à la main.
+- Une ligne annulée sans identifiant externe est écartée. Avec un identifiant, elle ne se réunit qu'aux lignes de ce même identifiant.
+- Une ligne annulée jamais importée est écartée, avec le motif « Le billet est annulé ».
+
+**Le retrait d'un billet déjà importé.**
+
+- Il exige la mise à jour : sans elle, la ligne reste « déjà importée », et l'aperçu le signale.
+- La candidature passe au statut « retirée ». La fiche n'est jamais supprimée.
+- Le rapport liste les places que la fiche tient encore pour ce billet : les séquences acceptées par la candidature, sans autre candidature active de la fiche qui les accepte.
+- Une case « Retirer les places des billets annulés », décochée par défaut, retire ces places. Sans elle, l'équipe les retire dans le programme.
+- Un billet déjà retiré ne change plus rien : le fichier se rejoue sans effet.
+
+**Le billet de remplacement.**
+
+- Après la vérification, l'aperçu propose, pour chaque nouveau billet, le billet annulé de la même personne : le même nom, puis un nom très proche, puis un téléphone que porte un seul billet annulé. L'adresse ne compte pas, car c'est souvent celle de l'acheteur.
+- La proposition ne vise qu'un billet annulé qui a une fiche. La personne qui importe choisit « Remplace le billet » ou « Nouvelle personne ».
+- Le billet de remplacement rejoint la fiche du billet annulé, avec son lien personnel et ses disponibilités. Il est une mise à jour de la personne : ses places ne sont pas annoncées.
+- Les billets annulés s'écrivent après les autres lignes, dans le dernier lot et en fin de lot. Une séquence que le billet de remplacement accepte garde donc sa place, sans retrait ni nouvelle annonce.
+
+**Les billets absents du fichier.**
+
+- Un billet déjà importé qui n'apparaît plus dans le fichier est signalé dans l'aperçu, avec son identifiant. L'import ne le modifie pas : un export filtré n'annule aucun billet.
+- La requête `refsImportees` rend les identifiants externes encore actifs d'une source, pour une personne qui peut importer dans sa portée.
+
+**Aucun mail.**
+
+- Le retrait d'une candidature et le retrait d'une place n'envoient aucun mail. Une personne joignable n'est donc pas prévenue d'un retrait : l'équipe la prévient si besoin.
+
+### Conséquences
+
+- Aucune migration : le statut « retirée » d'une candidature existe déjà.
+- L'état `ANNULEE` rejoint les états communs des imports de tableurs (ADR 0049). Les autres imports ne l'emploient pas.
+- Une correspondance d'import garde aussi les valeurs qui signifient « annulé ».

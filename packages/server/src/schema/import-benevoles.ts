@@ -9,6 +9,7 @@ import { publierPourActivite } from '../lib/flux.ts'
 import { fusionnerFiches } from '../lib/fusion-benevoles.ts'
 import {
   importerLot,
+  refsImportees,
   type LigneRapport,
   type RapportImport,
 } from '../lib/import-benevoles.ts'
@@ -83,6 +84,14 @@ const PersonneImportInput = builder.inputType('PersonneImportInput', {
       description:
         'Vrai : crée une fiche même quand une fiche a la même adresse.',
     }),
+    annulee: t.boolean({
+      description:
+        'Vrai : le billet est annulé. Déjà importé, et avec la mise à jour, sa candidature se retire ; sinon la ligne est écartée.',
+    }),
+    remplace: t.boolean({
+      description:
+        'Vrai : le billet remplace un billet annulé et rejoint sa fiche (rattachement). Avec la mise à jour, ses places ne sont pas annoncées.',
+    }),
   }),
 })
 
@@ -122,6 +131,11 @@ const LigneRef = builder.objectRef<LigneRapport>('LigneImport').implement({
         'Les champs déjà remplis d’une autre valeur : la mise à jour garde la valeur de la fiche.',
       resolve: l => l.conflits,
     }),
+    sequencesARetirer: t.idList({
+      description:
+        'Pour un billet annulé : les séquences dont sa fiche tient encore la place, sans autre candidature qui les accepte.',
+      resolve: l => l.sequencesARetirer,
+    }),
   }),
 })
 
@@ -146,6 +160,8 @@ const RapportRef = builder
       dejaImportees: t.exposeInt('dejaImportees'),
       misesAJour: t.exposeInt('misesAJour'),
       conflits: t.exposeInt('conflits'),
+      annulees: t.exposeInt('annulees'),
+      placesRetirees: t.exposeInt('placesRetirees'),
       ecartees: t.exposeInt('ecartees'),
       fichesCreees: t.exposeInt('fichesCreees'),
       fichesRattachees: t.exposeInt('fichesRattachees'),
@@ -177,7 +193,12 @@ const ARGUMENTS_IMPORT = builder.args(t => ({
   mettreAJour: t.boolean({
     defaultValue: false,
     description:
-      'Vrai : met à jour les personnes déjà importées, retrouvées par leur identifiant externe. Les champs vides se complètent et les nouvelles séquences s’ajoutent, sans mail. Réservé aux admins de l’activité.',
+      'Vrai : met à jour les personnes déjà importées, retrouvées par leur identifiant externe. Les champs vides se complètent et les nouvelles séquences s’ajoutent, sans mail. Un billet annulé retire sa candidature. Réservé aux admins de l’activité.',
+  }),
+  retirerPlacesAnnulees: t.boolean({
+    defaultValue: false,
+    description:
+      'Avec la mise à jour : retire les places des billets annulés, sauf celles qu’une autre candidature de la fiche accepte. Aucun mail ne part.',
   }),
   accord: t.boolean({
     required: true,
@@ -279,9 +300,23 @@ builder.queryFields(t => ({
           prevenirParMail: args.prevenirParMail ?? true,
           accepterTout: args.accepterTout ?? false,
           mettreAJour: args.mettreAJour ?? false,
+          retirerPlacesAnnulees: args.retirerPlacesAnnulees ?? false,
         },
         false
       ),
+  }),
+
+  refsImportees: t.stringList({
+    authScopes: { connecte: true },
+    description:
+      'Les identifiants externes déjà importés d’une source, hors candidatures retirées : l’aperçu signale ceux qu’un fichier ne contient plus.',
+    args: {
+      editionId: t.arg.id({ required: true }),
+      perimetreId: t.arg.id(),
+      source: t.arg.string({ required: true }),
+    },
+    resolve: (_root, args, ctx) =>
+      refsImportees(ctx, args.editionId, args.perimetreId, args.source),
   }),
 
   correspondancesImport: t.field({
@@ -409,6 +444,7 @@ builder.mutationFields(t => ({
           prevenirParMail: args.prevenirParMail ?? true,
           accepterTout: args.accepterTout ?? false,
           mettreAJour: args.mettreAJour ?? false,
+          retirerPlacesAnnulees: args.retirerPlacesAnnulees ?? false,
         },
         true
       ),

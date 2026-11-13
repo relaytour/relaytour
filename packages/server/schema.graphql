@@ -1178,6 +1178,7 @@ type EtatEtapePremiersPas {
 }
 
 enum EtatLigneImport {
+  ANNULEE
   A_IMPORTER
   DEJA_IMPORTEE
   ECARTEE
@@ -1686,6 +1687,11 @@ type LigneImport {
   motif: String
   rapprochement: RapprochementImport
   rattacheeA: ID
+
+  """
+  Pour un billet annulé : les séquences dont sa fiche tient encore la place, sans autre candidature qui les accepte.
+  """
+  sequencesARetirer: [ID!]!
 }
 
 """
@@ -2284,7 +2290,7 @@ type Mutation {
     editionId: ID!
 
     """
-    Vrai : met à jour les personnes déjà importées, retrouvées par leur identifiant externe. Les champs vides se complètent et les nouvelles séquences s’ajoutent, sans mail. Réservé aux admins de l’activité.
+    Vrai : met à jour les personnes déjà importées, retrouvées par leur identifiant externe. Les champs vides se complètent et les nouvelles séquences s’ajoutent, sans mail. Un billet annulé retire sa candidature. Réservé aux admins de l’activité.
     """
     mettreAJour: Boolean = false
     mode: ModeImport!
@@ -2295,6 +2301,11 @@ type Mutation {
     perimetreId: ID
     personnes: [PersonneImportInput!]!
     prevenirParMail: Boolean = true
+
+    """
+    Avec la mise à jour : retire les places des billets annulés, sauf celles qu’une autre candidature de la fiche accepte. Aucun mail ne part.
+    """
+    retirerPlacesAnnulees: Boolean = false
     source: String!
   ): RapportImportBenevoles!
 
@@ -3143,6 +3154,11 @@ input PersonneImportInput {
   """
   accordLe: Date
 
+  """
+  Vrai : le billet est annulé. Déjà importé, et avec la mise à jour, sa candidature se retire ; sinon la ligne est écartée.
+  """
+  annulee: Boolean
+
   """La clé de la personne dans le rapport."""
   cle: String!
   courriel: String
@@ -3160,6 +3176,11 @@ input PersonneImportInput {
   L’identifiant de la ligne dans l’outil d’origine : rend l’import rejouable.
   """
   refExterne: String
+
+  """
+  Vrai : le billet remplace un billet annulé et rejoint sa fiche (rattachement). Avec la mise à jour, ses places ne sont pas annoncées.
+  """
+  remplace: Boolean
   sequenceIds: [ID!]
   telephone: String
 }
@@ -3727,6 +3748,11 @@ type Query {
   """
   programme(editionId: ID!, mesSequences: Boolean = false, perimetreId: ID): [Sequence!]!
   recherche(editionId: ID, texte: String!): Recherche!
+
+  """
+  Les identifiants externes déjà importés d’une source, hors candidatures retirées : l’aperçu signale ceux qu’un fichier ne contient plus.
+  """
+  refsImportees(editionId: ID!, perimetreId: ID, source: String!): [String!]!
   retroplanning(editionId: ID!): [Tache!]!
   reunion(id: ID!): Reunion!
 
@@ -3757,7 +3783,7 @@ type Query {
     editionId: ID!
 
     """
-    Vrai : met à jour les personnes déjà importées, retrouvées par leur identifiant externe. Les champs vides se complètent et les nouvelles séquences s’ajoutent, sans mail. Réservé aux admins de l’activité.
+    Vrai : met à jour les personnes déjà importées, retrouvées par leur identifiant externe. Les champs vides se complètent et les nouvelles séquences s’ajoutent, sans mail. Un billet annulé retire sa candidature. Réservé aux admins de l’activité.
     """
     mettreAJour: Boolean = false
     mode: ModeImport!
@@ -3768,6 +3794,11 @@ type Query {
     perimetreId: ID
     personnes: [PersonneImportInput!]!
     prevenirParMail: Boolean = true
+
+    """
+    Avec la mise à jour : retire les places des billets annulés, sauf celles qu’une autre candidature de la fiche accepte. Aucun mail ne part.
+    """
+    retirerPlacesAnnulees: Boolean = false
     source: String!
   ): RapportImportBenevoles!
 
@@ -3863,6 +3894,7 @@ type RapportExport {
 
 type RapportImportBenevoles {
   aImporter: Int!
+  annulees: Int!
   conflits: Int!
   dejaImportees: Int!
   depassements: [DepassementImport!]!
@@ -3874,6 +3906,7 @@ type RapportImportBenevoles {
   misesAJour: Int!
   personnes: Int!
   places: Int!
+  placesRetirees: Int!
   simulation: Boolean!
 }
 

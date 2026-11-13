@@ -87,6 +87,10 @@ export interface PersonneSaisie {
   sequenceIds?: readonly (string | number)[] | null
   rattachement?: string | number | null
   nouvelleFiche?: boolean | null
+  /** Vrai pour un billet annulé : la personne déjà importée se retire. */
+  annulee?: boolean | null
+  /** Vrai pour un billet qui remplace un billet annulé, sur sa fiche : aucune place n'est annoncée. */
+  remplace?: boolean | null
 }
 
 export interface DemandeImport {
@@ -98,12 +102,19 @@ export interface DemandeImport {
   accepterTout: boolean
   /** Met à jour les personnes déjà importées, retrouvées par leur identifiant externe. */
   mettreAJour?: boolean
+  /** Avec la mise à jour : retire les places acceptées des billets annulés. */
+  retirerPlacesAnnulees?: boolean
   accord: boolean
   personnes: readonly PersonneSaisie[]
 }
 
 export type EtatLigne =
-  'A_IMPORTER' | 'IMPORTEE' | 'DEJA_IMPORTEE' | 'MISE_A_JOUR' | 'ECARTEE'
+  | 'A_IMPORTER'
+  | 'IMPORTEE'
+  | 'DEJA_IMPORTEE'
+  | 'MISE_A_JOUR'
+  | 'ANNULEE'
+  | 'ECARTEE'
 
 /** Un champ qu'une mise à jour complète, ou qu'elle laisse en conflit. */
 export type ChampImport =
@@ -122,6 +133,8 @@ export interface LigneRapport {
   champs: ChampImport[]
   /** Les champs déjà remplis d'une autre valeur, que la mise à jour garde. */
   conflits: ChampImport[]
+  /** Les séquences dont un billet annulé tient encore la place. */
+  sequencesARetirer: string[]
 }
 
 export interface RapportImport {
@@ -133,6 +146,10 @@ export interface RapportImport {
   misesAJour: number
   /** Les lignes dont un champ diffère de la personne déjà importée. */
   conflits: number
+  /** Les billets annulés dont la candidature se retire. */
+  annulees: number
+  /** Les places que l'import retire, ou retirerait, des billets annulés. */
+  placesRetirees: number
   ecartees: number
   fichesCreees: number
   fichesRattachees: number
@@ -160,6 +177,8 @@ interface PersonneValide {
   sequenceIds: string[]
   rattachement: string | null
   nouvelleFiche: boolean
+  annulee: boolean
+  remplace: boolean
 }
 
 interface Portee {
@@ -216,6 +235,37 @@ function valider(
 ): PersonneValide | { cle: string; motif: string } {
   const cle = String(saisie.cle).slice(0, CLE_MAX)
   try {
+    // Un billet annulé ne sert qu'à retrouver la personne déjà importée : son
+    // identifiant externe suffit.
+    if (saisie.annulee === true) {
+      const refExterne = texteFacultatif(
+        saisie.refExterne,
+        i18n._('L’identifiant externe'),
+        REF_EXTERNE_MAX
+      )
+      if (refExterne === null) {
+        throw erreurSaisie(
+          i18n._('Un billet annulé exige un identifiant externe.')
+        )
+      }
+      return {
+        cle,
+        nom: nomVide(saisie.nom)
+          ? refExterne
+          : texteRequis(saisie.nom, i18n._('Le nom'), NOM_BENEVOLE_MAX),
+        courriel: null,
+        telephone: null,
+        precisions: null,
+        refExterne,
+        accordLe: maintenant,
+        plages: [],
+        sequenceIds: [],
+        rattachement: null,
+        nouvelleFiche: false,
+        annulee: true,
+        remplace: false,
+      }
+    }
     if (nomVide(saisie.nom)) {
       throw erreurSaisie(i18n._('La ligne ne porte aucun nom.'))
     }
@@ -263,6 +313,8 @@ function valider(
           ? null
           : String(saisie.rattachement),
       nouvelleFiche: saisie.nouvelleFiche ?? false,
+      annulee: false,
+      remplace: saisie.remplace ?? false,
     }
   } catch (erreur) {
     return { cle, motif: (erreur as Error).message }
@@ -363,10 +415,53 @@ export function planifierMiseAJour(
   return plan
 }
 
+/**
+ * Les identifiants externes déjà importés d'une source, hors candidatures
+ * retirées, pour une personne qui peut importer dans cette portée.
+ */
+export async function refsImportees(
+  ctx: AppContext,
+  editionId: string | number,
+  perimetreId: string | number | null | undefined,
+  source: string
+): Promise<string[]> {
+  const portee = await porteeImport(ctx, editionId, perimetreId)
+  const appel = await prisma.appelBenevoles.findUnique({
+    where: {
+      editionId_sourceImport: {
+        editionId: portee.edition.id,
+        sourceImport: source.trim(),
+      },
+    },
+    select: { id: true, sansAdresse: true, perimetreId: true },
+  })
+  if (
+    appel === null ||
+    !appel.sansAdresse ||
+    appel.perimetreId !== portee.perimetreId
+  ) {
+    return []
+  }
+  const candidatures = await prisma.candidature.findMany({
+    where: {
+      appelId: appel.id,
+      refExterne: { not: null },
+      statut: { not: 'RETIREE' },
+    },
+    select: { refExterne: true },
+    orderBy: { refExterne: 'asc' },
+  })
+  return candidatures.map(c => c.refExterne!)
+}
+
 /** Une candidature déjà importée, que retrouve son identifiant externe. */
 interface Cible {
   candidatureId: string
   benevoleId: string | null
+  /** Vrai pour une candidature déjà retirée : un billet annulé n'y change rien. */
+  retiree: boolean
+  /** Les séquences acceptées de la candidature. */
+  acceptees: string[]
   /** Faux pour une candidature retirée, ou refusée sans fiche : le fichier n'y touche pas. */
   modifiable: boolean
   existant: Existant
@@ -394,7 +489,7 @@ async function lireCibles(
       telephone: true,
       precisionsDisponibilite: true,
       benevoleId: true,
-      choix: { select: { sequenceId: true } },
+      choix: { select: { sequenceId: true, statut: true } },
       plages: { select: { debut: true, fin: true } },
       benevole: {
         select: {
@@ -414,6 +509,10 @@ async function lireCibles(
         {
           candidatureId: c.id,
           benevoleId: c.benevoleId,
+          retiree: c.statut === 'RETIREE',
+          acceptees: c.choix
+            .filter(x => x.statut === 'ACCEPTE')
+            .map(x => x.sequenceId),
           modifiable:
             c.statut !== 'RETIREE' &&
             !(c.statut === 'TRAITEE' && c.benevoleId === null),
@@ -428,6 +527,61 @@ async function lireCibles(
       ] as const
     })
   )
+}
+
+/**
+ * Les places que les billets annulés tiennent encore, par candidature : les
+ * séquences acceptées de la candidature, où sa fiche a une place, et qu'aucune
+ * autre candidature active de la fiche n'accepte. `gardees` ajoute, par fiche,
+ * les séquences que d'autres lignes du lot vont accepter, comme un billet qui en
+ * remplace un autre.
+ */
+async function placesDesAnnulations(
+  base: typeof prisma | Prisma.TransactionClient,
+  editionId: string,
+  annulees: readonly Cible[],
+  gardees: ReadonlyMap<string, ReadonlySet<string>>
+): Promise<Map<string, string[]>> {
+  const avecFiche = annulees.filter(c => c.benevoleId !== null)
+  const resultat = new Map(annulees.map(c => [c.candidatureId, [] as string[]]))
+  if (avecFiche.length === 0) return resultat
+  const fiches = [...new Set(avecFiche.map(c => c.benevoleId!))]
+  const [autres, places] = await Promise.all([
+    base.choixCandidature.findMany({
+      where: {
+        statut: 'ACCEPTE',
+        candidature: {
+          benevoleId: { in: fiches },
+          statut: { not: 'RETIREE' },
+          id: { notIn: annulees.map(c => c.candidatureId) },
+        },
+      },
+      select: {
+        sequenceId: true,
+        candidature: { select: { benevoleId: true } },
+      },
+    }),
+    base.placeSequence.findMany({
+      where: { benevoleId: { in: fiches }, sequence: { editionId } },
+      select: { benevoleId: true, sequenceId: true },
+    }),
+  ])
+  const tenues = new Set(places.map(p => `${p.benevoleId}:${p.sequenceId}`))
+  const ailleurs = new Set(
+    autres.map(a => `${a.candidature.benevoleId}:${a.sequenceId}`)
+  )
+  for (const c of avecFiche) {
+    resultat.set(
+      c.candidatureId,
+      c.acceptees.filter(
+        id =>
+          tenues.has(`${c.benevoleId}:${id}`) &&
+          !ailleurs.has(`${c.benevoleId}:${id}`) &&
+          !(gardees.get(c.benevoleId!)?.has(id) ?? false)
+      )
+    )
+  }
+  return resultat
 }
 
 /**
@@ -515,8 +669,11 @@ export async function importerLot(
     }
     valides.push(resultat)
   }
+  // Un lot fait seulement de billets annulés n'apporte aucune séquence : les
+  // billets annulés partent dans les derniers lots.
   if (
     demande.mode === 'PLACES_DIRECTES' &&
+    valides.some(p => !p.annulee) &&
     !valides.some(p => p.sequenceIds.length > 0)
   ) {
     throw erreurSaisie(
@@ -674,6 +831,7 @@ export async function importerLot(
   )
   const aImporter: ImportPrevu[] = []
   const aMettreAJour: PersonneValide[] = []
+  const aAnnuler: { p: PersonneValide; cible: Cible }[] = []
   let fichesCreees = 0
   let fichesRattachees = 0
   let places = 0
@@ -689,6 +847,29 @@ export async function importerLot(
     const trouve = trouvees.get(p.cle) ?? null
     const ligne = ligneVide(p.cle, 'A_IMPORTER', null)
     ligne.compte = p.courriel !== null && comptes.has(p.courriel)
+    // Un billet annulé n'entre pas. Déjà importé, il retire sa candidature, avec
+    // la mise à jour seulement.
+    if (p.annulee) {
+      if (!dejaImportee(p)) {
+        lignes.set(
+          p.cle,
+          ligneVide(
+            p.cle,
+            'ECARTEE',
+            i18n._('Le billet est annulé : la ligne n’est pas importée.')
+          )
+        )
+        continue
+      }
+      ligne.etat = 'DEJA_IMPORTEE'
+      lignes.set(p.cle, ligne)
+      const cible = cibles.get(p.refExterne!)
+      if (!mettreAJour || cible === undefined || cible.retiree) continue
+      ligne.etat = 'ANNULEE'
+      ligne.rattacheeA = cible.benevoleId
+      aAnnuler.push({ p, cible })
+      continue
+    }
     if (dejaImportee(p)) {
       // Une ligne déjà importée ne rejoint aucune fiche : son rapprochement ne
       // demande aucune décision.
@@ -744,8 +925,41 @@ export async function importerLot(
     if (p.refExterne !== null) refsDeja.add(p.refExterne)
     if (p.courriel !== null) courrielsDeja.add(p.courriel)
     lignes.set(p.cle, ligne)
-    aImporter.push({ ...p, ficheId, creerFiche })
+    // Un billet qui remplace un billet annulé n'annonce pas ses places : c'est
+    // une mise à jour de la personne.
+    aImporter.push({
+      ...p,
+      remplace: p.remplace && mettreAJour,
+      ficheId,
+      creerFiche,
+    })
   }
+
+  // Les places que les billets annulés tiennent encore. Les séquences que les
+  // autres lignes du lot acceptent sur la même fiche restent tenues.
+  const gardees = new Map<string, Set<string>>()
+  if (accepter) {
+    for (const p of aImporter) {
+      if (p.ficheId === null) continue
+      const ids = gardees.get(p.ficheId) ?? new Set<string>()
+      for (const id of p.sequenceIds) ids.add(id)
+      gardees.set(p.ficheId, ids)
+    }
+  }
+  const aRetirer =
+    aAnnuler.length === 0
+      ? new Map<string, string[]>()
+      : await placesDesAnnulations(
+          prisma,
+          edition.id,
+          aAnnuler.map(a => a.cible),
+          gardees
+        )
+  for (const { p, cible } of aAnnuler) {
+    lignes.get(p.cle)!.sequencesARetirer =
+      aRetirer.get(cible.candidatureId) ?? []
+  }
+  const retirer = mettreAJour && demande.retirerPlacesAnnulees === true
 
   const fichesRestantes = Math.max(0, BENEVOLES_MAX - fiches.length)
   if (fichesCreees > fichesRestantes && ecrire) {
@@ -780,6 +994,10 @@ export async function importerLot(
       dejaImportees: toutes.filter(l => l.etat === 'DEJA_IMPORTEE').length,
       misesAJour: toutes.filter(l => l.etat === 'MISE_A_JOUR').length,
       conflits: toutes.filter(l => l.conflits.length > 0).length,
+      annulees: toutes.filter(l => l.etat === 'ANNULEE').length,
+      placesRetirees: retirer
+        ? toutes.reduce((n, l) => n + l.sequencesARetirer.length, 0)
+        : 0,
       ecartees: toutes.filter(l => l.etat === 'ECARTEE').length,
       fichesCreees,
       fichesRattachees,
@@ -791,7 +1009,10 @@ export async function importerLot(
         .filter((l): l is LigneRapport => l !== undefined),
     }
   }
-  if (!ecrire || aImporter.length + aMettreAJour.length === 0) {
+  if (
+    !ecrire ||
+    aImporter.length + aMettreAJour.length + aAnnuler.length === 0
+  ) {
     return rapport(!ecrire)
   }
 
@@ -800,6 +1021,8 @@ export async function importerLot(
     source,
     personnes: aImporter,
     misesAJour: aMettreAJour,
+    annulations: aAnnuler.map(a => a.p),
+    retirerPlaces: retirer,
     accepter,
     prevenirParMail: demande.prevenirParMail,
     maintenant,
@@ -817,6 +1040,12 @@ export async function importerLot(
     ligne.etat = plan === undefined ? 'DEJA_IMPORTEE' : 'MISE_A_JOUR'
     ligne.champs = plan?.champs ?? []
     ligne.conflits = plan?.conflits ?? ligne.conflits
+  }
+  for (const { p } of aAnnuler) {
+    const ligne = lignes.get(p.cle)!
+    const sequencesIds = ecrit.annulations.get(p.cle)
+    ligne.etat = sequencesIds === undefined ? 'DEJA_IMPORTEE' : 'ANNULEE'
+    ligne.sequencesARetirer = sequencesIds ?? []
   }
   // Les mails partent après la validation : la file relit chaque fiche. Une
   // mise à jour n'en envoie aucun.
@@ -866,6 +1095,7 @@ function ligneVide(
     compte: false,
     champs: [],
     conflits: [],
+    sequencesARetirer: [],
   }
 }
 
@@ -890,6 +1120,8 @@ async function ecrireLot(
     source: string
     personnes: ImportPrevu[]
     misesAJour: PersonneValide[]
+    annulations: PersonneValide[]
+    retirerPlaces: boolean
     accepter: boolean
     prevenirParMail: boolean
     maintenant: Date
@@ -898,6 +1130,7 @@ async function ecrireLot(
   annonces: string[]
   deja: Set<string>
   plans: Map<string, PlanMiseAJour>
+  annulations: Map<string, string[]>
 }> {
   const { edition, perimetreId } = lot.portee
   const acteurId = ctx.personne!.id
@@ -907,6 +1140,8 @@ async function ecrireLot(
     ),
   ].sort()
   const refsAMettreAJour = lot.misesAJour.map(p => p.refExterne!)
+  const refsAnnulees = lot.annulations.map(p => p.refExterne!)
+  const refsVerrouillees = [...refsAMettreAJour, ...refsAnnulees]
   return sousVerrouOrganisation(
     edition.organisationId,
     async tx => {
@@ -914,13 +1149,13 @@ async function ecrireLot(
       for (const id of sequenceIds) {
         await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${id} FOR UPDATE`
       }
-      if (refsAMettreAJour.length > 0) {
+      if (refsVerrouillees.length > 0) {
         const verrouillees = await tx.$queryRaw<
-          { id: string; benevoleId: string | null }[]
-        >`SELECT c.id, c.benevoleId FROM Candidature c
+          { id: string; benevoleId: string | null; refExterne: string }[]
+        >`SELECT c.id, c.benevoleId, c.refExterne FROM Candidature c
           JOIN AppelBenevoles a ON a.id = c.appelId
           WHERE a.editionId = ${edition.id} AND a.sourceImport = ${lot.source}
-            AND c.refExterne IN (${Prisma.join(refsAMettreAJour)})
+            AND c.refExterne IN (${Prisma.join(refsVerrouillees)})
           ORDER BY c.id FOR UPDATE`
         const benevoleIds = [
           ...new Set(
@@ -931,6 +1166,24 @@ async function ecrireLot(
         ].sort()
         if (benevoleIds.length > 0) {
           await tx.$queryRaw`SELECT id FROM Benevole WHERE id IN (${Prisma.join(benevoleIds)}) ORDER BY id FOR UPDATE`
+        }
+        // Les séquences dont un billet annulé retire la place se verrouillent
+        // aussi, comme dans un retrait de place.
+        const annulees = new Set(refsAnnulees)
+        const idsAnnulees = verrouillees
+          .filter(c => annulees.has(c.refExterne))
+          .map(c => c.id)
+        if (lot.retirerPlaces && idsAnnulees.length > 0) {
+          const acceptees = await tx.$queryRaw<{ sequenceId: string }[]>`
+            SELECT sequenceId FROM ChoixCandidature
+            WHERE candidatureId IN (${Prisma.join(idsAnnulees)})
+              AND statut = 'ACCEPTE'
+            ORDER BY sequenceId FOR UPDATE`
+          const dejaVerrouillees = new Set(sequenceIds)
+          for (const id of [...new Set(acceptees.map(a => a.sequenceId))]) {
+            if (dejaVerrouillees.has(id)) continue
+            await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${id} FOR UPDATE`
+          }
         }
       }
       // L'appel et ses lignes se relisent sous le verrou de l'organisation : un
@@ -966,7 +1219,7 @@ async function ecrireLot(
       const personnes = lot.personnes.filter(p => !deja.has(p.cle))
 
       // Les mises à jour se recalculent sur l'état relu sous le verrou.
-      const cibles = await lireCibles(tx, appelId, edition.id, refsAMettreAJour)
+      const cibles = await lireCibles(tx, appelId, edition.id, refsVerrouillees)
       const misesAJour = lot.misesAJour.flatMap(p => {
         const cible = cibles.get(p.refExterne!)
         if (cible === undefined || !cible.modifiable) return []
@@ -1083,7 +1336,9 @@ async function ecrireLot(
           placeCreee ||= acceptee.placeCreee
           touchees.add(sequenceId)
         }
-        if (placeCreee && ficheId !== null) annonces.push(ficheId)
+        if (placeCreee && ficheId !== null && !p.remplace) {
+          annonces.push(ficheId)
+        }
       }
 
       // Les mises à jour : aucune n'annonce de place, donc aucun mail.
@@ -1126,6 +1381,35 @@ async function ecrireLot(
         }
         plans.set(p.cle, plan)
       }
+
+      // Les billets annulés s'écrivent en dernier : les billets qui les
+      // remplacent ont déjà accepté leurs séquences, et ces places restent. Un
+      // retrait de place n'envoie aucun mail.
+      const annulees = lot.annulations.flatMap(p => {
+        const cible = cibles.get(p.refExterne!)
+        return cible === undefined || cible.retiree ? [] : [{ p, cible }]
+      })
+      const aRetirer = await placesDesAnnulations(
+        tx,
+        edition.id,
+        annulees.map(a => a.cible),
+        new Map()
+      )
+      const annulations = new Map<string, string[]>()
+      for (const { p, cible } of annulees) {
+        await tx.candidature.update({
+          where: { id: cible.candidatureId },
+          data: { statut: 'RETIREE', courrielEnAttente: null },
+        })
+        const ids = aRetirer.get(cible.candidatureId) ?? []
+        if (lot.retirerPlaces && ids.length > 0) {
+          await tx.placeSequence.deleteMany({
+            where: { benevoleId: cible.benevoleId!, sequenceId: { in: ids } },
+          })
+          for (const id of ids) touchees.add(id)
+        }
+        annulations.set(p.cle, ids)
+      }
       // Une seule nouvelle version par séquence acceptée dans le lot.
       for (const sequenceId of touchees) {
         await tx.sequence.update({
@@ -1133,7 +1417,7 @@ async function ecrireLot(
           data: { version: { increment: 1 } },
         })
       }
-      return { annonces, deja, plans }
+      return { annonces, deja, plans, annulations }
     },
     { timeout: 60_000 }
   )

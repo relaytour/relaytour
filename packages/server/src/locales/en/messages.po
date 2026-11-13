@@ -2064,6 +2064,16 @@ msgstr "{jour}, from {heureDebut} to {heureFin}"
 
 #. js-lingui-explicit-id
 #: src/lib/import-benevoles.ts
+msgid "L’identifiant externe"
+msgstr "The external ID"
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "Un billet annulé exige un identifiant externe."
+msgstr "A cancelled ticket requires an external ID."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
 msgid "La ligne ne porte aucun nom."
 msgstr "The line has no name."
 
@@ -2076,11 +2086,6 @@ msgstr "A person chooses at most {max} slots."
 #: src/lib/import-benevoles.ts
 msgid "La date de l’accord ne peut pas être future."
 msgstr "The date of the approval cannot be in the future."
-
-#. js-lingui-explicit-id
-#: src/lib/import-benevoles.ts
-msgid "L’identifiant externe"
-msgstr "The external ID"
 
 #. js-lingui-explicit-id
 #: src/lib/import-benevoles.ts
@@ -2121,6 +2126,11 @@ msgstr "This source is already used for another call. Choose another source."
 #: src/lib/import-benevoles.ts
 msgid "Seuls les admins de l’activité mettent à jour les personnes déjà importées."
 msgstr "Only the activity admins can update people already imported."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "Le billet est annulé : la ligne n’est pas importée."
+msgstr "The ticket is cancelled: the line is not imported."
 
 #. js-lingui-explicit-id
 #: src/lib/import-benevoles.ts

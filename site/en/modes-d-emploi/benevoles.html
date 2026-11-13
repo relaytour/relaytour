@@ -261,7 +261,9 @@
           <p>A person with the email address of an existing record joins it automatically. For the same phone number or a similar name, you choose “Join” or “Create a volunteer record”. The rows set aside can be downloaded as CSV.</p>
           <p class="note">No email is sent on import. An external ID, such as a ticket number, makes the import repeatable: an updated file adds only the new people. Two tickets from the same buyer stay two people, even with the same email address. The consent date is the import date, unless a column is matched.</p>
           <p>With the “Update” option, a person already imported receives the values from the file that they lack: email address, phone, notes and availability. Their new slots are added. A value already present stays in place, and the preview reports it. No place is removed.</p>
-          <p class="note">An update sends no email. When an update adds an email address, the record’s “Notify by email” option stays unchecked: check it on the record, then send the link with the “Resend by email” button.</p>
+          <p>A “Ticket cancellation” column reports cancelled tickets. Enter the values that mean “cancelled” in your tool, such as “Cancelled” or “Refunded”. With the “Update” option, the application of a cancelled ticket is withdrawn, and the record stays. The preview lists the places this ticket still holds. The “Remove the places of cancelled tickets” option removes them; otherwise, remove them in the program.</p>
+          <p>When a person cancels their ticket and takes another one, the preview suggests “Replaces ticket”. The new ticket then joins the record of the cancelled ticket, with its personal link. A ticket already imported that no longer appears in the file is only reported: a filtered export cancels nothing.</p>
+          <p class="note">An update sends no email. When an update adds an email address, the record’s “Notify by email” option stays unchecked: check it on the record, then send the link with the “Resend by email” button. Withdrawing an application or a place sends no email either.</p>
         </article>
 
         <article class="verre ecran" id="e-doublons">

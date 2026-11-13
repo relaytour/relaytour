@@ -76,6 +76,8 @@ interface Rapport {
   aImporter: number
   dejaImportees: number
   misesAJour: number
+  annulees: number
+  placesRetirees: number
   conflits: number
   ecartees: number
   fichesCreees: number
@@ -91,12 +93,13 @@ interface Rapport {
     compte: boolean
     champs: string[]
     conflits: string[]
+    sequencesARetirer: string[]
   }[]
 }
 
-const CHAMPS = `aImporter dejaImportees misesAJour conflits ecartees fichesCreees fichesRattachees places depassements { sequenceId renforts } lignes { cle etat motif rapprochement { benevoleId niveau } rattacheeA compte champs conflits }`
-const SIGNATURE = `$e: ID!, $p: ID, $src: String!, $m: ModeImport!, $pm: Boolean, $at: Boolean, $mj: Boolean, $ok: Boolean!, $l: [PersonneImportInput!]!`
-const APPEL = `editionId: $e, perimetreId: $p, source: $src, mode: $m, prevenirParMail: $pm, accepterTout: $at, mettreAJour: $mj, accord: $ok, personnes: $l`
+const CHAMPS = `aImporter dejaImportees misesAJour conflits annulees placesRetirees ecartees fichesCreees fichesRattachees places depassements { sequenceId renforts } lignes { cle etat motif rapprochement { benevoleId niveau } rattacheeA compte champs conflits sequencesARetirer }`
+const SIGNATURE = `$e: ID!, $p: ID, $src: String!, $m: ModeImport!, $pm: Boolean, $at: Boolean, $mj: Boolean, $rp: Boolean, $ok: Boolean!, $l: [PersonneImportInput!]!`
+const APPEL = `editionId: $e, perimetreId: $p, source: $src, mode: $m, prevenirParMail: $pm, accepterTout: $at, mettreAJour: $mj, retirerPlacesAnnulees: $rp, accord: $ok, personnes: $l`
 const SIMULER = `query (${SIGNATURE}) { simulerImportBenevoles(${APPEL}) { ${CHAMPS} } }`
 const IMPORTER = `mutation (${SIGNATURE}) { importerBenevoles(${APPEL}) { ${CHAMPS} } }`
 
@@ -1168,6 +1171,171 @@ describe('mise à jour d’un import', () => {
       })
     )
     expect(r.errors?.[0]?.message).toMatch(/admins de l’activité/)
+  })
+})
+
+describe('billets annulés', () => {
+  const REFS = `query ($e: ID!, $p: ID, $src: String!) { refsImportees(editionId: $e, perimetreId: $p, source: $src) }`
+  const src = `annulations ${s}`
+  const leo = `leo-${s}@exemple.fr`
+  let ficheLeo = ''
+
+  it('retire le billet annulé, garde la place que son remplaçant accepte, et n’annonce rien', async () => {
+    donnees(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src,
+          m: 'PLACES_DIRECTES',
+          pm: true,
+          l: [
+            {
+              cle: '1',
+              nom: 'Léo Garnier',
+              refExterne: 'C-1',
+              courriel: leo,
+              sequenceIds: [ids.finales, ids.relais],
+            },
+            {
+              cle: '2',
+              nom: 'Mila Garnier',
+              refExterne: 'C-2',
+              sequenceIds: [ids.finales],
+            },
+          ],
+        })
+      ),
+      'importerBenevoles'
+    )
+    ficheLeo = (
+      await prisma.benevole.findFirstOrThrow({
+        where: { activiteId: ids.activite, courriel: leo },
+      })
+    ).id
+    // La fiche de Léo est joignable : son premier lien est parti à l'import.
+    expect(enFile.map(e => e.benevoleId)).toEqual([ficheLeo])
+    enFile.length = 0
+
+    // Léo annule son billet et en prend un autre, pour le relais et la buvette.
+    const fichier = [
+      {
+        cle: 'n',
+        nom: 'Léo Garnier',
+        refExterne: 'C-9',
+        sequenceIds: [ids.relais, ids.buvette],
+        rattachement: ficheLeo,
+        remplace: true,
+      },
+      { cle: 'a', nom: 'Léo Garnier', refExterne: 'C-1', annulee: true },
+    ]
+    const simule = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        SIMULER,
+        variables({ src, m: 'PLACES_DIRECTES', mj: true, rp: true, l: fichier })
+      ),
+      'simulerImportBenevoles'
+    )
+    expect(simule).toMatchObject({ annulees: 1, placesRetirees: 1 })
+    expect(simule.lignes.find(l => l.cle === 'a')).toMatchObject({
+      etat: 'ANNULEE',
+      rattacheeA: ficheLeo,
+      sequencesARetirer: [ids.finales],
+    })
+
+    const rapport = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({ src, m: 'PLACES_DIRECTES', mj: true, rp: true, l: fichier })
+      ),
+      'importerBenevoles'
+    )
+    expect(rapport).toMatchObject({
+      aImporter: 1,
+      annulees: 1,
+      placesRetirees: 1,
+    })
+    expect(enFile).toEqual([])
+    const candidatures = await prisma.candidature.findMany({
+      where: { sourceImport: src },
+      orderBy: { refExterne: 'asc' },
+    })
+    expect(
+      candidatures.map(c => [c.refExterne, c.statut, c.benevoleId === ficheLeo])
+    ).toEqual([
+      ['C-1', 'RETIREE', true],
+      ['C-2', 'TRAITEE', false],
+      ['C-9', 'TRAITEE', true],
+    ])
+    const places = await prisma.placeSequence.findMany({
+      where: { benevoleId: ficheLeo },
+    })
+    expect(places.map(p => p.sequenceId).sort()).toEqual(
+      [ids.relais, ids.buvette].sort()
+    )
+
+    // Rejoué, le même fichier ne change plus rien.
+    const rejoue = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({ src, m: 'PLACES_DIRECTES', mj: true, rp: true, l: fichier })
+      ),
+      'importerBenevoles'
+    )
+    expect(rejoue).toMatchObject({ annulees: 0, dejaImportees: 2 })
+  })
+
+  it('écarte un billet annulé jamais importé, et laisse les places sans l’option de retrait', async () => {
+    const annule = [
+      { cle: 'z', nom: 'Zoé Garnier', refExterne: 'C-77', annulee: true },
+      { cle: 'm', nom: 'Mila Garnier', refExterne: 'C-2', annulee: true },
+    ]
+    // Sans la mise à jour, le billet déjà importé reste tel quel.
+    const sansMiseAJour = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({ src, m: 'PLACES_DIRECTES', l: annule })
+      ),
+      'importerBenevoles'
+    )
+    expect(sansMiseAJour.lignes.map(l => [l.cle, l.etat])).toEqual([
+      ['z', 'ECARTEE'],
+      ['m', 'DEJA_IMPORTEE'],
+    ])
+    expect(sansMiseAJour.lignes[0]!.motif).toMatch(/annulé/)
+
+    // Avec la mise à jour et sans l'option de retrait, la place reste.
+    const rapport = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({ src, m: 'PLACES_DIRECTES', mj: true, l: annule })
+      ),
+      'importerBenevoles'
+    )
+    expect(rapport).toMatchObject({ annulees: 1, placesRetirees: 0 })
+    const mila = await prisma.candidature.findFirstOrThrow({
+      where: { sourceImport: src, refExterne: 'C-2' },
+      include: { benevole: { include: { places: true } } },
+    })
+    expect(mila.statut).toBe('RETIREE')
+    expect(mila.benevole!.places.map(p => p.sequenceId)).toEqual([ids.finales])
+    expect(enFile).toEqual([])
+
+    // Les billets encore importés de la source, hors billets retirés.
+    expect(
+      donnees<string[]>(
+        await executer(ids.admin, REFS, { e: ids.edition, src }),
+        'refsImportees'
+      )
+    ).toEqual(['C-9'])
+    expect(
+      code(await executer(ids.referente, REFS, { e: ids.edition, src }))
+    ).toBe('FORBIDDEN')
   })
 })
 

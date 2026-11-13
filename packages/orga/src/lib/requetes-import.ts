@@ -29,6 +29,7 @@ export const SIMULER_IMPORT = graphql(`
     $prevenirParMail: Boolean
     $accepterTout: Boolean
     $mettreAJour: Boolean
+    $retirerPlacesAnnulees: Boolean
     $accord: Boolean!
     $personnes: [PersonneImportInput!]!
   ) {
@@ -40,6 +41,7 @@ export const SIMULER_IMPORT = graphql(`
       prevenirParMail: $prevenirParMail
       accepterTout: $accepterTout
       mettreAJour: $mettreAJour
+      retirerPlacesAnnulees: $retirerPlacesAnnulees
       accord: $accord
       personnes: $personnes
     ) {
@@ -47,6 +49,8 @@ export const SIMULER_IMPORT = graphql(`
       dejaImportees
       misesAJour
       conflits
+      annulees
+      placesRetirees
       ecartees
       fichesCreees
       fichesRattachees
@@ -66,6 +70,7 @@ export const SIMULER_IMPORT = graphql(`
         compte
         champs
         conflits
+        sequencesARetirer
         rapprochement {
           benevoleId
           nom
@@ -85,6 +90,7 @@ export const IMPORTER = graphql(`
     $prevenirParMail: Boolean
     $accepterTout: Boolean
     $mettreAJour: Boolean
+    $retirerPlacesAnnulees: Boolean
     $accord: Boolean!
     $personnes: [PersonneImportInput!]!
   ) {
@@ -96,6 +102,7 @@ export const IMPORTER = graphql(`
       prevenirParMail: $prevenirParMail
       accepterTout: $accepterTout
       mettreAJour: $mettreAJour
+      retirerPlacesAnnulees: $retirerPlacesAnnulees
       accord: $accord
       personnes: $personnes
     ) {
@@ -103,6 +110,8 @@ export const IMPORTER = graphql(`
       dejaImportees
       misesAJour
       conflits
+      annulees
+      placesRetirees
       ecartees
       fichesCreees
       fichesRattachees
@@ -113,6 +122,16 @@ export const IMPORTER = graphql(`
         motif
       }
     }
+  }
+`)
+
+export const REFS_IMPORTEES = graphql(`
+  query RefsImportees($editionId: ID!, $perimetreId: ID, $source: String!) {
+    refsImportees(
+      editionId: $editionId
+      perimetreId: $perimetreId
+      source: $source
+    )
   }
 `)
 
