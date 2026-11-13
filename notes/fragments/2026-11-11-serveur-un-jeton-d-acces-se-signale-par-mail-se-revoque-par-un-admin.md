@@ -4,6 +4,7 @@ type: rupture
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.31.0
 fr:
   titre: >-
     Un jeton d'accès se signale par mail, se révoque par un admin et n'ouvre la gestion des membres que sur demande

@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.31.0
 fr:
   titre: >-
     Tous les modèles de notifications envoient le résumé chaque semaine
