@@ -832,6 +832,11 @@ export async function importerLot(
   const aImporter: ImportPrevu[] = []
   const aMettreAJour: PersonneValide[] = []
   const aAnnuler: { p: PersonneValide; cible: Cible }[] = []
+  const refsActives = new Set(
+    valides.flatMap(p =>
+      !p.annulee && p.refExterne !== null ? [p.refExterne] : []
+    )
+  )
   let fichesCreees = 0
   let fichesRattachees = 0
   let places = 0
@@ -848,8 +853,21 @@ export async function importerLot(
     const ligne = ligneVide(p.cle, 'A_IMPORTER', null)
     ligne.compte = p.courriel !== null && comptes.has(p.courriel)
     // Un billet annulé n'entre pas. Déjà importé, il retire sa candidature, avec
-    // la mise à jour seulement.
+    // la mise à jour seulement. Une ligne active du même identifiant l'emporte.
     if (p.annulee) {
+      if (refsActives.has(p.refExterne!)) {
+        lignes.set(
+          p.cle,
+          ligneVide(
+            p.cle,
+            'ECARTEE',
+            i18n._(
+              'Une autre ligne du même identifiant externe n’est pas annulée.'
+            )
+          )
+        )
+        continue
+      }
       if (!dejaImportee(p)) {
         lignes.set(
           p.cle,
@@ -1022,6 +1040,7 @@ export async function importerLot(
     personnes: aImporter,
     misesAJour: aMettreAJour,
     annulations: aAnnuler.map(a => a.p),
+    sequencesAnnulees: aAnnuler.flatMap(a => a.cible.acceptees),
     retirerPlaces: retirer,
     accepter,
     prevenirParMail: demande.prevenirParMail,
@@ -1121,6 +1140,8 @@ async function ecrireLot(
     personnes: ImportPrevu[]
     misesAJour: PersonneValide[]
     annulations: PersonneValide[]
+    /** Les séquences acceptées des billets annulés, lues avant la transaction. */
+    sequencesAnnulees: string[]
     retirerPlaces: boolean
     accepter: boolean
     prevenirParMail: boolean
@@ -1134,10 +1155,13 @@ async function ecrireLot(
 }> {
   const { edition, perimetreId } = lot.portee
   const acteurId = ctx.personne!.id
+  // Les séquences d'abord, dans l'ordre de leurs identifiants, comme toute
+  // acceptation et tout retrait de place : celles des billets annulés aussi.
   const sequenceIds = [
-    ...new Set(
-      [...lot.personnes, ...lot.misesAJour].flatMap(p => p.sequenceIds)
-    ),
+    ...new Set([
+      ...[...lot.personnes, ...lot.misesAJour].flatMap(p => p.sequenceIds),
+      ...(lot.retirerPlaces ? lot.sequencesAnnulees : []),
+    ]),
   ].sort()
   const refsAMettreAJour = lot.misesAJour.map(p => p.refExterne!)
   const refsAnnulees = lot.annulations.map(p => p.refExterne!)
@@ -1167,8 +1191,9 @@ async function ecrireLot(
         if (benevoleIds.length > 0) {
           await tx.$queryRaw`SELECT id FROM Benevole WHERE id IN (${Prisma.join(benevoleIds)}) ORDER BY id FOR UPDATE`
         }
-        // Les séquences dont un billet annulé retire la place se verrouillent
-        // aussi, comme dans un retrait de place.
+        // Les séquences des billets annulés sont déjà verrouillées. Une
+        // séquence acceptée depuis la lecture ne l'est pas : le lot s'arrête
+        // plutôt que de prendre un verrou dans le désordre.
         const annulees = new Set(refsAnnulees)
         const idsAnnulees = verrouillees
           .filter(c => annulees.has(c.refExterne))
@@ -1179,10 +1204,13 @@ async function ecrireLot(
             WHERE candidatureId IN (${Prisma.join(idsAnnulees)})
               AND statut = 'ACCEPTE'
             ORDER BY sequenceId FOR UPDATE`
-          const dejaVerrouillees = new Set(sequenceIds)
-          for (const id of [...new Set(acceptees.map(a => a.sequenceId))]) {
-            if (dejaVerrouillees.has(id)) continue
-            await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${id} FOR UPDATE`
+          const verrouilleesAvant = new Set(sequenceIds)
+          if (acceptees.some(a => !verrouilleesAvant.has(a.sequenceId))) {
+            throw erreurSaisie(
+              i18n._(
+                'Une candidature de ce lot a changé pendant l’import. Relancez l’import du même fichier.'
+              )
+            )
           }
         }
       }

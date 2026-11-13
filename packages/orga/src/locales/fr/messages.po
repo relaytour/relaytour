@@ -11437,6 +11437,10 @@ msgstr "Une affectation rend la personne référent·e du périmètre : elle y m
 msgid "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
 msgstr "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
 
+#: src/lib/import-benevoles.ts
+msgid "Une autre ligne du même identifiant externe n’est pas annulée."
+msgstr "Une autre ligne du même identifiant externe n’est pas annulée."
+
 #: src/lib/conflit.ts
 msgid "Une autre personne"
 msgstr "Une autre personne"

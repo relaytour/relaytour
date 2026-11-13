@@ -587,6 +587,22 @@ export function construirePersonnes(
     void groupe
     return personne
   })
+  // Une ligne active du même identifiant l'emporte sur le billet annulé : une
+  // commande dont une seule ligne est remboursée garde ses autres lignes.
+  const refsActives = new Set(
+    personnes.flatMap(p => (p.refExterne === null ? [] : [p.refExterne]))
+  )
+  for (const [ref, annule] of billetsAnnules) {
+    if (!refsActives.has(ref)) continue
+    billetsAnnules.delete(ref)
+    for (const numero of annule.lignes) {
+      ecartees.push({
+        ligne: numero,
+        motif: t`Une autre ligne du même identifiant externe n’est pas annulée.`,
+        valeurs: tableau.lignes[numero - 2] ?? [],
+      })
+    }
+  }
   ecartees.sort((a, b) => a.ligne - b.ligne)
   return {
     personnes: [...personnes, ...billetsAnnules.values()].sort(

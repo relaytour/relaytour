@@ -11437,6 +11437,10 @@ msgstr "An appointment makes the person a coordinator of the area: they edit its
 msgid "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
 msgstr "An at sign followed by an area’s identifier mentions it, for example @logistique. A @groupe: mention followed by a group’s key mentions the whole group."
 
+#: src/lib/import-benevoles.ts
+msgid "Une autre ligne du même identifiant externe n’est pas annulée."
+msgstr "Another line with the same external ID is not cancelled."
+
 #: src/lib/conflit.ts
 msgid "Une autre personne"
 msgstr "Another person"

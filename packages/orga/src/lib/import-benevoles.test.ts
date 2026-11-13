@@ -387,6 +387,25 @@ describe('billets annulés', () => {
     expect(ecartees.map(e => e.ligne)).toEqual([6])
   })
 
+  it('écarte une ligne annulée dont l’identifiant porte aussi une ligne active', () => {
+    const { personnes, ecartees } = construirePersonnes(
+      {
+        entetes: tableau.entetes,
+        lignes: [
+          ['C-5', 'Eva Roy', '', 'Validé', 'Relais 1'],
+          ['C-5', 'Eva Roy', '', 'Remboursé', 'Relais 2'],
+        ],
+      },
+      champs,
+      new Map(),
+      { valeursNon: [], jour: null }
+    )
+    expect(personnes.map(p => [p.refExterne, p.annulee])).toEqual([
+      ['C-5', false],
+    ])
+    expect(ecartees.map(e => e.ligne)).toEqual([3])
+  })
+
   it('propose le nouveau billet de la même personne, pas celui d’un proche au même téléphone', () => {
     const { personnes } = construirePersonnes(tableau, champs, new Map(), {
       valeursNon: [],

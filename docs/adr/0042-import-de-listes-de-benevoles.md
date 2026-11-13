@@ -223,7 +223,7 @@ Un export de billetterie garde parfois les billets annulés, avec une colonne de
 
 - Une colonne s'associe au champ « Annulation du billet ». La personne qui importe déclare les valeurs qui signifient « annulé », comme les valeurs « non » de la forme 2 : « annulé », « remboursé », « cancelled » par défaut.
 - Seul un en-tête explicite propose ce champ (« Statut du billet », « Annulation », « Ticket status »). Un en-tête « Statut » ou « Order status » reste à associer à la main.
-- Une ligne annulée sans identifiant externe est écartée. Avec un identifiant, elle ne se réunit qu'aux lignes de ce même identifiant.
+- Une ligne annulée sans identifiant externe est écartée. Avec un identifiant, elle ne se réunit qu'aux lignes de ce même identifiant. Une ligne active du même identifiant l'emporte : la ligne annulée est écartée.
 - Une ligne annulée jamais importée est écartée, avec le motif « Le billet est annulé ».
 
 **Le retrait d'un billet déjà importé.**
@@ -240,6 +240,7 @@ Un export de billetterie garde parfois les billets annulés, avec une colonne de
 - La proposition ne vise qu'un billet annulé qui a une fiche. La personne qui importe choisit « Remplace le billet » ou « Nouvelle personne ».
 - Le billet de remplacement rejoint la fiche du billet annulé, avec son lien personnel et ses disponibilités. Il est une mise à jour de la personne : ses places ne sont pas annoncées.
 - Les billets annulés s'écrivent après les autres lignes, dans le dernier lot et en fin de lot. Une séquence que le billet de remplacement accepte garde donc sa place, sans retrait ni nouvelle annonce.
+- L'écriture verrouille les séquences des billets annulés avec celles du lot, dans l'ordre de leurs identifiants, avant les candidatures. Une candidature acceptée sur une autre séquence pendant l'import arrête le lot, qui se relance.
 
 **Les billets absents du fichier.**
 

@@ -1288,12 +1288,117 @@ describe('billets annulés', () => {
     expect(rejoue).toMatchObject({ annulees: 0, dejaImportees: 2 })
   })
 
+  it('garde la place qu’une candidature d’un autre appel accepte, et écarte un billet annulé dont l’identifiant reste actif', async () => {
+    const srcA = `billetterie A ${s}`
+    const srcB = `formulaire B ${s}`
+    donnees(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src: srcA,
+          m: 'PLACES_DIRECTES',
+          pm: false,
+          l: [
+            {
+              cle: '1',
+              nom: 'Hugo Perrin',
+              refExterne: 'A-1',
+              sequenceIds: [ids.finales, ids.relais],
+            },
+          ],
+        })
+      ),
+      'importerBenevoles'
+    )
+    const hugo = await prisma.benevole.findFirstOrThrow({
+      where: { activiteId: ids.activite, nom: 'Hugo Perrin' },
+    })
+    // Une autre source accepte aussi les finales pour la même fiche.
+    donnees(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src: srcB,
+          m: 'PLACES_DIRECTES',
+          pm: false,
+          l: [
+            {
+              cle: '1',
+              nom: 'Hugo Perrin',
+              refExterne: 'F-1',
+              sequenceIds: [ids.finales],
+              rattachement: hugo.id,
+            },
+          ],
+        })
+      ),
+      'importerBenevoles'
+    )
+    const rapport = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src: srcA,
+          m: 'PLACES_DIRECTES',
+          mj: true,
+          rp: true,
+          l: [
+            { cle: 'a', nom: 'Hugo Perrin', refExterne: 'A-1', annulee: true },
+          ],
+        })
+      ),
+      'importerBenevoles'
+    )
+    expect(rapport.lignes[0]).toMatchObject({
+      etat: 'ANNULEE',
+      sequencesARetirer: [ids.relais],
+    })
+    const places = await prisma.placeSequence.findMany({
+      where: { benevoleId: hugo.id },
+    })
+    expect(places.map(p => p.sequenceId)).toEqual([ids.finales])
+
+    // Une ligne active du même identifiant l'emporte sur la ligne annulée.
+    const doublon = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        SIMULER,
+        variables({
+          src: srcB,
+          m: 'PLACES_DIRECTES',
+          mj: true,
+          rp: true,
+          l: [
+            {
+              cle: 'v',
+              nom: 'Hugo Perrin',
+              refExterne: 'F-1',
+              sequenceIds: [ids.finales],
+            },
+            { cle: 'x', nom: 'Hugo Perrin', refExterne: 'F-1', annulee: true },
+          ],
+        })
+      ),
+      'simulerImportBenevoles'
+    )
+    expect(doublon.lignes.map(l => [l.cle, l.etat])).toEqual([
+      ['v', 'DEJA_IMPORTEE'],
+      ['x', 'ECARTEE'],
+    ])
+    expect(enFile).toEqual([])
+  })
+
   it('écarte un billet annulé jamais importé, et laisse les places sans l’option de retrait', async () => {
     const annule = [
       { cle: 'z', nom: 'Zoé Garnier', refExterne: 'C-77', annulee: true },
       { cle: 'm', nom: 'Mila Garnier', refExterne: 'C-2', annulee: true },
     ]
-    // Sans la mise à jour, le billet déjà importé reste tel quel.
+    // Un lot fait seulement de billets annulés passe en mode « places
+    // directes », sans séquence. Sans la mise à jour, le billet déjà importé
+    // reste tel quel.
     const sansMiseAJour = donnees<Rapport>(
       await executer(
         ids.admin,
