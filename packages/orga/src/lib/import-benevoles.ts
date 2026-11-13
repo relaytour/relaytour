@@ -1,6 +1,9 @@
 import type { MessageDescriptor } from '@lingui/core'
 import { msg, t } from '@lingui/core/macro'
 import {
+  cleNom,
+  cleTelephone,
+  nomsProches,
   nomVide,
   regrouper,
   sansAccent,
@@ -56,6 +59,7 @@ export type Champ =
   | 'REF_EXTERNE'
   | 'REGROUPEMENT'
   | 'DATE_ACCORD'
+  | 'ANNULATION'
 
 /** Les libellés des champs, à traduire à l'affichage : `t(LIBELLES_CHAMP[champ])`. */
 export const LIBELLES_CHAMP: Record<Champ, MessageDescriptor> = {
@@ -87,6 +91,7 @@ export const LIBELLES_CHAMP: Record<Champ, MessageDescriptor> = {
   REF_EXTERNE: msg`Identifiant externe`,
   REGROUPEMENT: msg`Regroupement des lignes`,
   DATE_ACCORD: msg`Date de l’accord`,
+  ANNULATION: msg`Annulation du billet`,
 }
 
 /** Les champs qu'une seule colonne reçoit. */
@@ -99,6 +104,7 @@ const UNIQUES: Champ[] = [
   'REF_EXTERNE',
   'REGROUPEMENT',
   'DATE_ACCORD',
+  'ANNULATION',
 ]
 
 /** Les synonymes d'en-tête, en français et en anglais (ADR 0047), comparés sans accent ni casse. */
@@ -124,6 +130,12 @@ const SYNONYMES: [Champ, RegExp][] = [
   [
     'DATE_ACCORD',
     /\b(date (de )?(la )?commande|date (de )?creation|date d'inscription|inscrit le|order date|registration date|registered on|signed up)\b/,
+  ],
+  // Seul un en-tête explicite désigne l'annulation : « Order status » ou
+  // « Statut » seuls restent à associer à la main.
+  [
+    'ANNULATION',
+    /\b(annulation|annule|annulee|statut (du )?billet|etat (du )?billet|cancellation|cancell?ed|ticket status)\b/,
   ],
   ['REF_EXTERNE', /\b(billet|ticket|numero de billet|identifiant|id)\b/],
   [
@@ -349,9 +361,21 @@ export interface Reglages {
   valeursNon: string[]
   /** Le jour d'un horaire sans jour. */
   jour: string | null
+  /** Les valeurs qui signifient « annulé » dans la colonne d'annulation. */
+  valeursAnnulees?: string[]
 }
 
 export const VALEURS_NON_PAR_DEFAUT = ['non', 'no', 'false', 'faux', 'n']
+
+export const VALEURS_ANNULEES_PAR_DEFAUT = [
+  'annulé',
+  'annulée',
+  'remboursé',
+  'remboursée',
+  'cancelled',
+  'canceled',
+  'refunded',
+]
 
 export interface PlageSaisie {
   jour: string
@@ -371,9 +395,15 @@ export interface PersonneLue extends Identite {
   accordLe: string | null
   sequenceIds: string[]
   plages: PlageSaisie[]
+  /** Vrai pour un billet annulé : la personne déjà importée se retire. */
+  annulee: boolean
 }
 
-/** Les personnes du fichier, réunies, et les lignes écartées avec leur motif. */
+/**
+ * Les personnes du fichier, réunies, et les lignes écartées avec leur motif. Une
+ * ligne annulée ne se réunit qu'aux lignes de son identifiant externe ; sans
+ * identifiant, elle est écartée.
+ */
 export function construirePersonnes(
   tableau: Tableau,
   champs: readonly Champ[],
@@ -382,8 +412,14 @@ export function construirePersonnes(
 ): { personnes: PersonneLue[]; ecartees: LigneEcartee[] } {
   const colonne = (champ: Champ) => champs.indexOf(champ)
   const non = new Set(reglages.valeursNon.map(v => sansAccent(v)))
+  const annulees = new Set(
+    (reglages.valeursAnnulees ?? VALEURS_ANNULEES_PAR_DEFAUT).map(v =>
+      sansAccent(v)
+    )
+  )
   const ecartees: LigneEcartee[] = []
   const lues: (PersonneLue & { groupe: string | null })[] = []
+  const billetsAnnules = new Map<string, PersonneLue>()
   tableau.lignes.forEach((ligne, i) => {
     const numero = i + 2
     const valeur = (champ: Champ) => {
@@ -396,6 +432,43 @@ export function construirePersonnes(
     const courriel = valeur('COURRIEL') || null
     const telephone = valeur('TELEPHONE') || null
     const groupe = valeur('REGROUPEMENT') || null
+    const refExterne = valeur('REF_EXTERNE') || null
+    const annulee =
+      valeur('ANNULATION') !== '' &&
+      annulees.has(sansAccent(valeur('ANNULATION')))
+    if (annulee) {
+      if (refExterne === null) {
+        ecartees.push({
+          ligne: numero,
+          motif: t`Le billet est annulé et ne porte pas d’identifiant externe.`,
+          valeurs: ligne,
+        })
+        return
+      }
+      // Un billet annulé ne porte que de quoi le reconnaître : son identifiant,
+      // son nom et son téléphone, pour proposer le billet qui le remplace.
+      const deja = billetsAnnules.get(refExterne)
+      if (deja) {
+        deja.lignes.push(numero)
+        if (nomVide(deja.nom) && !nomVide(nom)) deja.nom = nom
+        deja.telephone ??= telephone
+        return
+      }
+      billetsAnnules.set(refExterne, {
+        cle: `L${numero}`,
+        lignes: [numero],
+        nom: nomVide(nom) ? refExterne : nom,
+        courriel: null,
+        telephone,
+        precisions: null,
+        refExterne,
+        accordLe: null,
+        sequenceIds: [],
+        plages: [],
+        annulee: true,
+      })
+      return
+    }
     // Une ligne sans personne rejoint encore son groupe : la ligne d'une commande
     // peut ne porter qu'un poste.
     if (
@@ -460,10 +533,11 @@ export function construirePersonnes(
       courriel,
       telephone,
       precisions,
-      refExterne: valeur('REF_EXTERNE') || null,
+      refExterne,
       accordLe: lireDate(valeur('DATE_ACCORD')),
       sequenceIds: [...sequenceIds],
       plages,
+      annulee: false,
       groupe,
     })
   })
@@ -513,11 +587,74 @@ export function construirePersonnes(
     void groupe
     return personne
   })
+  // Une ligne active du même identifiant l'emporte sur le billet annulé : une
+  // commande dont une seule ligne est remboursée garde ses autres lignes.
+  const refsActives = new Set(
+    personnes.flatMap(p => (p.refExterne === null ? [] : [p.refExterne]))
+  )
+  for (const [ref, annule] of billetsAnnules) {
+    if (!refsActives.has(ref)) continue
+    billetsAnnules.delete(ref)
+    for (const numero of annule.lignes) {
+      ecartees.push({
+        ligne: numero,
+        motif: t`Une autre ligne du même identifiant externe n’est pas annulée.`,
+        valeurs: tableau.lignes[numero - 2] ?? [],
+      })
+    }
+  }
   ecartees.sort((a, b) => a.ligne - b.ligne)
   return {
-    personnes: personnes.sort((a, b) => a.lignes[0]! - b.lignes[0]!),
+    personnes: [...personnes, ...billetsAnnules.values()].sort(
+      (a, b) => a.lignes[0]! - b.lignes[0]!
+    ),
     ecartees,
   }
+}
+
+/**
+ * Les billets annulés que de nouveaux billets du même fichier remplacent sans
+ * doute : la même personne, par son nom, puis par un téléphone que ne porte
+ * qu'un seul billet annulé. L'adresse ne compte pas : c'est souvent celle de
+ * l'acheteur. Rend, par clé de nouveau billet, la clé du billet annulé.
+ */
+export function proposerRemplacements(
+  personnes: readonly PersonneLue[],
+  nouveaux: ReadonlySet<string>
+): Map<string, string> {
+  const annules = personnes.filter(p => p.annulee)
+  const libres = new Set(annules.map(p => p.cle))
+  const propositions = new Map<string, string>()
+  const candidats = personnes.filter(p => !p.annulee && nouveaux.has(p.cle))
+  const retenir = (nouveau: PersonneLue, annule: PersonneLue | undefined) => {
+    if (annule === undefined || propositions.has(nouveau.cle)) return
+    propositions.set(nouveau.cle, annule.cle)
+    libres.delete(annule.cle)
+  }
+  // Le même nom d'abord, puis un nom très proche.
+  for (const nouveau of candidats) {
+    retenir(
+      nouveau,
+      annules.find(
+        a => libres.has(a.cle) && cleNom(a.nom) === cleNom(nouveau.nom)
+      )
+    )
+  }
+  for (const nouveau of candidats) {
+    retenir(
+      nouveau,
+      annules.find(a => libres.has(a.cle) && nomsProches(a.nom, nouveau.nom))
+    )
+  }
+  for (const nouveau of candidats) {
+    const telephone = cleTelephone(nouveau.telephone)
+    if (telephone === null) continue
+    const memes = annules.filter(a => cleTelephone(a.telephone) === telephone)
+    if (memes.length === 1 && libres.has(memes[0]!.cle)) {
+      retenir(nouveau, memes[0])
+    }
+  }
+  return propositions
 }
 
 /** Réunit une ligne dans une autre : les champs vides se complètent, les choix s'additionnent. */

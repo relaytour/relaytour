@@ -530,6 +530,10 @@ msgstr "{nature, select, EVENEMENT {une édition} SAISON {une saison} other {un 
 msgid "{nbAbandonnees, plural, one {# abandonnée} other {# abandonnées}}"
 msgstr "{nbAbandonnees, plural, one {# abandonnée} other {# abandonnées}}"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbAbsents, plural, one {# billet déjà importé n’apparaît pas dans ce fichier.} other {# billets déjà importés n’apparaissent pas dans ce fichier.}}"
+msgstr "{nbAbsents, plural, one {# billet déjà importé n’apparaît pas dans ce fichier.} other {# billets déjà importés n’apparaissent pas dans ce fichier.}}"
+
 #: src/composants/Avancement.tsx
 msgid "{nbAFaire} à faire"
 msgstr "{nbAFaire} à faire"
@@ -537,6 +541,22 @@ msgstr "{nbAFaire} à faire"
 #: src/pages/ImportBenevoles.tsx
 msgid "{nbAImporter} à importer"
 msgstr "{nbAImporter} à importer"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbAnnulees} billets annulés"
+msgstr "{nbAnnulees} billets annulés"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbAnnuleesFinal} billets annulés, {nbPlacesRetireesFinal} places retirées."
+msgstr "{nbAnnuleesFinal} billets annulés, {nbPlacesRetireesFinal} places retirées."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbAnnuleesNonTraitees, plural, one {# billet annulé est déjà importé. Cochez « Mettre à jour les personnes déjà importées » pour retirer sa candidature.} other {# billets annulés sont déjà importés. Cochez « Mettre à jour les personnes déjà importées » pour retirer leurs candidatures.}}"
+msgstr "{nbAnnuleesNonTraitees, plural, one {# billet annulé est déjà importé. Cochez « Mettre à jour les personnes déjà importées » pour retirer sa candidature.} other {# billets annulés sont déjà importés. Cochez « Mettre à jour les personnes déjà importées » pour retirer leurs candidatures.}}"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbAnnuleesNonTraitees, plural, one {# billet annulé est déjà importé. Un admin de l’activité peut retirer sa candidature.} other {# billets annulés sont déjà importés. Un admin de l’activité peut retirer leurs candidatures.}}"
+msgstr "{nbAnnuleesNonTraitees, plural, one {# billet annulé est déjà importé. Un admin de l’activité peut retirer sa candidature.} other {# billets annulés sont déjà importés. Un admin de l’activité peut retirer leurs candidatures.}}"
 
 #: src/pages/ImportBenevoles.tsx
 msgid "{nbComptes, plural, one {# adresse est celle d’un compte de l’organisation.} other {# adresses sont celles d’un compte de l’organisation.}}"
@@ -2061,6 +2081,10 @@ msgstr "Annoncer les dates"
 msgid "Annuaire"
 msgstr "Annuaire"
 
+#: src/lib/import-benevoles.ts
+msgid "Annulation du billet"
+msgstr "Annulation du billet"
+
 #. Statut d’un message préparé
 #. Statut d’un message préparé
 #: src/composants/Messages.tsx
@@ -2068,6 +2092,7 @@ msgstr "Annuaire"
 msgid "Annulé"
 msgstr "Annulé"
 
+#: src/composants/AssistantTableur.tsx
 #: src/composants/ReunionDetail.tsx
 #: src/pages/Agenda.tsx
 msgid "Annulée"
@@ -2782,6 +2807,26 @@ msgid "Bibliothèque de documents"
 msgstr "Bibliothèque de documents"
 
 #: src/pages/ImportBenevoles.tsx
+msgid "Billet {refAnnule} · {listePlaces}"
+msgstr "Billet {refAnnule} · {listePlaces}"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Billet {refAnnule} · aucune place"
+msgstr "Billet {refAnnule} · aucune place"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Billet {refNouveau} · billet annulé {refAnnule} ({nomAnnule})"
+msgstr "Billet {refNouveau} · billet annulé {refAnnule} ({nomAnnule})"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Billets annulés"
+msgstr "Billets annulés"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Billets de remplacement"
+msgstr "Billets de remplacement"
+
+#: src/pages/ImportBenevoles.tsx
 msgid "Billetterie du 7 août"
 msgstr "Billetterie du 7 août"
 
@@ -3058,6 +3103,10 @@ msgstr "Ces fichiers ne s’importent pas."
 #: src/pages/AppelBenevoles.tsx
 msgid "Ces moments se chevauchent : {listeConflits}. L’équipe choisira avec vous."
 msgstr "Ces moments se chevauchent : {listeConflits}. L’équipe choisira avec vous."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Ces nouveaux billets semblent remplacer un billet annulé du fichier. Un billet de remplacement rejoint la fiche du billet annulé, avec son lien et ses disponibilités, sans aucun mail."
+msgstr "Ces nouveaux billets semblent remplacer un billet annulé du fichier. Un billet de remplacement rejoint la fiche du billet annulé, avec son lien et ses disponibilités, sans aucun mail."
 
 #: src/pages/ImportBenevoles.tsx
 msgid "Ces personnes ont déjà une autre valeur dans Relaytour. L’import garde cette valeur. Modifiez la fiche à la main si la valeur du fichier est la bonne."
@@ -6050,6 +6099,10 @@ msgstr "L’heure de fin suit l’heure de début."
 msgid "L’identifiant « {identifiant} » ne change pas ici : il dépend de l’hébergement."
 msgstr "L’identifiant « {identifiant} » ne change pas ici : il dépend de l’hébergement."
 
+#: src/pages/ImportBenevoles.tsx
+msgid "L’import ne les modifie pas : un export filtré n’annule aucun billet."
+msgstr "L’import ne les modifie pas : un export filtré n’annule aucun billet."
+
 #: src/pages/admin/Activites.tsx
 msgid "L’import ne lit que le dossier de l’activité choisie : ses périmètres, ses fiches et ses tâches types. Il ignore l’identité de l’organisation et les autres activités."
 msgstr "L’import ne lit que le dossier de l’activité choisie : ses périmètres, ses fiches et ses tâches types. Il ignore l’identité de l’organisation et les autres activités."
@@ -6114,6 +6167,14 @@ msgstr "La @logistique prépare les lieux, et chaque @groupe:sport transmet ses 
 #: src/pages/admin/Activites.tsx
 msgid "La borne doit dépasser la précédente."
 msgstr "La borne doit dépasser la précédente."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "La candidature de chaque billet annulé se retire, et ses places listées ici sont retirées. La fiche reste."
+msgstr "La candidature de chaque billet annulé se retire, et ses places listées ici sont retirées. La fiche reste."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "La candidature de chaque billet annulé se retire. Ses places listées ici restent : retirez-les dans le programme, ou cochez « Retirer les places des billets annulés ». La fiche reste."
+msgstr "La candidature de chaque billet annulé se retire. Ses places listées ici restent : retirez-les dans le programme, ou cochez « Retirer les places des billets annulés ». La fiche reste."
 
 #: src/lib/guide-markdown.ts
 msgid "La case se coche en modifiant la fiche, et non d’un clic. Une case de fiche ne crée pas de tâche."
@@ -6494,6 +6555,10 @@ msgstr "Le besoin est atteint."
 #: src/composants/Jauge.tsx
 msgid "Le besoin est dépassé."
 msgstr "Le besoin est dépassé."
+
+#: src/lib/import-benevoles.ts
+msgid "Le billet est annulé et ne porte pas d’identifiant externe."
+msgstr "Le billet est annulé et ne porte pas d’identifiant externe."
 
 #: src/composants/EcrireMessage.tsx
 msgid "Le champ Cc affiche toutes les adresses. Nous vous conseillons le champ Cci, sauf pour des personnes qui travaillent déjà ensemble."
@@ -8277,6 +8342,10 @@ msgstr "Nouvelle fiche du périmètre {nomPerimetre}"
 msgid "Nouvelle notification"
 msgstr "Nouvelle notification"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Nouvelle personne"
+msgstr "Nouvelle personne"
+
 #: src/composants/ReunionFormulaire.tsx
 #: src/pages/Agenda.tsx
 msgid "Nouvelle réunion"
@@ -9576,6 +9645,10 @@ msgstr "Remettre en cours"
 msgid "Remettre en cours : {objet}"
 msgstr "Remettre en cours : {objet}"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Remplace le billet {refAnnule}"
+msgstr "Remplace le billet {refAnnule}"
+
 #: src/composants/ChampImage.tsx
 #: src/composants/EcrireMessage.tsx
 msgid "Remplacer"
@@ -9912,6 +9985,10 @@ msgstr "Retirer le partage"
 #: src/pages/admin/Equipe.tsx
 msgid "Retirer le souhait de {nomSouhaitant}"
 msgstr "Retirer le souhait de {nomSouhaitant}"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Retirer les places des billets annulés. Une place acceptée pour un autre billet de la même personne reste en place. Aucun mail ne part."
+msgstr "Retirer les places des billets annulés. Une place acceptée pour un autre billet de la même personne reste en place. Aucun mail ne part."
 
 #: src/pages/TousLesPerimetres.tsx
 msgid "Retirer mon souhait"
@@ -11360,6 +11437,10 @@ msgstr "Une affectation rend la personne référent·e du périmètre : elle y m
 msgid "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
 msgstr "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
 
+#: src/lib/import-benevoles.ts
+msgid "Une autre ligne du même identifiant externe n’est pas annulée."
+msgstr "Une autre ligne du même identifiant externe n’est pas annulée."
+
 #: src/lib/conflit.ts
 msgid "Une autre personne"
 msgstr "Une autre personne"
@@ -11567,8 +11648,16 @@ msgid "Valeurs gardées"
 msgstr "Valeurs gardées"
 
 #: src/pages/ImportBenevoles.tsx
+msgid "Valeurs qui signifient « annulé »"
+msgstr "Valeurs qui signifient « annulé »"
+
+#: src/pages/ImportBenevoles.tsx
 msgid "Valeurs qui signifient « non »"
 msgstr "Valeurs qui signifient « non »"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Valeurs qui signifient annulé"
+msgstr "Valeurs qui signifient annulé"
 
 #: src/pages/ImportBenevoles.tsx
 msgid "Valeurs qui signifient non"

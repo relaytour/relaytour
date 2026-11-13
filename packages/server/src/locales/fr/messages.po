@@ -2064,6 +2064,16 @@ msgstr "{jour}, de {heureDebut} à {heureFin}"
 
 #. js-lingui-explicit-id
 #: src/lib/import-benevoles.ts
+msgid "L’identifiant externe"
+msgstr "L’identifiant externe"
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "Un billet annulé exige un identifiant externe."
+msgstr "Un billet annulé exige un identifiant externe."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
 msgid "La ligne ne porte aucun nom."
 msgstr "La ligne ne porte aucun nom."
 
@@ -2076,11 +2086,6 @@ msgstr "Une personne choisit {max} séquences au plus."
 #: src/lib/import-benevoles.ts
 msgid "La date de l’accord ne peut pas être future."
 msgstr "La date de l’accord ne peut pas être future."
-
-#. js-lingui-explicit-id
-#: src/lib/import-benevoles.ts
-msgid "L’identifiant externe"
-msgstr "L’identifiant externe"
 
 #. js-lingui-explicit-id
 #: src/lib/import-benevoles.ts
@@ -2124,6 +2129,16 @@ msgstr "Seuls les admins de l’activité mettent à jour les personnes déjà i
 
 #. js-lingui-explicit-id
 #: src/lib/import-benevoles.ts
+msgid "Une autre ligne du même identifiant externe n’est pas annulée."
+msgstr "Une autre ligne du même identifiant externe n’est pas annulée."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "Le billet est annulé : la ligne n’est pas importée."
+msgstr "Le billet est annulé : la ligne n’est pas importée."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
 msgid "La fiche à rattacher n’existe plus."
 msgstr "La fiche à rattacher n’existe plus."
 
@@ -2131,6 +2146,11 @@ msgstr "La fiche à rattacher n’existe plus."
 #: src/lib/import-benevoles.ts
 msgid "Une activité compte {max} fiches bénévoles au plus : ce lot en créerait {fichesCreees}, il en reste {fichesRestantes}."
 msgstr "Une activité compte {max} fiches bénévoles au plus : ce lot en créerait {fichesCreees}, il en reste {fichesRestantes}."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "Une candidature de ce lot a changé pendant l’import. Relancez l’import du même fichier."
+msgstr "Une candidature de ce lot a changé pendant l’import. Relancez l’import du même fichier."
 
 #. js-lingui-explicit-id
 #: src/lib/import-equipe-tableur.ts

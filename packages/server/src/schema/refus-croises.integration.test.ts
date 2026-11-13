@@ -1678,6 +1678,13 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'refsImportees',
+    query:
+      'query ($e: ID!, $p: ID) { refsImportees(editionId: $e, perimetreId: $p, source: "Intrusion") }',
+    variables: () => ({ e: a.edition, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'correspondancesImport',
     query: 'query ($a: ID!) { correspondancesImport(activiteId: $a) { id } }',
     variables: () => ({ a: a.activite }),

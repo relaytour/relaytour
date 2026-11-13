@@ -44,6 +44,8 @@ import {
   LIBELLES_CHAMP,
   lireFichier,
   proposerCible,
+  proposerRemplacements,
+  VALEURS_ANNULEES_PAR_DEFAUT,
   VALEURS_NON_PAR_DEFAUT,
   type Champ,
   type Cible,
@@ -56,6 +58,7 @@ import {
   CORRESPONDANCES,
   ENREGISTRER_CORRESPONDANCE,
   IMPORTER,
+  REFS_IMPORTEES,
   SEQUENCES_IMPORT,
   SIMULER_IMPORT,
 } from '../lib/requetes-import'
@@ -158,6 +161,8 @@ interface Bilan {
   dejaImportees: number
   misesAJour: number
   conflits: number
+  annulees: number
+  placesRetirees: number
   ecartees: number
   fichesCreees: number
   fichesRattachees: number
@@ -169,6 +174,8 @@ const BILAN_VIDE: Bilan = {
   dejaImportees: 0,
   misesAJour: 0,
   conflits: 0,
+  annulees: 0,
+  placesRetirees: 0,
   ecartees: 0,
   fichesCreees: 0,
   fichesRattachees: 0,
@@ -180,6 +187,8 @@ const additionner = (a: Bilan, b: Bilan): Bilan => ({
   dejaImportees: a.dejaImportees + b.dejaImportees,
   misesAJour: a.misesAJour + b.misesAJour,
   conflits: a.conflits + b.conflits,
+  annulees: a.annulees + b.annulees,
+  placesRetirees: a.placesRetirees + b.placesRetirees,
   ecartees: a.ecartees + b.ecartees,
   fichesCreees: a.fichesCreees + b.fichesCreees,
   fichesRattachees: a.fichesRattachees + b.fichesRattachees,
@@ -267,10 +276,14 @@ export default function ImportBenevoles() {
   const [jour, setJour] = useState<string | null>(null)
   const jourRetenu = jour ?? jours[0] ?? edition?.debut ?? null
   const [valeursNon, setValeursNon] = useState(VALEURS_NON_PAR_DEFAUT)
+  const [valeursAnnulees, setValeursAnnulees] = useState(
+    VALEURS_ANNULEES_PAR_DEFAUT
+  )
   const [mode, setMode] = useState<Mode>('A_REPARTIR')
   const [accepterTout, setAccepterTout] = useState(false)
   const [prevenirParMail, setPrevenirParMail] = useState(true)
   const [mettreAJour, setMettreAJour] = useState(false)
+  const [retirerPlacesAnnulees, setRetirerPlacesAnnulees] = useState(false)
   // Les champs changent d'objet à chaque rendu : leur clé garde les calculs.
   const cleChamps = champs.join(',')
   const choix = useMemo(
@@ -298,10 +311,19 @@ export default function ImportBenevoles() {
         ? construirePersonnes(tableau, champs, cibles, {
             valeursNon,
             jour: jourRetenu,
+            valeursAnnulees,
           })
         : { personnes: [] as PersonneLue[], ecartees: [] },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tableau, cleChamps, cibles, valeursNon, jourRetenu, apercu]
+    [
+      tableau,
+      cleChamps,
+      cibles,
+      valeursNon,
+      valeursAnnulees,
+      jourRetenu,
+      apercu,
+    ]
   )
   const [simulation, setSimulation] = useState<{
     bilan: Bilan
@@ -311,6 +333,12 @@ export default function ImportBenevoles() {
   } | null>(null)
   const [simulationEnCours, setSimulationEnCours] = useState(false)
   const [decisions, setDecisions] = useState<Map<string, Decision>>(new Map())
+  // Par nouveau billet : vrai s'il remplace le billet annulé proposé.
+  const [decisionsRemplacement, setDecisionsRemplacement] = useState<
+    Map<string, boolean>
+  >(new Map())
+  // Les identifiants déjà importés de la source, relus après la vérification.
+  const [refsDeLaSource, setRefsDeLaSource] = useState<string[] | null>(null)
   const [accord, setAccord] = useState(false)
 
   // Étape 5 : l'écriture.
@@ -340,13 +368,78 @@ export default function ImportBenevoles() {
     prevenirParMail,
     accepterTout: mode === 'A_REPARTIR' && accepterTout,
     mettreAJour: gere && mettreAJour,
+    retirerPlacesAnnulees:
+      gere && mettreAJour && champs.includes('ANNULATION')
+        ? retirerPlacesAnnulees
+        : false,
   }
+
+  // Les billets annulés partent en dernier : les billets qui les remplacent
+  // acceptent d'abord leurs séquences, et ces places restent.
+  const aEnvoyer = useMemo(
+    () => [
+      ...lues.personnes.filter(p => !p.annulee),
+      ...lues.personnes.filter(p => p.annulee),
+    ],
+    [lues]
+  )
+
+  // Les billets annulés qu'un nouveau billet du fichier remplace sans doute,
+  // parmi ceux qui ont une fiche : par clé du nouveau billet.
+  const remplacements = useMemo(() => {
+    const proposes = new Map<string, PersonneLue>()
+    if (!simulation || !(gere && mettreAJour)) return proposes
+    const etat = (p: PersonneLue) => simulation.lignes.get(p.cle)
+    const nouveaux = new Set(
+      lues.personnes
+        .filter(
+          p =>
+            !p.annulee &&
+            p.refExterne !== null &&
+            etat(p)?.etat === 'A_IMPORTER'
+        )
+        .map(p => p.cle)
+    )
+    const surFiche = lues.personnes.filter(
+      p => !p.annulee || (etat(p)?.etat === 'ANNULEE' && etat(p)?.rattacheeA)
+    )
+    const parCle = new Map(lues.personnes.map(p => [p.cle, p] as const))
+    for (const [nouveau, annule] of proposerRemplacements(surFiche, nouveaux)) {
+      proposes.set(nouveau, parCle.get(annule)!)
+    }
+    return proposes
+  }, [simulation, gere, mettreAJour, lues])
+  const remplace = (cle: string) =>
+    remplacements.has(cle) && (decisionsRemplacement.get(cle) ?? true)
 
   const versSaisie = (p: PersonneLue): PersonneImportInput => {
     const ligne = simulation?.lignes.get(p.cle)
     const niveau = ligne?.rapprochement?.niveau
     const decision =
       decisions.get(p.cle) ?? (niveau === 'FORT' ? 'RATTACHER' : 'CREER')
+    if (p.annulee) {
+      return { cle: p.cle, nom: p.nom, refExterne: p.refExterne, annulee: true }
+    }
+    // Un billet qui en remplace un autre rejoint la fiche du billet annulé.
+    const annule = remplace(p.cle) ? remplacements.get(p.cle) : undefined
+    const ficheDuBillet = annule
+      ? simulation?.lignes.get(annule.cle)?.rattacheeA
+      : null
+    if (ficheDuBillet) {
+      return {
+        cle: p.cle,
+        nom: p.nom,
+        courriel: p.courriel,
+        telephone: p.telephone,
+        precisions: p.precisions,
+        refExterne: p.refExterne,
+        accordLe: p.accordLe,
+        plages: p.plages,
+        sequenceIds: p.sequenceIds,
+        rattachement: ficheDuBillet,
+        remplace: true,
+      }
+    }
     return {
       cle: p.cle,
       nom: p.nom,
@@ -415,6 +508,11 @@ export default function ImportBenevoles() {
     if (Array.isArray(reglages.valeursNon)) {
       setValeursNon(reglages.valeursNon.filter(v => typeof v === 'string'))
     }
+    if (Array.isArray(reglages.valeursAnnulees)) {
+      setValeursAnnulees(
+        reglages.valeursAnnulees.filter(v => typeof v === 'string')
+      )
+    }
     if (reglages.mode === 'A_REPARTIR' || reglages.mode === 'PLACES_DIRECTES') {
       setMode(reglages.mode)
     }
@@ -438,7 +536,7 @@ export default function ImportBenevoles() {
               .filter(c => c.champ !== 'IGNORER')
               .map(c => [c.entete, c.champ])
           ),
-          reglages: { valeursNon, mode, prevenirParMail },
+          reglages: { valeursNon, valeursAnnulees, mode, prevenirParMail },
         },
       })
       message.success(t`Correspondance enregistrée.`)
@@ -455,7 +553,7 @@ export default function ImportBenevoles() {
       let depassements: SimulerImportBenevolesQuery['simulerImportBenevoles']['depassements'] =
         []
       let fichesRestantes = 0
-      for (const lot of enLots(lues.personnes)) {
+      for (const lot of enLots(aEnvoyer)) {
         const { data } = await client.query({
           query: SIMULER_IMPORT,
           variables: {
@@ -472,6 +570,23 @@ export default function ImportBenevoles() {
         fichesRestantes = rapport.fichesRestantes
       }
       setSimulation({ bilan, lignes, depassements, fichesRestantes })
+      setDecisionsRemplacement(new Map())
+      // Les billets déjà importés que le fichier ne contient plus : signalés,
+      // jamais modifiés. Un export filtré n'annule rien.
+      if (champs.includes('REF_EXTERNE')) {
+        const { data } = await client.query({
+          query: REFS_IMPORTEES,
+          variables: {
+            editionId: variablesCommunes.editionId,
+            perimetreId: variablesCommunes.perimetreId,
+            source: variablesCommunes.source,
+          },
+          fetchPolicy: 'no-cache',
+        })
+        setRefsDeLaSource(data?.refsImportees ?? [])
+      } else {
+        setRefsDeLaSource(null)
+      }
     } catch (e) {
       message.error(messageErreur(e))
     } finally {
@@ -485,7 +600,7 @@ export default function ImportBenevoles() {
     setEchec(null)
     let bilan = BILAN_VIDE
     let traitees = 0
-    const lots = enLots(lues.personnes)
+    const lots = enLots(aEnvoyer)
     try {
       for (const [i, lot] of lots.entries()) {
         const { data } = await importer({
@@ -583,6 +698,47 @@ export default function ImportBenevoles() {
   const comptes = lues.personnes.filter(
     p => simulation?.lignes.get(p.cle)?.compte
   )
+  const accepterLesChoix =
+    mode === 'PLACES_DIRECTES' || (mode === 'A_REPARTIR' && accepterTout)
+  const titres = new Map(
+    (programme?.programme ?? []).map(s => [s.id, s.titre] as const)
+  )
+  const remplacantDe = new Map(
+    [...remplacements.entries()]
+      .filter(([cle]) => remplace(cle))
+      .map(([cle, annule]) => [annule.cle, cle] as const)
+  )
+  // Les billets annulés et les places qu'ils tiennent encore, hors celles que
+  // leur billet de remplacement accepte.
+  const annulees = lues.personnes.flatMap(p => {
+    const ligne = simulation?.lignes.get(p.cle)
+    if (!p.annulee || ligne?.etat !== 'ANNULEE') return []
+    const remplacant = remplacantDe.get(p.cle)
+    const gardees = new Set(
+      remplacant && accepterLesChoix
+        ? (lues.personnes.find(q => q.cle === remplacant)?.sequenceIds ?? [])
+        : []
+    )
+    return [
+      {
+        personne: p,
+        places: ligne.sequencesARetirer
+          .filter(id => !gardees.has(id))
+          .map(id => titres.get(id) ?? id),
+      },
+    ]
+  })
+  const annuleesNonTraitees = lues.personnes.filter(
+    p => p.annulee && simulation?.lignes.get(p.cle)?.etat === 'DEJA_IMPORTEE'
+  )
+  const refsDuFichier = new Set(
+    tableau
+      ? tableau.lignes
+          .map(l => (l[champs.indexOf('REF_EXTERNE')] ?? '').trim())
+          .filter(Boolean)
+      : []
+  )
+  const absents = (refsDeLaSource ?? []).filter(r => !refsDuFichier.has(r))
   const enConflit = lues.personnes.filter(
     p => (simulation?.lignes.get(p.cle)?.conflits.length ?? 0) > 0
   )
@@ -604,6 +760,9 @@ export default function ImportBenevoles() {
   const nbDejaImportees = bilanSimule?.dejaImportees ?? 0
   const nbMisesAJour = bilanSimule?.misesAJour ?? 0
   const nbConflits = bilanSimule?.conflits ?? 0
+  const nbAnnulees = bilanSimule?.annulees ?? 0
+  const nbAnnuleesNonTraitees = annuleesNonTraitees.length
+  const nbAbsents = absents.length
   const nbEcarteesTotal = (bilanSimule?.ecartees ?? 0) + nbEcarteesNavigateur
   const nbFichesCreees = bilanSimule?.fichesCreees ?? 0
   const nbFichesRattachees = bilanSimule?.fichesRattachees ?? 0
@@ -618,6 +777,8 @@ export default function ImportBenevoles() {
   const nbPlacesFinal = resultat?.places ?? 0
   const nbDejaImporteesFinal = resultat?.dejaImportees ?? 0
   const nbMisesAJourFinal = resultat?.misesAJour ?? 0
+  const nbAnnuleesFinal = resultat?.annulees ?? 0
+  const nbPlacesRetireesFinal = resultat?.placesRetirees ?? 0
   const libelleLigne = (numero: number) => t`Ligne ${numero}`
   const libelleChampColonne = (entete: string) =>
     t`Champ de la colonne ${entete}`
@@ -897,6 +1058,20 @@ export default function ImportBenevoles() {
                 onChange={setValeursNon}
               />
             </label>
+            {champs.includes('ANNULATION') && (
+              <label className="rt-import-champ">
+                <span className="rt-libelle">
+                  {t`Valeurs qui signifient « annulé »`}
+                </span>
+                <Select
+                  aria-label={t`Valeurs qui signifient annulé`}
+                  mode="tags"
+                  style={{ minWidth: 260 }}
+                  value={valeursAnnulees}
+                  onChange={setValeursAnnulees}
+                />
+              </label>
+            )}
           </div>
           {choix.length === 0 ? (
             <p className="rt-note">
@@ -981,6 +1156,18 @@ export default function ImportBenevoles() {
               </Trans>
             </Checkbox>
           )}
+          {gere && mettreAJour && champs.includes('ANNULATION') && (
+            <Checkbox
+              checked={retirerPlacesAnnulees}
+              onChange={e => setRetirerPlacesAnnulees(e.target.checked)}
+            >
+              <Trans>
+                Retirer les places des billets annulés. Une place acceptée pour
+                un autre billet de la même personne reste en place. Aucun mail
+                ne part.
+              </Trans>
+            </Checkbox>
+          )}
           <Space>
             <Button onClick={() => setEtape(1)}>
               <Trans>Précédent</Trans>
@@ -1039,6 +1226,11 @@ export default function ImportBenevoles() {
                 {nbConflits > 0 && (
                   <li>
                     <Trans>{nbConflits} conflits</Trans>
+                  </li>
+                )}
+                {nbAnnulees > 0 && (
+                  <li>
+                    <Trans>{nbAnnulees} billets annulés</Trans>
                   </li>
                 )}
                 <li>
@@ -1123,6 +1315,121 @@ export default function ImportBenevoles() {
                   </ul>
                 </>
               )}
+              {remplacements.size > 0 && (
+                <>
+                  <h2 className="rt-intertitre">
+                    <Trans>Billets de remplacement</Trans>
+                  </h2>
+                  <p className="rt-note">
+                    <Trans>
+                      Ces nouveaux billets semblent remplacer un billet annulé
+                      du fichier. Un billet de remplacement rejoint la fiche du
+                      billet annulé, avec son lien et ses disponibilités, sans
+                      aucun mail.
+                    </Trans>
+                  </p>
+                  <ul className="rt-import-colonnes">
+                    {[...remplacements.entries()].map(([cle, annule]) => {
+                      const nouveau = lues.personnes.find(q => q.cle === cle)!
+                      const refNouveau = nouveau.refExterne ?? ''
+                      const refAnnule = annule.refExterne ?? ''
+                      const nomAnnule = annule.nom
+                      return (
+                        <li key={cle} className="rt-import-colonne">
+                          <div>
+                            <strong>{nouveau.nom}</strong>
+                            <span className="rt-note">
+                              {t`Billet ${refNouveau} · billet annulé ${refAnnule} (${nomAnnule})`}
+                            </span>
+                          </div>
+                          <Radio.Group
+                            value={remplace(cle)}
+                            onChange={e =>
+                              setDecisionsRemplacement(
+                                new Map(decisionsRemplacement).set(
+                                  cle,
+                                  e.target.value as boolean
+                                )
+                              )
+                            }
+                          >
+                            <Radio value={true}>
+                              <Trans>Remplace le billet {refAnnule}</Trans>
+                            </Radio>
+                            <Radio value={false}>
+                              <Trans>Nouvelle personne</Trans>
+                            </Radio>
+                          </Radio.Group>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </>
+              )}
+              {annulees.length > 0 && (
+                <>
+                  <h2 className="rt-intertitre">
+                    <Trans>Billets annulés</Trans>
+                  </h2>
+                  <p className="rt-note">
+                    {retirerPlacesAnnulees ? (
+                      <Trans>
+                        La candidature de chaque billet annulé se retire, et ses
+                        places listées ici sont retirées. La fiche reste.
+                      </Trans>
+                    ) : (
+                      <Trans>
+                        La candidature de chaque billet annulé se retire. Ses
+                        places listées ici restent : retirez-les dans le
+                        programme, ou cochez « Retirer les places des billets
+                        annulés ». La fiche reste.
+                      </Trans>
+                    )}
+                  </p>
+                  <ul className="rt-import-ecartees">
+                    {annulees.map(({ personne, places }) => {
+                      const refAnnule = personne.refExterne ?? ''
+                      const listePlaces = places.join(', ')
+                      return (
+                        <li key={personne.cle}>
+                          <strong>{personne.nom}</strong>{' '}
+                          {places.length > 0
+                            ? t`Billet ${refAnnule} · ${listePlaces}`
+                            : t`Billet ${refAnnule} · aucune place`}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </>
+              )}
+              {annuleesNonTraitees.length > 0 && (
+                <Alert
+                  type="info"
+                  showIcon
+                  title={
+                    gere
+                      ? t`${plural(nbAnnuleesNonTraitees, { one: '# billet annulé est déjà importé. Cochez « Mettre à jour les personnes déjà importées » pour retirer sa candidature.', other: '# billets annulés sont déjà importés. Cochez « Mettre à jour les personnes déjà importées » pour retirer leurs candidatures.' })}`
+                      : t`${plural(nbAnnuleesNonTraitees, { one: '# billet annulé est déjà importé. Un admin de l’activité peut retirer sa candidature.', other: '# billets annulés sont déjà importés. Un admin de l’activité peut retirer leurs candidatures.' })}`
+                  }
+                />
+              )}
+              {absents.length > 0 && (
+                <Alert
+                  type="info"
+                  showIcon
+                  title={t`${plural(nbAbsents, { one: '# billet déjà importé n’apparaît pas dans ce fichier.', other: '# billets déjà importés n’apparaissent pas dans ce fichier.' })}`}
+                  description={
+                    <>
+                      <Trans>
+                        L’import ne les modifie pas : un export filtré n’annule
+                        aucun billet.
+                      </Trans>{' '}
+                      {absents.slice(0, 20).join(', ')}
+                      {absents.length > 20 && ' …'}
+                    </>
+                  }
+                />
+              )}
               {enConflit.length > 0 && (
                 <>
                   <h2 className="rt-intertitre">
@@ -1205,7 +1512,9 @@ export default function ImportBenevoles() {
               disabled={
                 !simulation ||
                 !accord ||
-                simulation.bilan.aImporter + simulation.bilan.misesAJour ===
+                simulation.bilan.aImporter +
+                  simulation.bilan.misesAJour +
+                  simulation.bilan.annulees ===
                   0 ||
                 simulation.bilan.fichesCreees > simulation.fichesRestantes
               }
@@ -1248,6 +1557,8 @@ export default function ImportBenevoles() {
                   {t`${nbImportees} personnes importées, ${nbFichesCreeesFinal} fiches créées, ${nbFichesRattacheesFinal} fiches rejointes, ${nbPlacesFinal} places, ${nbDejaImporteesFinal} déjà importées.`}
                   {nbMisesAJourFinal > 0 &&
                     ` ${t`${nbMisesAJourFinal} personnes mises à jour.`}`}
+                  {nbAnnuleesFinal > 0 &&
+                    ` ${t`${nbAnnuleesFinal} billets annulés, ${nbPlacesRetireesFinal} places retirées.`}`}
                 </>
               }
               extra={[

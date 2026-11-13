@@ -13,6 +13,7 @@ import {
   lireHoraire,
   posteDe,
   proposerCible,
+  proposerRemplacements,
   valeursDe,
   type Champ,
   type Cible,
@@ -340,6 +341,80 @@ describe('billets d’un même acheteur', () => {
       ['B-2', 'Noé Morel', [3]],
       ['B-3', 'Lina Morel', [4]],
     ])
+  })
+})
+
+describe('billets annulés', () => {
+  const tableau: Tableau = {
+    entetes: [
+      'Billet',
+      'Nom complet',
+      'Téléphone',
+      'Statut du billet',
+      'Poste',
+    ],
+    lignes: [
+      ['B-1', 'Lina Morel', '06 11 22 33 44', 'Annulé', 'Relais 3'],
+      ['B-1', '', '', 'Annulé', 'Relais 3'],
+      ['B-2', 'Noé Morel', '06 11 22 33 44', 'Validé', 'Relais 2'],
+      ['B-9', 'lina MOREL', '06 11 22 33 44', 'Validé', 'Relais 5'],
+      ['', 'Sans Billet', '', 'Remboursé', ''],
+    ],
+  }
+  const champs: Champ[] = [
+    'REF_EXTERNE',
+    'NOM_COMPLET',
+    'TELEPHONE',
+    'ANNULATION',
+    'VALEURS',
+  ]
+
+  it('détecte la colonne, met à part le billet annulé et écarte celui sans identifiant', () => {
+    expect(champsDe(tableau)['Statut du billet']).toBe('ANNULATION')
+    const { personnes, ecartees } = construirePersonnes(
+      tableau,
+      champs,
+      new Map(),
+      { valeursNon: [], jour: null }
+    )
+    expect(
+      personnes.map(p => [p.refExterne, p.nom, p.annulee, p.lignes])
+    ).toEqual([
+      ['B-1', 'Lina Morel', true, [2, 3]],
+      ['B-2', 'Noé Morel', false, [4]],
+      ['B-9', 'lina MOREL', false, [5]],
+    ])
+    expect(ecartees.map(e => e.ligne)).toEqual([6])
+  })
+
+  it('écarte une ligne annulée dont l’identifiant porte aussi une ligne active', () => {
+    const { personnes, ecartees } = construirePersonnes(
+      {
+        entetes: tableau.entetes,
+        lignes: [
+          ['C-5', 'Eva Roy', '', 'Validé', 'Relais 1'],
+          ['C-5', 'Eva Roy', '', 'Remboursé', 'Relais 2'],
+        ],
+      },
+      champs,
+      new Map(),
+      { valeursNon: [], jour: null }
+    )
+    expect(personnes.map(p => [p.refExterne, p.annulee])).toEqual([
+      ['C-5', false],
+    ])
+    expect(ecartees.map(e => e.ligne)).toEqual([3])
+  })
+
+  it('propose le nouveau billet de la même personne, pas celui d’un proche au même téléphone', () => {
+    const { personnes } = construirePersonnes(tableau, champs, new Map(), {
+      valeursNon: [],
+      jour: null,
+    })
+    const cle = (ref: string) => personnes.find(p => p.refExterne === ref)!.cle
+    expect(
+      proposerRemplacements(personnes, new Set([cle('B-2'), cle('B-9')]))
+    ).toEqual(new Map([[cle('B-9'), cle('B-1')]]))
   })
 })
 

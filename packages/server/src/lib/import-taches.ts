@@ -24,6 +24,8 @@ export const ETATS_LIGNE = [
   'DEJA_IMPORTEE',
   // Import de bénévoles seulement : une personne déjà importée, mise à jour.
   'MISE_A_JOUR',
+  // Import de bénévoles seulement : un billet annulé, dont la candidature se retire.
+  'ANNULEE',
   'ECARTEE',
 ] as const
 
