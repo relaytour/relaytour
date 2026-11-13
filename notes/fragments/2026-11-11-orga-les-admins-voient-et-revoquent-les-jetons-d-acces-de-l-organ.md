@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.31.0
 fr:
   titre: >-
     Les admins voient et révoquent les jetons d'accès de l'organisation

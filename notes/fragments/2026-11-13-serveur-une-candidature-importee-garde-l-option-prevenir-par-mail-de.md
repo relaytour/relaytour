@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.31.0
 fr:
   titre: >-
     Une candidature importée garde l'option « Prévenir par mail » de son import

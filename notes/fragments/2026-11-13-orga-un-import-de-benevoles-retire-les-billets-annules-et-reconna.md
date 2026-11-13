@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.31.0
 fr:
   titre: >-
     Un import de bénévoles retire les billets annulés et reconnaît leur remplacement
