@@ -180,7 +180,7 @@ L'étude a montré trois autres défauts :
 - Deux lignes aux identifiants externes différents restent deux personnes, même avec la même adresse, le même téléphone ou le même nom. La règle s'applique dans le navigateur, y compris dans un groupe de la forme 3.
 - Le serveur reconnaît une ligne déjà importée par son seul identifiant externe. L'adresse ne sert qu'aux lignes sans identifiant.
 - Une ligne à identifiant externe ne se rapproche pas d'une fiche liée à une autre ligne du même appel d'import.
-- L'acceptation d'une candidature importée avec un identifiant externe ne rejoint pas une fiche par l'adresse.
+- L'acceptation d'une candidature importée avec un identifiant externe ne rejoint par l'adresse qu'une fiche liée à aucune autre ligne importée. Elle ne rejoint jamais la fiche d'un autre billet.
 - Le panneau « Doublons possibles » ne propose pas deux fiches liées à deux identifiants externes différents d'un même appel d'import.
 
 **L'option « Prévenir par mail » suit la personne importée.**

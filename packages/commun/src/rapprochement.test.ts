@@ -97,6 +97,21 @@ describe('regrouper', () => {
       ]
     )
   })
+
+  it('ne réunit pas deux billets par une ligne sans identifiant qui les relie', () => {
+    const lignes = [
+      { nom: 'Lina Morel', courriel: 'parent@exemple.org', refExterne: 'B-1' },
+      { nom: 'Noé Morel', telephone: '06 12 34 56 78', refExterne: 'B-2' },
+      {
+        nom: 'Morel',
+        courriel: 'parent@exemple.org',
+        telephone: '+33 6 12 34 56 78',
+        refExterne: null,
+      },
+    ]
+    const groupes = regrouper(lignes).map(g => g.map(l => l.refExterne ?? '-'))
+    expect(groupes).toEqual([['B-1', '-'], ['B-2']])
+  })
 })
 
 describe('pairesRapprochees', () => {

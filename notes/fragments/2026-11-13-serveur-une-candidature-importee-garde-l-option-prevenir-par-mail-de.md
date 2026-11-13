@@ -13,7 +13,8 @@ fr:
     Auparavant, cette fiche avait toujours l'option cochée, et une adresse sur la
     candidature suffisait à envoyer le lien personnel. Une candidature importée
     avant cette version crée une fiche sans l'option. Une candidature importée
-    avec un identifiant externe ne rejoint plus une fiche par son adresse.
+    avec un identifiant externe ne rejoint plus par son adresse la fiche d'un
+    autre billet.
 en:
   titre: >-
     An imported application keeps the "Notify by email" option of its import
@@ -23,7 +24,8 @@ en:
     record always received the option, and an email address on the application
     was enough to send the personal link. An application imported before this
     version creates a record without the option. An application imported with an
-    external ID no longer joins a record by its email address.
+    external ID no longer joins the record of another ticket by its email
+    address.
 ---
 
 ADR 0042, amendement du 2026-11-13. `accepterSurSequence` (`lib/appels.ts`) lit

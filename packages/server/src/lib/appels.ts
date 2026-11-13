@@ -493,19 +493,28 @@ export async function accepterSurSequence(
   })
   // Une candidature importée avec un identifiant externe désigne une ligne du
   // fichier, comme un billet : l'adresse d'un acheteur peut couvrir plusieurs
-  // billets, donc plusieurs personnes. Elle ne rejoint pas une fiche par son
-  // adresse (ADR 0042).
+  // billets, donc plusieurs personnes. Elle rejoint par l'adresse une fiche qui
+  // n'est liée à aucune autre ligne importée, jamais la fiche d'un autre
+  // billet (ADR 0042).
   const importee = candidature.origine === 'IMPORT'
+  const ligneImportee = importee && candidature.refExterne !== null
   let benevoleId = candidature.benevoleId
-  if (
-    benevoleId === null &&
-    candidature.courriel !== null &&
-    !(importee && candidature.refExterne !== null)
-  ) {
+  if (benevoleId === null && candidature.courriel !== null) {
     const existante = await tx.benevole.findFirst({
       where: {
         activiteId: candidature.activiteId,
         courriel: candidature.courriel,
+        ...(ligneImportee
+          ? {
+              candidatures: {
+                none: {
+                  id: { not: candidature.id },
+                  origine: 'IMPORT',
+                  refExterne: { not: null },
+                },
+              },
+            }
+          : {}),
       },
       orderBy: { createdAt: 'asc' },
       select: { id: true },

@@ -341,19 +341,29 @@ builder.queryFields(t => ({
       const ecartees = new Set(
         distinctes.map(p => `${p.benevoleAId}:${p.benevoleBId}`)
       )
+      const proches = pairesRapprochees(fiches)
+        .map(p => {
+          const [a, b] = [p.a, p.b].sort((x, y) => x.id.localeCompare(y.id))
+          return { a: a!, b: b!, niveau: p.niveau }
+        })
+        .filter(p => !ecartees.has(`${p.a.id}:${p.b.id}`))
       // Deux fiches nées de deux lignes d'un même import, aux identifiants
       // externes différents, désignent deux personnes : deux billets d'un même
-      // acheteur partagent une adresse sans être des doublons.
+      // acheteur partagent une adresse sans être des doublons. Seules les fiches
+      // des paires proches se lisent.
       const lignesDe = new Map<string, Map<string, Set<string>>>()
-      for (const c of await prisma.candidature.findMany({
-        where: {
-          activiteId,
-          origine: 'IMPORT',
-          refExterne: { not: null },
-          benevoleId: { not: null },
-        },
-        select: { appelId: true, refExterne: true, benevoleId: true },
-      })) {
+      const idsProches = [...new Set(proches.flatMap(p => [p.a.id, p.b.id]))]
+      for (const c of idsProches.length === 0
+        ? []
+        : await prisma.candidature.findMany({
+            where: {
+              activiteId,
+              origine: 'IMPORT',
+              refExterne: { not: null },
+              benevoleId: { in: idsProches },
+            },
+            select: { appelId: true, refExterne: true, benevoleId: true },
+          })) {
         const parAppel =
           lignesDe.get(c.benevoleId!) ?? new Map<string, Set<string>>()
         const refs = parAppel.get(c.appelId) ?? new Set<string>()
@@ -371,12 +381,7 @@ builder.queryFields(t => ({
         }
         return false
       }
-      const paires = pairesRapprochees(fiches)
-        .map(p => {
-          const [a, b] = [p.a, p.b].sort((x, y) => x.id.localeCompare(y.id))
-          return { a: a!, b: b!, niveau: p.niveau }
-        })
-        .filter(p => !ecartees.has(`${p.a.id}:${p.b.id}`))
+      const paires = proches
         .filter(p => !lignesDistinctes(p.a.id, p.b.id))
         .slice(0, DOUBLONS_MAX)
       return Promise.all(

@@ -990,6 +990,14 @@ describe('mise à jour d’un import', () => {
       ['v1', 'MISE_A_JOUR', ['COURRIEL', 'PLAGES', 'SEQUENCES']],
       ['v2', 'DEJA_IMPORTEE', []],
     ])
+    // La candidature refusée n'est ni écrite ni comptée.
+    expect(rapport).toMatchObject({ misesAJour: 1, fichesCreees: 0 })
+    expect(
+      await prisma.candidature.findFirstOrThrow({
+        where: { sourceImport: src, refExterne: 'V-2' },
+        include: { choix: true },
+      })
+    ).toMatchObject({ courriel: null, choix: [{ statut: 'REFUSE' }] })
     const rose = await prisma.candidature.findFirstOrThrow({
       where: { sourceImport: src, refExterne: 'V-1' },
       include: { choix: true, plages: true },
@@ -1025,6 +1033,126 @@ describe('mise à jour d’un import', () => {
       prevenirParMail: false,
     })
     expect(ficheRose.places[0]!.confirmeeLe).not.toBeNull()
+    expect(enFile).toEqual([])
+  })
+
+  it('ne touche pas une candidature retirée', async () => {
+    const src = `retrait ${s}`
+    donnees(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src,
+          l: [{ cle: 'r', nom: 'Iris Faure', refExterne: 'R-1' }],
+        })
+      ),
+      'importerBenevoles'
+    )
+    await prisma.candidature.updateMany({
+      where: { sourceImport: src, refExterne: 'R-1' },
+      data: { statut: 'RETIREE' },
+    })
+    const rapport = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src,
+          mj: true,
+          l: [
+            {
+              cle: 'r',
+              nom: 'Iris Faure',
+              refExterne: 'R-1',
+              courriel: `iris-${s}@exemple.fr`,
+            },
+          ],
+        })
+      ),
+      'importerBenevoles'
+    )
+    expect(rapport).toMatchObject({ misesAJour: 0, dejaImportees: 1 })
+    expect(
+      (
+        await prisma.candidature.findFirstOrThrow({
+          where: { sourceImport: src, refExterne: 'R-1' },
+        })
+      ).courriel
+    ).toBeNull()
+  })
+
+  it('rejoint à l’acceptation une fiche de même adresse sans autre billet ; une candidature d’avant la migration crée une fiche non joignable', async () => {
+    const src = `acceptation ${s}`
+    const wendy = `wendy-${s}@exemple.fr`
+    const xavier = `xavier-${s}@exemple.fr`
+    donnees(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src,
+          pm: true,
+          l: [
+            {
+              cle: 'w',
+              nom: 'Wendy Blanc',
+              refExterne: 'W-1',
+              courriel: wendy,
+              sequenceIds: [ids.buvette],
+            },
+            {
+              cle: 'x',
+              nom: 'Xavier Blanc',
+              refExterne: 'X-1',
+              courriel: xavier,
+              sequenceIds: [ids.buvette],
+            },
+          ],
+        })
+      ),
+      'importerBenevoles'
+    )
+    // Une candidature importée avant la colonne n'a pas gardé l'option.
+    await prisma.candidature.updateMany({
+      where: { sourceImport: src },
+      data: { prevenirParMail: null },
+    })
+    // Une fiche saisie après l'import porte l'adresse de Wendy, sans billet.
+    const saisie = await prisma.benevole.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        nom: 'Wendy Blanc',
+        courriel: wendy,
+        prevenirParMail: false,
+        accordLe: new Date(),
+      },
+    })
+    for (const ref of ['W-1', 'X-1']) {
+      const choix = await prisma.choixCandidature.findFirstOrThrow({
+        where: { candidature: { sourceImport: src, refExterne: ref } },
+      })
+      donnees(
+        await executer(
+          ids.admin,
+          `mutation ($id: ID!) { accepterChoixCandidature(id: $id) { id } }`,
+          { id: choix.id }
+        ),
+        'accepterChoixCandidature'
+      )
+    }
+    const candidatures = await prisma.candidature.findMany({
+      where: { sourceImport: src },
+      orderBy: { refExterne: 'asc' },
+      include: { benevole: true },
+    })
+    expect(candidatures[0]!.benevoleId).toBe(saisie.id)
+    expect(candidatures[1]!.benevole).toMatchObject({
+      courriel: xavier,
+      origine: 'IMPORT',
+      prevenirParMail: false,
+    })
     expect(enFile).toEqual([])
   })
 
