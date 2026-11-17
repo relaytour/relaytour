@@ -218,8 +218,8 @@
           <div class="verre panneau">
             <h3>What the installation checks</h3>
             <ul class="gestes">
-              <li><span><span class="libelle">Fetch</span></span><span>A public address, with no redirect, within 5 seconds and 16 KB.</span></li>
-              <li><span><span class="libelle">Name</span></span><span>80 characters at most, with no line break.</span></li>
+              <li><span><span class="libelle">Fetch</span></span><span>A domain name that leads to a public address. An IP address and <span class="route">localhost</span> are refused. No redirect, within 5 seconds and 16 KB.</span></li>
+              <li><span><span class="libelle">Name</span></span><span>80 characters at most, with no line break and no invisible formatting character.</span></li>
               <li><span><span class="libelle">Redirects</span></span><span>Ten addresses at most, in https, or in http on 127.0.0.1 or [::1] with any port (RFC 8252).</span></li>
               <li><span><span class="libelle">Cache</span></span><span>The installation keeps the document according to its <span class="route">Cache-Control</span> header, for 24 hours at most.</span></li>
             </ul>
