@@ -18,9 +18,15 @@ import {
 import { buildContext, type AppContext } from '../context.ts'
 import { contexteDeJetonAcces } from '../contexte-jeton.ts'
 import { env } from '../env.ts'
+import { journal } from '../lib/journal.ts'
 import { schema } from '../schema/index.ts'
 
-import { defiS256 } from './jetons.ts'
+import {
+  purgerApplications,
+  rappelerFinDesAutorisations,
+  revoquerApplicationsRefusees,
+} from './entretien.ts'
+import { defiS256, empreinte } from './jetons.ts'
 import { emetteur } from './metadonnees.ts'
 import { routesOAuth } from './routes.ts'
 
@@ -518,6 +524,19 @@ describe('échange du code', () => {
   })
 })
 
+describe('code expiré', () => {
+  it('refuse un code de plus de 60 secondes', async () => {
+    const code = await codeAccorde()
+    await prisma.demandeAutorisation.update({
+      where: { codeEmpreinte: empreinte(code) },
+      data: { codeExpireLe: new Date(Date.now() - 1000) },
+    })
+    const r = await echanger(code)
+    expect(r.statut).toBe(400)
+    expect(erreurDe(r)).toBe('invalid_grant')
+  })
+})
+
 describe('renouvellement', () => {
   it('fait tourner le jeton, et révoque tout quand l’ancien revient', async () => {
     const jetons = await jetonsAccordes()
@@ -630,5 +649,262 @@ describe('révocation', () => {
       (await contexteDeJetonAcces(ip, jetons.access_token, null)).refus
         ?.extensions.code
     ).toBe('JETON_INVALIDE')
+  })
+})
+
+describe('refus par l’organisation et par l’installation', () => {
+  const REFUSER =
+    'mutation ($c: String!) { refuserApplicationOrganisation(clientId: $c) }'
+  const LEVER =
+    'mutation ($c: String!) { autoriserApplicationOrganisation(clientId: $c) }'
+
+  it('un admin refuse une application : ses autorisations tombent, les demandes aussi', async () => {
+    const jetons = await jetonsAccordes()
+    const r = await executer(session(), REFUSER, { c: CLIENT })
+    expect(r.data).toEqual({ refuserApplicationOrganisation: 1 })
+    expect(
+      (await contexteDeJetonAcces(ip, jetons.access_token, null)).refus
+        ?.extensions.code
+    ).toBe('JETON_INVALIDE')
+    const liste = await executer(
+      session(),
+      '{ applicationsRefuseesOrganisation { clientId nom hote } }'
+    )
+    expect(liste.data).toEqual({
+      applicationsRefuseesOrganisation: [
+        {
+          clientId: CLIENT,
+          nom: 'Automate de test',
+          hote: new URL(CLIENT).host,
+        },
+      ],
+    })
+    const id = await nouvelleDemande()
+    const accord = await executer(session(), ACCORDER, { id, p: 'LECTURE' })
+    expect(accord.errors?.[0]?.extensions?.code).toBe('SAISIE_INVALIDE')
+    expect((await executer(session(), LEVER, { c: CLIENT })).data).toEqual({
+      autoriserApplicationOrganisation: true,
+    })
+    await jetonsAccordes()
+  })
+
+  it('l’installation ferme les applications d’une organisation sans toucher aux jetons d’accès', async () => {
+    const jetons = await jetonsAccordes()
+    const installation = buildContext('127.0.0.1', null, null, true)
+    const fermeture = await executer(
+      installation,
+      'mutation ($s: String!) { modifierOrganisationInstallation(slug: $s, api: { applications: false }) { api { applications } } }',
+      { s: slug }
+    )
+    expect(fermeture.data).toEqual({
+      modifierOrganisationInstallation: { api: { applications: false } },
+    })
+    try {
+      expect(
+        (await contexteDeJetonAcces(ip, jetons.access_token, null)).refus
+          ?.extensions.code
+      ).toBe('JETON_INVALIDE')
+      expect(erreurDe(await renouveler(jetons.refresh_token))).toBe(
+        'invalid_grant'
+      )
+      const id = await nouvelleDemande()
+      const accord = await executer(session(), ACCORDER, { id, p: 'LECTURE' })
+      expect(accord.errors?.[0]?.extensions?.code).toBe('SAISIE_INVALIDE')
+    } finally {
+      await prisma.organisation.update({
+        where: { id: ids.org },
+        data: { applicationsAutorisees: true },
+      })
+    }
+    expect(
+      (await contexteDeJetonAcces(ip, jetons.access_token, null)).refus
+    ).toBeNull()
+  })
+
+  it('révoque les autorisations d’une application refusée par l’installation', async () => {
+    await jetonsAccordes()
+    env.APPLICATIONS_REFUSEES = [CLIENT]
+    expect(await revoquerApplicationsRefusees(prisma)).toBeGreaterThan(0)
+    env.APPLICATIONS_REFUSEES = []
+    const actives = await prisma.jetonAcces.count({
+      where: {
+        organisationId: ids.org,
+        revoqueLe: null,
+        clientApplication: { clientId: CLIENT },
+      },
+    })
+    expect(actives).toBe(0)
+  })
+})
+
+describe('mails et entretien', () => {
+  it('signale un rejeu par mail', async () => {
+    const jetons = await jetonsAccordes()
+    expect((await renouveler(jetons.refresh_token)).statut).toBe(200)
+    enFile.length = 0
+    await renouveler(jetons.refresh_token)
+    expect(enFile.map(e => e.sorte)).toEqual(['autorisation-rejouee'])
+  })
+
+  it('rappelle une fois la fin proche d’une autorisation', async () => {
+    const jetons = await jetonsAccordes()
+    const ctx = await contexteDeJetonAcces(ip, jetons.access_token, null)
+    const id = ctx.jeton!.id
+    await prisma.jetonAcces.update({
+      where: { id },
+      data: { expireLe: new Date(Date.now() + 10 * 86_400_000) },
+    })
+    enFile.length = 0
+    expect(await rappelerFinDesAutorisations(prisma)).toBeGreaterThan(0)
+    expect(
+      enFile.some(
+        e =>
+          e.sorte === 'autorisation-fin-proche' &&
+          (e.options as { jetonAccesId: string }).jetonAccesId === id
+      )
+    ).toBe(true)
+    enFile.length = 0
+    await rappelerFinDesAutorisations(prisma)
+    expect(
+      enFile.some(
+        e => (e.options as { jetonAccesId: string }).jetonAccesId === id
+      )
+    ).toBe(false)
+  })
+
+  it('efface les demandes expirées, les jetons échus et les applications oubliées', async () => {
+    const demande = await nouvelleDemande()
+    await prisma.demandeAutorisation.update({
+      where: { id: demande },
+      data: { expireLe: new Date(Date.now() - 2 * 86_400_000) },
+    })
+    documents.set(AUTRE, documentDe(AUTRE))
+    await appeler(adresseAutoriser({ client_id: AUTRE }))
+    const autre = await prisma.clientApplication.findUniqueOrThrow({
+      where: { clientId: AUTRE },
+    })
+    await prisma.demandeAutorisation.deleteMany({
+      where: { clientApplicationId: autre.id },
+    })
+    await prisma.clientApplication.update({
+      where: { id: autre.id },
+      data: { updatedAt: new Date(Date.now() - 40 * 86_400_000) },
+    })
+    await purgerApplications(prisma)
+    expect(
+      await prisma.demandeAutorisation.findUnique({ where: { id: demande } })
+    ).toBeNull()
+    expect(
+      await prisma.clientApplication.findUnique({ where: { clientId: AUTRE } })
+    ).toBeNull()
+    // L'application qui porte des autorisations reste.
+    expect(
+      await prisma.clientApplication.findUnique({ where: { clientId: CLIENT } })
+    ).not.toBeNull()
+  })
+})
+
+describe('autre organisation', () => {
+  it('ne lit rien d’une autre organisation de la même personne', async () => {
+    const autre = await prisma.organisation.create({
+      data: {
+        slug: `${slug}-b`,
+        nom: `Organisation ${slug} B`,
+        configuration: {},
+        apiActivee: true,
+      },
+    })
+    try {
+      await prisma.appartenance.create({
+        data: { organisationId: autre.id, userId: ids.personne, role: 'ADMIN' },
+      })
+      const activiteB = await prisma.activite.create({
+        data: {
+          organisationId: autre.id,
+          slug: `${slug}-b`,
+          nom: 'Activité B',
+          groupes: [],
+        },
+      })
+      const jetons = await jetonsAccordes()
+      const ctx = await contexteDeJetonAcces(ip, jetons.access_token, null)
+      expect(ctx.refus).toBeNull()
+      const lues = await executer(ctx, '{ activites { id } }')
+      const visibles = (lues.data as { activites: { id: string }[] }).activites
+      expect(visibles.map(a => a.id)).toContain(ids.activite)
+      expect(visibles.map(a => a.id)).not.toContain(activiteB.id)
+      // Désigner l'activité de l'autre organisation par son identifiant ne rend rien.
+      const editions = await executer(
+        ctx,
+        'query ($a: ID) { editions(activiteId: $a) { id } }',
+        {
+          a: activiteB.id,
+        }
+      )
+      expect(editions.data?.editions ?? []).toEqual([])
+      expect(ctx.organisation?.id).toBe(ids.org)
+      // Demander l'activité de l'autre organisation ne change pas d'organisation.
+      const ailleurs = await contexteDeJetonAcces(
+        ip,
+        jetons.access_token,
+        activiteB.slug
+      )
+      expect(ailleurs.organisation?.id ?? null).not.toBe(autre.id)
+      const relues = await executer(ailleurs, '{ activites { id } }')
+      expect(
+        (
+          (relues.data as { activites: { id: string }[] } | null)?.activites ??
+          []
+        ).map(a => a.id)
+      ).not.toContain(activiteB.id)
+    } finally {
+      await prisma.activite.deleteMany({ where: { organisationId: autre.id } })
+      await prisma.appartenance.deleteMany({
+        where: { organisationId: autre.id },
+      })
+      await prisma.organisation.delete({ where: { id: autre.id } })
+    }
+  })
+})
+
+describe('journal', () => {
+  it('ne reçoit jamais un jeton ni un code', async () => {
+    const lignes: unknown[] = []
+    const espions = (['info', 'warn', 'error'] as const).map(niveau =>
+      vi.spyOn(journal, niveau).mockImplementation((...args: unknown[]) => {
+        lignes.push(args)
+      })
+    )
+    try {
+      const code = await codeAccorde()
+      const jetons = JSON.parse((await echanger(code)).texte) as Jetons
+      // Un rejeu, un renouvellement et une révocation écrivent au journal.
+      await echanger(code)
+      const nouveaux = await jetonsAccordes()
+      const suivants = JSON.parse(
+        (await renouveler(nouveaux.refresh_token)).texte
+      ) as Jetons
+      await renouveler(nouveaux.refresh_token)
+      await appeler('/oauth/revocation', {
+        corps: { token: suivants.access_token, client_id: CLIENT },
+      })
+      expect(lignes.length).toBeGreaterThan(0)
+      const texte = JSON.stringify(lignes)
+      for (const secret of [
+        code,
+        jetons.access_token,
+        jetons.refresh_token,
+        nouveaux.access_token,
+        nouveaux.refresh_token,
+        suivants.access_token,
+        suivants.refresh_token,
+        VERIFICATEUR,
+      ]) {
+        expect(texte).not.toContain(secret)
+      }
+      expect(texte).not.toMatch(/rt[or]_[A-Za-z0-9_-]{20}/)
+    } finally {
+      for (const e of espions) e.mockRestore()
+    }
   })
 })

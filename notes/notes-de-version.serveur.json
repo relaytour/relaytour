@@ -22,6 +22,20 @@
           "en": null
         },
         {
+          "id": "2026-11-17-serveur-les-admins-d-une-organisation-refusent-une-application-tierc",
+          "date": "2026-11-17",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les admins d'une organisation refusent une application tierce",
+            "texte": "Un admin de l'organisation refuse une application tierce par son identifiant. Le refus révoque ses autorisations, prévient leurs porteuses par mail et bloque les nouvelles demandes. L'administration de l'installation ferme les applications d'une organisation par `api.applications`. Un mail rappelle la fin d'une autorisation trente jours avant, et un autre signale une autorisation révoquée après un rejeu.",
+            "migration": null
+          },
+          "en": null
+        },
+        {
           "id": "2026-11-17-serveur-l-api-lit-l-etat-d-une-reunion-et-lie-sa-fiche-de-compte-ren",
           "date": "2026-11-17",
           "type": "fonctionnalite",

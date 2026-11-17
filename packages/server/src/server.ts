@@ -37,6 +37,7 @@ import {
   pageDesabonnement,
 } from './lib/desabonnement.ts'
 import { fermerLesFlux } from './lib/flux.ts'
+import { revoquerApplicationsRefusees } from './oauth/entretien.ts'
 import { routesOAuth } from './oauth/routes.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
@@ -109,6 +110,10 @@ const apollo = new ApolloServer<AppContext>({
 
 // La ligne Organisation existe dès le premier démarrage (ADR 0006, lot commun).
 await assurerOrganisationParDefaut()
+
+// Une application refusée par APPLICATIONS_REFUSEES perd ses autorisations au
+// démarrage (ADR 0067). Ses jetons ne répondaient déjà plus.
+await revoquerApplicationsRefusees(prisma)
 
 await apollo.start()
 

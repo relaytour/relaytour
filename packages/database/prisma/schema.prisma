@@ -64,6 +64,9 @@ model Organisation {
   // lisible par les membres. Elle révoque tous les jetons de l'organisation.
   apiSuspendueLe       DateTime?
   apiSuspensionMotif   String?            @db.VarChar(500)
+  // Applications tierces (ADR 0067) : l'administration de l'installation peut les
+  // fermer pour cette organisation. Leurs autorisations cessent alors de répondre.
+  applicationsAutorisees Boolean          @default(true)
   // Source de vérité du contenu (ADR 0009) : dernière modification faite dans
   // l'application, et dernier import ou export du dossier de contenu. Un import
   // refuse d'écraser une modification plus récente que la dernière synchronisation.
@@ -107,6 +110,7 @@ model Organisation {
   permissionsCreees       PermissionCreee[]
   fichesExportees         FicheExportee[]
   jetonsAcces             JetonAcces[]
+  applicationsRefusees    ApplicationRefusee[]
 }
 
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
@@ -408,6 +412,7 @@ model User {
   jetonsAcces             JetonAcces[]             @relation("JetonPorteur")
   jetonsAccesCrees        JetonAcces[]             @relation("JetonAuteur")
   jetonsAccesRevoques     JetonAcces[]             @relation("JetonRevocateur")
+  applicationsRefusees    ApplicationRefusee[]
   sondagesCrees           Sondage[]                @relation("SondageAuteur")
   participationsSondage   ParticipantSondage[]
   reponsesSondage         ReponseSondage[]
@@ -1646,6 +1651,8 @@ model JetonAcces {
   // jeton d'accès sans valeur utilisable : l'application reçoit des jetons
   // d'application et de renouvellement, qui portent ses bornes.
   clientApplicationId String?
+  // Le rappel envoyé trente jours avant la fin d'une autorisation (ADR 0067).
+  rappelFinLe         DateTime?
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
 
@@ -1688,6 +1695,24 @@ model ClientApplication {
 
   autorisations JetonAcces[]
   demandes      DemandeAutorisation[]
+}
+
+// Application refusée par un admin d'une organisation (ADR 0067). Le refus révoque
+// ses autorisations dans l'organisation et bloque les nouvelles demandes. Il vise
+// l'identifiant OAuth, même pour une application que l'installation ne connaît
+// pas encore.
+model ApplicationRefusee {
+  id             String   @id @default(cuid())
+  organisationId String
+  clientId       String   @db.VarChar(512)
+  parId          String?
+  createdAt      DateTime @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  par          User?        @relation(fields: [parId], references: [id], onDelete: SetNull)
+
+  @@unique([organisationId, clientId])
+  @@index([parId])
 }
 
 enum SourceClientApplication {

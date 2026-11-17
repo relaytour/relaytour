@@ -1,0 +1,16 @@
+{{marque}}
+
+[[Bonjour {{nom}},]]
+
+{{intro}}
+
+[[Pour garder cet accès, reconnectez l’application depuis son propre écran. Elle vous demandera de nouveau votre accord.]]
+
+[[Vous retrouvez toutes les applications autorisées depuis cet écran : {{lienJetons}}]]
+
+--
+[[Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
+organisateur de {{organisation}}.]] {{consigneReponse}}
+
+[[Cet espace est propulsé par Relaytour, logiciel libre.]]
+https://github.com/relaytour/relaytour

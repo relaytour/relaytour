@@ -22,6 +22,7 @@ import Redaction from './pages/admin/Redaction'
 import Agenda from './pages/Agenda'
 import AideMarkdown from './pages/AideMarkdown'
 import AppelBenevoles from './pages/AppelBenevoles'
+import Autoriser from './pages/Autoriser'
 import Benevoles from './pages/Benevoles'
 import ImportBenevoles from './pages/ImportBenevoles'
 import Connexion from './pages/Connexion'
@@ -53,6 +54,8 @@ const routeur = createBrowserRouter([
   // sans session.
   { path: '/benevoles/:jeton', element: <AppelBenevoles /> },
   { path: '/benevole/:jeton', element: <EspaceBenevole /> },
+  // Écran de consentement d'une application tierce (ADR 0067), hors d'une activité.
+  { path: '/autoriser/:id', element: <Autoriser /> },
   { path: '/', element: versActivite },
   {
     path: '/:activite',

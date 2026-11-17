@@ -373,6 +373,8 @@ export interface ChangementApi {
   imposee?: boolean | null
   suspendue?: boolean | null
   suspensionMotif?: string | null
+  /** Faux : les applications tierces de l'organisation ne répondent plus (ADR 0067). */
+  applications?: boolean | null
 }
 
 interface ReglageApiValide {
@@ -380,6 +382,7 @@ interface ReglageApiValide {
   imposee?: boolean
   suspendue?: boolean
   suspensionMotif?: string
+  applications?: boolean
 }
 
 function reglageApi(changement: ChangementApi): ReglageApiValide {
@@ -414,6 +417,9 @@ function reglageApi(changement: ChangementApi): ReglageApiValide {
       ? { suspendue: changement.suspendue }
       : {}),
     ...(motif.length > 0 ? { suspensionMotif: motif } : {}),
+    ...(typeof changement.applications === 'boolean'
+      ? { applications: changement.applications }
+      : {}),
   }
 }
 
@@ -421,6 +427,9 @@ function donneesApi(api: ReglageApiValide, instant: Date) {
   return {
     ...(api.autorisee === undefined ? {} : { apiAutorisee: api.autorisee }),
     ...(api.imposee === undefined ? {} : { apiImposee: api.imposee }),
+    ...(api.applications === undefined
+      ? {}
+      : { applicationsAutorisees: api.applications }),
     ...(api.suspendue === true
       ? { apiSuspendueLe: instant, apiSuspensionMotif: api.suspensionMotif }
       : api.suspendue === false
@@ -438,6 +447,8 @@ export interface ApiInstallation {
   suspensionMotif: string | null
   /** Jetons ni révoqués ni expirés : un compteur, sans aucune donnée des membres. */
   jetonsActifs: number
+  /** Les applications tierces répondent dans l'organisation (ADR 0067). */
+  applications: boolean
 }
 
 export interface PeriodeInstallation {
@@ -494,6 +505,7 @@ export async function organisationsInstallation(): Promise<
         apiImposee: true,
         apiSuspendueLe: true,
         apiSuspensionMotif: true,
+        applicationsAutorisees: true,
         createdAt: true,
         _count: { select: { appartenances: true } },
         activites: {
@@ -557,6 +569,7 @@ export async function organisationsInstallation(): Promise<
       suspendueLe: o.apiSuspendueLe,
       suspensionMotif: o.apiSuspensionMotif,
       jetonsActifs: compte(jetons, o.id),
+      applications: o.applicationsAutorisees,
     },
     activites: o.activites.map(a => ({
       slug: a.slug,

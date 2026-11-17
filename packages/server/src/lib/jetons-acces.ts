@@ -212,6 +212,7 @@ async function resoudreLigne(
           apiImposee: true,
           apiSuspendueLe: true,
           apiSuspensionMotif: true,
+          applicationsAutorisees: true,
         },
       },
     },
@@ -233,6 +234,18 @@ async function resoudreLigne(
     select: { id: true },
   })
   if (appartenance === null) return { issue: 'invalide' }
+  // Une application fermée par l'installation pour cette organisation, ou refusée
+  // par ses admins, répond comme un jeton inconnu (ADR 0067).
+  if (
+    ligne.clientApplication !== null &&
+    (!ligne.organisation.applicationsAutorisees ||
+      (await applicationRefuseeParLOrganisation(
+        ligne.organisationId,
+        ligne.clientApplication.clientId
+      )))
+  ) {
+    return { issue: 'invalide' }
+  }
   if (!apiOuverte(ligne.organisation)) {
     const cause = causeFermeture(etatApi(ligne.organisation))
     return {
@@ -255,6 +268,18 @@ async function resoudreLigne(
       application: ligne.clientApplication,
     },
   }
+}
+
+/** Vrai quand un admin de l'organisation a refusé cette application (ADR 0067). */
+export async function applicationRefuseeParLOrganisation(
+  organisationId: string,
+  clientId: string
+): Promise<boolean> {
+  const refus = await prisma.applicationRefusee.findUnique({
+    where: { organisationId_clientId: { organisationId, clientId } },
+    select: { id: true },
+  })
+  return refus !== null
 }
 
 /** Note le dernier usage d'un jeton, au plus une fois par minute. */

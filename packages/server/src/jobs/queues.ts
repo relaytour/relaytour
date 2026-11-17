@@ -39,6 +39,10 @@ export type SorteCourriel =
   | 'jeton-revoque'
   // Autorisation d'une application tierce (ADR 0067), signalée comme un jeton créé.
   | 'application-autorisee'
+  // Une autorisation qui prend fin dans 30 jours, et une autorisation révoquée après
+  // un rejeu (ADR 0067).
+  | 'autorisation-fin-proche'
+  | 'autorisation-rejouee'
 
 // La charge utile ne contient ni corps de mail ni jeton. Le processeur relit l'adresse
 // en base au moment de l'envoi. `destinataire` sert seulement quand aucun compte n'existe.
