@@ -655,6 +655,14 @@ msgstr "{nom} (vous)"
 msgid "{nomAffiche} (archivée)"
 msgstr "{nomAffiche} (archivée)"
 
+#: src/pages/Autoriser.tsx
+msgid "{nomApplication} demande l’accès à votre compte"
+msgstr "{nomApplication} demande l’accès à votre compte"
+
+#: src/pages/Autoriser.tsx
+msgid "{nomApplication} demande l’accès à votre compte dans {organisation}"
+msgstr "{nomApplication} demande l’accès à votre compte dans {organisation}"
+
 #: src/composants/SequenceFormulaire.tsx
 msgid "{nomBenevole} · bénévole"
 msgstr "{nomBenevole} · bénévole"
@@ -1731,6 +1739,10 @@ msgstr "Activités"
 msgid "Activités absentes de l’archive (gardées) :"
 msgstr "Activités absentes de l’archive (gardées) :"
 
+#: src/pages/Autoriser.tsx
+msgid "Activités de l’application"
+msgstr "Activités de l’application"
+
 #: src/composants/PreferenceJetons.tsx
 msgid "Activités du jeton"
 msgstr "Activités du jeton"
@@ -2100,6 +2112,8 @@ msgstr "Annulée"
 
 #: src/composants/AbonnementAgenda.tsx
 #: src/composants/AppelsBenevoles.tsx
+#: src/composants/ApplicationsAutorisees.tsx
+#: src/composants/ApplicationsRefusees.tsx
 #: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/ConnexionEspace.tsx
 #: src/composants/DateCleFormulaire.tsx
@@ -2210,10 +2224,19 @@ msgstr "Appel rouvert."
 msgid "Appels"
 msgstr "Appels"
 
+#: src/composants/JetonsOrganisation.tsx
+msgid "application"
+msgstr "application"
+
 #. Origine d’une version de fiche : rédigée dans Relaytour
+#: src/composants/ApplicationsAutorisees.tsx
 #: src/lib/fiches.ts
 msgid "Application"
 msgstr "Application"
+
+#: src/pages/Autoriser.tsx
+msgid "Application enregistrée par elle-même."
+msgstr "Application enregistrée par elle-même."
 
 #: src/lib/messagerie.ts
 msgid "Application Gmail"
@@ -2223,9 +2246,25 @@ msgstr "Application Gmail"
 msgid "Application Outlook"
 msgstr "Application Outlook"
 
+#: src/pages/Autoriser.tsx
+msgid "Application publiée par {hoteApplication}."
+msgstr "Application publiée par {hoteApplication}."
+
+#: src/composants/ApplicationsRefusees.tsx
+msgid "Application refusée. Autorisations révoquées : {nombre}."
+msgstr "Application refusée. Autorisations révoquées : {nombre}."
+
 #: src/lib/messagerie.ts
 msgid "Applications (à essayer)"
 msgstr "Applications (à essayer)"
+
+#: src/composants/ApplicationsAutorisees.tsx
+msgid "Applications autorisées"
+msgstr "Applications autorisées"
+
+#: src/composants/ApplicationsRefusees.tsx
+msgid "Applications refusées"
+msgstr "Applications refusées"
 
 #: src/composants/GestionAcces.tsx
 #: src/composants/PropositionModele.tsx
@@ -2264,6 +2303,10 @@ msgstr "Appliquez les tâches types des périmètres, ou créez les tâches depu
 #: src/composants/EcrireMessage.tsx
 msgid "Après l’ouverture, cette fenêtre propose de copier les adresses."
 msgstr "Après l’ouverture, cette fenêtre propose de copier les adresses."
+
+#: src/pages/Autoriser.tsx
+msgid "Après votre réponse, vous reviendrez sur {hoteRetour}."
+msgstr "Après votre réponse, vous reviendrez sur {hoteRetour}."
 
 #: src/lib/guide-markdown.ts
 msgid "Arbitrage"
@@ -2741,6 +2784,18 @@ msgstr "Aujourd’hui"
 msgid "Aussi les affectations, les nominations, les archivages et les demandes traitées par un autre admin."
 msgstr "Aussi les affectations, les nominations, les archivages et les demandes traitées par un autre admin."
 
+#: src/composants/ApplicationsAutorisees.tsx
+msgid "Autorisation révoquée."
+msgstr "Autorisation révoquée."
+
+#: src/composants/ApplicationsAutorisees.tsx
+msgid "Autorisée le {accordee}."
+msgstr "Autorisée le {accordee}."
+
+#: src/pages/Autoriser.tsx
+msgid "Autoriser"
+msgstr "Autoriser"
+
 #: src/composants/PreferencePush.tsx
 msgid "Autorisez-les dans les réglages de votre navigateur ou de votre téléphone, puis revenez sur cet écran."
 msgstr "Autorisez-les dans les réglages de votre navigateur ou de votre téléphone, puis revenez sur cet écran."
@@ -3064,6 +3119,10 @@ msgstr "Certaines tâches partagées ne seront pas déclinées."
 msgid "Ces adresses ont déjà un compte hors de votre organisation. Chaque personne accepte ou refuse l’invitation depuis son compte. Rien n’est créé en son nom avant son accord, et elle n’apparaît pas dans l’équipe."
 msgstr "Ces adresses ont déjà un compte hors de votre organisation. Chaque personne accepte ou refuse l’invitation depuis son compte. Rien n’est créé en son nom avant son accord, et elle n’apparaît pas dans l’équipe."
 
+#: src/composants/ApplicationsAutorisees.tsx
+msgid "Ces applications travaillent dans cette organisation en votre nom, avec vos droits. Vous les avez autorisées depuis leur propre écran."
+msgstr "Ces applications travaillent dans cette organisation en votre nom, avec vos droits. Vous les avez autorisées depuis leur propre écran."
+
 #: src/composants/VerificationAcces.tsx
 msgid "Ces comptes ont un droit sur le dossier sans être attendus : coordination, ancienne équipe, compte d’une autre adresse. Relaytour n’en garde que le nom."
 msgstr "Ces comptes ont un droit sur le dossier sans être attendus : coordination, ancienne équipe, compte d’une autre adresse. Relaytour n’en garde que le nom."
@@ -3156,6 +3215,14 @@ msgstr "Cette adresse partagée reçoit les questions sur l’équipe."
 #: src/pages/admin/Activites.tsx
 msgid "Cette adresse reçoit les réponses aux mails de l’activité."
 msgstr "Cette adresse reçoit les réponses aux mails de l’activité."
+
+#: src/pages/Autoriser.tsx
+msgid "Cette application s’est enregistrée elle-même. Son nom n’est pas vérifié."
+msgstr "Cette application s’est enregistrée elle-même. Son nom n’est pas vérifié."
+
+#: src/pages/Autoriser.tsx
+msgid "Cette demande d’autorisation n’est plus valable."
+msgstr "Cette demande d’autorisation n’est plus valable."
 
 #: src/composants/NotesDeVersion.tsx
 msgid "Cette fenêtre liste les changements de chaque version de Relaytour. Vous y lisez les notes qui concernent votre rôle."
@@ -3379,6 +3446,7 @@ msgid "Choisir {periodeUne}"
 msgstr "Choisir {periodeUne}"
 
 #: src/composants/PreferenceJetons.tsx
+#: src/pages/Autoriser.tsx
 msgid "Choisir des activités"
 msgstr "Choisir des activités"
 
@@ -3430,6 +3498,7 @@ msgid "Choisir une autre archive"
 msgstr "Choisir une autre archive"
 
 #: src/composants/GardeSession.tsx
+#: src/pages/Autoriser.tsx
 msgid "Choisir une organisation"
 msgstr "Choisir une organisation"
 
@@ -4291,6 +4360,7 @@ msgstr "Dernier jour de la phase"
 msgid "Dernier jour de la phase : aucun, la dernière phase reçoit tout ce qui suit"
 msgstr "Dernier jour de la phase : aucun, la dernière phase reçoit tout ce qui suit"
 
+#: src/composants/ApplicationsAutorisees.tsx
 #: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
@@ -4684,6 +4754,10 @@ msgstr "Effectif souhaité pour {perimetre}"
 msgid "Élément à cocher"
 msgstr "Élément à cocher"
 
+#: src/pages/Autoriser.tsx
+msgid "Elle agit avec vos droits, jamais plus. Elle ne peut ni gérer les membres, ni créer de jetons, ni modifier votre compte."
+msgstr "Elle agit avec vos droits, jamais plus. Elle ne peut ni gérer les membres, ni créer de jetons, ni modifier votre compte."
+
 #: src/composants/ModaleTache.tsx
 #: src/pages/LienTache.tsx
 msgid "Elle n’existe pas, ou vous n’avez pas accès à son périmètre."
@@ -4692,6 +4766,14 @@ msgstr "Elle n’existe pas, ou vous n’avez pas accès à son périmètre."
 #: src/pages/Fiche.tsx
 msgid "Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »)."
 msgstr "Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »)."
+
+#: src/pages/Autoriser.tsx
+msgid "Elle pourra aussi écrire en votre nom : créer et modifier des tâches, et les commenter."
+msgstr "Elle pourra aussi écrire en votre nom : créer et modifier des tâches, et les commenter."
+
+#: src/pages/Autoriser.tsx
+msgid "Elle pourra lire ce que vous voyez dans les activités choisies : tâches, fiches, agenda et équipe."
+msgstr "Elle pourra lire ce que vous voyez dans les activités choisies : tâches, fiches, agenda et équipe."
 
 #: src/pages/admin/Personnes.tsx
 msgid "Elle quitte l’équipe de l’activité, et ses souhaits des périodes en cours sont retirés. Son compte reste dans l’organisation."
@@ -4985,6 +5067,14 @@ msgstr "Expiré le {fin}."
 #: src/composants/MesInvitations.tsx
 msgid "Expire le {jourExpiration}"
 msgstr "Expire le {jourExpiration}"
+
+#: src/composants/ApplicationsAutorisees.tsx
+msgid "Expirée"
+msgstr "Expirée"
+
+#: src/composants/ApplicationsAutorisees.tsx
+msgid "Expirée le {fin}."
+msgstr "Expirée le {fin}."
 
 #: src/pages/admin/Organisation.tsx
 msgid "Export complet de l’organisation"
@@ -5448,6 +5538,10 @@ msgstr "Hors plages"
 msgid "https://cloud.exemple.org"
 msgstr "https://cloud.exemple.org"
 
+#: src/composants/ApplicationsRefusees.tsx
+msgid "https://exemple.org/client.json"
+msgstr "https://exemple.org/client.json"
+
 #: src/pages/admin/Organisation.tsx
 msgid "Icône d’application"
 msgstr "Icône d’application"
@@ -5462,6 +5556,10 @@ msgstr "Icône d’application (facultatif)"
 #: src/pages/FicheEditeur.tsx
 msgid "Identifiant"
 msgstr "Identifiant"
+
+#: src/composants/ApplicationsRefusees.tsx
+msgid "Identifiant de l’application"
+msgstr "Identifiant de l’application"
 
 #: src/lib/import-benevoles.ts
 msgid "Identifiant externe"
@@ -5772,6 +5870,10 @@ msgstr "Jamais"
 msgid "Jamais utilisé."
 msgstr "Jamais utilisé."
 
+#: src/composants/ApplicationsAutorisees.tsx
+msgid "Jamais utilisée."
+msgstr "Jamais utilisée."
+
 #: src/pages/EspaceBenevole.tsx
 msgid "Je confirme ma participation"
 msgstr "Je confirme ma participation"
@@ -5959,6 +6061,10 @@ msgstr "L’ancienne adresse cesse de répondre. Les candidatures déjà reçues
 msgid "L’annuaire du fournisseur ne connaît pas son adresse. Invitez la personne, ou saisissez l’adresse de son compte dans l’onglet « Comptes »."
 msgstr "L’annuaire du fournisseur ne connaît pas son adresse. Invitez la personne, ou saisissez l’adresse de son compte dans l’onglet « Comptes »."
 
+#: src/pages/Autoriser.tsx
+msgid "L’API de cette organisation est inactive."
+msgstr "L’API de cette organisation est inactive."
+
 #: src/composants/PreferenceJetons.tsx
 msgid "L’API de votre organisation est suspendue."
 msgstr "L’API de votre organisation est suspendue."
@@ -5998,6 +6104,10 @@ msgstr "L’application n’envoie rien : vous relisez le message dans votre mes
 #: src/composants/PreferenceMessagerie.tsx
 msgid "L’application ne semble pas s’être ouverte"
 msgstr "L’application ne semble pas s’être ouverte"
+
+#: src/composants/ApplicationsAutorisees.tsx
+msgid "L’application perd aussitôt son accès à votre compte dans cette organisation."
+msgstr "L’application perd aussitôt son accès à votre compte dans cette organisation."
 
 #: src/composants/HorsConnexion.tsx
 msgid "L’application reprend dès le retour du réseau."
@@ -6064,6 +6174,7 @@ msgid "L’espace ne demande pas de mot de passe. Vous recevez un code par mail 
 msgstr "L’espace ne demande pas de mot de passe. Vous recevez un code par mail à chaque connexion."
 
 #: src/composants/GardeSession.tsx
+#: src/pages/Autoriser.tsx
 msgid "L’espace organisateur ne répond pas."
 msgstr "L’espace organisateur ne répond pas."
 
@@ -6920,6 +7031,10 @@ msgstr "Le programme {dePeriode} n’a encore aucune séquence."
 msgid "Le programme n’a pas pu être chargé."
 msgstr "Le programme n’a pas pu être chargé."
 
+#: src/composants/ApplicationsRefusees.tsx
+msgid "Le refus est levé."
+msgstr "Le refus est levé."
+
 #: src/composants/GestionAcces.tsx
 msgid "Le réglage des accès est enregistré."
 msgstr "Le réglage des accès est enregistré."
@@ -7048,16 +7163,20 @@ msgstr "Le titre et le lien sont copiés."
 msgid "Lecture"
 msgstr "Lecture"
 
+#: src/composants/ApplicationsAutorisees.tsx
 #: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
+#: src/pages/Autoriser.tsx
 msgid "Lecture et écriture"
 msgstr "Lecture et écriture"
 
+#: src/composants/ApplicationsAutorisees.tsx
 #: src/composants/FichesConnexes.tsx
 #: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
+#: src/pages/Autoriser.tsx
 msgid "Lecture seule"
 msgstr "Lecture seule"
 
@@ -7234,8 +7353,8 @@ msgid "Les fichiers déposés dépassent 20 Mo au total."
 msgstr "Les fichiers déposés dépassent 20 Mo au total."
 
 #: src/composants/JetonsOrganisation.tsx
-msgid "Les jetons d’accès de tous les membres et des robots, sans leur valeur : les jetons actifs, puis ceux révoqués ou expirés depuis moins de trente jours. Révoquez un jeton qui ne sert plus ou qui a fuité : la personne en est prévenue par mail."
-msgstr "Les jetons d’accès de tous les membres et des robots, sans leur valeur : les jetons actifs, puis ceux révoqués ou expirés depuis moins de trente jours. Révoquez un jeton qui ne sert plus ou qui a fuité : la personne en est prévenue par mail."
+msgid "Les jetons d’accès de tous les membres et des robots, et les applications qu’ils ont autorisées, sans leur valeur : les jetons actifs, puis ceux révoqués ou expirés depuis moins de trente jours. Révoquez un jeton qui ne sert plus ou qui a fuité : la personne en est prévenue par mail."
+msgstr "Les jetons d’accès de tous les membres et des robots, et les applications qu’ils ont autorisées, sans leur valeur : les jetons actifs, puis ceux révoqués ou expirés depuis moins de trente jours. Révoquez un jeton qui ne sert plus ou qui a fuité : la personne en est prévenue par mail."
 
 #: src/composants/ModuleApi.tsx
 msgid "Les jetons de l’organisation ont été révoqués."
@@ -7459,6 +7578,10 @@ msgstr "Leur agenda indiquera comme organisatrice l’adresse d’envoi de l’i
 #: src/pages/FicheEditeur.tsx
 msgid "Leurs référentes et référents la liront dans leurs fiches connexes, sans pouvoir la modifier. Si elle concerne toute l’activité, une fiche commune convient mieux."
 msgstr "Leurs référentes et référents la liront dans leurs fiches connexes, sans pouvoir la modifier. Si elle concerne toute l’activité, une fiche commune convient mieux."
+
+#: src/composants/ApplicationsRefusees.tsx
+msgid "Lever le refus"
+msgstr "Lever le refus"
 
 #: src/pages/admin/Activites.tsx
 msgid "Libellé de la phase"
@@ -8230,6 +8353,11 @@ msgstr "Non confirmée"
 msgid "Non proposée par votre hébergeur"
 msgstr "Non proposée par votre hébergeur"
 
+#: src/composants/ApplicationsAutorisees.tsx
+#: src/pages/Autoriser.tsx
+msgid "Non vérifiée"
+msgstr "Non vérifiée"
+
 #. Colonne du tableau des fiches bénévoles
 #: src/composants/Repartition.tsx
 #: src/pages/Benevoles.tsx
@@ -8426,6 +8554,7 @@ msgstr "Organigramme"
 #: src/pages/admin/Admins.tsx
 #: src/pages/admin/NotificationsAdmin.tsx
 #: src/pages/admin/Organisation.tsx
+#: src/pages/Autoriser.tsx
 msgid "Organisation"
 msgstr "Organisation"
 
@@ -9441,6 +9570,10 @@ msgstr "Rechercher une tâche, une fiche, une personne"
 msgid "Recommandé pour vous"
 msgstr "Recommandé pour vous"
 
+#: src/pages/Autoriser.tsx
+msgid "Recommencez depuis l’application."
+msgstr "Recommencez depuis l’application."
+
 #: src/composants/ConnexionEspace.tsx
 msgid "Reconnecter {nomFournisseur}"
 msgstr "Reconnecter {nomFournisseur}"
@@ -9499,16 +9632,30 @@ msgstr "Référent·es :"
 msgid "Refusée"
 msgstr "Refusée"
 
+#: src/composants/ApplicationsRefusees.tsx
+msgid "Refusée le {le} par {par}."
+msgstr "Refusée le {le} par {par}."
+
+#: src/composants/ApplicationsRefusees.tsx
+msgid "Refusée le {le}."
+msgstr "Refusée le {le}."
+
 #: src/lib/declinaisons.ts
 msgid "Refusée par {personne} le {jour}"
 msgstr "Refusée par {personne} le {jour}"
 
+#: src/composants/ApplicationsRefusees.tsx
 #: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/Demandes.tsx
 #: src/composants/MesInvitations.tsx
+#: src/pages/Autoriser.tsx
 msgid "Refuser"
 msgstr "Refuser"
+
+#: src/composants/ApplicationsRefusees.tsx
+msgid "Refuser cette application dans l’organisation ?"
+msgstr "Refuser cette application dans l’organisation ?"
 
 #: src/composants/Demandes.tsx
 msgid "Refuser cette demande ?"
@@ -9521,6 +9668,10 @@ msgstr "Refuser cette invitation ?"
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Refuser cette tâche ?"
 msgstr "Refuser cette tâche ?"
+
+#: src/composants/ApplicationsRefusees.tsx
+msgid "Refuser l’application"
+msgstr "Refuser l’application"
 
 #: src/composants/CandidaturesBenevoles.tsx
 msgid "Refuser la candidature"
@@ -10099,7 +10250,16 @@ msgstr "Révoqué par {par}."
 msgid "Révoqué."
 msgstr "Révoqué."
 
+#: src/composants/ApplicationsAutorisees.tsx
+msgid "Révoquée"
+msgstr "Révoquée"
+
+#: src/composants/ApplicationsAutorisees.tsx
+msgid "Révoquée."
+msgstr "Révoquée."
+
 #: src/composants/AbonnementAgenda.tsx
+#: src/composants/ApplicationsAutorisees.tsx
 #: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
@@ -10113,6 +10273,10 @@ msgstr "Révoquer ce jeton du robot ?"
 #: src/composants/AbonnementAgenda.tsx
 msgid "Révoquer l’abonnement de l’activité ?"
 msgstr "Révoquer l’abonnement de l’activité ?"
+
+#: src/composants/ApplicationsAutorisees.tsx
+msgid "Révoquer l’accès de « {nom} » ?"
+msgstr "Révoquer l’accès de « {nom} » ?"
 
 #: src/composants/PreferenceJetons.tsx
 msgid "Révoquer le jeton « {libelle} » ?"
@@ -10440,11 +10604,16 @@ msgstr "Séquences"
 msgid "Ses activités"
 msgstr "Ses activités"
 
+#: src/composants/ApplicationsRefusees.tsx
+msgid "Ses autorisations sont révoquées, et les personnes concernées en sont prévenues par mail. Elle ne peut plus demander d’accès."
+msgstr "Ses autorisations sont révoquées, et les personnes concernées en sont prévenues par mail. Elle ne peut plus demander d’accès."
+
 #: src/composants/RobotsApi.tsx
 msgid "Ses jetons sont révoqués aussitôt, et sa place de membre se libère."
 msgstr "Ses jetons sont révoqués aussitôt, et sa place de membre se libère."
 
 #: src/composants/PreferenceJetons.tsx
+#: src/pages/Autoriser.tsx
 msgid "Seulement ces activités"
 msgstr "Seulement ces activités"
 
@@ -11149,7 +11318,9 @@ msgstr "Toutes les tâches assignées et les places de chaque personne sur {laPe
 msgid "Toutes les tâches de ce périmètre sont déjà liées à ce jalon."
 msgstr "Toutes les tâches de ce périmètre sont déjà liées à ce jalon."
 
+#: src/composants/ApplicationsAutorisees.tsx
 #: src/composants/PreferenceJetons.tsx
+#: src/pages/Autoriser.tsx
 msgid "Toutes mes activités"
 msgstr "Toutes mes activités"
 
@@ -11225,6 +11396,10 @@ msgstr "Un admin de l’organisation crée la première activité, ou l’import
 #: src/pages/admin/Admins.tsx
 msgid "Un admin de l’organisation gère toutes les activités, les comptes et l’identité de l’organisation."
 msgstr "Un admin de l’organisation gère toutes les activités, les comptes et l’identité de l’organisation."
+
+#: src/pages/Autoriser.tsx
+msgid "Un admin de l’organisation l’active dans l’écran « Organisation ». L’application ne peut pas recevoir d’accès d’ici là."
+msgstr "Un admin de l’organisation l’active dans l’écran « Organisation ». L’application ne peut pas recevoir d’accès d’ici là."
 
 #: src/composants/PreferenceJetons.tsx
 msgid "Un admin de l’organisation l’active dans l’écran « Organisation ». Vous pourrez alors créer vos jetons ici."
@@ -11458,6 +11633,10 @@ msgstr "Une adresse secrète publie l’agenda global de {nom}, sans les réunio
 msgid "Une affectation rend la personne référent·e du périmètre : elle y modifie les tâches et reçoit un mail qui l’annonce. Un souhait note seulement un intérêt : il ne donne aucun accès, et seuls les admins le voient."
 msgstr "Une affectation rend la personne référent·e du périmètre : elle y modifie les tâches et reçoit un mail qui l’annonce. Un souhait note seulement un intérêt : il ne donne aucun accès, et seuls les admins le voient."
 
+#: src/composants/ApplicationsRefusees.tsx
+msgid "Une application refusée perd ses autorisations dans l’organisation et ne peut plus en demander. Indiquez son identifiant, tel que la liste des jetons ou le mail d’autorisation le montrent."
+msgstr "Une application refusée perd ses autorisations dans l’organisation et ne peut plus en demander. Indiquez son identifiant, tel que la liste des jetons ou le mail d’autorisation le montrent."
+
 #: src/lib/guide-markdown.ts
 msgid "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
 msgstr "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
@@ -11654,6 +11833,7 @@ msgstr "Utilisez le lien du dernier mail reçu, ou contactez l’organisation."
 msgid "Valable {jours} jours"
 msgstr "Valable {jours} jours"
 
+#: src/composants/ApplicationsAutorisees.tsx
 #: src/composants/JetonsOrganisation.tsx
 #: src/composants/PreferenceJetons.tsx
 #: src/composants/RobotsApi.tsx
@@ -11745,6 +11925,7 @@ msgid "Vérifiez son nom, sa nature et ses groupes de périmètres, puis choisis
 msgstr "Vérifiez son nom, sa nature et ses groupes de périmètres, puis choisissez ses modules : agenda, bénévoles, documents."
 
 #: src/composants/GardeSession.tsx
+#: src/pages/Autoriser.tsx
 msgid "Vérifiez votre connexion, puis rechargez la page."
 msgstr "Vérifiez votre connexion, puis rechargez la page."
 
@@ -12262,6 +12443,10 @@ msgstr "Vous pouvez fermer le message d’essai sans l’envoyer."
 #: src/composants/ProposerPersonne.tsx
 msgid "Vous pouvez proposer une personne pour ce périmètre. Un admin examine la proposition, puis invite la personne."
 msgstr "Vous pouvez proposer une personne pour ce périmètre. Un admin examine la proposition, puis invite la personne."
+
+#: src/pages/Autoriser.tsx
+msgid "Vous pouvez retirer cet accès à tout moment dans Préférences, Jetons et API."
+msgstr "Vous pouvez retirer cet accès à tout moment dans Préférences, Jetons et API."
 
 #: src/lib/messages.ts
 msgid "Vous présentez l’outil et la façon de s’y connecter à des personnes qui le découvrent."

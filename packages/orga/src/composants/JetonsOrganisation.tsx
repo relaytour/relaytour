@@ -1,4 +1,4 @@
-import { KeyOutlined, RobotOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, KeyOutlined, RobotOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Tag } from 'antd'
@@ -26,6 +26,11 @@ const JETONS_ORGANISATION = graphql(`
         expireLe
         dernierAccesLe
         revoqueLe
+        application {
+          nom
+          hote
+          clientId
+        }
       }
       porteur {
         id
@@ -90,10 +95,11 @@ export default function JetonsOrganisation() {
       </span>
       <p className="rt-texte-secondaire" style={{ margin: 0 }}>
         <Trans>
-          Les jetons d’accès de tous les membres et des robots, sans leur valeur
-          : les jetons actifs, puis ceux révoqués ou expirés depuis moins de
-          trente jours. Révoquez un jeton qui ne sert plus ou qui a fuité : la
-          personne en est prévenue par mail.
+          Les jetons d’accès de tous les membres et des robots, et les
+          applications qu’ils ont autorisées, sans leur valeur : les jetons
+          actifs, puis ceux révoqués ou expirés depuis moins de trente jours.
+          Révoquez un jeton qui ne sert plus ou qui a fuité : la personne en est
+          prévenue par mail.
         </Trans>
       </p>
       {data !== undefined && lignes.length === 0 && (
@@ -127,9 +133,15 @@ export default function JetonsOrganisation() {
                       </Tag>
                     )}
                     · {j.nom}{' '}
-                    <span className="rt-mono rt-jeton-apercu">
-                      rt_{j.apercu}…
-                    </span>
+                    {j.application ? (
+                      <Tag icon={<AppstoreOutlined />}>
+                        {j.application.hote ?? t`application`}
+                      </Tag>
+                    ) : (
+                      <span className="rt-mono rt-jeton-apercu">
+                        rt_{j.apercu}…
+                      </span>
+                    )}
                   </span>
                   <span className="rt-choix-detail">
                     {j.portee === 'LECTURE'
@@ -143,6 +155,11 @@ export default function JetonsOrganisation() {
                       </>
                     )}
                   </span>
+                  {j.application && (
+                    <span className="rt-choix-detail rt-mono">
+                      {j.application.clientId}
+                    </span>
+                  )}
                   <span className="rt-note">
                     {actif(l)
                       ? t`Valable jusqu’au ${fin}.`

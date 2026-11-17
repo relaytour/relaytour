@@ -85,6 +85,10 @@ export default defineConfig({
       '/medias': { target: API, xfwd: true },
       // Abonnements à l'agenda (ADR 0037).
       '/agenda/': { target: API, xfwd: true },
+      // Autorisation des applications tierces (ADR 0067). L'écran de
+      // consentement (/autoriser/) reste une page de l'espace.
+      '/oauth/': { target: API, xfwd: true },
+      '/.well-known/oauth-': { target: API, xfwd: true },
     },
   },
   build: {
