@@ -12445,8 +12445,8 @@ msgid "Vous pouvez proposer une personne pour ce périmètre. Un admin examine l
 msgstr "You can refer a person for this area. An admin reviews the referral, then invites the person."
 
 #: src/pages/Autoriser.tsx
-msgid "Vous pouvez retirer cet accès à tout moment dans Préférences, Jetons et API."
-msgstr "You can remove this access at any time in Preferences, Tokens and API."
+msgid "Vous pouvez retirer cet accès à tout moment dans vos préférences, section « Applications autorisées »."
+msgstr "You can remove this access at any time in your preferences, “Authorized applications” section."
 
 #: src/lib/messages.ts
 msgid "Vous présentez l’outil et la façon de s’y connecter à des personnes qui le découvrent."

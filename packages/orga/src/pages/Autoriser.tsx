@@ -13,8 +13,8 @@ import {
   Tag,
   Typography,
 } from 'antd'
-import { useState, type ReactNode } from 'react'
-import { Navigate, useLocation, useParams } from 'react-router'
+import { useEffect, useState, type ReactNode } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router'
 
 import Marque from '../composants/Marque'
 import { graphql } from '../gql'
@@ -98,12 +98,22 @@ export default function Autoriser() {
       </PageSeule>
     )
   }
-  if (!data?.moi) {
-    // La personne se connecte d'abord, puis revient ici.
-    memoriserSuite(pathname)
-    return <Navigate to="/connexion" replace />
-  }
+  if (!data?.moi) return <VersConnexion chemin={pathname} />
   return <Consentement />
+}
+
+/** La personne se connecte d'abord, puis revient sur cet écran. */
+function VersConnexion({ chemin }: { chemin: string }) {
+  const navigate = useNavigate()
+  useEffect(() => {
+    memoriserSuite(chemin)
+    navigate('/connexion', { replace: true })
+  }, [chemin, navigate])
+  return (
+    <PageSeule>
+      <Skeleton active />
+    </PageSeule>
+  )
 }
 
 function PageSeule({ children }: { children: ReactNode }) {
@@ -342,8 +352,8 @@ function Consentement() {
         <Typography.Paragraph className="rt-note" style={{ margin: 0 }}>
           <Trans>Après votre réponse, vous reviendrez sur {hoteRetour}.</Trans>{' '}
           <Trans>
-            Vous pouvez retirer cet accès à tout moment dans Préférences, Jetons
-            et API.
+            Vous pouvez retirer cet accès à tout moment dans vos préférences,
+            section « Applications autorisées ».
           </Trans>
         </Typography.Paragraph>
 
