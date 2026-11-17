@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Connect an application · User guides · Relaytour</title>
+    <meta
+      name="description"
+      content="The user guide for third-party applications in Relaytour: authorize an application, follow and revoke your authorizations, refuse an application in the organization, and connect an application to the authorization server."
+    />
+    <link rel="alternate" hreflang="fr" href="https://relaytour.org/modes-d-emploi/applications.html" />
+    <link rel="alternate" hreflang="en" href="https://relaytour.org/en/modes-d-emploi/applications.html" />
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../../jetons.css" />
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Site navigation">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none" stroke-width="8" stroke-linecap="round" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" stroke="var(--rt-accent)" />
+            <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+          </svg>
+          <span class="logotype">Relay<span>tour</span></span>
+        </a>
+        <ul class="liens">
+          <li><a href="../">Overview</a></li>
+          <li><a href="../hebergement.html">Hosting</a></li>
+          <li><a href="../../design-system.html" hreflang="fr">Design system</a></li>
+          <li><a href="./" aria-current="true">User guides</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Source code</a></li>
+          <li><a href="../../modes-d-emploi/applications.html" hreflang="fr" lang="fr" class="langue">Français</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">All roles</span>
+        <h1>Connect an application</h1>
+        <p class="chapo">
+          A third-party application works in your organization on your behalf: an automation tool, a dashboard or a calendar. You authorize it from your Relaytour installation, without copying any secret. It receives your rights, never more.
+        </p>
+        <p class="renvoi">
+          The first sections are for every member and for organization admins. The section “Connect an application to Relaytour” is for the people who write an application.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-principe">
+        <div class="entete">
+          <span class="etiquette">Starting point</span>
+          <h2 id="t-principe">What an application authorization is</h2>
+          <p class="texte">
+            An access token suits a program that you install yourself. A third-party application follows another path: it sends you to the consent screen of your installation, and you grant it access.
+          </p>
+          <p class="texte">
+            Your approval creates an application authorization. It belongs to one person and one organization, and it carries a scope, activities and an end date, like an access token. The application never sees your sign-in address or your codes.
+          </p>
+        </div>
+        <nav class="verre sommaire" aria-label="Contents">
+          <span class="etiquette">In this user guide</span>
+          <ol>
+            <li><a href="#t-autoriser">Authorize an application</a>: the consent screen and its choices.</li>
+            <li><a href="#t-suivre">Follow and revoke your authorizations</a>: the “Authorized applications” section.</li>
+            <li><a href="#t-admins">Oversee the organization’s applications</a>: the choice of organization admins.</li>
+            <li><a href="#t-relier">Connect an application to Relaytour</a>: the OAuth 2.1 flow for the people who write an application.</li>
+            <li><a href="#t-securite">Stay in control</a>: good practices.</li>
+          </ol>
+        </nav>
+      </section>
+
+      <section aria-labelledby="t-autoriser">
+        <div class="entete">
+          <span class="etiquette">Every member</span>
+          <h2 id="t-autoriser">Authorize an application</h2>
+          <p class="texte">
+            The application offers a button to connect to Relaytour and asks for the address of your installation. Your browser then opens the consent screen. If you are not signed in, the organizer workspace first asks for your code, then brings you back to this screen.
+          </p>
+          <p class="texte">
+            The organization’s “API” module must be on. Otherwise, the screen says so and no authorization is possible.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-consentement">
+          <div class="ecran-tete"><h3>The consent screen</h3><span class="route">/autoriser/&lt;request&gt;</span></div>
+          <p>The screen names the application and the host that publishes it. It also shows the address your browser returns to after your answer.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Organization</span></span><span>Choose the organization where the application will work. This choice only appears if you are a member of several organizations.</span></li>
+            <li><span><span class="libelle">Read only</span></span><span>Limit the application to reading the tasks, sheets, calendar and team that you see.</span></li>
+            <li><span><span class="libelle">Read and write</span></span><span>Also let the application create, edit and comment on tasks on your behalf. This choice only appears if the application asks for writing.</span></li>
+            <li><span><span class="libelle">Only these activities</span></span><span>Choose the activities that the application sees. Without this choice, the authorization covers all your activities.</span></li>
+            <li><span><span class="libelle">Allow</span></span><span>Grant access. Your browser returns to the application, which receives its tokens.</span></li>
+            <li><span><span class="libelle">Decline</span></span><span>Grant nothing. Your browser returns to the application with your refusal.</span></li>
+          </ul>
+          <p class="note">An application that registered itself carries the “Not verified” label. Its name comes from the application alone, and the installation cannot confirm it.</p>
+        </article>
+
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Your rights, never more</h3>
+            <p>The application reads and edits what you read and edit. It never manages members, creates tokens or changes your account.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>An email for each approval</h3>
+            <p>Relaytour sends you an email after each authorization. This email carries a link that revokes the authorization in one step.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>One year at most</h3>
+            <p>An authorization lasts one year. Relaytour sends you an email thirty days before it ends. The application must then ask for your approval again.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-suivre">
+        <div class="entete">
+          <span class="etiquette">Every member</span>
+          <h2 id="t-suivre">Follow and revoke your authorizations</h2>
+          <p class="texte">
+            Your authorizations are in your preferences, below your access tokens. The section only appears once you have authorized an application in the organization.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-applications">
+          <div class="ecran-tete"><h3>The “Authorized applications” section</h3><span class="route">/&lt;activity&gt;/preferences#applications</span></div>
+          <p>Each line shows the name of the application, its scope, its activities, the date of approval, the end date and the last use.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Revoke</span></span><span>End the authorization. The application receives a refusal on its next request.</span></li>
+          </ul>
+          <p class="note">A revoked or expired authorization stays in the list for thirty days, with its state. A person has at most twenty active authorizations in one organization.</p>
+        </article>
+
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>Event</th><th>What happens to the authorization</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>You revoke the authorization</th><td>It ends at once.</td></tr>
+              <tr><th>The application signs out</th><td>It ends at once. The application revokes it itself.</td></tr>
+              <tr><th>An organization admin revokes it</th><td>It ends, and Relaytour notifies you by email.</td></tr>
+              <tr><th>An old token of the application comes back</th><td>Relaytour treats it as a sign of theft. The authorization ends, and Relaytour notifies you by email.</td></tr>
+              <tr><th>Your account is archived in the organization</th><td>All your authorizations end.</td></tr>
+              <tr><th>The “API” module is turned off</th><td>The authorization stops answering, then answers again when the module is turned back on.</td></tr>
+              <tr><th>The “API” module is suspended</th><td>All authorizations in the organization end.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-admins">
+        <div class="entete">
+          <span class="etiquette">Organization admins</span>
+          <h2 id="t-admins">Oversee the organization’s applications</h2>
+          <p class="texte">
+            Third-party applications depend on the “API” module. An organization admin turns it on in the “API for third-party programs” panel of the “Organization” screen. The <a href="api.html#t-module">API user guide</a> describes this panel.
+          </p>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Read the authorizations</h3>
+            <p>The panel lists the tokens of the whole organization. An application authorization shows the name of the application and its identifier.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Revoke a member’s authorization</h3>
+            <p>An organization admin revokes a member’s authorization from this list. Relaytour notifies the member by email.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Refuse an application</h3>
+            <p>Under “Refused applications”, an admin enters the identifier of an application. Its authorizations in the organization end, and it can no longer request new ones.</p>
+          </div>
+        </div>
+        <p class="note">“Lift the refusal” lets the application request authorizations again. The authorizations that the refusal revoked do not come back. An organization refuses at most two hundred applications.</p>
+        <p class="note">The installation administration can also close the feature, limit it to a list of applications, or refuse an application for all organizations. The <a href="https://github.com/relaytour/relaytour/blob/main/infra/README.md">reference deployment</a> describes these settings.</p>
+      </section>
+
+      <section aria-labelledby="t-relier">
+        <div class="entete">
+          <span class="etiquette">People who write an application</span>
+          <h2 id="t-relier">Connect an application to Relaytour</h2>
+          <p class="texte">
+            Each Relaytour installation is its own OAuth 2.1 authorization server. An application only knows the address of the organizer workspace, and it discovers the rest through the metadata documents.
+          </p>
+          <p class="texte">
+            The flow needs no prior registration and no client secret. The application publishes a document that describes it, and the address of this document serves as its identifier.
+          </p>
+        </div>
+
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>Address</th><th>What it serves</th></tr>
+            </thead>
+            <tbody>
+              <tr><th><span class="route">/.well-known/oauth-protected-resource</span></th><td>The resource metadata (RFC 9728). A 401 refusal from the API points to this document in the <span class="route">WWW-Authenticate</span> header.</td></tr>
+              <tr><th><span class="route">/.well-known/oauth-authorization-server</span></th><td>The authorization server metadata (RFC 8414).</td></tr>
+              <tr><th><span class="route">/oauth/autoriser</span></th><td>The start of the flow, opened in the person’s browser.</td></tr>
+              <tr><th><span class="route">/oauth/jeton</span></th><td>The exchange of a code, and the renewal of tokens.</td></tr>
+              <tr><th><span class="route">/oauth/revocation</span></th><td>The revocation of an authorization by the application (RFC 7009).</td></tr>
+              <tr><th><span class="route">/oauth/enregistrement</span></th><td>Dynamic registration (RFC 7591), only if the installation opens it. It is closed by default.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grille-2">
+          <div class="verre panneau">
+            <h3>1. Publish the application’s document</h3>
+            <p>The application publishes a JSON document at a public https address, with a path. This address is its <span class="route">client_id</span>, and the document repeats it.</p>
+            <pre class="source-markdown">{
+  "client_id": "https://tool.example/relaytour/client.json",
+  "client_name": "Example tool",
+  "redirect_uris": ["https://tool.example/relaytour/callback"],
+  "token_endpoint_auth_method": "none"
+}</pre>
+          </div>
+          <div class="verre panneau">
+            <h3>What the installation checks</h3>
+            <ul class="gestes">
+              <li><span><span class="libelle">Fetch</span></span><span>A domain name that leads to a public address. An IP address and <span class="route">localhost</span> are refused. No redirect, within 5 seconds and 16 KB.</span></li>
+              <li><span><span class="libelle">Name</span></span><span>80 characters at most, with no line break and no invisible formatting character.</span></li>
+              <li><span><span class="libelle">Redirects</span></span><span>Ten addresses at most, in https, or in http on 127.0.0.1 or [::1] with any port (RFC 8252).</span></li>
+              <li><span><span class="libelle">Cache</span></span><span>The installation keeps the document according to its <span class="route">Cache-Control</span> header, for 24 hours at most.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="verre panneau">
+          <h3>2. Send the person to the consent screen</h3>
+          <p>The application opens <span class="route">/oauth/autoriser</span> in the browser, with a PKCE S256 challenge and the target resource. The resource is the origin of the organizer workspace.</p>
+          <pre class="source-markdown">https://your-installation.example/oauth/autoriser
+  ?response_type=code
+  &amp;client_id=https%3A%2F%2Ftool.example%2Frelaytour%2Fclient.json
+  &amp;redirect_uri=https%3A%2F%2Ftool.example%2Frelaytour%2Fcallback
+  &amp;scope=lecture%20ecriture
+  &amp;state=…
+  &amp;code_challenge=…
+  &amp;code_challenge_method=S256
+  &amp;resource=https%3A%2F%2Fyour-installation.example</pre>
+          <p class="note">The scope is <span class="route">lecture</span> (read), or <span class="route">lecture ecriture</span> (read and write). The person can narrow the requested scope, never widen it. The callback carries <span class="route">code</span>, <span class="route">state</span> and <span class="route">iss</span> (RFC 9207): the application checks that <span class="route">iss</span> is the expected issuer.</p>
+        </div>
+
+        <div class="verre panneau">
+          <h3>3. Exchange the code</h3>
+          <p>The code lasts 60 seconds and works only once. The application exchanges it for an application token and a refresh token.</p>
+          <pre class="source-markdown">curl https://your-installation.example/oauth/jeton \
+  -d grant_type=authorization_code \
+  -d code=… \
+  -d code_verifier=… \
+  -d client_id=https://tool.example/relaytour/client.json \
+  -d redirect_uri=https://tool.example/relaytour/callback \
+  -d resource=https://your-installation.example</pre>
+          <p class="note">The response carries <span class="route">access_token</span> (prefix <span class="route">rto_</span>, one hour), <span class="route">refresh_token</span> (prefix <span class="route">rtr_</span>, 90 days) and the granted scope in <span class="route">scope</span>.</p>
+        </div>
+
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>4. Call the API</h3>
+            <p>The application token goes in the <span class="route">Authorization</span> header, on <span class="route">/graphql</span> or on <span class="route">/api/v1</span>. The routes, errors and rate limits are those of the <a href="api.html#t-graphql">API user guide</a>.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>5. Refresh</h3>
+            <p>Before the hour ends, the application sends <span class="route">grant_type=refresh_token</span>. It receives a new pair and must forget the old one: an old refresh token that comes back revokes the authorization.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>6. Sign out</h3>
+            <p>The application sends one of its tokens to <span class="route">/oauth/revocation</span>. The whole authorization ends, with all its tokens.</p>
+          </div>
+        </div>
+
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>OAuth error</th><th>What it means</th></tr>
+            </thead>
+            <tbody>
+              <tr><th><span class="route">invalid_request</span></th><td>A parameter is missing or malformed, for example a missing PKCE challenge or a method other than S256.</td></tr>
+              <tr><th><span class="route">invalid_scope</span></th><td>The requested scope contains a value other than <span class="route">lecture</span> or <span class="route">ecriture</span>.</td></tr>
+              <tr><th><span class="route">invalid_target</span></th><td>The <span class="route">resource</span> parameter is missing or names another installation.</td></tr>
+              <tr><th><span class="route">invalid_grant</span></th><td>The code or refresh token is unknown, expired, already used or presented by another application. The authorization may have ended.</td></tr>
+              <tr><th><span class="route">access_denied</span></th><td>The person declined access.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">An unknown redirect address, or an unreadable document, does not send the browser back to the application. The installation then shows the error itself, so that it never redirects to an undeclared address.</p>
+        <p class="note">The consent screen loads nothing from the application, neither a logo nor a script, and it never shows inside a frame.</p>
+      </section>
+
+      <section aria-labelledby="t-securite">
+        <div class="entete">
+          <span class="etiquette">Good practices</span>
+          <h2 id="t-securite">Stay in control</h2>
+        </div>
+        <div class="verre panneau">
+          <ul class="gestes">
+          <li><span><span class="libelle">Read the screen</span></span><span>Check the host that publishes the application before you allow it. Be wary of a “Not verified” application that you did not expect.</span></li>
+          <li><span><span class="libelle">The fewest rights possible</span></span><span>Choose read only and only the useful activities, even if the application asks for more.</span></li>
+          <li><span><span class="libelle">Read your emails</span></span><span>Revoke at once an authorization that you do not recognize, from the link in the email or from your preferences.</span></li>
+          <li><span><span class="libelle">Clean up</span></span><span>Revoke the applications that you no longer use. The date of last use, in the list, helps you spot them.</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Other user guides</span>
+          <h2 id="t-autres">Keep going</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="api.html">
+            <span class="role">All roles</span>
+            <h3>Use the API</h3>
+            <p>The “API” module, access tokens, the GraphQL and REST APIs, and robots.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+          <a class="verre panneau lien-guide" href="admin-organisation.html">
+            <span class="role">Organization admin</span>
+            <h3>Run the organization</h3>
+            <p>The identity of the organization, its activities, accounts, roles and modules.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+          <a class="verre panneau lien-guide" href="./">
+            <span class="role">All roles</span>
+            <h3>Choose a user guide</h3>
+            <p>The list of user guides for the organizer workspace.</p>
+            <span class="suite">See the list</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, organizer workspace. User guide up to date with version 0.31.0.
+      </footer>
+    </main>
+    <script src="../../bascule.js"></script>
+    <script src="../../sommaire.js"></script>
+  </body>
+</html>
