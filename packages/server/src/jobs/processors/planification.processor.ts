@@ -132,9 +132,25 @@ export async function planificationProcessor(
     await purgerDonneesTechniques(prisma)
     // Applications tierces (ADR 0067) : rappel avant la fin d'une autorisation,
     // révocation des applications refusées, puis effacement de ce qui ne sert plus.
-    await rappelerFinDesAutorisations(prisma)
-    await revoquerApplicationsRefusees(prisma)
-    await purgerApplications(prisma)
+    // Chaque étape tourne seule : l'échec de l'une n'empêche pas les suivantes.
+    for (const [etape, f] of [
+      ['rappel', rappelerFinDesAutorisations],
+      ['refus', revoquerApplicationsRefusees],
+      ['purge', purgerApplications],
+    ] as const) {
+      try {
+        await f(prisma)
+      } catch (erreur) {
+        journal.error(
+          {
+            evenement: 'entretien-applications-en-echec',
+            etape,
+            message: (erreur as Error).message,
+          },
+          'Une étape de l’entretien des applications tierces a échoué.'
+        )
+      }
+    }
     return
   }
 

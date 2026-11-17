@@ -46,11 +46,19 @@ export async function rappelerFinDesAutorisations(
       data: { rappelFinLe: maintenant },
     })
     if (count === 0) continue
-    await mettreEnFile(
+    const enFile = await mettreEnFile(
       'autorisation-fin-proche',
       { userId: a.userId },
       { organisationId: a.organisationId, jetonAccesId: a.id }
     )
+    // Un rappel que la file refuse se retente la nuit suivante.
+    if (!enFile) {
+      await prisma.jetonAcces.update({
+        where: { id: a.id },
+        data: { rappelFinLe: null },
+      })
+      continue
+    }
     envoyes++
   }
   return envoyes

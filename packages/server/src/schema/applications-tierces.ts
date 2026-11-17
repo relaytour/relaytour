@@ -345,6 +345,9 @@ const ApplicationRefuseeRef = builder
     }),
   })
 
+/** Applications refusées par une organisation, au plus : la liste les rend toutes. */
+const REFUS_MAX = 200
+
 /** Un identifiant d'application tel qu'un admin le saisit. */
 function clientIdSaisi(brut: string): string {
   const clientId = brut.trim()
@@ -367,7 +370,7 @@ builder.queryFields(t => ({
         where: { organisationId: ctx.organisation!.id },
         include: { par: { select: { name: true } } },
         orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
-        take: 200,
+        take: REFUS_MAX,
       })
       const clients = await prisma.clientApplication.findMany({
         where: { clientId: { in: refus.map(r => r.clientId) } },
@@ -399,6 +402,23 @@ builder.mutationFields(t => ({
       const revoquees = await sousVerrouOrganisation(
         organisationId,
         async tx => {
+          const deja = await tx.applicationRefusee.findUnique({
+            where: { organisationId_clientId: { organisationId, clientId } },
+            select: { id: true },
+          })
+          if (
+            deja === null &&
+            (await tx.applicationRefusee.count({
+              where: { organisationId },
+            })) >= REFUS_MAX
+          ) {
+            throw erreurSaisie(
+              i18n._(
+                'Cette organisation refuse déjà {max} applications : levez un refus avant d’en ajouter un.',
+                { max: REFUS_MAX }
+              )
+            )
+          }
           await tx.applicationRefusee.upsert({
             where: { organisationId_clientId: { organisationId, clientId } },
             create: { organisationId, clientId, parId },

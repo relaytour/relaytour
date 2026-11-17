@@ -238,6 +238,11 @@ msgid "Indiquez l’identifiant de l’application, 512 caractères au plus."
 msgstr "Indiquez l’identifiant de l’application, 512 caractères au plus."
 
 #. js-lingui-explicit-id
+#: src/schema/applications-tierces.ts
+msgid "Cette organisation refuse déjà {max} applications : levez un refus avant d’en ajouter un."
+msgstr "Cette organisation refuse déjà {max} applications : levez un refus avant d’en ajouter un."
+
+#. js-lingui-explicit-id
 #: src/schema/benevoles.ts
 msgid "Une fiche ne s’enregistre qu’avec l’accord de la personne."
 msgstr "Une fiche ne s’enregistre qu’avec l’accord de la personne."
