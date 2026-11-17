@@ -18,6 +18,7 @@ import {
 import { buildContext, type AppContext } from '../context.ts'
 import { contexteDeJetonAcces } from '../contexte-jeton.ts'
 import { env } from '../env.ts'
+import { journal } from '../lib/journal.ts'
 import { schema } from '../schema/index.ts'
 
 import {
@@ -25,7 +26,7 @@ import {
   rappelerFinDesAutorisations,
   revoquerApplicationsRefusees,
 } from './entretien.ts'
-import { defiS256 } from './jetons.ts'
+import { defiS256, empreinte } from './jetons.ts'
 import { emetteur } from './metadonnees.ts'
 import { routesOAuth } from './routes.ts'
 
@@ -523,6 +524,19 @@ describe('échange du code', () => {
   })
 })
 
+describe('code expiré', () => {
+  it('refuse un code de plus de 60 secondes', async () => {
+    const code = await codeAccorde()
+    await prisma.demandeAutorisation.update({
+      where: { codeEmpreinte: empreinte(code) },
+      data: { codeExpireLe: new Date(Date.now() - 1000) },
+    })
+    const r = await echanger(code)
+    expect(r.statut).toBe(400)
+    expect(erreurDe(r)).toBe('invalid_grant')
+  })
+})
+
 describe('renouvellement', () => {
   it('fait tourner le jeton, et révoque tout quand l’ancien revient', async () => {
     const jetons = await jetonsAccordes()
@@ -787,5 +801,110 @@ describe('mails et entretien', () => {
     expect(
       await prisma.clientApplication.findUnique({ where: { clientId: CLIENT } })
     ).not.toBeNull()
+  })
+})
+
+describe('autre organisation', () => {
+  it('ne lit rien d’une autre organisation de la même personne', async () => {
+    const autre = await prisma.organisation.create({
+      data: {
+        slug: `${slug}-b`,
+        nom: `Organisation ${slug} B`,
+        configuration: {},
+        apiActivee: true,
+      },
+    })
+    try {
+      await prisma.appartenance.create({
+        data: { organisationId: autre.id, userId: ids.personne, role: 'ADMIN' },
+      })
+      const activiteB = await prisma.activite.create({
+        data: {
+          organisationId: autre.id,
+          slug: `${slug}-b`,
+          nom: 'Activité B',
+          groupes: [],
+        },
+      })
+      const jetons = await jetonsAccordes()
+      const ctx = await contexteDeJetonAcces(ip, jetons.access_token, null)
+      expect(ctx.refus).toBeNull()
+      const lues = await executer(ctx, '{ activites { id } }')
+      const visibles = (lues.data as { activites: { id: string }[] }).activites
+      expect(visibles.map(a => a.id)).toContain(ids.activite)
+      expect(visibles.map(a => a.id)).not.toContain(activiteB.id)
+      // Désigner l'activité de l'autre organisation par son identifiant ne rend rien.
+      const editions = await executer(
+        ctx,
+        'query ($a: ID) { editions(activiteId: $a) { id } }',
+        {
+          a: activiteB.id,
+        }
+      )
+      expect(editions.data?.editions ?? []).toEqual([])
+      expect(ctx.organisation?.id).toBe(ids.org)
+      // Demander l'activité de l'autre organisation ne change pas d'organisation.
+      const ailleurs = await contexteDeJetonAcces(
+        ip,
+        jetons.access_token,
+        activiteB.slug
+      )
+      expect(ailleurs.organisation?.id ?? null).not.toBe(autre.id)
+      const relues = await executer(ailleurs, '{ activites { id } }')
+      expect(
+        (
+          (relues.data as { activites: { id: string }[] } | null)?.activites ??
+          []
+        ).map(a => a.id)
+      ).not.toContain(activiteB.id)
+    } finally {
+      await prisma.activite.deleteMany({ where: { organisationId: autre.id } })
+      await prisma.appartenance.deleteMany({
+        where: { organisationId: autre.id },
+      })
+      await prisma.organisation.delete({ where: { id: autre.id } })
+    }
+  })
+})
+
+describe('journal', () => {
+  it('ne reçoit jamais un jeton ni un code', async () => {
+    const lignes: unknown[] = []
+    const espions = (['info', 'warn', 'error'] as const).map(niveau =>
+      vi.spyOn(journal, niveau).mockImplementation((...args: unknown[]) => {
+        lignes.push(args)
+      })
+    )
+    try {
+      const code = await codeAccorde()
+      const jetons = JSON.parse((await echanger(code)).texte) as Jetons
+      // Un rejeu, un renouvellement et une révocation écrivent au journal.
+      await echanger(code)
+      const nouveaux = await jetonsAccordes()
+      const suivants = JSON.parse(
+        (await renouveler(nouveaux.refresh_token)).texte
+      ) as Jetons
+      await renouveler(nouveaux.refresh_token)
+      await appeler('/oauth/revocation', {
+        corps: { token: suivants.access_token, client_id: CLIENT },
+      })
+      expect(lignes.length).toBeGreaterThan(0)
+      const texte = JSON.stringify(lignes)
+      for (const secret of [
+        code,
+        jetons.access_token,
+        jetons.refresh_token,
+        nouveaux.access_token,
+        nouveaux.refresh_token,
+        suivants.access_token,
+        suivants.refresh_token,
+        VERIFICATEUR,
+      ]) {
+        expect(texte).not.toContain(secret)
+      }
+      expect(texte).not.toMatch(/rt[or]_[A-Za-z0-9_-]{20}/)
+    } finally {
+      for (const e of espions) e.mockRestore()
+    }
   })
 })

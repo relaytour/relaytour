@@ -1,6 +1,8 @@
 import { randomBytes } from 'node:crypto'
+import { isIP } from 'node:net'
 
 import { prisma, type ClientApplication } from '@relaytour/database'
+import type { Dispatcher } from 'undici'
 
 import { env } from '../env.ts'
 import { agentPublic } from '../espace-fichiers/reseau.ts'
@@ -92,16 +94,26 @@ export function identifiantCimd(clientId: string): URL | null {
   if (u.protocol !== 'https:' || u.hash !== '' || clientId.includes('#'))
     return null
   if (u.username !== '' || u.password !== '') return null
+  // Un éditeur se désigne par un nom de domaine. Une adresse IP ne passe pas par
+  // la résolution de l'agent public, qui seule refuse les réseaux internes : elle
+  // est refusée ici, comme `localhost`.
+  const hote = u.hostname.replace(/^\[|\]$/g, '').toLowerCase()
+  if (isIP(hote) !== 0) return null
+  if (hote === 'localhost' || hote.endsWith('.localhost')) return null
   if (u.pathname === '/' || /\/\.\.?(\/|$)/.test(u.pathname)) return null
   // L'adresse doit être écrite sous sa forme normalisée : le document la répète.
   return u.href === clientId ? u : null
 }
 
-/** Un nom lisible : 80 caractères au plus, sans retour à la ligne ni caractère de contrôle. */
+/**
+ * Un nom lisible : 80 caractères au plus, sans retour à la ligne, sans caractère de
+ * contrôle ni de format. Les caractères de format (catégorie Cf) comprennent les
+ * commandes bidirectionnelles, qui inverseraient le nom sur l'écran de consentement.
+ */
 export function nomClient(brut: unknown): string | null {
   if (typeof brut !== 'string') return null
   // eslint-disable-next-line no-control-regex
-  if (/[\u0000-\u001f\u007f\u2028\u2029]/.test(brut)) return null
+  if (/[\u0000-\u001f\u007f\u2028\u2029]|\p{Cf}/u.test(brut)) return null
   const nom = brut.trim()
   return nom.length === 0 || nom.length > NOM_CLIENT_MAX ? null : nom
 }
@@ -178,15 +190,22 @@ type LectureCimd =
   | { issue: 'ok'; description: DescriptionClient; cacheS: number }
   | { issue: 'injoignable' | 'invalide' }
 
-/** Lit un document CIMD sur Internet, avec les bornes de l'ADR 0067. */
-export async function lireDocumentCimd(adresse: string): Promise<LectureCimd> {
+/**
+ * Lit un document CIMD sur Internet, avec les bornes de l'ADR 0067. Les tests
+ * remplacent l'agent et le délai ; le serveur garde toujours l'agent public.
+ */
+export async function lireDocumentCimd(
+  adresse: string,
+  options: { agent?: Dispatcher; delaiMs?: number } = {}
+): Promise<LectureCimd> {
+  if (identifiantCimd(adresse) === null) return { issue: 'invalide' }
   let reponse: Response
   try {
     reponse = await fetch(adresse, {
       headers: { accept: 'application/json' },
       redirect: 'manual',
-      signal: AbortSignal.timeout(DELAI_CIMD_MS),
-      dispatcher: agentPublic,
+      signal: AbortSignal.timeout(options.delaiMs ?? DELAI_CIMD_MS),
+      dispatcher: options.agent ?? agentPublic,
     } as unknown as RequestInit)
   } catch {
     return { issue: 'injoignable' }

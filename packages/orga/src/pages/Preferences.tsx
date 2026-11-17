@@ -5,6 +5,7 @@ import { App, Button, Form, Input, Radio, Skeleton, Switch, Tag } from 'antd'
 import { useState } from 'react'
 
 import { PreferenceAgenda } from '../composants/AbonnementAgenda'
+import ApplicationsAutorisees from '../composants/ApplicationsAutorisees'
 import { DeuxColonnes, Panneau } from '../composants/Panneau'
 import PreferenceJetons from '../composants/PreferenceJetons'
 import PreferenceLangue from '../composants/PreferenceLangue'
@@ -669,6 +670,7 @@ export default function Preferences() {
           {/* Seuls les admins écrivent un message (ADR 0020). */}
           {(administre || session?.moi?.estAdmin) && <PreferenceMessagerie />}
           <PreferenceJetons modesDEmploi={organisation.modesDEmploi} />
+          <ApplicationsAutorisees />
         </DeuxColonnes>
       )}
     </>

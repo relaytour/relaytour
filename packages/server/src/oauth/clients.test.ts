@@ -60,6 +60,24 @@ describe('identifiant CIMD', () => {
     expect(identifiantCimd('https://app.exemple/client.json#f')).toBeNull()
     expect(identifiantCimd(`https://app.exemple/${'a'.repeat(600)}`)).toBeNull()
   })
+
+  it('refuse une adresse IP et localhost : seul un nom passe par la résolution publique', () => {
+    for (const adresse of [
+      'https://127.0.0.1/client.json',
+      'https://127.0.0.1:9999/client.json',
+      'https://10.0.0.5:8443/x',
+      'https://169.254.169.254/latest',
+      'https://[::1]/client.json',
+      'https://[fd12:3456::1]:8443/x',
+      'https://localhost/client.json',
+      'https://intranet.localhost/client.json',
+    ]) {
+      expect(identifiantCimd(adresse), adresse).toBeNull()
+    }
+    // Une adresse IP écrite autrement n'est pas normalisée : elle est refusée aussi.
+    expect(identifiantCimd('https://2130706433/client.json')).toBeNull()
+    expect(identifiantCimd('https://0x7f.1/client.json')).toBeNull()
+  })
 })
 
 describe('description d’un client', () => {
@@ -73,6 +91,13 @@ describe('description d’un client', () => {
       nom: 'Automate',
       redirectUris: ['https://app.exemple/retour'],
     })
+  })
+
+  it('refuse les caractères de format, dont les commandes bidirectionnelles', () => {
+    for (const c of ['\u202e', '\u2066', '\u200b', '\u200f', '\ufeff']) {
+      expect(nomClient(`Agenda${c}moc.elbairtsuc`)).toBeNull()
+    }
+    expect(nomClient('Agenda de l’équipe')).toBe('Agenda de l’équipe')
   })
 
   it('refuse un nom absent, trop long ou sur plusieurs lignes', () => {

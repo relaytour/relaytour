@@ -1,6 +1,6 @@
 # ADR 0067 — Autorisation d'applications tierces
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-11-17
 - Complète l'ADR 0064 (module API et jetons d'accès). Revient sur son option écartée « OAuth dans Relaytour ». S'appuie sur l'ADR 0007 (frontière entre logiciel et exploitation) et sur l'ADR 0035 (connexion).
 
@@ -45,7 +45,7 @@ Chaque organisation peut avoir sa propre installation, à sa propre adresse. Une
 ### Clients
 
 - **Le document de métadonnées de client (CIMD) est le mode principal.** Le `client_id` est une adresse https. L'installation lit ce document à chaque demande d'autorisation, avec ces règles :
-  - adresse publique seulement, sans redirection, en 5 secondes au plus, lecture arrêtée à 16 Ko ;
+  - adresse publique seulement, désignée par un nom de domaine (ni adresse IP, ni `localhost`), sans redirection, en 5 secondes au plus, lecture arrêtée à 16 Ko ;
   - le champ `client_id` du document doit être égal à l'adresse lue ;
   - le document doit déclarer `client_name` et `redirect_uris`, et `token_endpoint_auth_method` doit valoir `none` ;
   - le cache suit les en-têtes HTTP, 24 heures au plus.
@@ -100,7 +100,7 @@ Un code vaut 60 secondes et une seule fois. Un code rejoué révoque l'autorisat
 - La durée de 90 jours suit le rythme d'une organisation. Une automatisation peut rester sans usage pendant la pause entre deux éditions, sans perdre sa connexion.
 - Un jeton de renouvellement déjà utilisé qui revient révoque toute l'autorisation. La personne reçoit un mail qui le signale.
 - Le serveur garde l'empreinte SHA-256 de chaque jeton, jamais sa valeur. Les jetons sont opaques : une révocation agit dès la requête suivante.
-- **Audience.** Le paramètre `resource` (RFC 8707) est obligatoire à l'autorisation et à l'échange. Il doit valoir `ORIGINE_ORGA`, sinon la demande reçoit `invalid_target`. Le jeton n'est accepté que par cette installation, sur `/graphql`, le flux des changements et `/api/v1/`.
+- **Audience.** Le paramètre `resource` (RFC 8707) est obligatoire à l'autorisation et à l'échange du code. Il est facultatif au renouvellement, comme le permet la RFC 8707. Présent, il doit valoir `ORIGINE_ORGA`, sinon la demande reçoit `invalid_target`. Le jeton n'est accepté que par cette installation, sur `/graphql`, le flux des changements et `/api/v1/`.
 - À la fin de l'autorisation, après un an, l'application doit redemander l'accord de la personne.
 - Trente jours avant cette fin, la personne reçoit un mail de rappel. Le mail nomme l'application et la date, et indique comment la reconnecter.
 - Le contexte d'une requête porteuse d'un jeton d'application est celui d'un jeton d'accès. `jetonCourant` indique en plus le nom de l'application.
@@ -109,7 +109,7 @@ Un code vaut 60 secondes et une seule fois. Un code rejoué révoque l'autorisat
 
 ### Plusieurs applications
 
-- Une personne autorise autant d'applications qu'elle le souhaite, dans la limite de 20 autorisations actives par organisation. Ces autorisations ne comptent pas dans les 10 jetons d'accès de l'ADR 0064.
+- Une personne autorise autant d'applications qu'elle le souhaite, dans la limite de 20 autorisations actives par personne et par organisation. Ces autorisations ne comptent pas dans les 10 jetons d'accès de l'ADR 0064.
 - Une nouvelle autorisation du même client, par la même personne et pour la même organisation, remplace la précédente et la révoque.
 - Chaque autorisation se révoque seule, sans toucher aux autres ni aux jetons d'accès.
 
@@ -180,10 +180,10 @@ Cette règle protège l'engagement du projet : toutes les fonctions du logiciel 
 | Code volé en chemin | PKCE S256 obligatoire, code de 60 secondes à usage unique |
 | Redirection ouverte | Adresse de retour comparée exactement à celles du client ; erreur affichée sur l'installation avant cette vérification |
 | Confusion entre serveurs d'autorisation (*mix-up*) | Paramètre `iss` dans chaque réponse (RFC 9207) |
-| Falsification de requête (CSRF) | `state` rendu tel quel, PKCE, et demande liée à la session qui consent |
+| Falsification de requête (CSRF) | `state` rendu tel quel, PKCE, identifiant de demande aléatoire (32 octets) valable 15 minutes et à réponse unique, réponse réservée à une session |
 | Clic détourné sur « Autoriser » | Écran jamais affiché dans un cadre, accord jamais implicite |
 | Nom de client trompeur | Hôte affiché, client DCR signalé « non vérifié », DCR fermé par défaut |
-| Requête forgée vers le réseau interne (SSRF) par un CIMD | Adresse publique seulement, sans redirection, 5 secondes, 16 Ko |
+| Requête forgée vers le réseau interne (SSRF) par un CIMD | Nom de domaine seulement (adresse IP et `localhost` refusés), résolu vers une adresse publique, sans redirection, 5 secondes, 16 Ko |
 | Jeton de renouvellement volé | Rotation à chaque usage ; un ancien jeton qui revient révoque l'autorisation et prévient la personne |
 | Jeton présenté ailleurs | Audience fixée par `resource`, jeton opaque connu de la seule installation |
 | Élévation de droits | Bornes d'un jeton d'accès, sans gestion des membres, jamais plus que la session |
@@ -208,7 +208,7 @@ Les tests prouvent chaque contrôle par le refus :
 - l'écran de consentement porte `frame-ancestors 'none'` ;
 - le journal ne reçoit jamais un jeton ni un code.
 
-Une revue de sécurité de la mise en œuvre précède le passage de cette ADR à « acceptée ».
+Une revue de sécurité de la mise en œuvre précède le passage de cette ADR à « acceptée ». Elle a eu lieu sur la pile #377 à #381. Elle a relevé qu'une adresse IP écrite dans le `client_id` échappait au contrôle de l'adresse publique, faute de résolution de nom. L'identifiant refuse désormais toute adresse IP et `localhost`, et les tests de lecture du CIMD passent par le vrai `fetch`. Elle a aussi fait refuser les caractères de format Unicode (commandes bidirectionnelles comprises) dans le nom d'un client.
 
 ## Plan de mise en œuvre
 
