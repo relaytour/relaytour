@@ -64,6 +64,9 @@ model Organisation {
   // lisible par les membres. Elle révoque tous les jetons de l'organisation.
   apiSuspendueLe       DateTime?
   apiSuspensionMotif   String?            @db.VarChar(500)
+  // Applications tierces (ADR 0067) : l'administration de l'installation peut les
+  // fermer pour cette organisation. Leurs autorisations cessent alors de répondre.
+  applicationsAutorisees Boolean          @default(true)
   // Source de vérité du contenu (ADR 0009) : dernière modification faite dans
   // l'application, et dernier import ou export du dossier de contenu. Un import
   // refuse d'écraser une modification plus récente que la dernière synchronisation.
@@ -107,6 +110,7 @@ model Organisation {
   permissionsCreees       PermissionCreee[]
   fichesExportees         FicheExportee[]
   jetonsAcces             JetonAcces[]
+  applicationsRefusees    ApplicationRefusee[]
 }
 
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
@@ -408,6 +412,7 @@ model User {
   jetonsAcces             JetonAcces[]             @relation("JetonPorteur")
   jetonsAccesCrees        JetonAcces[]             @relation("JetonAuteur")
   jetonsAccesRevoques     JetonAcces[]             @relation("JetonRevocateur")
+  applicationsRefusees    ApplicationRefusee[]
   sondagesCrees           Sondage[]                @relation("SondageAuteur")
   participationsSondage   ParticipantSondage[]
   reponsesSondage         ReponseSondage[]
@@ -1617,37 +1622,47 @@ enum PorteeJeton {
 // Le jeton n'est jamais gardé : le serveur garde son empreinte SHA-256, comme pour
 // un abonnement à l'agenda (ADR 0037).
 model JetonAcces {
-  id             String      @id @default(cuid())
-  organisationId String
+  id                  String      @id @default(cuid())
+  organisationId      String
   // La personne dont le jeton porte les droits.
-  userId         String
+  userId              String
   // La personne qui a créé le jeton : la porteuse elle-même, ou un admin plus tard.
-  creeParId      String?
+  creeParId           String?
   // Libellé choisi à la création, pour reconnaître le programme : « script d'import ».
-  nom            String      @db.VarChar(80)
-  empreinte      String      @db.Char(64)
+  nom                 String      @db.VarChar(80)
+  empreinte           String      @db.Char(64)
   // Les huit caractères qui suivent le préfixe, pour reconnaître le jeton à l'écran.
-  apercu         String      @db.VarChar(8)
-  portee         PorteeJeton @default(LECTURE)
+  apercu              String      @db.VarChar(8)
+  portee              PorteeJeton @default(LECTURE)
   // Les activités ouvertes au jeton. Nul : toutes celles que la personne voit.
-  activiteIds    Json?
-  expireLe       DateTime
+  activiteIds         Json?
+  expireLe            DateTime
   // Dernier usage, posé au plus une fois par minute.
-  dernierAccesLe DateTime?
-  revoqueLe      DateTime?
+  dernierAccesLe      DateTime?
+  revoqueLe           DateTime?
   // L'admin de l'organisation qui a révoqué le jeton, nommé à sa porteuse (ADR 0064).
   // Nul quand la porteuse l'a révoqué elle-même, ou par le lien du mail de création.
-  revoqueParId   String?
+  revoqueParId        String?
   // Le jeton ouvre la gestion des membres : inviter, retirer et promouvoir une
   // personne. Désactivé par défaut : un jeton fuité ne change pas l'équipe (ADR 0064).
-  gestionMembres Boolean     @default(false)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  gestionMembres      Boolean     @default(false)
+  // L'application tierce que la personne a autorisée (ADR 0067). Nul pour un jeton
+  // d'accès créé dans « Jetons et API ». Une autorisation d'application est un
+  // jeton d'accès sans valeur utilisable : l'application reçoit des jetons
+  // d'application et de renouvellement, qui portent ses bornes.
+  clientApplicationId String?
+  // Le rappel envoyé trente jours avant la fin d'une autorisation (ADR 0067).
+  rappelFinLe         DateTime?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
 
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-  user         User         @relation("JetonPorteur", fields: [userId], references: [id], onDelete: Cascade)
-  creePar      User?        @relation("JetonAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
-  revoquePar   User?        @relation("JetonRevocateur", fields: [revoqueParId], references: [id], onDelete: SetNull)
+  organisation      Organisation         @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  clientApplication ClientApplication?   @relation(fields: [clientApplicationId], references: [id], onDelete: Cascade)
+  jetonsApplication JetonApplication[]
+  demande           DemandeAutorisation?
+  user              User                 @relation("JetonPorteur", fields: [userId], references: [id], onDelete: Cascade)
+  creePar           User?                @relation("JetonAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+  revoquePar        User?                @relation("JetonRevocateur", fields: [revoqueParId], references: [id], onDelete: SetNull)
 
   // L'empreinte est unique dans son organisation (invariant 18) ; le jeton ne porte
   // pas l'organisation, d'où l'index sur l'empreinte seule.
@@ -1657,6 +1672,104 @@ model JetonAcces {
   @@index([userId])
   @@index([creeParId])
   @@index([revoqueParId])
+  @@index([clientApplicationId])
+}
+
+// Application tierce connue de l'installation (ADR 0067). Une application
+// s'identifie par un document de métadonnées (CIMD) : son identifiant est
+// l'adresse https de ce document, relu quand sa copie expire. L'enregistrement
+// dynamique (DCR), fermé par défaut, crée un client dont le nom est déclaré par
+// l'application elle-même.
+model ClientApplication {
+  id            String                  @id @default(cuid())
+  clientId      String                  @unique @db.VarChar(512)
+  source        SourceClientApplication
+  nom           String                  @db.VarChar(80)
+  // Les adresses de retour déclarées, comparées exactement (sauf le port d'une
+  // adresse de boucle locale, RFC 8252).
+  redirectUris  Json
+  // Copie du document CIMD valable jusqu'à cette date (24 heures au plus).
+  valideJusquau DateTime
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  autorisations JetonAcces[]
+  demandes      DemandeAutorisation[]
+}
+
+// Application refusée par un admin d'une organisation (ADR 0067). Le refus révoque
+// ses autorisations dans l'organisation et bloque les nouvelles demandes. Il vise
+// l'identifiant OAuth, même pour une application que l'installation ne connaît
+// pas encore.
+model ApplicationRefusee {
+  id             String   @id @default(cuid())
+  organisationId String
+  clientId       String   @db.VarChar(512)
+  parId          String?
+  createdAt      DateTime @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  par          User?        @relation(fields: [parId], references: [id], onDelete: SetNull)
+
+  @@unique([organisationId, clientId])
+  @@index([parId])
+}
+
+enum SourceClientApplication {
+  CIMD
+  DCR
+}
+
+// Demande d'autorisation d'une application (ADR 0067), gardée 15 minutes. Son
+// identifiant figure dans l'adresse de l'écran de consentement : il est tiré au
+// hasard. Après l'accord, elle porte l'autorisation créée et l'empreinte du code,
+// valable 60 secondes et une seule fois.
+model DemandeAutorisation {
+  id                  String    @id @db.VarChar(43)
+  clientApplicationId String
+  redirectUri         String    @db.VarChar(512)
+  // `lecture` ou `lecture ecriture`.
+  portees             String    @db.VarChar(40)
+  state               String?   @db.VarChar(512)
+  codeChallenge       String    @db.Char(43)
+  expireLe            DateTime
+  // La réponse de la personne : un refus, ou l'autorisation créée.
+  reponduLe           DateTime?
+  jetonAccesId        String?   @unique
+  codeEmpreinte       String?   @unique @db.Char(64)
+  codeExpireLe        DateTime?
+  codeUtiliseLe       DateTime?
+  createdAt           DateTime  @default(now())
+
+  clientApplication ClientApplication @relation(fields: [clientApplicationId], references: [id], onDelete: Cascade)
+  jetonAcces        JetonAcces?       @relation(fields: [jetonAccesId], references: [id], onDelete: Cascade)
+
+  @@index([clientApplicationId])
+  @@index([expireLe])
+}
+
+// Jeton remis à une application autorisée (ADR 0067). Un jeton d'application
+// (`rto_`) vaut une heure ; un jeton de renouvellement (`rtr_`) vaut 90 jours et
+// tourne à chaque usage. Le serveur garde l'empreinte SHA-256, jamais la valeur.
+model JetonApplication {
+  id           String                @id @default(cuid())
+  jetonAccesId String
+  sorte        SorteJetonApplication
+  empreinte    String                @unique @db.Char(64)
+  expireLe     DateTime
+  // Un jeton de renouvellement déjà échangé. S'il revient, l'autorisation tombe.
+  utiliseLe    DateTime?
+  createdAt    DateTime              @default(now())
+
+  jetonAcces JetonAcces @relation(fields: [jetonAccesId], references: [id], onDelete: Cascade)
+
+  @@index([jetonAccesId])
+  @@index([expireLe])
+}
+
+enum SorteJetonApplication {
+  ACCES
+  RENOUVELLEMENT
 }
 
 enum TypeJournal {

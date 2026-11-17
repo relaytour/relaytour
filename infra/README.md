@@ -13,7 +13,7 @@ Ce dossier décrit le déploiement de référence (ADR 0004) : une machine sous 
 | `server` | API GraphQL, port 4400 sur `127.0.0.1` |
 | `worker` | Mails, rappels et résumés |
 
-L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*`, `/api/v1/*`, `/graphql`, `/medias/*` et `/agenda/*` vers l'API. `/medias/*` sert les logos et les favicons des organisations (ADR 0009). `/agenda/*` sert les abonnements à l'agenda, que relisent Outlook, Google ou Apple (ADR 0037). `/graphql` porte aussi le flux des changements (voir « Laisser passer le flux des changements »). Aucun outil Node n'est nécessaire sur le serveur.
+L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*`, `/api/v1/*`, `/graphql`, `/medias/*`, `/agenda/*`, `/oauth/*` et les documents `/.well-known/oauth-*` vers l'API. `/medias/*` sert les logos et les favicons des organisations (ADR 0009). `/agenda/*` sert les abonnements à l'agenda, que relisent Outlook, Google ou Apple (ADR 0037). `/graphql` porte aussi le flux des changements (voir « Laisser passer le flux des changements »). Aucun outil Node n'est nécessaire sur le serveur.
 
 ## Étapes
 
@@ -218,6 +218,13 @@ Un programme tiers (script, ligne de commande, outil de gestion de projet) trava
 3. **Le contrat.** `https://orga.exemple.org/api/v1/openapi.json` décrit l'API REST au format OpenAPI 3.0, sans jeton. Le dépôt en garde une copie dans `packages/server/openapi.json`.
 4. **Le réglage de l'hébergeur.** L'argument `api` de `modifierOrganisationInstallation` règle le module d'une organisation : `autorisee: false` l'interdit, `imposee: true` l'active sans le choix de l'organisation, `suspendue: true` avec un `suspensionMotif` le suspend et révoque tous ses jetons. La requête `organisations` rend l'état du module et le nombre de jetons actifs, sans aucune donnée des membres.
 5. **Les limites.** Un jeton compte 120 requêtes par minute au plus. Soixante jetons refusés en un quart d'heure depuis une même adresse ferment l'API à cette adresse pour la fenêtre. Le journal note `jeton-acces-refuse` sans jamais écrire le jeton.
+6. **Les applications tierces.** Une application (Zapier, n8n, un script) peut aussi demander l'accès par OAuth 2.1, sans jeton copié (ADR 0067). La personne se connecte, lit ce que l'application demande, puis accepte ou refuse. L'installation publie ses métadonnées sous `/.well-known/oauth-authorization-server` et `/.well-known/oauth-protected-resource`. Le relais transmet ces deux chemins et `/oauth/*` vers l'API, comme le `Caddyfile` d'exemple.
+   - `APPLICATIONS_TIERCES` vaut `ouvertes` par défaut. `liste` n'accepte que les applications de `APPLICATIONS_LISTE`, et `fermees` ferme la fonction. Les jetons d'accès restent utilisables dans tous les cas.
+   - `APPLICATIONS_REFUSEES` refuse des applications par l'adresse de leur document ou par leur hôte, sur tous ses ports. Leurs jetons cessent de répondre dès la requête suivante, et leurs autorisations se révoquent au démarrage suivant.
+   - L'argument `api.applications: false` de `modifierOrganisationInstallation` ferme les applications d'une organisation, sans toucher à ses jetons d'accès. Les admins d'une organisation peuvent aussi refuser une application précise.
+   - La purge de nuit rappelle la fin d'une autorisation trente jours avant, et efface les demandes expirées, les jetons échus et les applications sans autorisation depuis 30 jours.
+   - Une application s'identifie par un document de métadonnées publié sur une adresse https. L'API le lit au moment de l'autorisation : elle doit pouvoir joindre Internet en https. Sans accès sortant, choisissez `fermees`, ou ouvrez l'enregistrement dynamique par `APPLICATIONS_ENREGISTREMENT_DYNAMIQUE=true`.
+   - Le journal note `autorisation-application-accordee`, `autorisation-application-revoquee`, `code-autorisation-rejoue` et `jeton-renouvellement-rejoue`, sans jamais écrire un jeton ni un code.
 
 ## Constituer une équipe depuis le serveur
 

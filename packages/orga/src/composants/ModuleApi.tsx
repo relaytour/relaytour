@@ -6,6 +6,7 @@ import { graphql } from '../gql'
 import { messageErreur } from '../lib/erreurs'
 import { API_ORGANISATION, apiOuverte } from '../lib/jetons'
 
+import ApplicationsRefusees from './ApplicationsRefusees'
 import JetonsOrganisation from './JetonsOrganisation'
 import { Panneau } from './Panneau'
 import RobotsApi from './RobotsApi'
@@ -126,6 +127,7 @@ export default function ModuleApi() {
       {/* Les jetons des membres se voient et se révoquent même quand le module est
           fermé : une désactivation ne révoque rien. */}
       {etat !== undefined && <JetonsOrganisation />}
+      {etat !== undefined && <ApplicationsRefusees />}
       {/* Les robots ne servent qu'avec l'API ouverte : leurs jetons en dépendent. */}
       {apiOuverte(etat) && <RobotsApi />}
     </Panneau>

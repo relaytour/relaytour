@@ -227,11 +227,15 @@ type ApercuPerimetreModele {
 Le module « API » d’une organisation (ADR 0064) : son état, les réglages de l’administration de l’installation et le nombre de jetons actifs.
 """
 type ApiInstallation {
+  """
+  Faux : les applications tierces de l’organisation ne répondent plus (ADR 0067).
+  """
+  applications: Boolean!
   autorisee: Boolean!
   etat: EtatApi!
   imposee: Boolean!
 
-  """Jetons ni révoqués ni expirés."""
+  """Jetons ni révoqués ni expirés, autorisations d’applications comprises."""
   jetonsActifs: Int!
   suspendueLe: DateTime
   suspensionMotif: String
@@ -241,6 +245,11 @@ type ApiInstallation {
 Un champ absent ne change pas. `suspendue: true` exige `suspensionMotif` et révoque tous les jetons de l’organisation ; `suspendue: false` lève la suspension.
 """
 input ApiInstallationInput {
+  """
+  Faux : les applications tierces de l’organisation cessent de répondre et ne reçoivent plus d’autorisation. Les jetons d’accès ne changent pas.
+  """
+  applications: Boolean
+
   """Faux : l’organisation ne peut pas activer l’API."""
   autorisee: Boolean
 
@@ -324,6 +333,40 @@ type AppelEtAdresse {
   """L’adresse publique de l’appel."""
   adresse: String!
   appel: AppelBenevoles!
+}
+
+"""Une application tierce refusée par un admin de l’organisation active."""
+type ApplicationRefusee {
+  clientId: String!
+  hote: String!
+
+  """
+  Le nom que l’application déclare. Nul quand l’installation ne la connaît pas.
+  """
+  nom: String
+  refuseeLe: DateTime!
+  refuseePar: String
+}
+
+"""
+Une application tierce. Son nom vient de son document de métadonnées, ou de l’application elle-même quand elle s’est enregistrée seule.
+"""
+type ApplicationTierce {
+  """
+  L’identifiant OAuth : l’adresse du document de métadonnées, ou un identifiant tiré par l’installation.
+  """
+  clientId: String!
+
+  """
+  L’hôte qui publie le document de métadonnées. Nul pour une application enregistrée seule.
+  """
+  hote: String
+  nom: String!
+
+  """
+  Vrai quand l’application publie un document de métadonnées. Faux quand elle s’est enregistrée seule : son nom n’est pas vérifié.
+  """
+  verifiee: Boolean!
 }
 
 """
@@ -891,6 +934,25 @@ type Demande {
   texte: String
   traiteeLe: DateTime
   traiteePar: Personne
+}
+
+"""
+Une demande d’accès d’une application tierce, en attente de la réponse de la personne connectée.
+"""
+type DemandeAutorisation {
+  application: ApplicationTierce!
+
+  """
+  Vrai quand l’application demande aussi l’écriture. La personne peut la limiter à la lecture.
+  """
+  ecritureDemandee: Boolean!
+  expireLe: DateTime!
+
+  """
+  L’hôte vers lequel le navigateur revient après la réponse : il reçoit le code.
+  """
+  hoteRetour: String!
+  id: ID!
 }
 
 type DemandePerimetre {
@@ -1569,6 +1631,11 @@ type JetonAcces {
 
   """Les huit caractères qui suivent « rt_ », pour reconnaître le jeton."""
   apercu: String!
+
+  """
+  L’application tierce autorisée par la personne (ADR 0067). Nulle pour un jeton créé dans « Jetons et API ».
+  """
+  application: ApplicationTierce
   creeLe: DateTime!
   dernierAccesLe: DateTime
   expireLe: DateTime!
@@ -1589,6 +1656,11 @@ Les bornes du jeton qui porte la requête : un programme tiers les lit pour savo
 type JetonCourant {
   """Nul : toutes les activités que la personne voit."""
   activiteIds: [ID!]
+
+  """
+  Le nom de l’application tierce qui porte la requête (ADR 0067). Nul pour un jeton d’accès.
+  """
+  application: String
   expireLe: DateTime!
 
   """
@@ -1930,6 +2002,11 @@ type Mutation {
   Accepte ou refuse une déclinaison proposée à un périmètre. Seule une personne qui écrit dans ce périmètre répond. Une déclinaison acceptée entre parmi ses tâches.
   """
   accorderDeclinaison(accepter: Boolean!, id: ID!): Tache!
+
+  """
+  Accepte une demande d’autorisation pour l’organisation active. Crée l’autorisation et rend l’adresse de retour de l’application, avec le code. La portée et les activités peuvent réduire la demande, jamais l’étendre.
+  """
+  accorderDemandeAutorisation(activiteIds: [ID!], id: ID!, portee: PorteeJeton!): String!
   accorderDroitRedaction(perimetreId: ID, personneId: ID!): DroitRedaction!
 
   """
@@ -1976,6 +2053,11 @@ type Mutation {
   archiverFiche(archive: Boolean!, id: ID!): Fiche!
   archiverPersonne(archive: Boolean!, id: ID!): Personne!
   assignerTache(assigne: Boolean!, id: ID!, personneId: ID): Tache!
+
+  """
+  Lève le refus d’une application tierce dans l’organisation active. Les autorisations révoquées ne reviennent pas. Rend faux quand l’application n’était pas refusée.
+  """
+  autoriserApplicationOrganisation(clientId: String!): Boolean!
 
   """
   Change le statut d’une tâche. Demander le statut qu’elle a déjà ne change rien. Avec `statutAttendu`, le serveur refuse de changer un statut qu’une autre personne a modifié entre-temps (code `CONFLIT_VERSION`).
@@ -2668,6 +2750,11 @@ type Mutation {
   reconduireEdition(cibleId: ID!, sourceId: ID!, tacheIds: [ID!]): RapportReconduction!
 
   """
+  Refuse une application tierce pour l’organisation active. Révoque ses autorisations, dont les porteuses l’apprennent par mail, et rend leur nombre.
+  """
+  refuserApplicationOrganisation(clientId: String!): Int!
+
+  """
   Refuse tous les choix en attente d’une candidature et la clôt. Réservé aux personnes qui gèrent l’appel. Aucun mail ne part.
   """
   refuserCandidature(id: ID!): Candidature!
@@ -2677,6 +2764,11 @@ type Mutation {
   """
   refuserChoixCandidature(id: ID!): Candidature!
   refuserDemande(id: ID!): Demande!
+
+  """
+  Refuse une demande d’autorisation. Rend l’adresse de retour de l’application, avec `error=access_denied`.
+  """
+  refuserDemandeAutorisation(id: ID!): String!
 
   """
   La personne refuse une invitation. L’organisation n’en est pas informée : une invitation refusée et une invitation expirée ne se distinguent pas.
@@ -3549,6 +3641,11 @@ type Query {
   Les appels à bénévoles d’une période que la personne voit : tous pour un admin de l’activité ; ceux de la période et de ses périmètres sinon.
   """
   appelsBenevoles(editionId: ID!): [AppelBenevoles!]!
+
+  """
+  Les applications tierces que les admins de l’organisation active ont refusées.
+  """
+  applicationsRefuseesOrganisation: [ApplicationRefusee!]!
   avancementGlobal(editionId: ID!): [AvancementPerimetre!]!
   baremeScore: BaremeScore!
 
@@ -3607,6 +3704,11 @@ type Query {
   La couverture du programme par tranches de 30 minutes. Sans périmètre donné, toutes les séquences comptent. Sinon, seules comptent celles des périmètres donnés, et celles sans périmètre avec `sansPerimetre`. Les bénévoles à répartir se comptent tous.
   """
   couvertureProgramme(editionId: ID!, perimetreIds: [ID!], sansPerimetre: Boolean = false): [TrancheCouverture!]!
+
+  """
+  Une demande d’autorisation en attente. Nulle quand elle est inconnue, expirée ou déjà traitée.
+  """
+  demandeAutorisation(id: ID!): DemandeAutorisation
   demandes(editionId: ID!, statut: StatutDemande): [Demande!]!
 
   """
@@ -3679,12 +3781,17 @@ type Query {
   lieux(activiteId: ID!, inclureArchives: Boolean = false): [Lieu!]!
 
   """
+  Les applications tierces que la personne a autorisées dans l’organisation active : les autorisations actives, puis celles révoquées ou expirées depuis moins de 30 jours. `revoquerJetonAcces` en révoque une.
+  """
+  mesAutorisationsApplications: [JetonAcces!]!
+
+  """
   Les invitations qui attendent l’accord de la personne connectée (ADR 0030).
   """
   mesInvitations: [InvitationRecue!]!
 
   """
-  Les jetons d’accès de la personne dans l’organisation active : les jetons actifs, puis ceux révoqués ou expirés depuis moins de 30 jours.
+  Les jetons d’accès de la personne dans l’organisation active : les jetons actifs, puis ceux révoqués ou expirés depuis moins de 30 jours. Les autorisations d’application se lisent par `mesAutorisationsApplications`.
   """
   mesJetonsAcces: [JetonAcces!]!
   mesOrganisations: [OrganisationDeLaPersonne!]!

@@ -176,6 +176,7 @@ describe('accès à l’administration de l’installation', () => {
       PeriodeInstallation: ['annee', 'debut', 'fin', 'nom', 'statut'],
       // Le module « API » (ADR 0064) : des réglages et un compteur de jetons.
       ApiInstallation: [
+        'applications',
         'autorisee',
         'etat',
         'imposee',

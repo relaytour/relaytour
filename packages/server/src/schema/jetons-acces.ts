@@ -18,6 +18,7 @@ import { journal } from '../lib/journal.ts'
 import { i18n } from '../lib/langue.ts'
 import { texteRequis } from '../lib/saisie.ts'
 
+import { ApplicationTierceRef } from './application-tierce.ts'
 import { builder } from './builder.ts'
 
 // Jetons d'accès et module « API » de l'organisation (ADR 0064).
@@ -78,6 +79,18 @@ export const JetonAccesRef = builder
       }),
       revoqueLe: t.expose('revoqueLe', { type: 'DateTime', nullable: true }),
       creeLe: t.expose('createdAt', { type: 'DateTime' }),
+      application: t.field({
+        type: ApplicationTierceRef,
+        nullable: true,
+        description:
+          'L’application tierce autorisée par la personne (ADR 0067). Nulle pour un jeton créé dans « Jetons et API ».',
+        resolve: async j =>
+          j.clientApplicationId === null
+            ? null
+            : prisma.clientApplication.findUnique({
+                where: { id: j.clientApplicationId },
+              }),
+      }),
     }),
   })
 
@@ -164,6 +177,12 @@ const JetonCourantRef = builder
         resolve: j => (j.activites === null ? null : [...j.activites]),
       }),
       expireLe: t.expose('expireLe', { type: 'DateTime' }),
+      application: t.string({
+        nullable: true,
+        description:
+          'Le nom de l’application tierce qui porte la requête (ADR 0067). Nul pour un jeton d’accès.',
+        resolve: j => j.application?.nom ?? null,
+      }),
     }),
   })
 
@@ -192,7 +211,7 @@ async function apiDeLOrganisation(
 }
 
 /** Les activités choisies pour un jeton, chacune vérifiée. Nulle : aucune restriction. */
-async function activitesChoisies(
+export async function activitesChoisies(
   ctx: AppContext,
   ids: readonly (string | number)[] | null | undefined
 ): Promise<string[] | null> {
@@ -221,13 +240,14 @@ builder.queryFields(t => ({
     type: [JetonAccesRef],
     authScopes: { $all: { connecte: true, session: true } },
     description:
-      'Les jetons d’accès de la personne dans l’organisation active : les jetons actifs, puis ceux révoqués ou expirés depuis moins de 30 jours.',
+      'Les jetons d’accès de la personne dans l’organisation active : les jetons actifs, puis ceux révoqués ou expirés depuis moins de 30 jours. Les autorisations d’application se lisent par `mesAutorisationsApplications`.',
     resolve: (_root, _args, ctx) => {
       const recents = new Date(Date.now() - 30 * 86_400_000)
       return prisma.jetonAcces.findMany({
         where: {
           organisationId: ctx.organisation!.id,
           userId: ctx.personne!.id,
+          clientApplicationId: null,
           OR: [
             { revoqueLe: null, expireLe: { gt: recents } },
             { revoqueLe: { gt: recents } },

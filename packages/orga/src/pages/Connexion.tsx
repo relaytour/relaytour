@@ -15,6 +15,7 @@ import {
   type LienConnexion,
 } from '../lib/connexion'
 import { appareil, estInstallee } from '../lib/installation'
+import { reprendreSuite } from '../lib/suite-connexion'
 
 type Etape = 'adresse' | 'code'
 
@@ -47,7 +48,9 @@ export default function Connexion() {
     try {
       await seConnecter(adresseSaisie, codeSaisi)
       await apollo.resetStore()
-      navigate('/', { replace: true })
+      // Une page demandée avant la connexion (l'écran de consentement d'une
+      // application, ADR 0067) se rouvre ensuite.
+      navigate(reprendreSuite() ?? '/', { replace: true })
     } catch (e) {
       setErreur(
         e instanceof ErreurConnexion ? e.message : t`La connexion a échoué.`

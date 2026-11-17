@@ -47,6 +47,7 @@ import './flux.ts'
 import './notes-de-version.ts'
 import './jetons-acces.ts'
 import './robots.ts'
+import './applications-tierces.ts'
 
 import { builder } from './builder.ts'
 

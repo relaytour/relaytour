@@ -17,6 +17,9 @@ export const SORTES_JAMAIS_REPORTEES: ReadonlySet<string> = new Set([
   // Un jeton créé ou révoqué se signale sans délai (ADR 0064).
   'jeton-cree',
   'jeton-revoque',
+  // Une application autorisée se signale sans délai (ADR 0067).
+  'application-autorisee',
+  'autorisation-rejouee',
 ])
 
 // Le compteur d'un jour garde sa clé deux jours : il couvre le jour entier, quel
