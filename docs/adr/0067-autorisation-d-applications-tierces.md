@@ -96,11 +96,13 @@ Un code vaut 60 secondes et une seule fois. Un code rejoué révoque l'autorisat
   - la dimension « gestion des membres » n'est jamais accordée à une application ;
   - la liste « Ce qu'un jeton n'ouvre pas » de l'ADR 0064 s'applique telle quelle.
 - Un **jeton d'application** a la forme `rto_` suivi de 43 caractères base64url. Il vaut une heure.
-- Un **jeton de renouvellement** a la forme `rtr_` suivi de 43 caractères base64url. Il vaut 30 jours et tourne à chaque usage : chaque échange rend un nouveau jeton de renouvellement et retire le précédent.
+- Un **jeton de renouvellement** a la forme `rtr_` suivi de 43 caractères base64url. Il vaut 90 jours et tourne à chaque usage : chaque échange rend un nouveau jeton de renouvellement et retire le précédent.
+- La durée de 90 jours suit le rythme d'une organisation. Une automatisation peut rester sans usage pendant la pause entre deux éditions, sans perdre sa connexion.
 - Un jeton de renouvellement déjà utilisé qui revient révoque toute l'autorisation. La personne reçoit un mail qui le signale.
 - Le serveur garde l'empreinte SHA-256 de chaque jeton, jamais sa valeur. Les jetons sont opaques : une révocation agit dès la requête suivante.
 - **Audience.** Le paramètre `resource` (RFC 8707) est obligatoire à l'autorisation et à l'échange. Il doit valoir `ORIGINE_ORGA`, sinon la demande reçoit `invalid_target`. Le jeton n'est accepté que par cette installation, sur `/graphql`, le flux des changements et `/api/v1/`.
 - À la fin de l'autorisation, après un an, l'application doit redemander l'accord de la personne.
+- Trente jours avant cette fin, la personne reçoit un mail de rappel. Le mail nomme l'application et la date, et indique comment la reconnecter.
 - Le contexte d'une requête porteuse d'un jeton d'application est celui d'un jeton d'accès. `jetonCourant` indique en plus le nom de l'application.
 - Une requête refusée reçoit les statuts de l'ADR 0064 : 401 `JETON_INVALIDE`, 403 `API_INACTIVE`, 429 `LIMITE_DE_DEBIT`.
 - Un module « API » désactivé ou interdit refuse aussi l'échange d'un jeton de renouvellement, sans le consommer. L'autorisation répond de nouveau à la réactivation.
@@ -125,13 +127,13 @@ Un code vaut 60 secondes et une seule fois. Un code rejoué révoque l'autorisat
 ### Refus par l'administration de l'installation
 
 - `APPLICATIONS_TIERCES` règle la fonction pour toute l'installation :
-  - `ouvertes`, la valeur par défaut, accepte tout client valide ;
+  - `ouvertes`, la valeur par défaut, accepte tout client valide. Le module « API » de chaque organisation reste inactif par défaut. Aucune application ne demande donc d'accès avant son activation par un admin de l'organisation ;
   - `liste` n'accepte que les `client_id` de `APPLICATIONS_LISTE` ;
   - `fermees` ferme les points `/oauth/*` et les métadonnées. Les jetons d'accès de l'ADR 0064 restent utilisables.
 - `APPLICATIONS_REFUSEES` liste des `client_id` ou des hôtes refusés, quel que soit le mode.
 - L'administration de l'installation peut fermer les applications tierces d'une organisation par l'argument `api.applications` de `modifierOrganisationInstallation`.
 - Un client refusé ne reçoit aucune nouvelle autorisation. Ses jetons cessent de répondre dès la requête suivante. Ses autorisations se révoquent au démarrage suivant.
-- Une installation sans accès sortant vers Internet ne peut pas lire de CIMD. Son exploitant choisit `fermees`, ou ouvre l'enregistrement dynamique.
+- Une installation sans accès sortant vers Internet ne peut pas lire de CIMD. La demande affiche alors « Cette installation ne peut pas vérifier l'application » (*"This installation cannot verify the application"*), sans détail technique. Son exploitant choisit `fermees`, ou ouvre l'enregistrement dynamique.
 
 ### Transport et relais
 
@@ -145,8 +147,14 @@ Aucune fonction n'est refusée dans le logiciel au motif qu'une application tier
 
 Cette règle protège l'engagement du projet : toutes les fonctions du logiciel restent dans le logiciel, sur toute installation. Une application tierce s'ajoute au logiciel et ne le remplace pas.
 
+### Mise en œuvre
+
+- Le serveur d'autorisation est une implémentation propre dans `packages/server`. Ses jetons entrent directement dans le contexte des jetons d'accès de l'ADR 0064, avec les mêmes contrôles et les mêmes refus.
+- Les tests d'intégration jouent le rôle de l'application avec la bibliothèque cliente `oauth4webapi`. Ils vérifient ainsi le protocole de l'extérieur.
+
 ## Options écartées
 
+- **Le greffon de fournisseur OAuth de Better Auth.** La version 1.7 de Better Auth ne le contient pas : il vient d'un paquet séparé. Un greffon créerait ses propres jetons et ses propres tables, qu'il faudrait traduire dans le contexte de l'ADR 0064. Deux politiques d'accès seraient alors à tenir.
 - **Des greffons chargés dans le serveur, sur le modèle de WordPress.** Un greffon s'exécuterait avec tous les droits du serveur. Il pourrait lire toutes les organisations d'une installation (ADR 0030). Il ferait tourner une version différente de l'image publiée (ADR 0007). Il figerait le code interne comme une interface à maintenir. Une fonction utile à tous entre dans le dépôt, éventuellement comme module (ADR 0052).
 - **OpenID Connect.** Relaytour ne sert pas à se connecter à d'autres sites. Un `id_token` exposerait l'identité de la personne sans besoin.
 - **Des jetons JWT signés.** Un jeton autoporteur resterait valable jusqu'à sa fin après une révocation. L'installation est le seul serveur de ressources, et un jeton opaque se vérifie en base.
@@ -188,6 +196,7 @@ Les tests prouvent chaque contrôle par le refus :
 - une demande sans PKCE S256, avec une autre adresse de retour ou une autre ressource est refusée ;
 - un code rejoué, expiré ou présenté avec un autre `code_verifier` est refusé, et le rejeu révoque l'autorisation ;
 - un jeton de renouvellement réutilisé révoque l'autorisation et met un mail en file ;
+- une autorisation qui prend fin dans 30 jours met un mail de rappel en file, une seule fois ;
 - un CIMD sur une adresse privée, avec une redirection, trop lent ou trop gros est refusé ;
 - un CIMD dont le `client_id` diffère de l'adresse lue est refusé ;
 - un jeton d'application en lecture refuse une mutation, et un jeton limité à une activité ne lit pas les autres ;
@@ -203,6 +212,6 @@ Une revue de sécurité de la mise en œuvre précède le passage de cette ADR �
 
 ## Plan de mise en œuvre
 
-1. Serveur : métadonnées, clients CIMD, enregistrement dynamique facultatif, autorisation, jetons, rotation, révocation, refus de l'installation et de l'organisation, mails, lignes du Caddyfile de référence, tests.
+1. Serveur : métadonnées, clients CIMD, enregistrement dynamique facultatif, autorisation, jetons, rotation, révocation, refus de l'installation et de l'organisation, mails d'autorisation et de rappel, lignes du Caddyfile de référence, tests.
 2. Espace organisateur : écran de consentement en français et en anglais, et section « Applications autorisées » de « Jetons et API ». Le panneau « API » de l'écran « Organisation » reçoit les autorisations des membres et les clients refusés.
 3. Mode d'emploi de la connexion d'une application, glossaire et règle de gouvernance dans `CONTRIBUTING.md`. L'ADR passe à « acceptée » après la revue de sécurité.
