@@ -128,6 +128,18 @@ export function sujets(
     'jeton-revoque': i18n._('{nomCourt} : un jeton d’accès a été révoqué', {
       nomCourt,
     }),
+    'application-autorisee': i18n._(
+      '{nomCourt} : une application a reçu l’accès à votre compte',
+      { nomCourt }
+    ),
+    'autorisation-fin-proche': i18n._(
+      '{nomCourt} : l’accès d’une application prend bientôt fin',
+      { nomCourt }
+    ),
+    'autorisation-rejouee': i18n._(
+      '{nomCourt} : l’accès d’une application a été révoqué',
+      { nomCourt }
+    ),
   }
 }
 
@@ -1418,7 +1430,11 @@ export async function composer(
   // nom de qui il agit, avec un lien de révocation signé ; un jeton de robot se
   // signale à l'admin qui l'a créé. La révocation par un admin se signale à la
   // porteuse. Le mail ne porte jamais la valeur du jeton.
-  if (job.sorte === 'jeton-cree' || job.sorte === 'jeton-revoque') {
+  if (
+    job.sorte === 'jeton-cree' ||
+    job.sorte === 'jeton-revoque' ||
+    job.sorte === 'application-autorisee'
+  ) {
     if (job.jetonAccesId === undefined) {
       throw new Error(`Le mail « ${job.sorte} » exige un jeton.`)
     }
@@ -1434,6 +1450,7 @@ export async function composer(
         revoqueLe: true,
         user: { select: { name: true, robot: true } },
         revoquePar: { select: { name: true } },
+        clientApplication: { select: { nom: true, clientId: true } },
       },
     })
     // Un jeton disparu avec son compte, ou une révocation annulée : rien à dire.
@@ -1471,7 +1488,38 @@ export async function composer(
     variables.lienJetons = jeton.user.robot
       ? lienVers('/admin/organisation')
       : `${lienPreferences}#jetons`
-    if (job.sorte === 'jeton-cree') {
+    const application = jeton.clientApplication
+    if (job.sorte === 'application-autorisee' && application !== null) {
+      // Une autorisation d'application (ADR 0067) : le mail nomme l'application et
+      // l'hôte de son identifiant, jamais un jeton.
+      let hote = application.clientId
+      try {
+        hote = new URL(application.clientId).host
+      } catch {
+        // Un client enregistré seul n'a pas d'adresse : son identifiant suffit.
+      }
+      variables.intro = i18n._(
+        'L’application « {application} » ({hote}) a reçu l’accès à votre compte. Cet accès reste valable jusqu’au {fin}.',
+        {
+          application: application.nom,
+          hote,
+          fin: jeton.expireLe.toLocaleDateString(langueCourante(), {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'UTC',
+          }),
+        }
+      )
+      variables.lienJetons = `${lienPreferences}#applications`
+      const { env } = await import('../env.ts')
+      variables.lienRevocation = adresseRevocation(
+        origine,
+        jetonRevocation(env.BETTER_AUTH_SECRET, job.jetonAccesId)
+      )
+    } else if (job.sorte === 'application-autorisee') {
+      return null
+    } else if (job.sorte === 'jeton-cree') {
       variables.intro = i18n._(
         'Le jeton d’accès « {jeton} » ({apercu}) vient d’être créé. Il reste valable jusqu’au {fin}.',
         {
@@ -1490,6 +1538,14 @@ export async function composer(
         origine,
         jetonRevocation(env.BETTER_AUTH_SECRET, job.jetonAccesId)
       )
+    } else if (application !== null) {
+      variables.intro = i18n._(
+        'L’autorisation de l’application « {application} » a été révoquée par {par}. L’application n’a plus accès à l’espace.',
+        {
+          application: application.nom,
+          par: jeton.revoquePar?.name ?? i18n._('un admin de l’organisation'),
+        }
+      )
     } else {
       variables.intro = i18n._(
         'Le jeton d’accès « {jeton} » ({apercu}) a été révoqué par {par}. Le programme qui l’utilisait n’a plus accès à l’espace.',
@@ -1500,6 +1556,57 @@ export async function composer(
         }
       )
     }
+  }
+
+  // Fin proche ou rejeu d'une autorisation d'application (ADR 0067).
+  if (
+    job.sorte === 'autorisation-fin-proche' ||
+    job.sorte === 'autorisation-rejouee'
+  ) {
+    if (job.jetonAccesId === undefined) {
+      throw new Error(`Le mail « ${job.sorte} » exige une autorisation.`)
+    }
+    const autorisation = await prisma.jetonAcces.findUnique({
+      where: { id: job.jetonAccesId },
+      select: {
+        expireLe: true,
+        revoqueLe: true,
+        clientApplication: { select: { nom: true } },
+      },
+    })
+    // Une autorisation disparue, ou révoquée avant le rappel : rien à dire.
+    if (
+      autorisation === null ||
+      autorisation.clientApplication === null ||
+      (job.sorte === 'autorisation-fin-proche' &&
+        autorisation.revoqueLe !== null)
+    ) {
+      return null
+    }
+    const destinataire = await prisma.user.findUniqueOrThrow({
+      where: { id: job.userId },
+      select: { name: true },
+    })
+    variables.nom = destinataire.name
+    variables.lienJetons = `${lienPreferences}#applications`
+    variables.intro =
+      job.sorte === 'autorisation-fin-proche'
+        ? i18n._(
+            'L’accès de l’application « {application} » à votre compte prend fin le {fin}.',
+            {
+              application: autorisation.clientApplication.nom,
+              fin: autorisation.expireLe.toLocaleDateString(langueCourante(), {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                timeZone: 'UTC',
+              }),
+            }
+          )
+        : i18n._(
+            'L’accès de l’application « {application} » à votre compte a été révoqué : un jeton déjà utilisé a été présenté une seconde fois.',
+            { application: autorisation.clientApplication.nom }
+          )
   }
 
   const { repondreA, repondre } = reponsesDuMail(configuration, job.sorte)

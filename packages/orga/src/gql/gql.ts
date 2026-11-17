@@ -29,6 +29,11 @@ type Documents = {
     "\n  mutation FermerAppelBenevoles($id: ID!) {\n    fermerAppelBenevoles(id: $id) {\n      id\n    }\n  }\n": typeof types.FermerAppelBenevolesDocument,
     "\n  mutation RouvrirAppelBenevoles($id: ID!) {\n    rouvrirAppelBenevoles(id: $id) {\n      id\n    }\n  }\n": typeof types.RouvrirAppelBenevolesDocument,
     "\n  mutation RenouvelerAdresseAppelBenevoles($id: ID!) {\n    renouvelerAdresseAppelBenevoles(id: $id) {\n      adresse\n    }\n  }\n": typeof types.RenouvelerAdresseAppelBenevolesDocument,
+    "\n  query MesAutorisationsApplications {\n    mesAutorisationsApplications {\n      id\n      portee\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n      application {\n        nom\n        hote\n        verifiee\n      }\n    }\n  }\n": typeof types.MesAutorisationsApplicationsDocument,
+    "\n  mutation RevoquerAutorisationApplication($id: ID!) {\n    revoquerJetonAcces(id: $id)\n  }\n": typeof types.RevoquerAutorisationApplicationDocument,
+    "\n  query ApplicationsRefuseesOrganisation {\n    applicationsRefuseesOrganisation {\n      clientId\n      nom\n      hote\n      refuseeLe\n      refuseePar\n    }\n  }\n": typeof types.ApplicationsRefuseesOrganisationDocument,
+    "\n  mutation RefuserApplicationOrganisation($clientId: String!) {\n    refuserApplicationOrganisation(clientId: $clientId)\n  }\n": typeof types.RefuserApplicationOrganisationDocument,
+    "\n  mutation AutoriserApplicationOrganisation($clientId: String!) {\n    autoriserApplicationOrganisation(clientId: $clientId)\n  }\n": typeof types.AutoriserApplicationOrganisationDocument,
     "\n  query DernieresNotifications {\n    notifications(nonLuesSeulement: true, limite: 10) {\n      ...NotificationAffichee\n    }\n  }\n": typeof types.DernieresNotificationsDocument,
     "\n  mutation AccepterChoixCandidature($id: ID!) {\n    accepterChoixCandidature(id: $id) {\n      id\n    }\n  }\n": typeof types.AccepterChoixCandidatureDocument,
     "\n  mutation RefuserChoixCandidature($id: ID!) {\n    refuserChoixCandidature(id: $id) {\n      id\n    }\n  }\n": typeof types.RefuserChoixCandidatureDocument,
@@ -48,7 +53,7 @@ type Documents = {
     "\n  mutation InviterDansLActivite(\n    $email: String!\n    $nom: String!\n    $activiteId: ID\n    $editionId: ID\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      activiteId: $activiteId\n      editionId: $editionId\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      enAttente\n    }\n  }\n": typeof types.InviterDansLActiviteDocument,
     "\n  mutation RelancerInvitation($id: ID!) {\n    relancerInvitation(id: $id)\n  }\n": typeof types.RelancerInvitationDocument,
     "\n  mutation RetirerInvitation($id: ID!) {\n    retirerInvitation(id: $id)\n  }\n": typeof types.RetirerInvitationDocument,
-    "\n  query JetonsAccesOrganisation {\n    jetonsAccesOrganisation {\n      jeton {\n        id\n        nom\n        apercu\n        portee\n        gestionMembres\n        activiteIds\n        expireLe\n        dernierAccesLe\n        revoqueLe\n      }\n      porteur {\n        id\n        nom\n        robot\n      }\n      revoquePar\n    }\n  }\n": typeof types.JetonsAccesOrganisationDocument,
+    "\n  query JetonsAccesOrganisation {\n    jetonsAccesOrganisation {\n      jeton {\n        id\n        nom\n        apercu\n        portee\n        gestionMembres\n        activiteIds\n        expireLe\n        dernierAccesLe\n        revoqueLe\n        application {\n          nom\n          hote\n          clientId\n        }\n      }\n      porteur {\n        id\n        nom\n        robot\n      }\n      revoquePar\n    }\n  }\n": typeof types.JetonsAccesOrganisationDocument,
     "\n  mutation RevoquerJetonOrganisation($id: ID!) {\n    revoquerJetonOrganisation(id: $id)\n  }\n": typeof types.RevoquerJetonOrganisationDocument,
     "\n  mutation LienEspaceBenevole($benevoleId: ID!, $nouveau: Boolean) {\n    lienEspaceBenevole(benevoleId: $benevoleId, nouveau: $nouveau)\n  }\n": typeof types.LienEspaceBenevoleDocument,
     "\n  mutation RenvoyerLienBenevole($benevoleId: ID!) {\n    renvoyerLienBenevole(benevoleId: $benevoleId)\n  }\n": typeof types.RenvoyerLienBenevoleDocument,
@@ -246,6 +251,10 @@ type Documents = {
     "\n  mutation SupprimerDateCle($id: ID!) {\n    supprimerDateCle(id: $id)\n  }\n": typeof types.SupprimerDateCleDocument,
     "\n  query AppelBenevolesPublic($jeton: String!) {\n    appelBenevolesPublic(jeton: $jeton) {\n      organisation\n      activite\n      periode\n      introduction\n      contact\n      ouAilleurs\n      jours\n      sequences {\n        ref\n        titre\n        jour\n        jourFin\n        heureDebut\n        heureFin\n        lieu\n        lieuDescription\n        perimetre\n        couleur\n        consignes\n        placesRecherchees\n        complete\n      }\n    }\n  }\n": typeof types.AppelBenevolesPublicDocument,
     "\n  mutation DeposerCandidature(\n    $jeton: String!\n    $nom: String!\n    $email: String!\n    $telephone: String\n    $sequences: [String!]!\n    $ouAilleurs: Boolean\n    $plages: [PlageDisponibiliteInput!]\n    $precisions: String\n    $message: String\n    $accord: Boolean!\n    $siteWeb: String\n  ) {\n    deposerCandidature(\n      jeton: $jeton\n      nom: $nom\n      email: $email\n      telephone: $telephone\n      sequences: $sequences\n      ouAilleurs: $ouAilleurs\n      plages: $plages\n      precisions: $precisions\n      message: $message\n      accord: $accord\n      siteWeb: $siteWeb\n    )\n  }\n": typeof types.DeposerCandidatureDocument,
+    "\n  query DemandeAutorisation($id: ID!) {\n    demandeAutorisation(id: $id) {\n      id\n      hoteRetour\n      ecritureDemandee\n      application {\n        nom\n        clientId\n        hote\n        verifiee\n      }\n    }\n  }\n": typeof types.DemandeAutorisationDocument,
+    "\n  query ActivitesConsentement {\n    activites {\n      id\n      nom\n    }\n  }\n": typeof types.ActivitesConsentementDocument,
+    "\n  mutation AccorderDemandeAutorisation(\n    $id: ID!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n  ) {\n    accorderDemandeAutorisation(\n      id: $id\n      portee: $portee\n      activiteIds: $activiteIds\n    )\n  }\n": typeof types.AccorderDemandeAutorisationDocument,
+    "\n  mutation RefuserDemandeAutorisation($id: ID!) {\n    refuserDemandeAutorisation(id: $id)\n  }\n": typeof types.RefuserDemandeAutorisationDocument,
     "\n  mutation CreerBenevole(\n    $activiteId: ID!\n    $nom: String!\n    $courriel: String\n    $telephone: String\n    $note: String\n    $prevenirParMail: Boolean\n    $accord: Boolean!\n  ) {\n    creerBenevole(\n      activiteId: $activiteId\n      nom: $nom\n      courriel: $courriel\n      telephone: $telephone\n      note: $note\n      prevenirParMail: $prevenirParMail\n      accord: $accord\n    ) {\n      id\n    }\n  }\n": typeof types.CreerBenevoleDocument,
     "\n  mutation ModifierBenevole(\n    $id: ID!\n    $nom: String!\n    $courriel: String\n    $telephone: String\n    $note: String\n    $prevenirParMail: Boolean\n  ) {\n    modifierBenevole(\n      id: $id\n      nom: $nom\n      courriel: $courriel\n      telephone: $telephone\n      note: $note\n      prevenirParMail: $prevenirParMail\n    ) {\n      id\n    }\n  }\n": typeof types.ModifierBenevoleDocument,
     "\n  mutation SupprimerBenevole($id: ID!) {\n    supprimerBenevole(id: $id)\n  }\n": typeof types.SupprimerBenevoleDocument,
@@ -327,6 +336,11 @@ const documents: Documents = {
     "\n  mutation FermerAppelBenevoles($id: ID!) {\n    fermerAppelBenevoles(id: $id) {\n      id\n    }\n  }\n": types.FermerAppelBenevolesDocument,
     "\n  mutation RouvrirAppelBenevoles($id: ID!) {\n    rouvrirAppelBenevoles(id: $id) {\n      id\n    }\n  }\n": types.RouvrirAppelBenevolesDocument,
     "\n  mutation RenouvelerAdresseAppelBenevoles($id: ID!) {\n    renouvelerAdresseAppelBenevoles(id: $id) {\n      adresse\n    }\n  }\n": types.RenouvelerAdresseAppelBenevolesDocument,
+    "\n  query MesAutorisationsApplications {\n    mesAutorisationsApplications {\n      id\n      portee\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n      application {\n        nom\n        hote\n        verifiee\n      }\n    }\n  }\n": types.MesAutorisationsApplicationsDocument,
+    "\n  mutation RevoquerAutorisationApplication($id: ID!) {\n    revoquerJetonAcces(id: $id)\n  }\n": types.RevoquerAutorisationApplicationDocument,
+    "\n  query ApplicationsRefuseesOrganisation {\n    applicationsRefuseesOrganisation {\n      clientId\n      nom\n      hote\n      refuseeLe\n      refuseePar\n    }\n  }\n": types.ApplicationsRefuseesOrganisationDocument,
+    "\n  mutation RefuserApplicationOrganisation($clientId: String!) {\n    refuserApplicationOrganisation(clientId: $clientId)\n  }\n": types.RefuserApplicationOrganisationDocument,
+    "\n  mutation AutoriserApplicationOrganisation($clientId: String!) {\n    autoriserApplicationOrganisation(clientId: $clientId)\n  }\n": types.AutoriserApplicationOrganisationDocument,
     "\n  query DernieresNotifications {\n    notifications(nonLuesSeulement: true, limite: 10) {\n      ...NotificationAffichee\n    }\n  }\n": types.DernieresNotificationsDocument,
     "\n  mutation AccepterChoixCandidature($id: ID!) {\n    accepterChoixCandidature(id: $id) {\n      id\n    }\n  }\n": types.AccepterChoixCandidatureDocument,
     "\n  mutation RefuserChoixCandidature($id: ID!) {\n    refuserChoixCandidature(id: $id) {\n      id\n    }\n  }\n": types.RefuserChoixCandidatureDocument,
@@ -346,7 +360,7 @@ const documents: Documents = {
     "\n  mutation InviterDansLActivite(\n    $email: String!\n    $nom: String!\n    $activiteId: ID\n    $editionId: ID\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      activiteId: $activiteId\n      editionId: $editionId\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      enAttente\n    }\n  }\n": types.InviterDansLActiviteDocument,
     "\n  mutation RelancerInvitation($id: ID!) {\n    relancerInvitation(id: $id)\n  }\n": types.RelancerInvitationDocument,
     "\n  mutation RetirerInvitation($id: ID!) {\n    retirerInvitation(id: $id)\n  }\n": types.RetirerInvitationDocument,
-    "\n  query JetonsAccesOrganisation {\n    jetonsAccesOrganisation {\n      jeton {\n        id\n        nom\n        apercu\n        portee\n        gestionMembres\n        activiteIds\n        expireLe\n        dernierAccesLe\n        revoqueLe\n      }\n      porteur {\n        id\n        nom\n        robot\n      }\n      revoquePar\n    }\n  }\n": types.JetonsAccesOrganisationDocument,
+    "\n  query JetonsAccesOrganisation {\n    jetonsAccesOrganisation {\n      jeton {\n        id\n        nom\n        apercu\n        portee\n        gestionMembres\n        activiteIds\n        expireLe\n        dernierAccesLe\n        revoqueLe\n        application {\n          nom\n          hote\n          clientId\n        }\n      }\n      porteur {\n        id\n        nom\n        robot\n      }\n      revoquePar\n    }\n  }\n": types.JetonsAccesOrganisationDocument,
     "\n  mutation RevoquerJetonOrganisation($id: ID!) {\n    revoquerJetonOrganisation(id: $id)\n  }\n": types.RevoquerJetonOrganisationDocument,
     "\n  mutation LienEspaceBenevole($benevoleId: ID!, $nouveau: Boolean) {\n    lienEspaceBenevole(benevoleId: $benevoleId, nouveau: $nouveau)\n  }\n": types.LienEspaceBenevoleDocument,
     "\n  mutation RenvoyerLienBenevole($benevoleId: ID!) {\n    renvoyerLienBenevole(benevoleId: $benevoleId)\n  }\n": types.RenvoyerLienBenevoleDocument,
@@ -544,6 +558,10 @@ const documents: Documents = {
     "\n  mutation SupprimerDateCle($id: ID!) {\n    supprimerDateCle(id: $id)\n  }\n": types.SupprimerDateCleDocument,
     "\n  query AppelBenevolesPublic($jeton: String!) {\n    appelBenevolesPublic(jeton: $jeton) {\n      organisation\n      activite\n      periode\n      introduction\n      contact\n      ouAilleurs\n      jours\n      sequences {\n        ref\n        titre\n        jour\n        jourFin\n        heureDebut\n        heureFin\n        lieu\n        lieuDescription\n        perimetre\n        couleur\n        consignes\n        placesRecherchees\n        complete\n      }\n    }\n  }\n": types.AppelBenevolesPublicDocument,
     "\n  mutation DeposerCandidature(\n    $jeton: String!\n    $nom: String!\n    $email: String!\n    $telephone: String\n    $sequences: [String!]!\n    $ouAilleurs: Boolean\n    $plages: [PlageDisponibiliteInput!]\n    $precisions: String\n    $message: String\n    $accord: Boolean!\n    $siteWeb: String\n  ) {\n    deposerCandidature(\n      jeton: $jeton\n      nom: $nom\n      email: $email\n      telephone: $telephone\n      sequences: $sequences\n      ouAilleurs: $ouAilleurs\n      plages: $plages\n      precisions: $precisions\n      message: $message\n      accord: $accord\n      siteWeb: $siteWeb\n    )\n  }\n": types.DeposerCandidatureDocument,
+    "\n  query DemandeAutorisation($id: ID!) {\n    demandeAutorisation(id: $id) {\n      id\n      hoteRetour\n      ecritureDemandee\n      application {\n        nom\n        clientId\n        hote\n        verifiee\n      }\n    }\n  }\n": types.DemandeAutorisationDocument,
+    "\n  query ActivitesConsentement {\n    activites {\n      id\n      nom\n    }\n  }\n": types.ActivitesConsentementDocument,
+    "\n  mutation AccorderDemandeAutorisation(\n    $id: ID!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n  ) {\n    accorderDemandeAutorisation(\n      id: $id\n      portee: $portee\n      activiteIds: $activiteIds\n    )\n  }\n": types.AccorderDemandeAutorisationDocument,
+    "\n  mutation RefuserDemandeAutorisation($id: ID!) {\n    refuserDemandeAutorisation(id: $id)\n  }\n": types.RefuserDemandeAutorisationDocument,
     "\n  mutation CreerBenevole(\n    $activiteId: ID!\n    $nom: String!\n    $courriel: String\n    $telephone: String\n    $note: String\n    $prevenirParMail: Boolean\n    $accord: Boolean!\n  ) {\n    creerBenevole(\n      activiteId: $activiteId\n      nom: $nom\n      courriel: $courriel\n      telephone: $telephone\n      note: $note\n      prevenirParMail: $prevenirParMail\n      accord: $accord\n    ) {\n      id\n    }\n  }\n": types.CreerBenevoleDocument,
     "\n  mutation ModifierBenevole(\n    $id: ID!\n    $nom: String!\n    $courriel: String\n    $telephone: String\n    $note: String\n    $prevenirParMail: Boolean\n  ) {\n    modifierBenevole(\n      id: $id\n      nom: $nom\n      courriel: $courriel\n      telephone: $telephone\n      note: $note\n      prevenirParMail: $prevenirParMail\n    ) {\n      id\n    }\n  }\n": types.ModifierBenevoleDocument,
     "\n  mutation SupprimerBenevole($id: ID!) {\n    supprimerBenevole(id: $id)\n  }\n": types.SupprimerBenevoleDocument,
@@ -687,6 +705,26 @@ export function graphql(source: "\n  mutation RenouvelerAdresseAppelBenevoles($i
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  query MesAutorisationsApplications {\n    mesAutorisationsApplications {\n      id\n      portee\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n      application {\n        nom\n        hote\n        verifiee\n      }\n    }\n  }\n"): (typeof documents)["\n  query MesAutorisationsApplications {\n    mesAutorisationsApplications {\n      id\n      portee\n      activiteIds\n      expireLe\n      dernierAccesLe\n      revoqueLe\n      creeLe\n      application {\n        nom\n        hote\n        verifiee\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevoquerAutorisationApplication($id: ID!) {\n    revoquerJetonAcces(id: $id)\n  }\n"): (typeof documents)["\n  mutation RevoquerAutorisationApplication($id: ID!) {\n    revoquerJetonAcces(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query ApplicationsRefuseesOrganisation {\n    applicationsRefuseesOrganisation {\n      clientId\n      nom\n      hote\n      refuseeLe\n      refuseePar\n    }\n  }\n"): (typeof documents)["\n  query ApplicationsRefuseesOrganisation {\n    applicationsRefuseesOrganisation {\n      clientId\n      nom\n      hote\n      refuseeLe\n      refuseePar\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RefuserApplicationOrganisation($clientId: String!) {\n    refuserApplicationOrganisation(clientId: $clientId)\n  }\n"): (typeof documents)["\n  mutation RefuserApplicationOrganisation($clientId: String!) {\n    refuserApplicationOrganisation(clientId: $clientId)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AutoriserApplicationOrganisation($clientId: String!) {\n    autoriserApplicationOrganisation(clientId: $clientId)\n  }\n"): (typeof documents)["\n  mutation AutoriserApplicationOrganisation($clientId: String!) {\n    autoriserApplicationOrganisation(clientId: $clientId)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  query DernieresNotifications {\n    notifications(nonLuesSeulement: true, limite: 10) {\n      ...NotificationAffichee\n    }\n  }\n"): (typeof documents)["\n  query DernieresNotifications {\n    notifications(nonLuesSeulement: true, limite: 10) {\n      ...NotificationAffichee\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -763,7 +801,7 @@ export function graphql(source: "\n  mutation RetirerInvitation($id: ID!) {\n   
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query JetonsAccesOrganisation {\n    jetonsAccesOrganisation {\n      jeton {\n        id\n        nom\n        apercu\n        portee\n        gestionMembres\n        activiteIds\n        expireLe\n        dernierAccesLe\n        revoqueLe\n      }\n      porteur {\n        id\n        nom\n        robot\n      }\n      revoquePar\n    }\n  }\n"): (typeof documents)["\n  query JetonsAccesOrganisation {\n    jetonsAccesOrganisation {\n      jeton {\n        id\n        nom\n        apercu\n        portee\n        gestionMembres\n        activiteIds\n        expireLe\n        dernierAccesLe\n        revoqueLe\n      }\n      porteur {\n        id\n        nom\n        robot\n      }\n      revoquePar\n    }\n  }\n"];
+export function graphql(source: "\n  query JetonsAccesOrganisation {\n    jetonsAccesOrganisation {\n      jeton {\n        id\n        nom\n        apercu\n        portee\n        gestionMembres\n        activiteIds\n        expireLe\n        dernierAccesLe\n        revoqueLe\n        application {\n          nom\n          hote\n          clientId\n        }\n      }\n      porteur {\n        id\n        nom\n        robot\n      }\n      revoquePar\n    }\n  }\n"): (typeof documents)["\n  query JetonsAccesOrganisation {\n    jetonsAccesOrganisation {\n      jeton {\n        id\n        nom\n        apercu\n        portee\n        gestionMembres\n        activiteIds\n        expireLe\n        dernierAccesLe\n        revoqueLe\n        application {\n          nom\n          hote\n          clientId\n        }\n      }\n      porteur {\n        id\n        nom\n        robot\n      }\n      revoquePar\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -1552,6 +1590,22 @@ export function graphql(source: "\n  query AppelBenevolesPublic($jeton: String!)
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeposerCandidature(\n    $jeton: String!\n    $nom: String!\n    $email: String!\n    $telephone: String\n    $sequences: [String!]!\n    $ouAilleurs: Boolean\n    $plages: [PlageDisponibiliteInput!]\n    $precisions: String\n    $message: String\n    $accord: Boolean!\n    $siteWeb: String\n  ) {\n    deposerCandidature(\n      jeton: $jeton\n      nom: $nom\n      email: $email\n      telephone: $telephone\n      sequences: $sequences\n      ouAilleurs: $ouAilleurs\n      plages: $plages\n      precisions: $precisions\n      message: $message\n      accord: $accord\n      siteWeb: $siteWeb\n    )\n  }\n"): (typeof documents)["\n  mutation DeposerCandidature(\n    $jeton: String!\n    $nom: String!\n    $email: String!\n    $telephone: String\n    $sequences: [String!]!\n    $ouAilleurs: Boolean\n    $plages: [PlageDisponibiliteInput!]\n    $precisions: String\n    $message: String\n    $accord: Boolean!\n    $siteWeb: String\n  ) {\n    deposerCandidature(\n      jeton: $jeton\n      nom: $nom\n      email: $email\n      telephone: $telephone\n      sequences: $sequences\n      ouAilleurs: $ouAilleurs\n      plages: $plages\n      precisions: $precisions\n      message: $message\n      accord: $accord\n      siteWeb: $siteWeb\n    )\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query DemandeAutorisation($id: ID!) {\n    demandeAutorisation(id: $id) {\n      id\n      hoteRetour\n      ecritureDemandee\n      application {\n        nom\n        clientId\n        hote\n        verifiee\n      }\n    }\n  }\n"): (typeof documents)["\n  query DemandeAutorisation($id: ID!) {\n    demandeAutorisation(id: $id) {\n      id\n      hoteRetour\n      ecritureDemandee\n      application {\n        nom\n        clientId\n        hote\n        verifiee\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query ActivitesConsentement {\n    activites {\n      id\n      nom\n    }\n  }\n"): (typeof documents)["\n  query ActivitesConsentement {\n    activites {\n      id\n      nom\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AccorderDemandeAutorisation(\n    $id: ID!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n  ) {\n    accorderDemandeAutorisation(\n      id: $id\n      portee: $portee\n      activiteIds: $activiteIds\n    )\n  }\n"): (typeof documents)["\n  mutation AccorderDemandeAutorisation(\n    $id: ID!\n    $portee: PorteeJeton!\n    $activiteIds: [ID!]\n  ) {\n    accorderDemandeAutorisation(\n      id: $id\n      portee: $portee\n      activiteIds: $activiteIds\n    )\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RefuserDemandeAutorisation($id: ID!) {\n    refuserDemandeAutorisation(id: $id)\n  }\n"): (typeof documents)["\n  mutation RefuserDemandeAutorisation($id: ID!) {\n    refuserDemandeAutorisation(id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

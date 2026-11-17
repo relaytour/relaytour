@@ -110,7 +110,7 @@ Les notifications de l'organisation ne passent pas par les activités. Un jeton 
 ## Options écartées
 
 - **Un jeton d'organisation sans compte.** Le journal, le fil d'une tâche, les notifications et le score attribuent chaque action à un compte. Un jeton sans compte demanderait un acteur fictif, ou des colonnes nulles dans toutes ces tables.
-- **OAuth dans Relaytour.** Chaque installation devrait enregistrer les programmes clients et tenir un serveur d'autorisation. Un jeton personnel suffit à une ligne de commande et à une automatisation. Un programme tiers peut proposer OAuth à ses propres utilisateurs.
+- **OAuth dans Relaytour.** Chaque installation devrait enregistrer les programmes clients et tenir un serveur d'autorisation. Un jeton personnel suffit à une ligne de commande et à une automatisation. Un programme tiers peut proposer OAuth à ses propres utilisateurs. L'ADR 0067 revient sur ce choix pour les applications tierces.
 - **Une API REST générée pour tout le schéma (Sofa).** La bibliothèque `sofa-api` crée une route par champ racine, choisit elle-même les champs rendus et ouvre des routes de webhook. Une seule erreur de champ fait alors échouer toute la réponse, et le contrat décrit chaque type GraphQL entier. Une liste fermée de documents écrits à la main garde des réponses exactes et un contrat lisible.
 - **Un jeton sans date de fin.** Un jeton oublié resterait valable. La date de fin d'un an borne le risque d'une fuite.
 - **Des droits fins par opération.** Les droits de la personne existent déjà, champ par champ. Une liste d'opérations par jeton serait une seconde politique d'accès à tenir.

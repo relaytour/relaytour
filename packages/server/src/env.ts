@@ -22,6 +22,16 @@ function adresseRetourValide(s: string): boolean {
   }
 }
 
+// Une liste d'identifiants ou d'hôtes d'applications tierces (ADR 0067).
+const listeApplications = optionnelle.transform(s =>
+  s === undefined
+    ? []
+    : s
+        .split(',')
+        .map(v => v.trim())
+        .filter(Boolean)
+)
+
 // Variables lues hors de ce schéma, volontairement : DOMAINES_COURRIEL_AUTORISES
 // (lib/contenu.ts) et CONTENU_ORGA (scripts orga-*). Elles servent à des scripts qui
 // tournent sans base ni `.env` complet, comme `orga:valider` en CI (invariant 12).
@@ -177,6 +187,24 @@ const EnvSchema = z
     // Dropbox de l'exploitant.
     DROPBOX_CLIENT_ID: optionnelle,
     DROPBOX_CLIENT_SECRET: optionnelle,
+    // Applications tierces (ADR 0067) : « ouvertes » accepte toute application
+    // valide, « liste » les seules applications de APPLICATIONS_LISTE, « fermees »
+    // ferme les points /oauth/* et leurs métadonnées. Les jetons d'accès de
+    // l'ADR 0064 répondent dans tous les cas.
+    APPLICATIONS_TIERCES: z
+      .enum(['ouvertes', 'liste', 'fermees', ''])
+      .optional()
+      .transform(v => (v === undefined || v === '' ? 'ouvertes' : v)),
+    // Identifiants d'applications (adresses de leur document de métadonnées),
+    // séparés par des virgules.
+    APPLICATIONS_LISTE: listeApplications,
+    // Identifiants ou hôtes refusés, quel que soit le mode.
+    APPLICATIONS_REFUSEES: listeApplications,
+    // Enregistrement dynamique (RFC 7591), fermé par défaut.
+    APPLICATIONS_ENREGISTREMENT_DYNAMIQUE: z
+      .enum(['true', 'false', ''])
+      .optional()
+      .transform(v => v === 'true'),
     // Nextcloud par le compte d'un admin : les hôtes que l'organisation peut
     // désigner. « * » admet tout hôte en https dont les adresses sont publiques ;
     // un hôte nommé (« cloud.exemple.org », « nuage.lan:8443 ») est admis tel

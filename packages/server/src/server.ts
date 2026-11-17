@@ -37,7 +37,8 @@ import {
   pageDesabonnement,
 } from './lib/desabonnement.ts'
 import { fermerLesFlux } from './lib/flux.ts'
-import { PREFIXE_JETON } from './lib/jetons-acces.ts'
+import { revoquerApplicationsRefusees } from './oauth/entretien.ts'
+import { routesOAuth } from './oauth/routes.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
 import { avecLangue, langueDe, languesDuNavigateur } from './lib/langue.ts'
@@ -109,6 +110,10 @@ const apollo = new ApolloServer<AppContext>({
 
 // La ligne Organisation existe dès le premier démarrage (ADR 0006, lot commun).
 await assurerOrganisationParDefaut()
+
+// Une application refusée par APPLICATIONS_REFUSEES perd ses autorisations au
+// démarrage (ADR 0067). Ses jetons ne répondaient déjà plus.
+await revoquerApplicationsRefusees(prisma)
 
 await apollo.start()
 
@@ -411,6 +416,10 @@ const servirRevocation =
 app.get(`${CHEMIN_REVOCATION}/:jeton`, servirRevocation('GET'))
 app.post(`${CHEMIN_REVOCATION}/:jeton`, servirRevocation('POST'))
 
+// Serveur d'autorisation des applications tierces (ADR 0067) : métadonnées et
+// points /oauth/*, que le relais de l'exploitant transmet.
+routesOAuth(app)
+
 // Better Auth lit lui-même le corps des requêtes : son routeur passe avant express.json().
 const gestionnaireAuth = toNodeHandler(auth)
 app.all('/api/auth/*splat', (req, res) => {
@@ -440,9 +449,10 @@ async function contexteDeRequete(
   const ip = adresseClient(req)
   const porteur = /^Bearer\b\s*(.*)$/i.exec(req.get('authorization') ?? '')
   const presente = (porteur?.[1] ?? '').trim()
-  // Un jeton d'accès se reconnaît à son préfixe (ADR 0064) : il ne compte pas parmi
-  // les refus du jeton d'administration.
-  if (porteur !== null && presente.startsWith(PREFIXE_JETON)) {
+  // Un jeton d'accès se reconnaît à son préfixe (ADR 0064), comme un jeton
+  // d'application (`rto_`, ADR 0067) : il ne compte pas parmi les refus du jeton
+  // d'administration.
+  if (porteur !== null && /^rt[or]?_/.test(presente)) {
     return options.jetonsAcces === false
       ? buildContext(ip, null)
       : contexteDeJetonAcces(

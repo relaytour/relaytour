@@ -37,9 +37,11 @@ describe('portées réservées à la session', () => {
     expect(champsAPortee(schema.getQueryType(), 'session')).toEqual([
       'abonnePush',
       'abonnementAgendaActivite',
+      'applicationsRefuseesOrganisation',
       'exportContenu',
       'exportOrganisation',
       'jetonsAccesOrganisation',
+      'mesAutorisationsApplications',
       'mesJetonsAcces',
       'monAbonnementAgenda',
       'notificationsAutresOrganisations',
@@ -50,7 +52,9 @@ describe('portées réservées à la session', () => {
   it('les mutations qui exigent une session sont celles-ci', () => {
     expect(champsAPortee(schema.getMutationType(), 'session')).toEqual([
       'abonnerPush',
+      'accorderDemandeAutorisation',
       'activerApi',
+      'autoriserApplicationOrganisation',
       'commencerConnexionEspaceFichiers',
       'commencerConnexionNextcloud',
       'connecterCompteServiceGoogle',
@@ -65,6 +69,7 @@ describe('portées réservées à la session', () => {
       'lienEspaceBenevole',
       'modifierMonAdresseVisible',
       'modifierPreferencesNotification',
+      'refuserApplicationOrganisation',
       'reglerAbonnementAgendaActivite',
       'reglerMonAbonnementAgenda',
       'renvoyerLienBenevole',

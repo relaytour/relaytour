@@ -74,7 +74,12 @@ const ApiInstallationRef = builder
       }),
       suspensionMotif: t.exposeString('suspensionMotif', { nullable: true }),
       jetonsActifs: t.exposeInt('jetonsActifs', {
-        description: 'Jetons ni révoqués ni expirés.',
+        description:
+          'Jetons ni révoqués ni expirés, autorisations d’applications comprises.',
+      }),
+      applications: t.exposeBoolean('applications', {
+        description:
+          'Faux : les applications tierces de l’organisation ne répondent plus (ADR 0067).',
       }),
     }),
   })
@@ -92,6 +97,10 @@ const ApiInstallationInput = builder.inputType('ApiInstallationInput', {
     }),
     suspendue: t.boolean(),
     suspensionMotif: t.string(),
+    applications: t.boolean({
+      description:
+        'Faux : les applications tierces de l’organisation cessent de répondre et ne reçoivent plus d’autorisation. Les jetons d’accès ne changent pas.',
+    }),
   }),
 })
 
@@ -312,6 +321,7 @@ builder.mutationFields(t => ({
                   autorisee: args.api.autorisee ?? undefined,
                   imposee: args.api.imposee ?? undefined,
                   suspendue: args.api.suspendue ?? undefined,
+                  applications: args.api.applications ?? undefined,
                 },
         },
         'Une organisation a été modifiée par l’administration de l’installation.'

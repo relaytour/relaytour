@@ -5,6 +5,8 @@ import { apiInactive, jetonInvalide, limiteDeDebit } from './lib/erreurs.ts'
 import { noterAcces, resoudreJetonAcces } from './lib/jetons-acces.ts'
 import { journal } from './lib/journal.ts'
 import { limiterParCle, rendreTentative } from './lib/limite.ts'
+import { applicationRefusee } from './oauth/refus.ts'
+import { enteteDefiPorteur } from './oauth/metadonnees.ts'
 
 // Contexte d'une requête porteuse d'un jeton d'accès (ADR 0064).
 //
@@ -51,6 +53,15 @@ export async function contexteDeJetonAcces(
     return anonyme(jetonInvalide())
   }
   await rendreTentative(cleRefus)
+  // Une application refusée par l'installation après son autorisation ne répond
+  // plus, avec la réponse d'un jeton inconnu (ADR 0067).
+  if (
+    resolution.issue === 'ok' &&
+    resolution.jeton.application !== null &&
+    applicationRefusee(resolution.jeton.application.clientId)
+  ) {
+    return anonyme(jetonInvalide())
+  }
   if (resolution.issue === 'api-fermee') {
     return anonyme(apiInactive(resolution.cause, resolution.motif))
   }
@@ -95,7 +106,7 @@ export function creerRefusDeJetonAcces(
   calcules: WeakMap<Request, AppContext>
 ): RequestHandler {
   return (req, res, suite) => {
-    const porteur = /^Bearer\s+(rt_\S*)\s*$/i.exec(
+    const porteur = /^Bearer\s+(rt[or]?_\S*)\s*$/i.exec(
       req.get('authorization') ?? ''
     )
     if (porteur === null) {
@@ -111,7 +122,7 @@ export function creerRefusDeJetonAcces(
         }
         const statut = statutDuRefus(ctx.refus.extensions.code)
         if (statut === 401) {
-          res.set('WWW-Authenticate', 'Bearer error="invalid_token"')
+          res.set('WWW-Authenticate', enteteDefiPorteur('invalid_token'))
         }
         if (statut === 429) res.set('Retry-After', '60')
         res.status(statut).json({

@@ -7,6 +7,8 @@ import {
   type StatutOrganisation,
 } from '@relaytour/database'
 
+import { autorisationDuJetonApplication } from '../oauth/jetons.ts'
+
 import { erreurSaisie } from './erreurs.ts'
 import { i18n } from './langue.ts'
 import { sousVerrouOrganisation } from './limites.ts'
@@ -123,6 +125,11 @@ export interface JetonDuContexte {
    * personne, dans la limite des droits de la personne. Faux par défaut.
    */
   gestionMembres: boolean
+  /**
+   * L'application tierce qui porte la requête (ADR 0067). Nulle pour un jeton
+   * d'accès créé dans « Jetons et API ».
+   */
+  application: { clientId: string; nom: string } | null
 }
 
 export type ResolutionJeton =
@@ -154,9 +161,38 @@ export async function resoudreJetonAcces(
   jeton: string,
   maintenant = new Date()
 ): Promise<ResolutionJeton> {
-  if (!estUnJetonAcces(jeton)) return { issue: 'invalide' }
+  let ou: Prisma.JetonAccesWhereInput
+  if (estUnJetonAcces(jeton)) {
+    // Une autorisation d'application n'a pas de valeur utilisable : son empreinte
+    // ne correspond à aucun jeton, et la condition le garantit aussi.
+    ou = { empreinte: empreinteJetonAcces(jeton), clientApplicationId: null }
+  } else {
+    // Un jeton d'application désigne son autorisation (ADR 0067).
+    const id = await autorisationDuJetonApplication(jeton, maintenant)
+    if (id === null) return { issue: 'invalide' }
+    ou = { id, clientApplicationId: { not: null } }
+  }
+  return resoudreLigne(ou, maintenant)
+}
+
+/**
+ * Une autorisation d'application désignée par son identifiant (ADR 0067), avec les
+ * contrôles d'un jeton d'accès : l'échange d'un code ou d'un jeton de
+ * renouvellement les repasse tous.
+ */
+export function resoudreAutorisationApplication(
+  id: string,
+  maintenant = new Date()
+): Promise<ResolutionJeton> {
+  return resoudreLigne({ id, clientApplicationId: { not: null } }, maintenant)
+}
+
+async function resoudreLigne(
+  ou: Prisma.JetonAccesWhereInput,
+  maintenant: Date
+): Promise<ResolutionJeton> {
   const ligne = await prisma.jetonAcces.findFirst({
-    where: { empreinte: empreinteJetonAcces(jeton) },
+    where: ou,
     select: {
       id: true,
       userId: true,
@@ -166,6 +202,7 @@ export async function resoudreJetonAcces(
       expireLe: true,
       revoqueLe: true,
       gestionMembres: true,
+      clientApplication: { select: { clientId: true, nom: true } },
       organisation: {
         select: {
           slug: true,
@@ -175,6 +212,7 @@ export async function resoudreJetonAcces(
           apiImposee: true,
           apiSuspendueLe: true,
           apiSuspensionMotif: true,
+          applicationsAutorisees: true,
         },
       },
     },
@@ -196,6 +234,18 @@ export async function resoudreJetonAcces(
     select: { id: true },
   })
   if (appartenance === null) return { issue: 'invalide' }
+  // Une application fermée par l'installation pour cette organisation, ou refusée
+  // par ses admins, répond comme un jeton inconnu (ADR 0067).
+  if (
+    ligne.clientApplication !== null &&
+    (!ligne.organisation.applicationsAutorisees ||
+      (await applicationRefuseeParLOrganisation(
+        ligne.organisationId,
+        ligne.clientApplication.clientId
+      )))
+  ) {
+    return { issue: 'invalide' }
+  }
   if (!apiOuverte(ligne.organisation)) {
     const cause = causeFermeture(etatApi(ligne.organisation))
     return {
@@ -215,8 +265,21 @@ export async function resoudreJetonAcces(
       activites: lireActivitesDuJeton(ligne.activiteIds),
       expireLe: ligne.expireLe,
       gestionMembres: ligne.gestionMembres,
+      application: ligne.clientApplication,
     },
   }
+}
+
+/** Vrai quand un admin de l'organisation a refusé cette application (ADR 0067). */
+export async function applicationRefuseeParLOrganisation(
+  organisationId: string,
+  clientId: string
+): Promise<boolean> {
+  const refus = await prisma.applicationRefusee.findUnique({
+    where: { organisationId_clientId: { organisationId, clientId } },
+    select: { id: true },
+  })
+  return refus !== null
 }
 
 /** Note le dernier usage d'un jeton, au plus une fois par minute. */
@@ -295,6 +358,8 @@ export async function creerJetonAcces(
           userId: donnees.userId,
           revoqueLe: null,
           expireLe: { gt: maintenant },
+          // Les autorisations d'application ont leur propre plafond (ADR 0067).
+          clientApplicationId: null,
         },
       })
       const max = donnees.max ?? JETONS_ACTIFS_MAX

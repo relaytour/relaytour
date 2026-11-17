@@ -1491,6 +1491,29 @@ const CAS: Cas[] = [
       sansEffet: data => expect(data).toEqual({ revoquerJetonAcces: false }),
     },
   },
+  // Applications tierces (ADR 0067) : une demande se désigne par un identifiant
+  // tiré au hasard, et une activité invisible n'entre dans aucune autorisation.
+  {
+    operation: 'demandeAutorisation',
+    query: 'query ($id: ID!) { demandeAutorisation(id: $id) { id } }',
+    variables: () => ({ id: 'd'.repeat(43) }),
+    attente: {
+      sansEffet: data => expect(data).toEqual({ demandeAutorisation: null }),
+    },
+  },
+  {
+    operation: 'refuserDemandeAutorisation',
+    query: 'mutation ($id: ID!) { refuserDemandeAutorisation(id: $id) }',
+    variables: () => ({ id: 'd'.repeat(43) }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'accorderDemandeAutorisation',
+    query:
+      'mutation ($id: ID!, $a: [ID!]) { accorderDemandeAutorisation(id: $id, portee: LECTURE, activiteIds: $a) }',
+    variables: () => ({ id: 'd'.repeat(43), a: [a.activite] }),
+    attente: REFUSE,
+  },
   // Robots (ADR 0064) : un admin d'une autre organisation, ou qui n'administre
   // pas l'organisation, ne crée ni robot ni jeton de robot dans A.
   {

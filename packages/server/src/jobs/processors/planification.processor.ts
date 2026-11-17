@@ -17,6 +17,11 @@ import { consoliderTache } from '../../lib/fenetre-notifications.ts'
 import { journal } from '../../lib/journal.ts'
 import { purgerDonneesTechniques, purgerMedias } from '../../lib/purge.ts'
 import {
+  purgerApplications,
+  rappelerFinDesAutorisations,
+  revoquerApplicationsRefusees,
+} from '../../oauth/entretien.ts'
+import {
   genererRappels,
   prioritesAEnvoyer,
   personnesAResumer,
@@ -125,6 +130,27 @@ export async function planificationProcessor(
     await purgerMedias(prisma, job.data)
     await purgerBenevoles(prisma, job.data)
     await purgerDonneesTechniques(prisma)
+    // Applications tierces (ADR 0067) : rappel avant la fin d'une autorisation,
+    // révocation des applications refusées, puis effacement de ce qui ne sert plus.
+    // Chaque étape tourne seule : l'échec de l'une n'empêche pas les suivantes.
+    for (const [etape, f] of [
+      ['rappel', rappelerFinDesAutorisations],
+      ['refus', revoquerApplicationsRefusees],
+      ['purge', purgerApplications],
+    ] as const) {
+      try {
+        await f(prisma)
+      } catch (erreur) {
+        journal.error(
+          {
+            evenement: 'entretien-applications-en-echec',
+            etape,
+            message: (erreur as Error).message,
+          },
+          'Une étape de l’entretien des applications tierces a échoué.'
+        )
+      }
+    }
     return
   }
 
