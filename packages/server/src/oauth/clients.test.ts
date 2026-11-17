@@ -22,9 +22,7 @@ describe('adresses de retour', () => {
     expect(adresseRetourAcceptable('http://app.exemple/retour')).toBe(false)
     expect(adresseRetourAcceptable('http://localhost/retour')).toBe(false)
     expect(adresseRetourAcceptable('https://app.exemple/retour#x')).toBe(false)
-    expect(adresseRetourAcceptable('https://moi:secret@app.exemple/')).toBe(
-      false
-    )
+    expect(adresseRetourAcceptable('https://moi@app.exemple/')).toBe(false)
     expect(adresseRetourAcceptable('javascript:alert(1)')).toBe(false)
   })
 
