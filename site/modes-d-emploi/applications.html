@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Connecter une application · Modes d'emploi · Relaytour</title>
+    <meta
+      name="description"
+      content="Le mode d'emploi des applications tierces de Relaytour : autoriser une application, suivre et révoquer ses autorisations, refuser une application dans l'organisation, et relier une application au serveur d'autorisation."
+    />
+    <link rel="alternate" hreflang="fr" href="https://relaytour.org/modes-d-emploi/applications.html" />
+    <link rel="alternate" hreflang="en" href="https://relaytour.org/en/modes-d-emploi/applications.html" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../jetons.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Navigation du site">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none" stroke-width="8" stroke-linecap="round" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" stroke="var(--rt-accent)" />
+            <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+          </svg>
+          <span class="logotype">Relay<span>tour</span></span>
+        </a>
+        <ul class="liens">
+          <li><a href="../">Présentation</a></li>
+          <li><a href="../hebergement.html">Hébergement</a></li>
+          <li><a href="../design-system.html">Design system</a></li>
+          <li><a href="./" aria-current="true">Modes d'emploi</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
+          <li><a href="../en/modes-d-emploi/applications.html" hreflang="en" lang="en" class="langue">English</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Tous les rôles</span>
+        <h1>Connecter une application</h1>
+        <p class="chapo">
+          Une application tierce travaille dans votre organisation en votre nom : un outil d'automatisation, un tableau de bord ou un agenda. Vous l'autorisez depuis votre installation de Relaytour, sans copier de secret. Elle reçoit vos droits, jamais davantage.
+        </p>
+        <p class="renvoi">
+          Les premières sections s'adressent à chaque membre et aux admins de l'organisation. La section « Relier une application » s'adresse aux personnes qui écrivent une application.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-principe">
+        <div class="entete">
+          <span class="etiquette">Point de départ</span>
+          <h2 id="t-principe">Ce qu'est une autorisation d'application</h2>
+          <p class="texte">
+            Un jeton d'accès convient à un programme que vous installez vous-même. Une application tierce suit un autre parcours : elle vous envoie sur l'écran de consentement de votre installation, et vous lui accordez l'accès.
+          </p>
+          <p class="texte">
+            Votre accord crée une autorisation d'application. Elle appartient à une personne et à une organisation, et elle porte une portée, des activités et une date de fin, comme un jeton d'accès. L'application ne voit jamais votre adresse de connexion ni vos codes.
+          </p>
+        </div>
+        <nav class="verre sommaire" aria-label="Sommaire">
+          <span class="etiquette">Dans ce mode d'emploi</span>
+          <ol>
+            <li><a href="#t-autoriser">Autoriser une application</a> : l'écran de consentement et ses choix.</li>
+            <li><a href="#t-suivre">Suivre et révoquer vos autorisations</a> : la section « Applications autorisées ».</li>
+            <li><a href="#t-admins">Encadrer les applications de l'organisation</a> : le choix des admins de l'organisation.</li>
+            <li><a href="#t-relier">Relier une application</a> : le parcours OAuth 2.1 pour les personnes qui écrivent une application.</li>
+            <li><a href="#t-securite">Garder la main</a> : les bonnes pratiques.</li>
+          </ol>
+        </nav>
+      </section>
+
+      <section aria-labelledby="t-autoriser">
+        <div class="entete">
+          <span class="etiquette">Chaque membre</span>
+          <h2 id="t-autoriser">Autoriser une application</h2>
+          <p class="texte">
+            L'application propose un bouton de connexion à Relaytour et vous demande l'adresse de votre installation. Votre navigateur ouvre alors l'écran de consentement. Si vous n'êtes pas connecté·e, l'espace organisateur vous demande d'abord votre code, puis vous ramène sur cet écran.
+          </p>
+          <p class="texte">
+            Le module « API » de l'organisation doit être actif. Sinon, l'écran l'indique et aucune autorisation n'est possible.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-consentement">
+          <div class="ecran-tete"><h3>L'écran de consentement</h3><span class="route">/autoriser/&lt;demande&gt;</span></div>
+          <p>L'écran nomme l'application et l'hôte qui la publie. Il indique aussi l'adresse où votre navigateur reviendra après votre réponse.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Organisation</span></span><span>Choisir l'organisation où l'application travaillera. Ce choix n'apparaît que si vous êtes membre de plusieurs organisations.</span></li>
+            <li><span><span class="libelle">Lecture seule</span></span><span>Limiter l'application à la lecture des tâches, des fiches, de l'agenda et de l'équipe que vous voyez.</span></li>
+            <li><span><span class="libelle">Lecture et écriture</span></span><span>Permettre aussi à l'application de créer, de modifier et de commenter des tâches en votre nom. Ce choix n'apparaît que si l'application demande l'écriture.</span></li>
+            <li><span><span class="libelle">Seulement ces activités</span></span><span>Choisir les activités que l'application voit. Sans ce choix, l'autorisation couvre toutes vos activités.</span></li>
+            <li><span><span class="libelle">Autoriser</span></span><span>Accorder l'accès. Votre navigateur revient dans l'application, qui reçoit ses jetons.</span></li>
+            <li><span><span class="libelle">Refuser</span></span><span>Ne rien accorder. Votre navigateur revient dans l'application avec votre refus.</span></li>
+          </ul>
+          <p class="note">Une application qui s'est enregistrée elle-même porte l'étiquette « Non vérifiée ». Son nom vient de l'application seule, et l'installation ne peut pas le confirmer.</p>
+        </article>
+
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Vos droits, jamais plus</h3>
+            <p>L'application lit et modifie ce que vous lisez et modifiez. Elle ne gère jamais les membres, ne crée pas de jetons et ne modifie pas votre compte.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Un mail à chaque accord</h3>
+            <p>Relaytour vous envoie un mail après chaque autorisation. Ce mail porte un lien qui révoque l'autorisation en un geste.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Un an au plus</h3>
+            <p>Une autorisation vaut un an. Relaytour vous prévient par mail trente jours avant sa fin. L'application vous redemande alors votre accord.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-suivre">
+        <div class="entete">
+          <span class="etiquette">Chaque membre</span>
+          <h2 id="t-suivre">Suivre et révoquer vos autorisations</h2>
+          <p class="texte">
+            Vos autorisations se trouvent dans vos préférences, sous les jetons d'accès. La section ne s'affiche que si vous avez déjà autorisé une application dans l'organisation.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-applications">
+          <div class="ecran-tete"><h3>La section « Applications autorisées »</h3><span class="route">/&lt;activité&gt;/preferences#applications</span></div>
+          <p>Chaque ligne indique le nom de l'application, sa portée, ses activités, la date de l'accord, la date de fin et le dernier usage.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Révoquer</span></span><span>Mettre fin à l'autorisation. L'application reçoit un refus dès sa requête suivante.</span></li>
+          </ul>
+          <p class="note">Une autorisation révoquée ou expirée reste affichée trente jours, avec son état. Une personne a au plus vingt autorisations actives dans une organisation.</p>
+        </article>
+
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>Événement</th><th>Ce qui arrive à l'autorisation</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>Vous révoquez l'autorisation</th><td>Elle prend fin aussitôt.</td></tr>
+              <tr><th>L'application se déconnecte</th><td>Elle prend fin aussitôt. L'application la révoque elle-même.</td></tr>
+              <tr><th>Un admin de l'organisation la révoque</th><td>Elle prend fin, et Relaytour vous prévient par mail.</td></tr>
+              <tr><th>Un ancien jeton de l'application revient</th><td>Relaytour y voit le signe d'un vol. L'autorisation prend fin, et Relaytour vous prévient par mail.</td></tr>
+              <tr><th>Votre compte est archivé dans l'organisation</th><td>Toutes vos autorisations prennent fin.</td></tr>
+              <tr><th>Le module « API » est désactivé</th><td>L'autorisation ne répond plus, puis répond de nouveau à la réactivation.</td></tr>
+              <tr><th>Le module « API » est suspendu</th><td>Toutes les autorisations de l'organisation prennent fin.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-admins">
+        <div class="entete">
+          <span class="etiquette">Admins de l'organisation</span>
+          <h2 id="t-admins">Encadrer les applications de l'organisation</h2>
+          <p class="texte">
+            Les applications tierces dépendent du module « API ». Un admin de l'organisation l'active dans le panneau « API pour les programmes tiers » de l'écran « Organisation ». Le <a href="api.html#t-module">mode d'emploi de l'API</a> décrit ce panneau.
+          </p>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Lire les autorisations</h3>
+            <p>Le panneau liste les jetons de toute l'organisation. Une autorisation d'application y porte le nom de l'application et son identifiant.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Révoquer celle d'un membre</h3>
+            <p>Un admin de l'organisation révoque l'autorisation d'un membre depuis cette liste. Relaytour prévient le membre par mail.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Refuser une application</h3>
+            <p>Sous « Applications refusées », un admin indique l'identifiant d'une application. Ses autorisations dans l'organisation prennent fin, et elle ne peut plus en demander.</p>
+          </div>
+        </div>
+        <p class="note">« Lever le refus » permet de nouveau à l'application de demander des autorisations. Les autorisations révoquées par le refus ne reviennent pas. Une organisation refuse au plus deux cents applications.</p>
+        <p class="note">L'administration de l'installation peut aussi fermer la fonction, la limiter à une liste d'applications ou refuser une application pour toutes les organisations. Le <a href="https://github.com/relaytour/relaytour/blob/main/infra/README.md">déploiement de référence</a> décrit ces réglages.</p>
+      </section>
+
+      <section aria-labelledby="t-relier">
+        <div class="entete">
+          <span class="etiquette">Personnes qui écrivent une application</span>
+          <h2 id="t-relier">Relier une application</h2>
+          <p class="texte">
+            Chaque installation de Relaytour est son propre serveur d'autorisation OAuth 2.1. Une application ne connaît que l'adresse de l'espace organisateur, et elle découvre le reste par les documents de métadonnées.
+          </p>
+          <p class="texte">
+            Le parcours ne demande ni inscription préalable, ni secret de client. L'application publie un document qui la décrit, et l'adresse de ce document lui sert d'identifiant.
+          </p>
+        </div>
+
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>Adresse</th><th>Ce qu'elle sert</th></tr>
+            </thead>
+            <tbody>
+              <tr><th><span class="route">/.well-known/oauth-protected-resource</span></th><td>Les métadonnées de la ressource (RFC 9728). Un refus 401 de l'API désigne ce document dans l'en-tête <span class="route">WWW-Authenticate</span>.</td></tr>
+              <tr><th><span class="route">/.well-known/oauth-authorization-server</span></th><td>Les métadonnées du serveur d'autorisation (RFC 8414).</td></tr>
+              <tr><th><span class="route">/oauth/autoriser</span></th><td>Le début du parcours, ouvert dans le navigateur de la personne.</td></tr>
+              <tr><th><span class="route">/oauth/jeton</span></th><td>L'échange d'un code, et le renouvellement des jetons.</td></tr>
+              <tr><th><span class="route">/oauth/revocation</span></th><td>La révocation d'une autorisation par l'application (RFC 7009).</td></tr>
+              <tr><th><span class="route">/oauth/enregistrement</span></th><td>L'enregistrement dynamique (RFC 7591), seulement si l'installation l'ouvre. Il est fermé par défaut.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grille-2">
+          <div class="verre panneau">
+            <h3>1. Publier le document de l'application</h3>
+            <p>L'application publie un document JSON sur une adresse https publique, avec un chemin. Cette adresse est son <span class="route">client_id</span>, et le document la répète.</p>
+            <pre class="source-markdown">{
+  "client_id": "https://outil.exemple/relaytour/client.json",
+  "client_name": "Outil d'exemple",
+  "redirect_uris": ["https://outil.exemple/relaytour/retour"],
+  "token_endpoint_auth_method": "none"
+}</pre>
+          </div>
+          <div class="verre panneau">
+            <h3>Ce que l'installation vérifie</h3>
+            <ul class="gestes">
+              <li><span><span class="libelle">Lecture</span></span><span>Une adresse publique, sans redirection, en 5 secondes et 16 Ko au plus.</span></li>
+              <li><span><span class="libelle">Nom</span></span><span>80 caractères au plus, sans retour à la ligne.</span></li>
+              <li><span><span class="libelle">Retours</span></span><span>Dix adresses au plus, en https, ou en http sur 127.0.0.1 ou [::1] avec un port libre (RFC 8252).</span></li>
+              <li><span><span class="libelle">Cache</span></span><span>L'installation garde le document selon son en-tête <span class="route">Cache-Control</span>, 24 heures au plus.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="verre panneau">
+          <h3>2. Envoyer la personne sur l'écran de consentement</h3>
+          <p>L'application ouvre <span class="route">/oauth/autoriser</span> dans le navigateur, avec un défi PKCE S256 et la ressource visée. La ressource est l'origine de l'espace organisateur.</p>
+          <pre class="source-markdown">https://votre-installation.exemple/oauth/autoriser
+  ?response_type=code
+  &amp;client_id=https%3A%2F%2Foutil.exemple%2Frelaytour%2Fclient.json
+  &amp;redirect_uri=https%3A%2F%2Foutil.exemple%2Frelaytour%2Fretour
+  &amp;scope=lecture%20ecriture
+  &amp;state=…
+  &amp;code_challenge=…
+  &amp;code_challenge_method=S256
+  &amp;resource=https%3A%2F%2Fvotre-installation.exemple</pre>
+          <p class="note">La portée vaut <span class="route">lecture</span>, ou <span class="route">lecture ecriture</span>. La personne peut réduire la portée demandée, jamais l'élargir. Le retour porte <span class="route">code</span>, <span class="route">state</span> et <span class="route">iss</span> (RFC 9207) : l'application vérifie que <span class="route">iss</span> vaut l'émetteur attendu.</p>
+        </div>
+
+        <div class="verre panneau">
+          <h3>3. Échanger le code</h3>
+          <p>Le code vaut 60 secondes et ne sert qu'une fois. L'application l'échange contre un jeton d'application et un jeton de renouvellement.</p>
+          <pre class="source-markdown">curl https://votre-installation.exemple/oauth/jeton \
+  -d grant_type=authorization_code \
+  -d code=… \
+  -d code_verifier=… \
+  -d client_id=https://outil.exemple/relaytour/client.json \
+  -d redirect_uri=https://outil.exemple/relaytour/retour \
+  -d resource=https://votre-installation.exemple</pre>
+          <p class="note">La réponse porte <span class="route">access_token</span> (préfixe <span class="route">rto_</span>, une heure), <span class="route">refresh_token</span> (préfixe <span class="route">rtr_</span>, 90 jours) et la portée accordée dans <span class="route">scope</span>.</p>
+        </div>
+
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>4. Appeler l'API</h3>
+            <p>Le jeton d'application s'envoie dans l'en-tête <span class="route">Authorization</span>, sur <span class="route">/graphql</span> ou sur <span class="route">/api/v1</span>. Les routes, les erreurs et les débits sont ceux du <a href="api.html#t-graphql">mode d'emploi de l'API</a>.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>5. Renouveler</h3>
+            <p>Avant la fin de l'heure, l'application envoie <span class="route">grant_type=refresh_token</span>. Elle reçoit une nouvelle paire et doit oublier l'ancienne : un ancien jeton de renouvellement qui revient révoque l'autorisation.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>6. Se déconnecter</h3>
+            <p>L'application envoie l'un de ses jetons à <span class="route">/oauth/revocation</span>. L'autorisation entière prend fin, avec tous ses jetons.</p>
+          </div>
+        </div>
+
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>Erreur OAuth</th><th>Ce qu'elle signifie</th></tr>
+            </thead>
+            <tbody>
+              <tr><th><span class="route">invalid_request</span></th><td>Un paramètre manque ou n'a pas la forme attendue, par exemple un défi PKCE absent ou d'une autre méthode que S256.</td></tr>
+              <tr><th><span class="route">invalid_scope</span></th><td>La portée demandée contient une valeur autre que <span class="route">lecture</span> ou <span class="route">ecriture</span>.</td></tr>
+              <tr><th><span class="route">invalid_target</span></th><td>Le paramètre <span class="route">resource</span> manque ou désigne une autre installation.</td></tr>
+              <tr><th><span class="route">invalid_grant</span></th><td>Le code ou le jeton de renouvellement est inconnu, expiré, déjà utilisé ou présenté par une autre application. L'autorisation a pu prendre fin.</td></tr>
+              <tr><th><span class="route">access_denied</span></th><td>La personne a refusé l'accès.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Une adresse de retour inconnue, ou un document illisible, ne renvoie pas vers l'application. L'installation affiche alors l'erreur elle-même, pour ne jamais rediriger vers une adresse non déclarée.</p>
+        <p class="note">L'écran de consentement ne charge rien de l'application, ni logo ni script, et ne s'affiche jamais dans un cadre.</p>
+      </section>
+
+      <section aria-labelledby="t-securite">
+        <div class="entete">
+          <span class="etiquette">Bonnes pratiques</span>
+          <h2 id="t-securite">Garder la main</h2>
+        </div>
+        <div class="verre panneau">
+          <ul class="gestes">
+          <li><span><span class="libelle">Lire l'écran</span></span><span>Vérifiez l'hôte qui publie l'application avant d'autoriser. Méfiez-vous d'une application « Non vérifiée » que vous n'attendiez pas.</span></li>
+          <li><span><span class="libelle">Le moins de droits possible</span></span><span>Choisissez la lecture seule et les seules activités utiles, même si l'application demande davantage.</span></li>
+          <li><span><span class="libelle">Lire vos mails</span></span><span>Révoquez aussitôt une autorisation que vous ne reconnaissez pas, depuis le lien du mail ou depuis vos préférences.</span></li>
+          <li><span><span class="libelle">Faire le tri</span></span><span>Révoquez les applications que vous n'utilisez plus. La date du dernier usage, dans la liste, aide à les repérer.</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Autres modes d'emploi</span>
+          <h2 id="t-autres">Poursuivre</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="api.html">
+            <span class="role">Tous les rôles</span>
+            <h3>Utiliser l'API</h3>
+            <p>Le module « API », les jetons d'accès, les API GraphQL et REST, et les robots.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="admin-organisation.html">
+            <span class="role">Admin de l'organisation</span>
+            <h3>Tenir l'organisation</h3>
+            <p>L'identité de l'organisation, ses activités, les comptes, les rôles et les modules.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="./">
+            <span class="role">Tous les rôles</span>
+            <h3>Choisir un mode d'emploi</h3>
+            <p>La liste des modes d'emploi de l'espace organisateur.</p>
+            <span class="suite">Voir la liste</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, espace organisateur. Mode d'emploi à jour de la version 0.31.0.
+      </footer>
+    </main>
+    <script src="../bascule.js"></script>
+    <script src="../sommaire.js"></script>
+  </body>
+</html>
