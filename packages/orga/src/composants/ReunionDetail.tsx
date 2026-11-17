@@ -189,16 +189,20 @@ export default function ReunionDetail({
     skip: !reunion?.peutLierCompteRendu,
   })
   const perimetreReunion = reunion?.perimetre?.id ?? null
-  const fichesCompteRendu = useMemo(
-    () =>
-      (fiches?.fiches ?? []).filter(
-        f =>
-          perimetreReunion === null ||
-          !f.perimetre ||
-          f.perimetre.id === perimetreReunion
-      ),
-    [fiches, perimetreReunion]
-  )
+  const compteRendu = reunion?.compteRendu ?? null
+  const fichesCompteRendu = useMemo(() => {
+    const proposees = (fiches?.fiches ?? []).filter(
+      f =>
+        perimetreReunion === null ||
+        !f.perimetre ||
+        f.perimetre.id === perimetreReunion
+    )
+    // Une fiche liée puis archivée reste citée (ADR 0066) : la liste la garde,
+    // pour que le champ affiche son titre.
+    return compteRendu === null || proposees.some(f => f.id === compteRendu.id)
+      ? proposees
+      : [...proposees, compteRendu]
+  }, [fiches, perimetreReunion, compteRendu])
 
   const choisirCompteRendu = (ficheId: string | null) => {
     if (!reunion) return
