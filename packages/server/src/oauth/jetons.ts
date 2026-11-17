@@ -97,6 +97,11 @@ export async function emettreJetons(
     new Date(
       Math.min(maintenant.getTime() + s * 1000, autorisation.expireLe.getTime())
     )
+  // Les jetons expirés de l'autorisation s'effacent à chaque émission. Un jeton de
+  // renouvellement déjà échangé reste jusqu'à sa fin : son retour signale un rejeu.
+  await tx.jetonApplication.deleteMany({
+    where: { jetonAccesId: autorisation.id, expireLe: { lte: maintenant } },
+  })
   const acces = nouveauJetonApplication()
   const renouvellement = nouveauRenouvellement()
   const finAcces = borne(DUREE_ACCES_S)

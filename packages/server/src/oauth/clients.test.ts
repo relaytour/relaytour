@@ -158,6 +158,23 @@ describe('refus de l’installation', () => {
     expect(
       applicationRefusee(client, { ...ouvertes, refusees: ['autre.exemple'] })
     ).toBe(false)
+    // Un autre port ne contourne pas le refus d'un hôte.
+    const autrePort = 'https://app.exemple:8443/client.json'
+    expect(
+      applicationRefusee(autrePort, { ...ouvertes, refusees: ['app.exemple'] })
+    ).toBe(true)
+    expect(
+      applicationRefusee(autrePort, {
+        ...ouvertes,
+        refusees: ['app.exemple:8443'],
+      })
+    ).toBe(true)
+    expect(
+      applicationRefusee(client, {
+        ...ouvertes,
+        refusees: ['app.exemple:8443'],
+      })
+    ).toBe(false)
   })
 
   it('n’accepte que la liste en mode liste, et rien en mode fermé', () => {

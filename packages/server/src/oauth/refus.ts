@@ -26,11 +26,13 @@ export function applicationsOuvertes(
   return r.mode !== 'fermees'
 }
 
-function hoteDe(clientId: string): string | null {
+/** Le nom d'hôte d'un identifiant, et l'hôte avec son port s'il en a un. */
+function hotesDe(clientId: string): string[] {
   try {
-    return new URL(clientId).host.toLowerCase()
+    const u = new URL(clientId)
+    return [...new Set([u.hostname, u.host].map(h => h.toLowerCase()))]
   } catch {
-    return null
+    return []
   }
 }
 
@@ -40,9 +42,11 @@ export function applicationRefusee(
   r: ReglageApplications = reglageDeLEnvironnement()
 ): boolean {
   if (r.mode === 'fermees') return true
-  const hote = hoteDe(clientId)
+  // Un hôte refusé l'est sur tous ses ports : « exemple.org » refuse aussi
+  // « exemple.org:8443 ». Une entrée « hote:port » ne refuse que ce port.
+  const hotes = hotesDe(clientId)
   const refusee = r.refusees.some(
-    v => v === clientId || (hote !== null && v.toLowerCase() === hote)
+    v => v === clientId || hotes.includes(v.toLowerCase())
   )
   if (refusee) return true
   return r.mode === 'liste' && !r.liste.includes(clientId)
