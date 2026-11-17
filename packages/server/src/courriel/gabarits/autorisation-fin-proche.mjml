@@ -1,0 +1,33 @@
+<mjml>
+  <mj-head>
+    <mj-title>[[L’accès d’une application à votre compte prend bientôt fin]]</mj-title>
+    <mj-preview>[[Reconnectez l’application pour garder son accès.]]</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="24px" color="#010101" padding="0 0 16px" />
+    </mj-attributes>
+  </mj-head>
+
+  <mj-body background-color="#040404" width="480px">
+    <mj-include path="./_entete.mjml" />
+
+    <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
+      <mj-column>
+        <mj-text font-size="20px" line-height="28px" font-weight="700">
+          [[Bonjour {{nom}},]]
+        </mj-text>
+        <mj-text>
+          {{intro}}
+        </mj-text>
+        <mj-text>
+          [[Pour garder cet accès, reconnectez l’application depuis son propre écran. Elle vous demandera de nouveau votre accord.]]
+        </mj-text>
+        <mj-text padding="0 0 4px" font-size="13px" line-height="20px">
+          [[Vous retrouvez toutes les applications autorisées depuis cet écran : {{lienJetons}}]]
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-include path="./_pied.mjml" />
+  </mj-body>
+</mjml>

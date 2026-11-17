@@ -132,6 +132,14 @@ export function sujets(
       '{nomCourt} : une application a reçu l’accès à votre compte',
       { nomCourt }
     ),
+    'autorisation-fin-proche': i18n._(
+      '{nomCourt} : l’accès d’une application prend bientôt fin',
+      { nomCourt }
+    ),
+    'autorisation-rejouee': i18n._(
+      '{nomCourt} : l’accès d’une application a été révoqué',
+      { nomCourt }
+    ),
   }
 }
 
@@ -1548,6 +1556,57 @@ export async function composer(
         }
       )
     }
+  }
+
+  // Fin proche ou rejeu d'une autorisation d'application (ADR 0067).
+  if (
+    job.sorte === 'autorisation-fin-proche' ||
+    job.sorte === 'autorisation-rejouee'
+  ) {
+    if (job.jetonAccesId === undefined) {
+      throw new Error(`Le mail « ${job.sorte} » exige une autorisation.`)
+    }
+    const autorisation = await prisma.jetonAcces.findUnique({
+      where: { id: job.jetonAccesId },
+      select: {
+        expireLe: true,
+        revoqueLe: true,
+        clientApplication: { select: { nom: true } },
+      },
+    })
+    // Une autorisation disparue, ou révoquée avant le rappel : rien à dire.
+    if (
+      autorisation === null ||
+      autorisation.clientApplication === null ||
+      (job.sorte === 'autorisation-fin-proche' &&
+        autorisation.revoqueLe !== null)
+    ) {
+      return null
+    }
+    const destinataire = await prisma.user.findUniqueOrThrow({
+      where: { id: job.userId },
+      select: { name: true },
+    })
+    variables.nom = destinataire.name
+    variables.lienJetons = `${lienPreferences}#applications`
+    variables.intro =
+      job.sorte === 'autorisation-fin-proche'
+        ? i18n._(
+            'L’accès de l’application « {application} » à votre compte prend fin le {fin}.',
+            {
+              application: autorisation.clientApplication.nom,
+              fin: autorisation.expireLe.toLocaleDateString(langueCourante(), {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                timeZone: 'UTC',
+              }),
+            }
+          )
+        : i18n._(
+            'L’accès de l’application « {application} » à votre compte a été révoqué : un jeton déjà utilisé a été présenté une seconde fois.',
+            { application: autorisation.clientApplication.nom }
+          )
   }
 
   const { repondreA, repondre } = reponsesDuMail(configuration, job.sorte)

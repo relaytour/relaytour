@@ -224,8 +224,18 @@ msgstr "This installation does not accept this application."
 
 #. js-lingui-explicit-id
 #: src/schema/applications-tierces.ts
+msgid "Cette organisation n’accepte pas cette application."
+msgstr "This organization does not accept this application."
+
+#. js-lingui-explicit-id
+#: src/schema/applications-tierces.ts
 msgid "Vous avez déjà autorisé {max} applications dans cette organisation : révoquez-en une avant d’en autoriser une autre."
 msgstr "You have already authorized {max} applications in this organization: revoke one before authorizing another."
+
+#. js-lingui-explicit-id
+#: src/schema/applications-tierces.ts
+msgid "Indiquez l’identifiant de l’application, 512 caractères au plus."
+msgstr "Enter the application identifier, 512 characters at most."
 
 #. js-lingui-explicit-id
 #: src/schema/benevoles.ts
@@ -3420,6 +3430,41 @@ msgstr "Revoke this authorization: {lienRevocation}"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
+msgid "L’accès d’une application à votre compte prend bientôt fin"
+msgstr "An application's access to your account ends soon"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Reconnectez l’application pour garder son accès."
+msgstr "Reconnect the application to keep its access."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Pour garder cet accès, reconnectez l’application depuis son propre écran. Elle vous demandera de nouveau votre accord."
+msgstr "To keep this access, reconnect the application from its own screen. It will ask for your consent again."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous retrouvez toutes les applications autorisées depuis cet écran : {lienJetons}"
+msgstr "You can see all authorized applications from this screen: {lienJetons}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "L’accès d’une application à votre compte a été révoqué"
+msgstr "An application's access to your account was revoked"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Un jeton déjà utilisé a été présenté une seconde fois."
+msgstr "A token that was already used was presented a second time."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Ce rejeu peut signaler le vol d’un jeton. Si vous utilisez toujours l’application, reconnectez-la depuis son propre écran. Sinon, aucune action n’est nécessaire."
+msgstr "This replay may indicate a stolen token. If you still use the application, reconnect it from its own screen. Otherwise, no action is needed."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
 #: src/courriel/messages.ts
 msgid "Ouvrir mon espace"
 msgstr "Open my space"
@@ -3916,6 +3961,16 @@ msgstr "{nomCourt}: an application was given access to your account"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
+msgid "{nomCourt} : l’accès d’une application prend bientôt fin"
+msgstr "{nomCourt}: an application's access ends soon"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{nomCourt} : l’accès d’une application a été révoqué"
+msgstr "{nomCourt}: an application's access was revoked"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
 msgid "Pour toute question, répondez à ce mail."
 msgstr "If you have any questions, reply to this email."
 
@@ -4374,6 +4429,16 @@ msgstr "an organization admin"
 #: src/courriel/messages.ts
 msgid "Le jeton d’accès « {jeton} » ({apercu}) a été révoqué par {par}. Le programme qui l’utilisait n’a plus accès à l’espace."
 msgstr "The access token “{jeton}” ({apercu}) has been revoked by {par}. The program that used it no longer has access to the workspace."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "L’accès de l’application « {application} » à votre compte prend fin le {fin}."
+msgstr "The access of the application “{application}” to your account ends on {fin}."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "L’accès de l’application « {application} » à votre compte a été révoqué : un jeton déjà utilisé a été présenté une seconde fois."
+msgstr "The access of the application “{application}” to your account was revoked: a token that was already used was presented a second time."
 
 #. js-lingui-explicit-id
 #: src/api-rest/routeur.ts

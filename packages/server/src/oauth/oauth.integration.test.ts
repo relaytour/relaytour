@@ -20,6 +20,11 @@ import { contexteDeJetonAcces } from '../contexte-jeton.ts'
 import { env } from '../env.ts'
 import { schema } from '../schema/index.ts'
 
+import {
+  purgerApplications,
+  rappelerFinDesAutorisations,
+  revoquerApplicationsRefusees,
+} from './entretien.ts'
 import { defiS256 } from './jetons.ts'
 import { emetteur } from './metadonnees.ts'
 import { routesOAuth } from './routes.ts'
@@ -630,5 +635,157 @@ describe('révocation', () => {
       (await contexteDeJetonAcces(ip, jetons.access_token, null)).refus
         ?.extensions.code
     ).toBe('JETON_INVALIDE')
+  })
+})
+
+describe('refus par l’organisation et par l’installation', () => {
+  const REFUSER =
+    'mutation ($c: String!) { refuserApplicationOrganisation(clientId: $c) }'
+  const LEVER =
+    'mutation ($c: String!) { autoriserApplicationOrganisation(clientId: $c) }'
+
+  it('un admin refuse une application : ses autorisations tombent, les demandes aussi', async () => {
+    const jetons = await jetonsAccordes()
+    const r = await executer(session(), REFUSER, { c: CLIENT })
+    expect(r.data).toEqual({ refuserApplicationOrganisation: 1 })
+    expect(
+      (await contexteDeJetonAcces(ip, jetons.access_token, null)).refus
+        ?.extensions.code
+    ).toBe('JETON_INVALIDE')
+    const liste = await executer(
+      session(),
+      '{ applicationsRefuseesOrganisation { clientId nom hote } }'
+    )
+    expect(liste.data).toEqual({
+      applicationsRefuseesOrganisation: [
+        {
+          clientId: CLIENT,
+          nom: 'Automate de test',
+          hote: new URL(CLIENT).host,
+        },
+      ],
+    })
+    const id = await nouvelleDemande()
+    const accord = await executer(session(), ACCORDER, { id, p: 'LECTURE' })
+    expect(accord.errors?.[0]?.extensions?.code).toBe('SAISIE_INVALIDE')
+    expect((await executer(session(), LEVER, { c: CLIENT })).data).toEqual({
+      autoriserApplicationOrganisation: true,
+    })
+    await jetonsAccordes()
+  })
+
+  it('l’installation ferme les applications d’une organisation sans toucher aux jetons d’accès', async () => {
+    const jetons = await jetonsAccordes()
+    const installation = buildContext('127.0.0.1', null, null, true)
+    const fermeture = await executer(
+      installation,
+      'mutation ($s: String!) { modifierOrganisationInstallation(slug: $s, api: { applications: false }) { api { applications } } }',
+      { s: slug }
+    )
+    expect(fermeture.data).toEqual({
+      modifierOrganisationInstallation: { api: { applications: false } },
+    })
+    try {
+      expect(
+        (await contexteDeJetonAcces(ip, jetons.access_token, null)).refus
+          ?.extensions.code
+      ).toBe('JETON_INVALIDE')
+      expect(erreurDe(await renouveler(jetons.refresh_token))).toBe(
+        'invalid_grant'
+      )
+      const id = await nouvelleDemande()
+      const accord = await executer(session(), ACCORDER, { id, p: 'LECTURE' })
+      expect(accord.errors?.[0]?.extensions?.code).toBe('SAISIE_INVALIDE')
+    } finally {
+      await prisma.organisation.update({
+        where: { id: ids.org },
+        data: { applicationsAutorisees: true },
+      })
+    }
+    expect(
+      (await contexteDeJetonAcces(ip, jetons.access_token, null)).refus
+    ).toBeNull()
+  })
+
+  it('révoque les autorisations d’une application refusée par l’installation', async () => {
+    await jetonsAccordes()
+    env.APPLICATIONS_REFUSEES = [CLIENT]
+    expect(await revoquerApplicationsRefusees(prisma)).toBeGreaterThan(0)
+    env.APPLICATIONS_REFUSEES = []
+    const actives = await prisma.jetonAcces.count({
+      where: {
+        organisationId: ids.org,
+        revoqueLe: null,
+        clientApplication: { clientId: CLIENT },
+      },
+    })
+    expect(actives).toBe(0)
+  })
+})
+
+describe('mails et entretien', () => {
+  it('signale un rejeu par mail', async () => {
+    const jetons = await jetonsAccordes()
+    expect((await renouveler(jetons.refresh_token)).statut).toBe(200)
+    enFile.length = 0
+    await renouveler(jetons.refresh_token)
+    expect(enFile.map(e => e.sorte)).toEqual(['autorisation-rejouee'])
+  })
+
+  it('rappelle une fois la fin proche d’une autorisation', async () => {
+    const jetons = await jetonsAccordes()
+    const ctx = await contexteDeJetonAcces(ip, jetons.access_token, null)
+    const id = ctx.jeton!.id
+    await prisma.jetonAcces.update({
+      where: { id },
+      data: { expireLe: new Date(Date.now() + 10 * 86_400_000) },
+    })
+    enFile.length = 0
+    expect(await rappelerFinDesAutorisations(prisma)).toBeGreaterThan(0)
+    expect(
+      enFile.some(
+        e =>
+          e.sorte === 'autorisation-fin-proche' &&
+          (e.options as { jetonAccesId: string }).jetonAccesId === id
+      )
+    ).toBe(true)
+    enFile.length = 0
+    await rappelerFinDesAutorisations(prisma)
+    expect(
+      enFile.some(
+        e => (e.options as { jetonAccesId: string }).jetonAccesId === id
+      )
+    ).toBe(false)
+  })
+
+  it('efface les demandes expirées, les jetons échus et les applications oubliées', async () => {
+    const demande = await nouvelleDemande()
+    await prisma.demandeAutorisation.update({
+      where: { id: demande },
+      data: { expireLe: new Date(Date.now() - 2 * 86_400_000) },
+    })
+    documents.set(AUTRE, documentDe(AUTRE))
+    await appeler(adresseAutoriser({ client_id: AUTRE }))
+    const autre = await prisma.clientApplication.findUniqueOrThrow({
+      where: { clientId: AUTRE },
+    })
+    await prisma.demandeAutorisation.deleteMany({
+      where: { clientApplicationId: autre.id },
+    })
+    await prisma.clientApplication.update({
+      where: { id: autre.id },
+      data: { updatedAt: new Date(Date.now() - 40 * 86_400_000) },
+    })
+    await purgerApplications(prisma)
+    expect(
+      await prisma.demandeAutorisation.findUnique({ where: { id: demande } })
+    ).toBeNull()
+    expect(
+      await prisma.clientApplication.findUnique({ where: { clientId: AUTRE } })
+    ).toBeNull()
+    // L'application qui porte des autorisations reste.
+    expect(
+      await prisma.clientApplication.findUnique({ where: { clientId: CLIENT } })
+    ).not.toBeNull()
   })
 })

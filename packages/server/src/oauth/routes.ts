@@ -1,6 +1,7 @@
 import { prisma } from '@relaytour/database'
 import express, { type Express, type Request, type Response } from 'express'
 
+import { mettreEnFile } from '../courriel/file.ts'
 import { env } from '../env.ts'
 import { adresseClient } from '../lib/adresse-client.ts'
 import { echapperHtml } from '../lib/html.ts'
@@ -258,9 +259,24 @@ const refus = (
   statut = 400
 ): Echange => ({ issue: 'refus', statut, erreur, description })
 
-/** Un rejeu révoque l'autorisation : le code ou le jeton a pu être volé. */
+/**
+ * Un rejeu révoque l'autorisation : le code ou le jeton a pu être volé. La personne
+ * l'apprend par mail, une seule fois.
+ */
 async function rejeu(jetonAccesId: string, evenement: string) {
-  await revoquerAutorisation(prisma, jetonAccesId)
+  if (await revoquerAutorisation(prisma, jetonAccesId)) {
+    const autorisation = await prisma.jetonAcces.findUnique({
+      where: { id: jetonAccesId },
+      select: { userId: true, organisationId: true },
+    })
+    if (autorisation !== null) {
+      await mettreEnFile(
+        'autorisation-rejouee',
+        { userId: autorisation.userId },
+        { organisationId: autorisation.organisationId, jetonAccesId }
+      )
+    }
+  }
   journal.warn(
     { evenement, jetonAccesId },
     'Un code ou un jeton de renouvellement déjà utilisé est revenu : l’autorisation est révoquée.'

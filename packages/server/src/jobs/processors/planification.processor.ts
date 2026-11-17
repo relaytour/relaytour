@@ -17,6 +17,11 @@ import { consoliderTache } from '../../lib/fenetre-notifications.ts'
 import { journal } from '../../lib/journal.ts'
 import { purgerDonneesTechniques, purgerMedias } from '../../lib/purge.ts'
 import {
+  purgerApplications,
+  rappelerFinDesAutorisations,
+  revoquerApplicationsRefusees,
+} from '../../oauth/entretien.ts'
+import {
   genererRappels,
   prioritesAEnvoyer,
   personnesAResumer,
@@ -125,6 +130,11 @@ export async function planificationProcessor(
     await purgerMedias(prisma, job.data)
     await purgerBenevoles(prisma, job.data)
     await purgerDonneesTechniques(prisma)
+    // Applications tierces (ADR 0067) : rappel avant la fin d'une autorisation,
+    // révocation des applications refusées, puis effacement de ce qui ne sert plus.
+    await rappelerFinDesAutorisations(prisma)
+    await revoquerApplicationsRefusees(prisma)
+    await purgerApplications(prisma)
     return
   }
 

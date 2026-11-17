@@ -37,6 +37,7 @@ describe('portées réservées à la session', () => {
     expect(champsAPortee(schema.getQueryType(), 'session')).toEqual([
       'abonnePush',
       'abonnementAgendaActivite',
+      'applicationsRefuseesOrganisation',
       'exportContenu',
       'exportOrganisation',
       'jetonsAccesOrganisation',
@@ -53,6 +54,7 @@ describe('portées réservées à la session', () => {
       'abonnerPush',
       'accorderDemandeAutorisation',
       'activerApi',
+      'autoriserApplicationOrganisation',
       'commencerConnexionEspaceFichiers',
       'commencerConnexionNextcloud',
       'connecterCompteServiceGoogle',
@@ -67,6 +69,7 @@ describe('portées réservées à la session', () => {
       'lienEspaceBenevole',
       'modifierMonAdresseVisible',
       'modifierPreferencesNotification',
+      'refuserApplicationOrganisation',
       'reglerAbonnementAgendaActivite',
       'reglerMonAbonnementAgenda',
       'renvoyerLienBenevole',

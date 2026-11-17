@@ -10,6 +10,7 @@ import { mettreEnFile } from '../courriel/file.ts'
 import { apiInactive, erreurSaisie } from '../lib/erreurs.ts'
 import {
   apiOuverte,
+  applicationRefuseeParLOrganisation,
   causeFermeture,
   empreinteJetonAcces,
   etatApi,
@@ -25,6 +26,7 @@ import {
   empreinte,
   nouveauCode,
 } from '../oauth/jetons.ts'
+import { ADRESSE_MAX } from '../oauth/clients.ts'
 import { adresseDeRetour } from '../oauth/metadonnees.ts'
 import { applicationRefusee } from '../oauth/refus.ts'
 
@@ -192,8 +194,20 @@ builder.mutationFields(t => ({
           apiImposee: true,
           apiSuspendueLe: true,
           apiSuspensionMotif: true,
+          applicationsAutorisees: true,
         },
       })
+      if (
+        !reglage.applicationsAutorisees ||
+        (await applicationRefuseeParLOrganisation(
+          organisationId,
+          client.clientId
+        ))
+      ) {
+        throw erreurSaisie(
+          i18n._('Cette organisation n’accepte pas cette application.')
+        )
+      }
       if (!apiOuverte(reglage)) {
         const cause = causeFermeture(etatApi(reglage))
         throw apiInactive(
@@ -295,6 +309,161 @@ builder.mutationFields(t => ({
         code,
         state: demande.state,
       })
+    },
+  }),
+}))
+
+// Refus d'une application par les admins d'une organisation (ADR 0067). Le refus
+// révoque ses autorisations dans l'organisation, prévient leurs porteuses, et
+// bloque les nouvelles demandes. Il se lève par `autoriserApplicationOrganisation`.
+
+interface ApplicationRefuseeLue {
+  clientId: string
+  createdAt: Date
+  par: { name: string } | null
+  nom: string | null
+}
+
+const ApplicationRefuseeRef = builder
+  .objectRef<ApplicationRefuseeLue>('ApplicationRefusee')
+  .implement({
+    description:
+      'Une application tierce refusée par un admin de l’organisation active.',
+    fields: t => ({
+      clientId: t.exposeString('clientId'),
+      nom: t.exposeString('nom', {
+        nullable: true,
+        description:
+          'Le nom que l’application déclare. Nul quand l’installation ne la connaît pas.',
+      }),
+      hote: t.string({ resolve: a => hoteDe(a.clientId) }),
+      refuseeLe: t.expose('createdAt', { type: 'DateTime' }),
+      refuseePar: t.string({
+        nullable: true,
+        resolve: a => a.par?.name ?? null,
+      }),
+    }),
+  })
+
+/** Un identifiant d'application tel qu'un admin le saisit. */
+function clientIdSaisi(brut: string): string {
+  const clientId = brut.trim()
+  if (clientId.length === 0 || clientId.length > ADRESSE_MAX) {
+    throw erreurSaisie(
+      i18n._('Indiquez l’identifiant de l’application, 512 caractères au plus.')
+    )
+  }
+  return clientId
+}
+
+builder.queryFields(t => ({
+  applicationsRefuseesOrganisation: t.field({
+    type: [ApplicationRefuseeRef],
+    authScopes: { $all: { admin: true, session: true } },
+    description:
+      'Les applications tierces que les admins de l’organisation active ont refusées.',
+    resolve: async (_root, _args, ctx) => {
+      const refus = await prisma.applicationRefusee.findMany({
+        where: { organisationId: ctx.organisation!.id },
+        include: { par: { select: { name: true } } },
+        orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+        take: 200,
+      })
+      const clients = await prisma.clientApplication.findMany({
+        where: { clientId: { in: refus.map(r => r.clientId) } },
+        select: { clientId: true, nom: true },
+      })
+      return refus.map(r => ({
+        clientId: r.clientId,
+        createdAt: r.createdAt,
+        par: r.par,
+        nom: clients.find(c => c.clientId === r.clientId)?.nom ?? null,
+      }))
+    },
+  }),
+}))
+
+builder.mutationFields(t => ({
+  refuserApplicationOrganisation: t.int({
+    authScopes: { $all: { admin: true, session: true } },
+    // Une application indésirable se refuse même dans une organisation en lecture seule.
+    skipTypeScopes: true,
+    description:
+      'Refuse une application tierce pour l’organisation active. Révoque ses autorisations, dont les porteuses l’apprennent par mail, et rend leur nombre.',
+    args: { clientId: t.arg.string({ required: true }) },
+    resolve: async (_root, args, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const parId = ctx.personne!.id
+      const clientId = clientIdSaisi(args.clientId)
+      const maintenant = new Date()
+      const revoquees = await sousVerrouOrganisation(
+        organisationId,
+        async tx => {
+          await tx.applicationRefusee.upsert({
+            where: { organisationId_clientId: { organisationId, clientId } },
+            create: { organisationId, clientId, parId },
+            update: {},
+          })
+          const cibles = await tx.jetonAcces.findMany({
+            where: {
+              organisationId,
+              revoqueLe: null,
+              clientApplication: { clientId },
+            },
+            select: { id: true, userId: true },
+          })
+          await tx.jetonAcces.updateMany({
+            where: { id: { in: cibles.map(c => c.id) } },
+            data: { revoqueLe: maintenant, revoqueParId: parId },
+          })
+          return cibles
+        }
+      )
+      journal.info(
+        {
+          evenement: 'application-refusee-par-organisation',
+          organisationId,
+          par: parId,
+          autorisationsRevoquees: revoquees.length,
+        },
+        'Un admin de l’organisation a refusé une application tierce.'
+      )
+      for (const r of revoquees) {
+        if (r.userId === parId) continue
+        await mettreEnFile(
+          'jeton-revoque',
+          { userId: r.userId },
+          { organisationId, jetonAccesId: r.id }
+        )
+      }
+      return revoquees.length
+    },
+  }),
+
+  autoriserApplicationOrganisation: t.boolean({
+    authScopes: { $all: { admin: true, session: true } },
+    skipTypeScopes: true,
+    description:
+      'Lève le refus d’une application tierce dans l’organisation active. Les autorisations révoquées ne reviennent pas. Rend faux quand l’application n’était pas refusée.',
+    args: { clientId: t.arg.string({ required: true }) },
+    resolve: async (_root, args, ctx) => {
+      const { count } = await prisma.applicationRefusee.deleteMany({
+        where: {
+          organisationId: ctx.organisation!.id,
+          clientId: clientIdSaisi(args.clientId),
+        },
+      })
+      if (count > 0) {
+        journal.info(
+          {
+            evenement: 'application-autorisee-par-organisation',
+            organisationId: ctx.organisation!.id,
+            par: ctx.personne!.id,
+          },
+          'Un admin de l’organisation a levé le refus d’une application tierce.'
+        )
+      }
+      return count > 0
     },
   }),
 }))
