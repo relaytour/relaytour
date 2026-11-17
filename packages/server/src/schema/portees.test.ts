@@ -40,6 +40,7 @@ describe('portées réservées à la session', () => {
       'exportContenu',
       'exportOrganisation',
       'jetonsAccesOrganisation',
+      'mesAutorisationsApplications',
       'mesJetonsAcces',
       'monAbonnementAgenda',
       'notificationsAutresOrganisations',
@@ -50,6 +51,7 @@ describe('portées réservées à la session', () => {
   it('les mutations qui exigent une session sont celles-ci', () => {
     expect(champsAPortee(schema.getMutationType(), 'session')).toEqual([
       'abonnerPush',
+      'accorderDemandeAutorisation',
       'activerApi',
       'commencerConnexionEspaceFichiers',
       'commencerConnexionNextcloud',

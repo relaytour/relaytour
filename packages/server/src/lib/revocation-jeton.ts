@@ -65,6 +65,8 @@ export interface JetonARevoquer {
   apercu: string
   userId: string
   organisationId: string
+  /** Vrai pour l'autorisation d'une application tierce (ADR 0067). */
+  application: boolean
 }
 
 /**
@@ -86,6 +88,7 @@ export async function jetonARevoquer(
       organisationId: true,
       revoqueLe: true,
       expireLe: true,
+      clientApplicationId: true,
     },
   })
   if (
@@ -95,7 +98,14 @@ export async function jetonARevoquer(
   ) {
     return null
   }
-  return jeton
+  return {
+    id: jeton.id,
+    nom: jeton.nom,
+    apercu: jeton.apercu,
+    userId: jeton.userId,
+    organisationId: jeton.organisationId,
+    application: jeton.clientApplicationId !== null,
+  }
 }
 
 /** Révoque le jeton d'un lien. Rend faux quand il ne répondait déjà plus. */
@@ -152,13 +162,22 @@ export async function pageRevocation(
       organisation: echapperHtml(configuration?.nom ?? ''),
     }
     const corps =
-      etat === 'invalide'
-        ? `<h1>${i18n._('Lien non valide')}</h1>
+      jeton?.application === true
+        ? etat === 'fait'
+          ? `<h1>${i18n._('Autorisation révoquée')}</h1>
+<p>${i18n._('L’application « {jeton} » n’a plus accès à votre compte dans {organisation}.', valeurs)}</p>`
+          : `<h1>${i18n._('Révoquer l’autorisation d’une application')}</h1>
+<p>${i18n._('Vous êtes sur le point de révoquer l’accès de l’application « {jeton} » à votre compte dans {organisation}. Elle perdra aussitôt son accès.', valeurs)}</p>
+<form method="post">
+<button type="submit">${i18n._('Révoquer cette autorisation')}</button>
+</form>`
+        : etat === 'invalide'
+          ? `<h1>${i18n._('Lien non valide')}</h1>
 <p>${i18n._('Ce lien de révocation n’est pas valide, ou le jeton qu’il désigne ne répond déjà plus. Vous gérez vos jetons d’accès dans les préférences de l’espace organisateur.')}</p>`
-        : etat === 'fait'
-          ? `<h1>${i18n._('Jeton révoqué')}</h1>
+          : etat === 'fait'
+            ? `<h1>${i18n._('Jeton révoqué')}</h1>
 <p>${i18n._('Le jeton « {jeton} » ({apercu}) de {organisation} ne répond plus. Le programme qui le détenait a perdu son accès.', valeurs)}</p>`
-          : `<h1>${i18n._('Révoquer un jeton d’accès')}</h1>
+            : `<h1>${i18n._('Révoquer un jeton d’accès')}</h1>
 <p>${i18n._('Vous êtes sur le point de révoquer le jeton « {jeton} » ({apercu}) de {organisation}. Le programme qui le détient perdra aussitôt son accès.', valeurs)}</p>
 <form method="post">
 <button type="submit">${i18n._('Révoquer ce jeton')}</button>

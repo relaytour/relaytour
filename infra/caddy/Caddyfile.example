@@ -34,10 +34,12 @@ api.exemple.org {
 # première partie (ADR 0002). Les mails citent les images sous /medias/ (ADR 0009).
 # /graphql porte aussi le flux des changements (SSE, ADR 0017) : Caddy le transmet
 # au fil de l'eau, sans réglage. /agenda/* sert les abonnements à l'agenda (ADR 0037).
-# /api/v1/* sert l'API REST des programmes tiers (ADR 0064).
+# /api/v1/* sert l'API REST des programmes tiers (ADR 0064). /oauth/* et les deux
+# documents /.well-known/oauth-* servent l'autorisation des applications tierces
+# (ADR 0067). L'écran de consentement (/autoriser/*) reste une page de l'espace.
 orga.exemple.org {
 	import entetes-securite
-	@api path /api/auth/* /api/v1/* /graphql /medias/* /agenda/*
+	@api path /api/auth/* /api/v1/* /graphql /medias/* /agenda/* /oauth/* /.well-known/oauth-authorization-server /.well-known/oauth-protected-resource*
 	handle @api {
 		import relais-api
 	}

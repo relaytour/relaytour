@@ -207,6 +207,27 @@ msgid "La personne a retiré cette candidature."
 msgstr "The person withdrew this application."
 
 #. js-lingui-explicit-id
+#: src/schema/applications-tierces.ts
+msgid "Cette demande d’autorisation n’est plus valable. Recommencez depuis l’application."
+msgstr "This authorization request is no longer valid. Start again from the application."
+
+#. js-lingui-explicit-id
+#: src/schema/applications-tierces.ts
+msgid "L’application n’a demandé que la lecture."
+msgstr "The application only requested read access."
+
+#. js-lingui-explicit-id
+#: src/oauth/routes.ts
+#: src/schema/applications-tierces.ts
+msgid "Cette installation n’accepte pas cette application."
+msgstr "This installation does not accept this application."
+
+#. js-lingui-explicit-id
+#: src/schema/applications-tierces.ts
+msgid "Vous avez déjà autorisé {max} applications dans cette organisation : révoquez-en une avant d’en autoriser une autre."
+msgstr "You have already authorized {max} applications in this organization: revoke one before authorizing another."
+
+#. js-lingui-explicit-id
 #: src/schema/benevoles.ts
 msgid "Une fiche ne s’enregistre qu’avec l’accord de la personne."
 msgstr "A record can only be saved with the person’s consent."
@@ -1351,6 +1372,41 @@ msgstr "the milestone already links {max} tasks"
 #: src/orga/taches-de-la-periode.ts
 msgid "la tâche liée attend l’accord de son périmètre"
 msgstr "the linked task is awaiting approval from its area"
+
+#. js-lingui-explicit-id
+#: src/oauth/routes.ts
+msgid "Autorisation impossible"
+msgstr "Authorization failed"
+
+#. js-lingui-explicit-id
+#: src/oauth/routes.ts
+msgid "Cette installation ne peut pas vérifier l’application."
+msgstr "This installation cannot verify the application."
+
+#. js-lingui-explicit-id
+#: src/oauth/routes.ts
+msgid "L’application ne publie pas une description valable."
+msgstr "The application does not publish a valid description."
+
+#. js-lingui-explicit-id
+#: src/oauth/routes.ts
+msgid "Cette installation ne connaît pas cette application."
+msgstr "This installation does not know this application."
+
+#. js-lingui-explicit-id
+#: src/oauth/routes.ts
+msgid "La demande ne désigne aucune application."
+msgstr "The request does not name any application."
+
+#. js-lingui-explicit-id
+#: src/oauth/routes.ts
+msgid "L’adresse de retour ne correspond pas à celles de l’application."
+msgstr "The return address does not match the application's addresses."
+
+#. js-lingui-explicit-id
+#: src/oauth/routes.ts
+msgid "L’API de cette organisation est fermée."
+msgstr "The API of this organization is closed."
 
 #. js-lingui-explicit-id
 #: src/lib/abonnements.ts
@@ -2714,6 +2770,32 @@ msgstr "This sheet cannot hold the minutes of this meeting."
 
 #. js-lingui-explicit-id
 #: src/lib/revocation-jeton.ts
+msgid "Autorisation révoquée"
+msgstr "Authorization revoked"
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "L’application « {jeton} » n’a plus accès à votre compte dans {organisation}."
+msgstr "The application “{jeton}” no longer has access to your account in {organisation}."
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Révoquer l’autorisation d’une application"
+msgstr "Revoke an application authorization"
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
+msgid "Vous êtes sur le point de révoquer l’accès de l’application « {jeton} » à votre compte dans {organisation}. Elle perdra aussitôt son accès."
+msgstr "You are about to revoke the access of the application “{jeton}” to your account in {organisation}. It will lose its access immediately."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+#: src/lib/revocation-jeton.ts
+msgid "Révoquer cette autorisation"
+msgstr "Revoke this authorization"
+
+#. js-lingui-explicit-id
+#: src/lib/revocation-jeton.ts
 msgid "Ce lien de révocation n’est pas valide, ou le jeton qu’il désigne ne répond déjà plus. Vous gérez vos jetons d’accès dans les préférences de l’espace organisateur."
 msgstr "This revocation link is not valid, or the token it designates no longer responds. You manage your access tokens in the preferences of the organizer workspace."
 
@@ -3303,6 +3385,41 @@ msgstr "Open the calendar: {lienAgenda}"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
+msgid "Une application a reçu l’accès à votre compte"
+msgstr "An application was given access to your account"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Si vous n’êtes pas à l’origine de cette autorisation, révoquez-la sans attendre."
+msgstr "If you did not grant this authorization, revoke it right away."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Bonjour {nom},"
+msgstr "Hello {nom},"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Elle agit en votre nom, avec vos droits."
+msgstr "It acts on your behalf, with your permissions."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Si vous n’êtes pas à l’origine de cette autorisation, révoquez-la sans attendre. L’application perd aussitôt son accès."
+msgstr "If you did not grant this authorization, revoke it right away. The application loses its access immediately."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous retrouvez toutes les applications autorisées, et pouvez les révoquer, depuis cet écran : {lienJetons}"
+msgstr "You can see all authorized applications, and revoke them, from this screen: {lienJetons}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Révoquer cette autorisation : {lienRevocation}"
+msgstr "Revoke this authorization: {lienRevocation}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
 #: src/courriel/messages.ts
 msgid "Ouvrir mon espace"
 msgstr "Open my space"
@@ -3356,11 +3473,6 @@ msgstr "Reply in the calendar: {lienAgenda}"
 #: src/courriel/gabarits.genere.ts
 msgid "Des demandes pour rejoindre l’équipe attendent votre décision."
 msgstr "Requests to join the team are waiting for your decision."
-
-#. js-lingui-explicit-id
-#: src/courriel/gabarits.genere.ts
-msgid "Bonjour {nom},"
-msgstr "Hello {nom},"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
@@ -3796,6 +3908,11 @@ msgstr "{nomCourt}: an access token has been created"
 #: src/courriel/messages.ts
 msgid "{nomCourt} : un jeton d’accès a été révoqué"
 msgstr "{nomCourt}: an access token has been revoked"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{nomCourt} : une application a reçu l’accès à votre compte"
+msgstr "{nomCourt}: an application was given access to your account"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
@@ -4235,18 +4352,28 @@ msgstr "Scope: {droits}."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
+msgid "L’application « {application} » ({hote}) a reçu l’accès à votre compte. Cet accès reste valable jusqu’au {fin}."
+msgstr "The application “{application}” ({hote}) was given access to your account. This access remains valid until {fin}."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
 msgid "Le jeton d’accès « {jeton} » ({apercu}) vient d’être créé. Il reste valable jusqu’au {fin}."
 msgstr "The access token “{jeton}” ({apercu}) has just been created. It remains valid until {fin}."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
-msgid "Le jeton d’accès « {jeton} » ({apercu}) a été révoqué par {par}. Le programme qui l’utilisait n’a plus accès à l’espace."
-msgstr "The access token “{jeton}” ({apercu}) has been revoked by {par}. The program that used it no longer has access to the workspace."
+msgid "L’autorisation de l’application « {application} » a été révoquée par {par}. L’application n’a plus accès à l’espace."
+msgstr "The authorization of the application “{application}” was revoked by {par}. The application no longer has access to the space."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
 msgid "un admin de l’organisation"
 msgstr "an organization admin"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Le jeton d’accès « {jeton} » ({apercu}) a été révoqué par {par}. Le programme qui l’utilisait n’a plus accès à l’espace."
+msgstr "The access token “{jeton}” ({apercu}) has been revoked by {par}. The program that used it no longer has access to the workspace."
 
 #. js-lingui-explicit-id
 #: src/api-rest/routeur.ts

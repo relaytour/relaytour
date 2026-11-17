@@ -13,6 +13,7 @@ import {
 import type { AppContext } from '../context.ts'
 import { formaterErreur } from '../lib/erreurs.ts'
 import { i18n } from '../lib/langue.ts'
+import { enteteDefiPorteur } from '../oauth/metadonnees.ts'
 
 import { contratOpenApi, analyser, parametresDuChemin } from './openapi.ts'
 import { OPERATIONS_REST, type OperationRest } from './operations.ts'
@@ -64,8 +65,14 @@ interface ErreurRest {
 
 function repondreErreurs(res: Response, erreurs: readonly ErreurRest[]) {
   const statut = statutDuCode(erreurs[0]?.code)
-  if (statut === 401)
-    res.set('WWW-Authenticate', 'Bearer error="invalid_token"')
+  if (statut === 401) {
+    res.set(
+      'WWW-Authenticate',
+      enteteDefiPorteur(
+        erreurs[0]?.code === 'JETON_REQUIS' ? null : 'invalid_token'
+      )
+    )
+  }
   if (statut === 429) res.set('Retry-After', '60')
   res.status(statut).json({ erreurs })
 }
@@ -158,9 +165,10 @@ export function routeurApiRest(options: OptionsApiRest): express.Router {
 
   // Tout le reste exige un jeton d'accès. Une session ne compte pas. Le contrôle
   // précède la lecture du corps : un refus ne coûte pas l'analyse d'un mégaoctet.
-  // Le motif est celui de /graphql : `rt_` seul est un jeton invalide.
+  // Le motif est celui de /graphql : `rt_` seul est un jeton invalide. Un jeton
+  // d'application (`rto_`, ADR 0067) passe par le même contexte.
   routeur.use((req, res, suite) => {
-    const porteur = /^Bearer\s+(rt_\S*)\s*$/i.exec(
+    const porteur = /^Bearer\s+(rt[or]?_\S*)\s*$/i.exec(
       req.get('authorization') ?? ''
     )
     if (porteur === null) {

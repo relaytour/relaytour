@@ -37,6 +37,8 @@ export type SorteCourriel =
   // admin de l'organisation. Ces mails de sécurité ne sont jamais reportés.
   | 'jeton-cree'
   | 'jeton-revoque'
+  // Autorisation d'une application tierce (ADR 0067), signalée comme un jeton créé.
+  | 'application-autorisee'
 
 // La charge utile ne contient ni corps de mail ni jeton. Le processeur relit l'adresse
 // en base au moment de l'envoi. `destinataire` sert seulement quand aucun compte n'existe.

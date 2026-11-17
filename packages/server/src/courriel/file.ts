@@ -43,7 +43,8 @@ export async function mettreEnFile(
     // Regroupement glissant : un mail de même identifiant, ajouté pendant son
     // délai, remplace le mail en attente et repousse son départ (ADR 0041).
     regroupement?: string
-    // Pour `jeton-cree` et `jeton-revoque` (ADR 0064) : le jeton, relu à l'envoi.
+    // Pour `jeton-cree`, `jeton-revoque` (ADR 0064) et `application-autorisee`
+    // (ADR 0067) : le jeton ou l'autorisation, relu à l'envoi.
     jetonAccesId?: string
   } = {}
 ): Promise<boolean> {
