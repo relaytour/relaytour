@@ -67,5 +67,6 @@
 | [0063](0063-mails-de-suivi-hierarchises.md) | Mails de suivi hiérarchisés | Proposée |
 | [0064](0064-acces-programmatique.md) | Accès programmatique : module API et jetons d'accès | Proposée |
 | [0065](0065-notifications-essentielles-et-modeles-de-reglages.md) | Notifications essentielles, modèles de réglages et fenêtre de regroupement | Proposée |
+| [0066](0066-reunion-terminee-et-compte-rendu.md) | Réunion terminée et compte rendu | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

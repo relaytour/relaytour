@@ -198,6 +198,7 @@ export async function construireExport(organisationId: string) {
       edition: { select: { annee: true } },
       perimetre: { select: { slug: true } },
       creePar: { select: { email: true } },
+      compteRendu: { select: { slug: true } },
       taches: {
         orderBy: { id: 'asc' },
         include: {
@@ -780,6 +781,8 @@ export async function construireExport(organisationId: string) {
       cible: r.cible,
       pointEquipe: r.pointEquipe,
       annuleeLe: r.annuleeLe?.toISOString() ?? null,
+      // La fiche du compte rendu, par son identifiant de contenu (ADR 0066).
+      compteRendu: r.compteRendu?.slug ?? null,
       creePar: r.creePar?.email ?? null,
       creeLe: r.createdAt.toISOString(),
       taches: r.taches.map(t => ({

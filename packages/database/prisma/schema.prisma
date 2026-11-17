@@ -1042,6 +1042,8 @@ model Reunion {
   version        Int               @default(0)
   creeParId      String?
   annuleeLe      DateTime?
+  // La fiche du compte rendu (ADR 0066) ; null sans compte rendu.
+  compteRenduFicheId String?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
@@ -1050,6 +1052,7 @@ model Reunion {
   edition       Edition              @relation(fields: [editionId], references: [id], onDelete: Restrict)
   perimetre     Perimetre?           @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
   creePar       User?                @relation("ReunionAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+  compteRendu   Fiche?               @relation("ReunionCompteRendu", fields: [compteRenduFicheId], references: [id], onDelete: SetNull)
   convocations  ConvocationReunion[]
   taches        ReunionTache[]
   notifications Notification[]
@@ -1057,6 +1060,7 @@ model Reunion {
 
   @@index([editionId, debut])
   @@index([perimetreId, debut])
+  @@index([compteRenduFicheId])
   @@index([organisationId])
   @@index([activiteId])
   @@index([creeParId])
@@ -1761,6 +1765,8 @@ model Fiche {
   masquages       FicheConnexeMasquee[]
   ressources      RessourceFiche[]
   exportCloud     FicheExportee?
+  // Les réunions dont la fiche porte le compte rendu (ADR 0066).
+  reunionsCompteRendu Reunion[] @relation("ReunionCompteRendu")
 
   @@unique([organisationId, slug])
   @@index([perimetreId])

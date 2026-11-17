@@ -1216,6 +1216,22 @@ enum EtatReconduction {
 }
 
 """
+L’état d’une réunion, déduit à la lecture (ADR 0066) : prévue, terminée quand sa fin est passée, ou annulée.
+"""
+enum EtatReunion {
+  """La réunion a été annulée."""
+  ANNULEE
+
+  """La réunion n’est pas encore terminée."""
+  PREVUE
+
+  """
+  La fin de la réunion est passée. Elle ne se modifie plus et ne s’annule plus ; son compte rendu reste modifiable.
+  """
+  TERMINEE
+}
+
+"""
 Un événement du journal d’une tâche : création, modification, assignation, retrait ou changement de statut.
 """
 type EvenementTache {
@@ -2339,6 +2355,17 @@ type Mutation {
   Le lien personnel d’une fiche, à copier : créé s’il n’existe pas. `nouveau` tire un nouveau lien, qui révoque l’ancien. Aucun mail ne part. Réservé aux personnes qui lisent ses coordonnées.
   """
   lienEspaceBenevole(benevoleId: ID!, nouveau: Boolean = false): String!
+
+  """
+  Lie la fiche du compte rendu à une réunion, ou retire le lien avec `ficheId` nul (ADR 0066). Réservé aux personnes qui écrivent dans son agenda. Une réunion terminée l’accepte ; une réunion annulée le refuse. Le lien n’envoie aucun mail et ne change pas la version de la réunion.
+  """
+  lierCompteRenduReunion(
+    """
+    Une fiche de l’activité : commune, ou du périmètre pour une réunion de périmètre. Sans valeur : le lien est retiré.
+    """
+    ficheId: ID
+    reunionId: ID!
+  ): Reunion!
 
   """
   Lie un dossier du fournisseur connecté à une activité, avec ses lecteurs. Un dossier se lie une seule fois par activité.
@@ -4097,6 +4124,11 @@ type Reunion {
   cible: CibleConvocation
 
   """
+  La fiche du compte rendu (ADR 0066), si la personne lit le détail de la réunion et la fiche. Nul sinon.
+  """
+  compteRendu: Fiche
+
+  """
   Les personnes convoquées et leur réponse, pour les personnes qui écrivent dans cet agenda. Nul sinon.
   """
   convocations: [ConvocationLue!]
@@ -4111,6 +4143,7 @@ type Reunion {
 
   """Vrai si la personne connectée est convoquée."""
   estConvoquee: Boolean!
+  etat: EtatReunion!
   fin: DateTime!
 
   """HH:MM, dans le fuseau de l’organisation."""
@@ -4133,6 +4166,15 @@ type Reunion {
 
   """Le périmètre de la réunion ; nul pour l’agenda global."""
   perimetre: Perimetre
+
+  """
+  Vrai pour les personnes qui écrivent dans l’agenda de la réunion, tant qu’elle n’est pas annulée, même terminée.
+  """
+  peutLierCompteRendu: Boolean!
+
+  """
+  Vrai pour les personnes qui écrivent dans l’agenda de la réunion, tant qu’elle est prévue.
+  """
   peutModifier: Boolean!
 
   """
@@ -4380,6 +4422,9 @@ enum StatutOrganisation {
   SUSPENDUE
 }
 
+"""
+Le statut stocké : prévue ou annulée. L’état d’une réunion passée se lit dans `etat` (ADR 0066).
+"""
 enum StatutReunion {
   ANNULEE
   PREVUE

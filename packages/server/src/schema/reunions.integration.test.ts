@@ -282,6 +282,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await prisma.reunion.deleteMany({ where: { organisationId: ids.org } })
+  await prisma.fiche.deleteMany({ where: { organisationId: ids.org } })
   await prisma.tache.deleteMany({
     where: { perimetre: { organisationId: ids.org } },
   })
@@ -1069,5 +1070,201 @@ describe('personnes convocables', () => {
     expect(
       code(await executer(ids.referent, CONVOCABLES, { e: ids.edition }))
     ).toBe('FORBIDDEN')
+  })
+})
+
+describe('réunion terminée et compte rendu (ADR 0066)', () => {
+  const ETAT = `query ($id: ID!) { reunion(id: $id) {
+    id statut etat version peutModifier peutLierCompteRendu detailMasque
+    compteRendu { id slug } convocations { personneId }
+  } }`
+  const LIER = `mutation ($id: ID!, $f: ID) { lierCompteRenduReunion(reunionId: $id, ficheId: $f) {
+    id etat version compteRendu { id slug }
+  } }`
+  interface Etat {
+    id: string
+    statut: string
+    etat: string
+    version: number
+    peutModifier: boolean
+    peutLierCompteRendu: boolean
+    detailMasque: boolean
+    compteRendu: { id: string; slug: string } | null
+    convocations: { personneId: string }[] | null
+  }
+  const fiches = {
+    commune: '',
+    natation: '',
+    basket: '',
+    autre: '',
+    archivee: '',
+  }
+
+  /** Une réunion de natation terminée le 10 janvier 2026. */
+  const reunionTerminee = (perimetreId: string | null = ids.natation) =>
+    prisma.reunion.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        editionId: ids.edition,
+        perimetreId,
+        titre: 'Réunion terminée',
+        debut: new Date('2026-01-10T17:00:00.000Z'),
+        fin: new Date('2026-01-10T18:00:00.000Z'),
+        cible: perimetreId === null ? 'EQUIPE' : 'PERIMETRE',
+        convocations: {
+          create: { userId: ids.referent, envoyeeLe: new Date() },
+        },
+      },
+    })
+
+  beforeAll(async () => {
+    for (const [cle, activiteId, perimetreId, archivedAt] of [
+      ['commune', ids.activite, null, null],
+      ['natation', ids.activite, ids.natation, null],
+      ['basket', ids.activite, ids.basket, null],
+      ['autre', ids.autreActivite, null, null],
+      ['archivee', ids.activite, ids.natation, new Date()],
+    ] as const) {
+      fiches[cle] = (
+        await prisma.fiche.create({
+          data: {
+            organisationId: ids.org,
+            activiteId,
+            perimetreId,
+            slug: `cr-${cle}-${s}`,
+            archivedAt,
+          },
+        })
+      ).id
+    }
+  })
+
+  it('se lit terminée quand sa fin est passée, sans changer son statut', async () => {
+    const passee = await reunionTerminee()
+    const lue = donnees<Etat>(
+      await executer(ids.referent, ETAT, { id: passee.id }),
+      'reunion'
+    )
+    expect(lue.statut).toBe('PREVUE')
+    expect(lue.etat).toBe('TERMINEE')
+    expect(lue.peutModifier).toBe(false)
+    expect(lue.peutLierCompteRendu).toBe(true)
+    // Les personnes qui écrivent dans l'agenda relisent encore les convocations.
+    expect(lue.convocations).toEqual([{ personneId: ids.referent }])
+    const aVenir = await reunionNatation()
+    expect(
+      donnees<Etat>(
+        await executer(ids.referent, ETAT, { id: aVenir.id }),
+        'reunion'
+      ).etat
+    ).toBe('PREVUE')
+  })
+
+  it('refuse la modification et l’annulation d’une réunion terminée, sans rien envoyer', async () => {
+    const passee = await reunionTerminee()
+    expect(
+      code(
+        await executer(ids.referent, MODIFIER, {
+          id: passee.id,
+          t: 'Reprise',
+          j: '2027-03-01',
+          d: '10:00',
+          f: '11:00',
+          version: 0,
+        })
+      )
+    ).toBe('SAISIE_INVALIDE')
+    expect(code(await executer(ids.referent, ANNULER, { id: passee.id }))).toBe(
+      'SAISIE_INVALIDE'
+    )
+    const apres = await prisma.reunion.findUniqueOrThrow({
+      where: { id: passee.id },
+    })
+    expect(apres).toMatchObject({ statut: 'PREVUE', version: 0, sequence: 0 })
+    expect(
+      await prisma.notification.count({ where: { reunionId: passee.id } })
+    ).toBe(0)
+  })
+
+  it('lie une fiche commune ou du périmètre, sans changer la version', async () => {
+    const passee = await reunionTerminee()
+    const liee = donnees<Etat>(
+      await executer(ids.referent, LIER, { id: passee.id, f: fiches.natation }),
+      'lierCompteRenduReunion'
+    )
+    expect(liee.compteRendu?.id).toBe(fiches.natation)
+    expect(liee.version).toBe(0)
+    const commune = donnees<Etat>(
+      await executer(ids.referent, LIER, { id: passee.id, f: fiches.commune }),
+      'lierCompteRenduReunion'
+    )
+    expect(commune.compteRendu?.id).toBe(fiches.commune)
+    const retiree = donnees<Etat>(
+      await executer(ids.referent, LIER, { id: passee.id, f: null }),
+      'lierCompteRenduReunion'
+    )
+    expect(retiree.compteRendu).toBeNull()
+  })
+
+  it('refuse une fiche d’un autre périmètre, d’une autre activité ou archivée', async () => {
+    const passee = await reunionTerminee()
+    for (const f of [
+      fiches.basket,
+      fiches.autre,
+      fiches.archivee,
+      'inconnue',
+    ]) {
+      expect(
+        code(await executer(ids.referent, LIER, { id: passee.id, f }))
+      ).toBe('SAISIE_INVALIDE')
+    }
+    expect(
+      (await prisma.reunion.findUniqueOrThrow({ where: { id: passee.id } }))
+        .compteRenduFicheId
+    ).toBeNull()
+  })
+
+  it('refuse le lien aux personnes qui n’écrivent pas dans l’agenda, et masque le compte rendu en consultation', async () => {
+    const passee = await reunionTerminee()
+    await executer(ids.referent, LIER, { id: passee.id, f: fiches.natation })
+    for (const userId of [ids.basketteuse, ids.membre, ids.externe, null]) {
+      expect(
+        code(await executer(userId, LIER, { id: passee.id, f: fiches.commune }))
+      ).toBeDefined()
+    }
+    const consultee = donnees<Etat>(
+      await executer(ids.basketteuse, ETAT, { id: passee.id }),
+      'reunion'
+    )
+    expect(consultee.detailMasque).toBe(true)
+    expect(consultee.peutLierCompteRendu).toBe(false)
+    expect(consultee.compteRendu).toBeNull()
+    expect(
+      (await prisma.reunion.findUniqueOrThrow({ where: { id: passee.id } }))
+        .compteRenduFicheId
+    ).toBe(fiches.natation)
+  })
+
+  it('accepte une fiche de tout périmètre pour l’agenda global, et refuse une réunion annulée', async () => {
+    const globale = await reunionTerminee(null)
+    expect(
+      code(
+        await executer(ids.referent, LIER, { id: globale.id, f: fiches.basket })
+      )
+    ).toBe('FORBIDDEN')
+    const liee = donnees<Etat>(
+      await executer(ids.adminActivite, LIER, {
+        id: globale.id,
+        f: fiches.basket,
+      }),
+      'lierCompteRenduReunion'
+    )
+    expect(liee.compteRendu?.id).toBe(fiches.basket)
+    const { id } = await reunionNatation()
+    await executer(ids.referent, ANNULER, { id })
+    expect(
+      code(await executer(ids.referent, LIER, { id, f: fiches.natation }))
+    ).toBe('SAISIE_INVALIDE')
   })
 })

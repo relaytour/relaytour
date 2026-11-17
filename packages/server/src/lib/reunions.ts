@@ -16,6 +16,7 @@ import { instantDepuisHeureLocale } from './heures.ts'
 import { journal } from './journal.ts'
 import { i18n } from './langue.ts'
 import { exigerModule } from './modules.ts'
+import { peutLireFiche } from './fiches.ts'
 
 // Réunions de l'agenda (ADR 0037).
 //
@@ -467,4 +468,80 @@ export function horaireValide(
     throw erreurSaisie(i18n._('La fin de la réunion suit son début.'))
   }
   return { debut, fin }
+}
+
+// ── Réunion terminée et compte rendu (ADR 0066) ──────────────────────────────
+
+/**
+ * L'état d'une réunion, déduit à la lecture : annulée, terminée quand sa fin est
+ * passée, sinon prévue. Seule l'annulation est stockée ; l'état terminé ne
+ * demande aucun geste et n'envoie rien.
+ */
+export type EtatReunion = 'PREVUE' | 'TERMINEE' | 'ANNULEE'
+
+export function etatReunion(
+  reunion: { statut: 'PREVUE' | 'ANNULEE'; fin: Date },
+  maintenant: Date = new Date()
+): EtatReunion {
+  if (reunion.statut === 'ANNULEE') return 'ANNULEE'
+  return reunion.fin.getTime() <= maintenant.getTime() ? 'TERMINEE' : 'PREVUE'
+}
+
+/**
+ * Refuse la modification et l'annulation d'une réunion terminée : elle a eu lieu,
+ * et un nouveau mail de convocation ou d'annulation tromperait les personnes
+ * convoquées. Son compte rendu reste modifiable.
+ */
+export function exigerNonTerminee(reunion: {
+  statut: 'PREVUE' | 'ANNULEE'
+  fin: Date
+}): void {
+  if (etatReunion(reunion) === 'TERMINEE') {
+    throw erreurSaisie(
+      i18n._(
+        'Cette réunion est terminée : elle ne se modifie plus et ne s’annule plus.'
+      )
+    )
+  }
+}
+
+/**
+ * La fiche du compte rendu, vérifiée : une fiche non archivée de l'activité de la
+ * réunion, commune ou d'un périmètre. Une réunion de périmètre ne cite qu'une
+ * fiche commune ou une fiche de son périmètre. La personne doit lire la fiche.
+ * Une fiche hors de ces règles vaut une fiche inconnue.
+ */
+export async function compteRenduValide(
+  ctx: AppContext,
+  ficheId: string | number | null | undefined,
+  reunion: { activiteId: string; perimetreId: string | null }
+): Promise<string | null> {
+  if (ficheId === null || ficheId === undefined || ficheId === '') return null
+  const fiche = await prisma.fiche.findFirst({
+    where: {
+      id: String(ficheId),
+      organisationId: ctx.organisation!.id,
+      activiteId: reunion.activiteId,
+      archivedAt: null,
+    },
+    select: {
+      id: true,
+      perimetreId: true,
+      organisationId: true,
+      activiteId: true,
+    },
+  })
+  const refus = erreurSaisie(
+    i18n._('Cette fiche ne peut pas porter le compte rendu de cette réunion.')
+  )
+  if (fiche === null) throw refus
+  if (
+    reunion.perimetreId !== null &&
+    fiche.perimetreId !== null &&
+    fiche.perimetreId !== reunion.perimetreId
+  ) {
+    throw refus
+  }
+  if (!(await peutLireFiche(ctx, fiche))) throw refus
+  return fiche.id
 }

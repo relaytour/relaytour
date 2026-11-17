@@ -20,10 +20,13 @@ import { publierPourActivite } from '../lib/flux.ts'
 import { heureLocale } from '../lib/heures.ts'
 import { dansLEquipeQuiVoit, membreActif } from '../lib/appartenances.ts'
 import {
+  compteRenduValide,
   CONVOCATIONS_MAX,
   DESCRIPTION_REUNION_MAX,
   detailOuvert,
+  etatReunion,
   exigerEcritureReunion,
+  exigerNonTerminee,
   horaireValide,
   LIEU_MAX,
   lienVisioValide,
@@ -35,7 +38,9 @@ import {
 import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
+import { FicheRef } from './fiches.ts'
 import { PerimetreRef } from './organisation.ts'
+import { peutLireFiche } from '../lib/fiches.ts'
 import { i18n } from '../lib/langue.ts'
 import { exigerModule } from '../lib/modules.ts'
 
@@ -46,6 +51,20 @@ import { exigerModule } from '../lib/modules.ts'
 
 const StatutReunionEnum = builder.enumType(StatutReunion, {
   name: 'StatutReunion',
+  description:
+    'Le statut stocké : prévue ou annulée. L’état d’une réunion passée se lit dans `etat` (ADR 0066).',
+})
+const EtatReunionEnum = builder.enumType('EtatReunion', {
+  description:
+    'L’état d’une réunion, déduit à la lecture (ADR 0066) : prévue, terminée quand sa fin est passée, ou annulée.',
+  values: {
+    PREVUE: { description: 'La réunion n’est pas encore terminée.' },
+    TERMINEE: {
+      description:
+        'La fin de la réunion est passée. Elle ne se modifie plus et ne s’annule plus ; son compte rendu reste modifiable.',
+    },
+    ANNULEE: { description: 'La réunion a été annulée.' },
+  } as const,
 })
 export const CibleConvocationEnum = builder.enumType(CibleConvocation, {
   name: 'CibleConvocation',
@@ -83,6 +102,8 @@ export type ReunionChargee = Prisma.ReunionGetPayload<{
 interface ReunionLue {
   reunion: ReunionChargee
   detail: boolean
+  /** La personne écrit dans l'agenda de la réunion, qui n'est pas annulée. */
+  ecrit: boolean
   peutModifier: boolean
   moi: string
   fuseau: string
@@ -170,6 +191,29 @@ export const ReunionRef = builder.objectRef<ReunionLue>('Reunion').implement({
       type: StatutReunionEnum,
       resolve: l => l.reunion.statut,
     }),
+    etat: t.field({
+      type: EtatReunionEnum,
+      resolve: l => etatReunion(l.reunion),
+    }),
+    compteRendu: t.field({
+      type: FicheRef,
+      nullable: true,
+      description:
+        'La fiche du compte rendu (ADR 0066), si la personne lit le détail de la réunion et la fiche. Nul sinon.',
+      resolve: async (l, _args, ctx) => {
+        const ficheId = l.reunion.compteRenduFicheId
+        if (!l.detail || ficheId === null) return null
+        const fiche = await prisma.fiche.findUnique({ where: { id: ficheId } })
+        return fiche !== null && (await peutLireFiche(ctx, fiche))
+          ? fiche
+          : null
+      },
+    }),
+    peutLierCompteRendu: t.boolean({
+      description:
+        'Vrai pour les personnes qui écrivent dans l’agenda de la réunion, tant qu’elle n’est pas annulée, même terminée.',
+      resolve: l => l.ecrit,
+    }),
     cible: t.field({
       type: CibleConvocationEnum,
       nullable: true,
@@ -208,7 +252,11 @@ export const ReunionRef = builder.objectRef<ReunionLue>('Reunion').implement({
       type: [TacheLieeRef],
       resolve: l => (l.detail ? l.reunion.taches.map(t => t.tache) : []),
     }),
-    peutModifier: t.boolean({ resolve: l => l.peutModifier }),
+    peutModifier: t.boolean({
+      description:
+        'Vrai pour les personnes qui écrivent dans l’agenda de la réunion, tant qu’elle est prévue.',
+      resolve: l => l.peutModifier,
+    }),
     estConvoquee: t.boolean({
       description: 'Vrai si la personne connectée est convoquée.',
       resolve: l => l.reunion.convocations.some(c => c.userId === l.moi),
@@ -241,7 +289,7 @@ export const ReunionRef = builder.objectRef<ReunionLue>('Reunion').implement({
       description:
         'Les personnes convoquées et leur réponse, pour les personnes qui écrivent dans cet agenda. Nul sinon.',
       resolve: l =>
-        l.peutModifier
+        l.ecrit
           ? l.reunion.convocations
               .map(c => ({
                 personneId: c.userId,
@@ -280,7 +328,8 @@ export async function lireReunion(
   return {
     reunion,
     detail: ecrit || (await detailOuvert(ctx, reunion, convoquee)),
-    peutModifier: ecrit,
+    ecrit,
+    peutModifier: ecrit && etatReunion(reunion) === 'PREVUE',
     moi,
     fuseau: ctx.organisation!.fuseauHoraire,
   }
@@ -633,6 +682,7 @@ builder.mutationFields(t => {
             i18n._('Cette réunion est annulée : elle ne change plus.')
           )
         }
+        exigerNonTerminee(actuelle)
         const lieu = {
           editionId: actuelle.editionId,
           perimetreId: actuelle.perimetreId,
@@ -755,6 +805,7 @@ builder.mutationFields(t => {
           perimetreId: actuelle.perimetreId,
         })
         if (actuelle.statut === 'ANNULEE') return lireReunion(ctx, actuelle)
+        exigerNonTerminee(actuelle)
         // Sous le verrou de la réunion, les convocations lues sont celles que
         // l'annulation retire des agendas ; un envoi en cours se rattrape à sa
         // fin (`concilierApresEnvoi`).
@@ -788,6 +839,48 @@ builder.mutationFields(t => {
           ctx.personne!.id
         )
         return lireReunion(ctx, annulee)
+      },
+    }),
+
+    lierCompteRenduReunion: t.field({
+      type: ReunionRef,
+      authScopes: { connecte: true },
+      description:
+        'Lie la fiche du compte rendu à une réunion, ou retire le lien avec `ficheId` nul (ADR 0066). Réservé aux personnes qui écrivent dans son agenda. Une réunion terminée l’accepte ; une réunion annulée le refuse. Le lien n’envoie aucun mail et ne change pas la version de la réunion.',
+      args: {
+        reunionId: t.arg.id({ required: true }),
+        ficheId: t.arg.id({
+          description:
+            'Une fiche de l’activité : commune, ou du périmètre pour une réunion de périmètre. Sans valeur : le lien est retiré.',
+        }),
+      },
+      resolve: async (_root, args, ctx) => {
+        const actuelle = await reunionVisible(ctx, String(args.reunionId))
+        const { activiteId } = await exigerEcritureReunion(ctx, {
+          editionId: actuelle.editionId,
+          perimetreId: actuelle.perimetreId,
+        })
+        if (actuelle.statut === 'ANNULEE') {
+          throw erreurSaisie(
+            i18n._('Cette réunion est annulée : elle ne change plus.')
+          )
+        }
+        const ficheId = await compteRenduValide(ctx, args.ficheId, actuelle)
+        const { count } = await prisma.reunion.updateMany({
+          where: { id: actuelle.id, statut: 'PREVUE' },
+          data: { compteRenduFicheId: ficheId },
+        })
+        if (count === 0) {
+          throw erreurSaisie(
+            i18n._('Cette réunion est annulée : elle ne change plus.')
+          )
+        }
+        publierPourActivite('AGENDA', ctx.organisation!.id, activiteId, {
+          id: actuelle.id,
+          perimetreId: actuelle.perimetreId,
+          editionId: actuelle.editionId,
+        })
+        return lireReunion(ctx, await reunionVisible(ctx, actuelle.id))
       },
     }),
 

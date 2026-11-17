@@ -3725,6 +3725,14 @@ msgstr "Compte de service Google"
 msgid "Compte enregistré."
 msgstr "Compte enregistré."
 
+#: src/composants/ReunionDetail.tsx
+msgid "Compte rendu"
+msgstr "Compte rendu"
+
+#: src/composants/ReunionDetail.tsx
+msgid "Compte rendu lié."
+msgstr "Compte rendu lié."
+
 #: src/composants/FilTache.tsx
 #: src/composants/Messages.tsx
 msgid "Compte supprimé"
@@ -5096,6 +5104,10 @@ msgstr "Fiche créée : {pointsFicheCreee} points."
 #: src/pages/FicheEditeur.tsx
 msgid "Fiche créée."
 msgstr "Fiche créée."
+
+#: src/composants/ReunionDetail.tsx
+msgid "Fiche du compte rendu"
+msgstr "Fiche du compte rendu"
 
 #: src/pages/Benevoles.tsx
 #: src/pages/FicheEditeur.tsx
@@ -6584,6 +6596,10 @@ msgstr "Le commentaire est supprimé."
 msgid "Le compte est créé et l’invitation est envoyée. Une partie des rôles ou des souhaits n’a pas été enregistrée : vérifiez-les, puis enregistrez de nouveau."
 msgstr "Le compte est créé et l’invitation est envoyée. Une partie des rôles ou des souhaits n’a pas été enregistrée : vérifiez-les, puis enregistrez de nouveau."
 
+#: src/composants/ReunionDetail.tsx
+msgid "Le compte rendu n’est plus lié."
+msgstr "Le compte rendu n’est plus lié."
+
 #: src/lib/depot-contenu.ts
 msgid "Le dépôt a échoué."
 msgstr "Le dépôt a échoué."
@@ -7538,6 +7554,10 @@ msgstr "Lier des tâches"
 #: src/composants/LierTaches.tsx
 msgid "Lier des tâches au jalon"
 msgstr "Lier des tâches au jalon"
+
+#: src/composants/ReunionDetail.tsx
+msgid "Lier la fiche du compte rendu"
+msgstr "Lier la fiche du compte rendu"
 
 #: src/composants/ExplorateurDossier.tsx
 msgid "Lier le dossier {nomElement}"
@@ -10849,6 +10869,11 @@ msgstr "Téléphone"
 #: src/pages/Benevoles.tsx
 msgid "Téléphone (facultatif)"
 msgstr "Téléphone (facultatif)"
+
+#: src/composants/ReunionDetail.tsx
+#: src/pages/Agenda.tsx
+msgid "Terminée"
+msgstr "Terminée"
 
 #. En-tête de colonne d’un tableau d’exemple : terrain de sport
 #: src/lib/guide-markdown.ts
