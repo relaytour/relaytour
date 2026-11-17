@@ -3725,6 +3725,14 @@ msgstr "Google service account"
 msgid "Compte enregistré."
 msgstr "Account saved."
 
+#: src/composants/ReunionDetail.tsx
+msgid "Compte rendu"
+msgstr "Minutes"
+
+#: src/composants/ReunionDetail.tsx
+msgid "Compte rendu lié."
+msgstr "Minutes linked."
+
 #: src/composants/FilTache.tsx
 #: src/composants/Messages.tsx
 msgid "Compte supprimé"
@@ -5096,6 +5104,10 @@ msgstr "Sheet created: {pointsFicheCreee} points."
 #: src/pages/FicheEditeur.tsx
 msgid "Fiche créée."
 msgstr "Sheet created."
+
+#: src/composants/ReunionDetail.tsx
+msgid "Fiche du compte rendu"
+msgstr "Minutes sheet"
 
 #: src/pages/Benevoles.tsx
 #: src/pages/FicheEditeur.tsx
@@ -6584,6 +6596,10 @@ msgstr "The comment is deleted."
 msgid "Le compte est créé et l’invitation est envoyée. Une partie des rôles ou des souhaits n’a pas été enregistrée : vérifiez-les, puis enregistrez de nouveau."
 msgstr "The account is created and the invitation is sent. Some roles or interests were not saved: check them, then save again."
 
+#: src/composants/ReunionDetail.tsx
+msgid "Le compte rendu n’est plus lié."
+msgstr "The minutes are no longer linked."
+
 #: src/lib/depot-contenu.ts
 msgid "Le dépôt a échoué."
 msgstr "The upload failed."
@@ -7538,6 +7554,10 @@ msgstr "Link tasks"
 #: src/composants/LierTaches.tsx
 msgid "Lier des tâches au jalon"
 msgstr "Link tasks to the milestone"
+
+#: src/composants/ReunionDetail.tsx
+msgid "Lier la fiche du compte rendu"
+msgstr "Link the minutes sheet"
 
 #: src/composants/ExplorateurDossier.tsx
 msgid "Lier le dossier {nomElement}"
@@ -10849,6 +10869,11 @@ msgstr "Phone"
 #: src/pages/Benevoles.tsx
 msgid "Téléphone (facultatif)"
 msgstr "Phone (optional)"
+
+#: src/composants/ReunionDetail.tsx
+#: src/pages/Agenda.tsx
+msgid "Terminée"
+msgstr "Ended"
 
 #. En-tête de colonne d’un tableau d’exemple : terrain de sport
 #: src/lib/guide-markdown.ts

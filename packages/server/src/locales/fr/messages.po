@@ -2703,6 +2703,16 @@ msgid "La fin de la réunion suit son début."
 msgstr "La fin de la réunion suit son début."
 
 #. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "Cette réunion est terminée : elle ne se modifie plus et ne s’annule plus."
+msgstr "Cette réunion est terminée : elle ne se modifie plus et ne s’annule plus."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "Cette fiche ne peut pas porter le compte rendu de cette réunion."
+msgstr "Cette fiche ne peut pas porter le compte rendu de cette réunion."
+
+#. js-lingui-explicit-id
 #: src/lib/revocation-jeton.ts
 msgid "Ce lien de révocation n’est pas valide, ou le jeton qu’il désigne ne répond déjà plus. Vous gérez vos jetons d’accès dans les préférences de l’espace organisateur."
 msgstr "Ce lien de révocation n’est pas valide, ou le jeton qu’il désigne ne répond déjà plus. Vous gérez vos jetons d’accès dans les préférences de l’espace organisateur."

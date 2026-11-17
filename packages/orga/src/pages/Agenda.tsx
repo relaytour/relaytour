@@ -93,6 +93,7 @@ const REUNIONS = graphql(`
       heureDebut
       heureFin
       statut
+      etat
       lieu
       detailMasque
       estConvoquee
@@ -486,7 +487,11 @@ export default function Agenda() {
           {reunion && (
             <span className="rt-note rt-agenda-description">
               {[
-                reunion.statut === 'ANNULEE' ? t`Annulée` : null,
+                reunion.etat === 'ANNULEE'
+                  ? t`Annulée`
+                  : reunion.etat === 'TERMINEE'
+                    ? t`Terminée`
+                    : null,
                 reunion.lieu,
                 reunion.estConvoquee
                   ? reponseConvocation

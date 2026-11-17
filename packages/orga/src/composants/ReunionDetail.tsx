@@ -2,13 +2,14 @@ import { useMutation, useQuery } from '@apollo/client/react'
 import {
   EditOutlined,
   EnvironmentOutlined,
+  FileTextOutlined,
   StopOutlined,
   VideoCameraOutlined,
 } from '@ant-design/icons'
 import type { MessageDescriptor } from '@lingui/core'
 import { msg, plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { App, Button, Drawer, Radio, Skeleton, Tag } from 'antd'
+import { App, Button, Drawer, Radio, Select, Skeleton, Tag } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 
@@ -17,6 +18,7 @@ import type { ReponseConvocation } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { libelleJours } from '../lib/agenda'
 import { messageErreur } from '../lib/erreurs'
+import { LISTE_FICHES } from '../lib/fiches'
 import { PERIMETRES } from '../lib/requetes'
 
 import BoutonPartage from './BoutonPartage'
@@ -37,6 +39,7 @@ const REUNION = graphql(`
       heureDebut
       heureFin
       statut
+      etat
       cible
       pointEquipe
       version
@@ -55,6 +58,12 @@ const REUNION = graphql(`
         perimetreId
       }
       peutModifier
+      peutLierCompteRendu
+      compteRendu {
+        id
+        slug
+        titre
+      }
       estConvoquee
       maReponse
       reponses {
@@ -87,6 +96,19 @@ const ANNULER = graphql(`
     annulerReunion(id: $id) {
       id
       statut
+    }
+  }
+`)
+
+const LIER_COMPTE_RENDU = graphql(`
+  mutation LierCompteRenduReunion($id: ID!, $ficheId: ID) {
+    lierCompteRenduReunion(reunionId: $id, ficheId: $ficheId) {
+      id
+      compteRendu {
+        id
+        slug
+        titre
+      }
     }
   }
 `)
@@ -150,13 +172,50 @@ export default function ReunionDetail({
   const { data: perimetres } = useQuery(PERIMETRES)
   const [repondre, reponse] = useMutation(REPONDRE, { refetchQueries: RELIRE })
   const [annuler] = useMutation(ANNULER, { refetchQueries: RELIRE })
+  const [lierCompteRendu, liaison] = useMutation(LIER_COMPTE_RENDU, {
+    refetchQueries: RELIRE,
+  })
   const [saisie, setSaisie] = useState<ReunionSaisie | null>(null)
   const slugDe = useMemo(
     () => new Map((perimetres?.perimetres ?? []).map(p => [p.id, p.slug])),
     [perimetres]
   )
   const reunion = data?.reunion
-  const annulee = reunion?.statut === 'ANNULEE'
+  const annulee = reunion?.etat === 'ANNULEE'
+  const terminee = reunion?.etat === 'TERMINEE'
+  // Les fiches proposées pour le compte rendu (ADR 0066) : les fiches communes,
+  // et celles du périmètre pour une réunion de périmètre.
+  const { data: fiches } = useQuery(LISTE_FICHES, {
+    skip: !reunion?.peutLierCompteRendu,
+  })
+  const perimetreReunion = reunion?.perimetre?.id ?? null
+  const compteRendu = reunion?.compteRendu ?? null
+  const fichesCompteRendu = useMemo(() => {
+    const proposees = (fiches?.fiches ?? []).filter(
+      f =>
+        perimetreReunion === null ||
+        !f.perimetre ||
+        f.perimetre.id === perimetreReunion
+    )
+    // Une fiche liée puis archivée reste citée (ADR 0066) : la liste la garde,
+    // pour que le champ affiche son titre.
+    return compteRendu === null || proposees.some(f => f.id === compteRendu.id)
+      ? proposees
+      : [...proposees, compteRendu]
+  }, [fiches, perimetreReunion, compteRendu])
+
+  const choisirCompteRendu = (ficheId: string | null) => {
+    if (!reunion) return
+    void lierCompteRendu({ variables: { id: reunion.id, ficheId } })
+      .then(() =>
+        message.success(
+          ficheId === null
+            ? t`Le compte rendu n’est plus lié.`
+            : t`Compte rendu lié.`
+        )
+      )
+      .catch((erreur: unknown) => message.error(messageErreur(erreur)))
+  }
 
   const confirmerAnnulation = () => {
     if (!reunion) return
@@ -241,6 +300,7 @@ export default function ReunionDetail({
           <div className="rt-reunion">
             <p className="rt-reunion-quand">
               {annulee && <Tag color="error">{t`Annulée`}</Tag>}
+              {terminee && <Tag>{t`Terminée`}</Tag>}
               <span className={annulee ? 'rt-agenda-faite' : undefined}>
                 {reunion.jourFin === reunion.jour
                   ? `${libelleJours(reunion.jour)}, ${reunion.heureDebut} → ${reunion.heureFin}`
@@ -262,7 +322,7 @@ export default function ReunionDetail({
                 <Tag style={{ marginInlineStart: 8 }}>{t`Point d’équipe`}</Tag>
               )}
             </p>
-            {reunion.pointEquipe && !annulee && (
+            {reunion.pointEquipe && !annulee && !terminee && (
               <p className="rt-note">
                 <Trans>
                   Cette réunion fixe la fin de la période que couvrent les
@@ -286,7 +346,7 @@ export default function ReunionDetail({
                     <EnvironmentOutlined aria-hidden /> {reunion.lieu}
                   </p>
                 )}
-                {reunion.lienVisio && !annulee && (
+                {reunion.lienVisio && !annulee && !terminee && (
                   <p>
                     <Button
                       icon={<VideoCameraOutlined />}
@@ -334,6 +394,46 @@ export default function ReunionDetail({
                 )}
               </>
             )}
+
+            {!reunion.detailMasque &&
+              !annulee &&
+              (reunion.compteRendu || reunion.peutLierCompteRendu) && (
+                <section>
+                  <h3 className="rt-reunion-intertitre">
+                    <Trans>Compte rendu</Trans>
+                  </h3>
+                  {reunion.compteRendu && (
+                    <p className="rt-reunion-ligne">
+                      <FileTextOutlined aria-hidden />{' '}
+                      <Link
+                        className="rt-ligne-lien"
+                        to={lien(`/fiches/${reunion.compteRendu.slug}`)}
+                      >
+                        {reunion.compteRendu.titre}
+                      </Link>
+                    </p>
+                  )}
+                  {reunion.peutLierCompteRendu && (
+                    <Select
+                      allowClear
+                      showSearch
+                      optionFilterProp="label"
+                      style={{ width: '100%' }}
+                      aria-label={t`Fiche du compte rendu`}
+                      placeholder={t`Lier la fiche du compte rendu`}
+                      disabled={liaison.loading}
+                      value={reunion.compteRendu?.id ?? null}
+                      onChange={(valeur: string | undefined) =>
+                        choisirCompteRendu(valeur ?? null)
+                      }
+                      options={fichesCompteRendu.map(f => ({
+                        value: f.id,
+                        label: f.titre,
+                      }))}
+                    />
+                  )}
+                </section>
+              )}
 
             {reunion.estConvoquee && !annulee && (
               <section>

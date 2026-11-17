@@ -1445,6 +1445,13 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'lierCompteRenduReunion',
+    query:
+      'mutation ($id: ID!, $f: ID) { lierCompteRenduReunion(reunionId: $id, ficheId: $f) { id } }',
+    variables: () => ({ id: a.reunion, f: a.fiche }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'repondreConvocation',
     query:
       'mutation ($id: ID!) { repondreConvocation(reunionId: $id, reponse: ABSENT) { id } }',
