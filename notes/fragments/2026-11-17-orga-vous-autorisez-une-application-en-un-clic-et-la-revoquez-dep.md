@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.32.0
 fr:
   titre: >-
     Vous autorisez une application en un clic, et la révoquez depuis vos préférences
