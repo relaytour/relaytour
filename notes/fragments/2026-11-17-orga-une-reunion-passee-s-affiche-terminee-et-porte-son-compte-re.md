@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.32.0
 fr:
   titre: >-
     Une réunion passée s'affiche terminée, et porte son compte rendu

@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.32.0
 fr:
   titre: >-
     L'API lit l'état d'une réunion et lie sa fiche de compte rendu

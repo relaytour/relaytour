@@ -2,10 +2,10 @@
   "schemaVersion": 5,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.32.0",
       "notes": [
         {
           "id": "2026-11-17-serveur-une-application-tierce-demande-l-acces-par-oauth-avec-l-acco",

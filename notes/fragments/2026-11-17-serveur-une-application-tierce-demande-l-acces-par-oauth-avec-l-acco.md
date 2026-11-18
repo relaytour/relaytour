@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.32.0
 fr:
   titre: >-
     Une application tierce demande l'accès par OAuth, avec l'accord de la personne
