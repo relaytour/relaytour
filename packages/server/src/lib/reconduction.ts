@@ -134,6 +134,7 @@ export async function reconduire(
       titre: true,
       description: true,
       echeance: true,
+      duree: true,
       statut: true,
       modeleSlug: true,
       perimetreId: true,
@@ -148,6 +149,7 @@ export async function reconduire(
           titre: true,
           description: true,
           echeance: true,
+          duree: true,
           modeleSlug: true,
           perimetreId: true,
           jalonLe: true,
@@ -229,6 +231,8 @@ export async function reconduire(
         titre: tache.titre,
         description: tache.description,
         echeance: ligne.echeance,
+        // La durée estimée suit la tâche reprise (ADR 0068).
+        duree: tache.duree,
         modeleSlug: tache.modeleSlug,
         ficheId,
         ...marque(tache.jalonLe),
@@ -245,6 +249,7 @@ export async function reconduire(
           titre: declinaison.titre,
           description: declinaison.description,
           echeance: decaler(declinaison.echeance, jours),
+          duree: declinaison.duree,
           modeleSlug: declinaison.modeleSlug,
           ficheId: ficheReprise(
             declinaison.fiche,

@@ -266,3 +266,95 @@ describe('classement', () => {
     ])
   })
 })
+
+// Périodes de travail (ADR 0068). L'horizon va du 2026-11-04 au 2026-11-18.
+describe('tâches à commencer', () => {
+  const h = horizon(AUJOURDHUI, null)
+  const classer = (taches: TacheAClasser[]) =>
+    classerPriorites(taches, ['p'], h)[0]!
+
+  it('retient une tâche à faire dont la période commence dans l’horizon', () => {
+    const longue = tache({
+      id: 'longue',
+      echeance: '2026-12-20',
+      debutTravail: '2026-11-15',
+    })
+    const bloc = classer([longue])
+    expect(bloc.priorites).toEqual([])
+    expect(bloc.aCommencer.map(t => t.id)).toEqual(['longue'])
+    expect(bloc.ensuite).toBeNull()
+  })
+
+  it('retient une tâche dont la période a déjà commencé', () => {
+    const bloc = classer([
+      tache({ echeance: '2026-12-20', debutTravail: '2026-10-21' }),
+    ])
+    expect(bloc.aCommencer).toHaveLength(1)
+  })
+
+  it('écarte une tâche dont la période commence après l’horizon', () => {
+    const plusTard = tache({
+      id: 'plus-tard',
+      echeance: '2027-01-20',
+      debutTravail: '2026-11-19',
+    })
+    const bloc = classer([plusTard])
+    expect(bloc.aCommencer).toEqual([])
+    expect(bloc.ensuite?.id).toBe('plus-tard')
+  })
+
+  it('laisse dans les priorités une tâche dont l’échéance tombe dans l’horizon', () => {
+    const proche = tache({
+      id: 'proche',
+      echeance: '2026-11-10',
+      debutTravail: '2026-10-20',
+    })
+    const bloc = classer([proche])
+    expect(bloc.priorites.map(p => p.tache.id)).toEqual(['proche'])
+    expect(bloc.aCommencer).toEqual([])
+  })
+
+  it('écarte une tâche en cours, et une tâche sans période de travail', () => {
+    const bloc = classer([
+      tache({
+        id: 'en-cours',
+        statut: 'EN_COURS',
+        echeance: '2026-12-20',
+        debutTravail: '2026-11-01',
+      }),
+      tache({ id: 'sans-duree', echeance: '2026-12-20' }),
+    ])
+    expect(bloc.aCommencer).toEqual([])
+  })
+
+  it('écarte une tâche qu’un ajustement fait entrer dans les priorités', () => {
+    const haute = tache({
+      echeance: '2026-12-20',
+      debutTravail: '2026-11-01',
+      ajustement: { niveau: 'HAUTE', jusquAu: '2026-11-18' },
+    })
+    const bloc = classer([haute])
+    expect(bloc.priorites).toHaveLength(1)
+    expect(bloc.aCommencer).toEqual([])
+  })
+
+  it('ne change pas le score', () => {
+    const avec = tache({ echeance: '2026-11-10', debutTravail: '2026-10-20' })
+    const sans = tache({ echeance: '2026-11-10' })
+    expect(noter(avec, h).score).toBe(noter(sans, h).score)
+  })
+
+  it('range par premier jour, puis par échéance, et plafonne à cinq', () => {
+    const taches = [
+      tache({ id: 'c', echeance: '2026-12-30', debutTravail: '2026-11-10' }),
+      tache({ id: 'a', echeance: '2026-12-20', debutTravail: '2026-11-01' }),
+      tache({ id: 'b', echeance: '2026-12-25', debutTravail: '2026-11-10' }),
+      tache({ id: 'd', echeance: '2027-01-02', debutTravail: '2026-11-11' }),
+      tache({ id: 'e', echeance: '2027-01-03', debutTravail: '2026-11-12' }),
+      tache({ id: 'f', echeance: '2027-01-04', debutTravail: '2026-11-13' }),
+    ]
+    const bloc = classer(taches)
+    expect(bloc.aCommencer.map(t => t.id)).toEqual(['a', 'b', 'c', 'd', 'e'])
+    expect(bloc.aCommencerAutres).toBe(1)
+  })
+})

@@ -2254,6 +2254,8 @@ const CAS: Cas[] = [
       ['chargeEquipe', 'chargeEquipe(editionId: $e) { personne { id } }'],
       // Les priorités d'une période (ADR 0059).
       ['priorites', 'priorites(editionId: $e) { fin }'],
+      // Les tâches à commencer d'une période (ADR 0068).
+      ['tachesACommencer', 'tachesACommencer(editionId: $e) { fin }'],
     ] as const
   ).map(([operation, champ]) => ({
     operation,

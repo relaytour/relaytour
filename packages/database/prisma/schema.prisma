@@ -818,6 +818,15 @@ enum AjustementPriorite {
   EPINGLEE
 }
 
+// Durée estimée d'une tâche (ADR 0068). Les jours retenus sont dans
+// `packages/commun/src/periodes-de-travail.ts`.
+enum DureeTache {
+  QUELQUES_JOURS
+  DEUX_A_TROIS_SEMAINES
+  UN_A_DEUX_MOIS
+  DEUX_A_TROIS_MOIS
+}
+
 enum AccordDeclinaison {
   EN_ATTENTE
   ACCEPTE
@@ -833,6 +842,9 @@ model Tache {
   titre              String
   description        String?             @db.Text
   echeance           DateTime?           @db.Date
+  // Durée estimée (ADR 0068). Avec l'échéance, elle donne la période de travail,
+  // calculée à la lecture. Null : la tâche n'a pas de période de travail.
+  duree              DureeTache?
   statut             StatutTache         @default(A_FAIRE)
   // Identifiant du modèle Git d'origine (phase 3), null pour une tâche créée dans l'app.
   modeleSlug         String?

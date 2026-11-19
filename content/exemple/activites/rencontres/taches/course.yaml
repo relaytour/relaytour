@@ -10,6 +10,7 @@ taches:
     description: >-
       Les référent·es listent les points de balisage et les postes de signaleurs, puis demandent les bénévoles au pôle Bénévoles.
     echeance: J-45
+    duree: quelques-jours
   - modele: publier-les-resultats
     titre: Publier les résultats
     description: >-

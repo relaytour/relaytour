@@ -1,3 +1,4 @@
+import { debutTravail } from '@relaytour/commun'
 import type { PrismaClient } from '@relaytour/database'
 
 import type { CourrielJobData, SorteCourriel } from '../jobs/queues.ts'
@@ -44,6 +45,7 @@ import {
   propositionModele,
 } from '../lib/modeles-notification.ts'
 import { preferencesDe } from '../lib/notifications.ts'
+import { jourISO } from '../lib/agenda.ts'
 import { lirePrioritesDeLaPeriode } from '../lib/priorites-periode.ts'
 import { filtreNotificationsAdmin } from '../lib/notifications-admin.ts'
 import {
@@ -155,6 +157,8 @@ function activiteDuSujet(
 // installation en sommeil, dont l'équipe ne lit peut-être plus le contact (ADR 0057).
 /** Le nombre de nouvelles de la cloche qu'un résumé reprend au plus. */
 const LIMITE_RESUME = 30
+/** Le nombre de tâches à commencer que le mail des priorités montre par périmètre (ADR 0068). */
+const A_COMMENCER_DANS_LE_MAIL = 3
 
 const SANS_REPONSE = new Set<SorteCourriel>([
   'essai',
@@ -976,9 +980,11 @@ export async function composer(
       configuration.fuseauHoraire,
       maintenant
     )
+    // Un périmètre entre dans le mail par ses priorités ou par ses tâches à
+    // commencer (ADR 0068).
     const retenus = lues.perimetres.filter(
       p =>
-        p.priorites.length > 0 &&
+        (p.priorites.length > 0 || p.aCommencer.length > 0) &&
         (mode === 'ACTIVITE' || mesPerimetres.has(p.perimetre.id))
     )
     // Une personne au résumé hebdomadaire reçoit ses nouvelles dans le mail des
@@ -1024,7 +1030,10 @@ export async function composer(
     const jourPriorites = new Date(
       `${aujourdhui(maintenant, configuration.fuseauHoraire)}T00:00:00Z`
     )
-    const tacheIds = retenus.flatMap(p => p.priorites.map(x => x.tache.id))
+    const tacheIds = retenus.flatMap(p => [
+      ...p.priorites.map(x => x.tache.id),
+      ...p.aCommencer.map(t => t.id),
+    ])
     const [assignations, comptes, plusieurs] = await Promise.all([
       prisma.tacheAssignation.findMany({
         where: { tacheId: { in: tacheIds } },
@@ -1078,21 +1087,78 @@ export async function composer(
           tri: rang,
         }
       })
-      return p.autres > 0
-        ? [
-            ...taches,
-            {
-              groupe,
-              perimetre,
-              rubrique: 'PRIORITES' as const,
-              element: i18n._(
-                '{n, plural, one {et # autre priorité} other {et # autres priorités}}',
-                { n: p.autres }
-              ),
-              tri: Number.MAX_SAFE_INTEGER,
-            },
-          ]
-        : taches
+      // Les tâches à commencer (ADR 0068) : trois au plus, sans score.
+      const aCommencer = p.aCommencer
+        .slice(0, A_COMMENCER_DANS_LE_MAIL)
+        .map((t, rang) => {
+          const noms = assignes.get(t.id) ?? []
+          const qui = noms.length > 0 ? noms.join(', ') : i18n._('à prendre')
+          const debut = debutTravail(
+            t.echeance?.toISOString() ?? null,
+            t.duree
+          )!
+          const texte =
+            debut <= jourISO(jourPriorites)
+              ? i18n._(
+                  '« {titre} », période de travail commencée le {debut}, pour le {date} · {qui}',
+                  {
+                    titre: t.titre,
+                    debut: dateLongue(new Date(`${debut}T00:00:00Z`)),
+                    date: dateLongue(t.echeance!),
+                    qui,
+                  }
+                )
+              : i18n._(
+                  '« {titre} », peut commencer dès le {debut}, pour le {date} · {qui}',
+                  {
+                    titre: t.titre,
+                    debut: dateLongue(new Date(`${debut}T00:00:00Z`)),
+                    date: dateLongue(t.echeance!),
+                    qui,
+                  }
+                )
+          return {
+            groupe,
+            perimetre,
+            rubrique: 'A_COMMENCER' as const,
+            element: avecDeclinaisons(texte, comptes.get(t.id)),
+            tri: rang,
+          }
+        })
+      const autresACommencer =
+        p.aCommencer.length - aCommencer.length + p.aCommencerAutres
+      return [
+        ...taches,
+        ...(p.autres > 0
+          ? [
+              {
+                groupe,
+                perimetre,
+                rubrique: 'PRIORITES' as const,
+                element: i18n._(
+                  '{n, plural, one {et # autre priorité} other {et # autres priorités}}',
+                  { n: p.autres }
+                ),
+                tri: Number.MAX_SAFE_INTEGER,
+              },
+            ]
+          : []),
+        ...aCommencer,
+        ...(autresACommencer > 0
+          ? [
+              {
+                groupe,
+                perimetre,
+                rubrique: 'A_COMMENCER' as const,
+                element: i18n._(
+                  '{n, plural, one {et # autre tâche à commencer} other {et # autres tâches à commencer}}',
+                  { n: autresACommencer }
+                ),
+                tri: Number.MAX_SAFE_INTEGER,
+              },
+            ]
+          : []),
+      ]
     })
     variables.priorites =
       lignes.length > 0
