@@ -35,15 +35,20 @@ const SORTIE = join(SITE, 'recherche')
 const MODULES = join(RACINE, 'node_modules')
 
 // Modèle multilingue sous licence MIT (intfloat/multilingual-e5-small, converti
-// pour ONNX). Une nouvelle révision se relit et change les empreintes.
+// pour ONNX). Chaque fichier porte son empreinte SHA-256 : un fichier différent
+// arrête le script. Une nouvelle révision se relit et change les empreintes.
 export const MODELE = 'Xenova/multilingual-e5-small'
 const REVISION = '761b726dd34fb83930e26aab4e9ac3899aa1fa78'
-const FICHIERS_MODELE = [
-  'config.json',
-  'tokenizer.json',
-  'tokenizer_config.json',
-  'onnx/model_quantized.onnx',
-]
+const FICHIERS_MODELE = {
+  'config.json':
+    'cb99455288675345e1a4f411438d5d0adbba5fbd3a67ea4fb03c015433b996c1',
+  'tokenizer.json':
+    '0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39',
+  'tokenizer_config.json':
+    'a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b',
+  'onnx/model_quantized.onnx':
+    'f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193',
+}
 
 // transformers.js et le moteur WebAssembly d'ONNX Runtime, dans sa version sans
 // WebGPU (14 Mo au lieu de 27).
@@ -90,25 +95,21 @@ const existe = async chemin => {
   }
 }
 
-// Télécharge le modèle à sa révision fixée, sauf s'il est déjà là. Les empreintes
-// attendues viennent de Hugging Face, qui les publie pour chaque fichier.
+// Télécharge le modèle à sa révision fixée, sauf s'il est déjà là, puis vérifie
+// l'empreinte de chaque fichier.
 async function preparerModele() {
   const dossier = join(SORTIE, 'modeles', MODELE)
-  const arbre = await fetch(
-    `https://huggingface.co/api/models/${MODELE}/tree/${REVISION}?recursive=true`
-  ).then(reponse => (reponse.ok ? reponse.json() : null))
-  for (const fichier of FICHIERS_MODELE) {
+  for (const [fichier, attendue] of Object.entries(FICHIERS_MODELE)) {
     const chemin = join(dossier, fichier)
-    const attendue = arbre?.find(entree => entree.path === fichier)?.lfs?.oid
-    if (await existe(chemin)) {
-      if (!attendue || (await empreinte(chemin)) === attendue) continue
+    if ((await existe(chemin)) && (await empreinte(chemin)) === attendue) {
+      continue
     }
     const adresse = `https://huggingface.co/${MODELE}/resolve/${REVISION}/${fichier}`
     const reponse = await fetch(adresse)
     if (!reponse.ok) throw new Error(`✖ ${adresse} : ${reponse.status}`)
     await mkdir(dirname(chemin), { recursive: true })
     await writeFile(chemin, Buffer.from(await reponse.arrayBuffer()))
-    if (attendue && (await empreinte(chemin)) !== attendue) {
+    if ((await empreinte(chemin)) !== attendue) {
       throw new Error(`✖ ${fichier} : empreinte inattendue`)
     }
   }

@@ -62,9 +62,12 @@ jobs:
           path: site/recherche/modeles
           key: modele-recherche-${{ hashFiles('outils/recherche.mjs') }}
 
-      # Les passages des modes d'emploi, leurs vecteurs, le modèle et
-      # transformers.js, servis depuis le site (outils/recherche.mjs).
+      # L'index Pagefind, les passages des modes d'emploi, leurs vecteurs, le
+      # modèle et transformers.js, servis depuis le site (outils/recherche.mjs).
+      # Un échec de cette étape ne bloque pas la publication : sans index, le
+      # champ de recherche reste caché, et sans modèle, la case de l'IA aussi.
       - name: Préparer la recherche des modes d'emploi
+        continue-on-error: true
         run: node outils/recherche.mjs
 
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
