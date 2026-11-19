@@ -63,5 +63,8 @@
     "typescript": "~5.9.0",
     "typescript-eslint": "^8.71.2"
   },
-  "license": "AGPL-3.0-only"
+  "license": "AGPL-3.0-only",
+  "resolutions": {
+    "effect@npm:3.21.0": "3.22.4"
+  }
 }
