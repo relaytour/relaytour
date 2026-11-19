@@ -51,7 +51,7 @@
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.0",
+    "@eslint/js": "^10.0.1",
     "@graphql-codegen/cli": "^7.4.6",
     "@graphql-codegen/client-preset": "^6.2.3",
     "@lingui/babel-plugin-lingui-macro": "~6.9.1",
