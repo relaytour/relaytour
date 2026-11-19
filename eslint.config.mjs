@@ -16,6 +16,8 @@ export default tseslint.config(
       'packages/orga/**',
       '.yarn/**',
       '.claude/worktrees/**',
+      // Index, modèle et bibliothèques écrits par outils/recherche.mjs.
+      'site/recherche/**',
     ],
   },
   js.configs.recommended,
