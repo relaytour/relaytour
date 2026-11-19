@@ -14,6 +14,8 @@ export const HORIZON_MAX = 30
 export const JOURS_SANS_POINT = 7
 /** Le nombre de priorités qu'un périmètre montre au plus. */
 export const PRIORITES_PAR_PERIMETRE = 5
+/** Le nombre de tâches à commencer qu'un périmètre montre au plus (ADR 0068). */
+export const A_COMMENCER_PAR_PERIMETRE = 5
 
 export type NiveauAjustement = 'BASSE' | 'HAUTE' | 'EPINGLEE'
 
@@ -71,6 +73,11 @@ export interface TacheAClasser {
   jalonOuvertes?: number
   /** Les jalons ouverts que la tâche sert, avec leur échéance. */
   jalonsServis?: readonly { titre: string; echeance: string }[]
+  /**
+   * Premier jour de la période de travail (ADR 0068) : l'échéance moins la durée
+   * estimée. Absent ou null : la tâche n'a pas de période de travail.
+   */
+  debutTravail?: string | null
 }
 
 export interface Horizon {
@@ -96,7 +103,18 @@ export interface PrioritesDuPerimetre<T extends TacheAClasser = TacheAClasser> {
   priorites: TacheNotee<T>[]
   /** Priorités au-delà du plafond. */
   autres: number
-  /** La prochaine tâche ouverte, quand le périmètre n'a aucune priorité. */
+  /**
+   * Les tâches à commencer (ADR 0068) : à faire, avec une période de travail qui
+   * commence dans l'horizon ou avant, et une échéance après l'horizon. Au plus
+   * `A_COMMENCER_PAR_PERIMETRE`, par premier jour puis par échéance.
+   */
+  aCommencer: T[]
+  /** Tâches à commencer au-delà du plafond. */
+  aCommencerAutres: number
+  /**
+   * La prochaine tâche ouverte, quand le périmètre n'a ni priorité ni tâche à
+   * commencer.
+   */
   ensuite: T | null
 }
 
@@ -220,6 +238,37 @@ export function estRetenue(notee: TacheNotee, h: Horizon): boolean {
   return notee.echeanceRetenue !== null && notee.echeanceRetenue <= h.fin
 }
 
+/**
+ * Une tâche est à commencer quand elle est à faire, que sa période de travail
+ * commence au plus tard le dernier jour de l'horizon et que son échéance tombe
+ * après l'horizon. Une tâche retenue dans les priorités ne l'est pas.
+ */
+export function estACommencer(notee: TacheNotee, h: Horizon): boolean {
+  const { tache } = notee
+  if (tache.statut !== 'A_FAIRE') return false
+  if (estRetenue(notee, h)) return false
+  const debut = tache.debutTravail ?? null
+  return (
+    debut !== null &&
+    tache.echeance !== null &&
+    debut <= h.fin &&
+    tache.echeance > h.fin
+  )
+}
+
+function comparerACommencer(a: TacheAClasser, b: TacheAClasser): number {
+  const cles = (t: TacheAClasser) => [
+    t.debutTravail ?? '',
+    t.echeance ?? '',
+    t.id,
+  ]
+  const [da, ea, ia] = cles(a)
+  const [db, eb, ib] = cles(b)
+  if (da !== db) return da! < db! ? -1 : 1
+  if (ea !== eb) return ea! < eb! ? -1 : 1
+  return ia! < ib! ? -1 : ia! > ib! ? 1 : 0
+}
+
 function comparer(a: TacheNotee, b: TacheNotee): number {
   if (a.epinglee !== b.epinglee) return a.epinglee ? -1 : 1
   if (a.score !== b.score) return b.score - a.score
@@ -231,8 +280,9 @@ function comparer(a: TacheNotee, b: TacheNotee): number {
 
 /**
  * Les priorités de chaque périmètre, dans l'ordre des périmètres reçus. Chaque
- * périmètre garde au plus `PRIORITES_PAR_PERIMETRE` priorités. Un périmètre sans
- * priorité reçoit sa prochaine tâche ouverte qui porte une échéance.
+ * périmètre garde au plus `PRIORITES_PAR_PERIMETRE` priorités et
+ * `A_COMMENCER_PAR_PERIMETRE` tâches à commencer. Un périmètre sans priorité ni
+ * tâche à commencer reçoit sa prochaine tâche ouverte qui porte une échéance.
  */
 export function classerPriorites<T extends TacheAClasser>(
   taches: readonly T[],
@@ -245,8 +295,12 @@ export function classerPriorites<T extends TacheAClasser>(
     const siennes = parPerimetre.get(perimetreId) ?? []
     const notees = siennes.map(t => noter(t, h))
     const retenues = notees.filter(n => estRetenue(n, h)).sort(comparer)
+    const aCommencer = notees
+      .filter(n => estACommencer(n, h))
+      .map(n => n.tache)
+      .sort(comparerACommencer)
     const ensuite =
-      retenues.length > 0
+      retenues.length > 0 || aCommencer.length > 0
         ? null
         : (notees
             .filter(n => n.echeanceRetenue !== null)
@@ -261,6 +315,11 @@ export function classerPriorites<T extends TacheAClasser>(
       perimetreId,
       priorites: retenues.slice(0, PRIORITES_PAR_PERIMETRE),
       autres: Math.max(0, retenues.length - PRIORITES_PAR_PERIMETRE),
+      aCommencer: aCommencer.slice(0, A_COMMENCER_PAR_PERIMETRE),
+      aCommencerAutres: Math.max(
+        0,
+        aCommencer.length - A_COMMENCER_PAR_PERIMETRE
+      ),
       ensuite,
     }
   })

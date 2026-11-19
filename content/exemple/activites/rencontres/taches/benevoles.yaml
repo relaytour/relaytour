@@ -23,6 +23,7 @@ taches:
       Le pôle diffuse l'appel avec le pôle Communication.
       Les bénévoles s'inscrivent dans un outil de l'association.
     echeance: J-120
+    duree: un-a-deux-mois
     fiche: planifier-les-creneaux
   - modele: planifier-les-creneaux-des-benevoles
     titre: Planifier les créneaux des bénévoles
@@ -30,6 +31,7 @@ taches:
       Le pôle remplit le tableau de présence par site et par créneau.
       Il signale les créneaux vides aux sports et aux pôles concernés.
     echeance: J-60
+    duree: deux-a-trois-semaines
     fiche: planifier-les-creneaux
   - modele: confirmer-la-presence-des-benevoles
     titre: Confirmer la présence de chaque bénévole

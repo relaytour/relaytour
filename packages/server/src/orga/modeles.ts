@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
+import { DUREE_CONTENU, DUREES_TACHE, dureeDuContenu } from '@relaytour/commun'
 import { parse } from 'yaml'
 import { z } from 'zod'
 
@@ -129,6 +130,19 @@ const EcheanceRelative = z
   .string()
   .regex(ECHEANCE_RELATIVE, 'échéance relative de la forme J-120 ou J+3')
 
+// Durée estimée d'une tâche type (ADR 0068), dans la notation du contenu.
+const DureeContenu = z.enum(
+  DUREES_TACHE.map(d => DUREE_CONTENU[d]) as [string, ...string[]],
+  {
+    message: `durée attendue parmi : ${DUREES_TACHE.map(d => DUREE_CONTENU[d]).join(', ')}`,
+  }
+)
+
+/** La durée d'une tâche type, en valeur de la base, ou null sans durée. */
+export function dureeDuModele(valeur: string | undefined) {
+  return valeur === undefined ? null : dureeDuContenu(valeur)
+}
+
 // Déclinaison d'une tâche partagée (ADR 0026) : la tâche type se décline dans les
 // périmètres d'un groupe, ou dans une liste de périmètres. Un champ absent reprend
 // celui de la tâche partagée.
@@ -139,6 +153,7 @@ const Declinaison = z
     titre: z.string().min(1).max(TITRE_MAX).optional(),
     description: z.string().max(5000).optional(),
     echeance: EcheanceRelative.optional(),
+    duree: DureeContenu.optional(),
     // Une fiche commune seulement : les périmètres cibles la lisent tous.
     fiche: Slug.optional(),
     // Vrai : chaque déclinaison devient un jalon (ADR 0062).
@@ -161,6 +176,7 @@ const TacheModele = z.strictObject({
   titre: z.string().min(1).max(TITRE_MAX),
   description: z.string().max(5000).optional(),
   echeance: EcheanceRelative.optional(),
+  duree: DureeContenu.optional(),
   fiche: Slug.optional(),
   declinaison: Declinaison.optional(),
   jalon: z.array(ModeleLie).max(LIENS_JALON_MAX).optional(),
@@ -214,11 +230,13 @@ export function textesDeLaDeclinaison(tache: TacheModele): {
   titre: string
   description: string | undefined
   echeance: string | undefined
+  duree: string | undefined
 } {
   return {
     titre: tache.declinaison?.titre ?? tache.titre,
     description: tache.declinaison?.description ?? tache.description,
     echeance: tache.declinaison?.echeance ?? tache.echeance,
+    duree: tache.declinaison?.duree ?? tache.duree,
   }
 }
 

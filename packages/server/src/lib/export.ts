@@ -537,6 +537,7 @@ export async function construireExport(organisationId: string) {
           titre: t.titre,
           description: t.description,
           echeance: jour(t.echeance),
+          duree: t.duree,
           statut: t.statut,
           modele: t.modeleSlug,
           fiche: t.fiche?.slug ?? null,

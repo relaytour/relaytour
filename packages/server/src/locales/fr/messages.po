@@ -2942,6 +2942,11 @@ msgstr "À traiter avant le point"
 
 #. js-lingui-explicit-id
 #: src/lib/suivi-courriel.ts
+msgid "À commencer"
+msgstr "À commencer"
+
+#. js-lingui-explicit-id
+#: src/lib/suivi-courriel.ts
 msgid "Déclinaisons en retard"
 msgstr "Déclinaisons en retard"
 
@@ -4171,8 +4176,23 @@ msgstr "« {titre} », pour le {date} · {qui}"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
+msgid "« {titre} », période de travail commencée le {debut}, pour le {date} · {qui}"
+msgstr "« {titre} », période de travail commencée le {debut}, pour le {date} · {qui}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "« {titre} », peut commencer dès le {debut}, pour le {date} · {qui}"
+msgstr "« {titre} », peut commencer dès le {debut}, pour le {date} · {qui}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
 msgid "{n, plural, one {et # autre priorité} other {et # autres priorités}}"
 msgstr "{n, plural, one {et # autre priorité} other {et # autres priorités}}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{n, plural, one {et # autre tâche à commencer} other {et # autres tâches à commencer}}"
+msgstr "{n, plural, one {et # autre tâche à commencer} other {et # autres tâches à commencer}}"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts

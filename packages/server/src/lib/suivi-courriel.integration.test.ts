@@ -498,6 +498,34 @@ describe('mail des priorités', () => {
     expect(message?.texte ?? '').not.toContain('Vos nouvelles')
   })
 
+  // Périodes de travail (ADR 0068) : une rubrique « À commencer » suit les
+  // priorités du périmètre.
+  it('reprend les tâches à commencer, avec le premier jour de leur période', async () => {
+    const longue = await prisma.tache.create({
+      data: {
+        editionId: ids.edition,
+        perimetreId: ids.ville,
+        titre: 'Chercher des partenaires',
+        echeance: jourA(45),
+        duree: 'UN_A_DEUX_MOIS',
+      },
+    })
+    try {
+      const message = await composer(prisma, {
+        sorte: 'priorites',
+        userId: ids.membre,
+        organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
+        editionId: ids.edition,
+      })
+      expect(message?.texte).toMatch(
+        /À commencer\n {4}- « Chercher des partenaires », période de travail commencée le [^\n]+, pour le [^\n]+ · à prendre/
+      )
+    } finally {
+      await prisma.tache.delete({ where: { id: longue.id } })
+    }
+  })
+
   it('n’envoie rien sans choix, ni à une personne sans place', async () => {
     await choisir(ids.membre, 'AUCUN')
     for (const userId of [ids.membre, ids.sansPlace, ids.archivee]) {

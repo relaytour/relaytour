@@ -1,3 +1,4 @@
+import { debutTravail } from '@relaytour/commun'
 import {
   prisma,
   type AjustementPriorite,
@@ -77,6 +78,9 @@ export interface PrioritesDuPerimetreLues {
   perimetre: Perimetre
   priorites: PrioriteLue[]
   autres: number
+  /** Les tâches à commencer (ADR 0068), sans score. */
+  aCommencer: Tache[]
+  aCommencerAutres: number
   ensuite: Tache | null
 }
 
@@ -172,11 +176,13 @@ export async function lirePrioritesDeLaPeriode(
     )
     const actives = ouvertes.filter(d => d.accord === 'ACCEPTE')
     const ajustement = ajustementLu(tache, jour)
+    const echeance = tache.echeance ? jourISO(tache.echeance) : null
     return {
       id: tache.id,
       perimetreId: tache.perimetreId,
       statut: tache.statut as TacheAClasser['statut'],
-      echeance: tache.echeance ? jourISO(tache.echeance) : null,
+      echeance,
+      debutTravail: debutTravail(echeance, tache.duree),
       assignes: tache._count.assignations,
       declinaisonsActives: actives.length,
       declinaisonsEnAttente: tache.declinaisons.filter(
@@ -239,6 +245,8 @@ export async function lirePrioritesDeLaPeriode(
         raisons: n.raisons,
       })),
       autres: c.autres,
+      aCommencer: c.aCommencer.map(t => t.ligne),
+      aCommencerAutres: c.aCommencerAutres,
       ensuite: c.ensuite?.ligne ?? null,
     })),
   }

@@ -79,6 +79,14 @@ msgstr "{0, plural, one {Une séquence utilise ce lieu.} other {# séquences uti
 msgid "{abandonnees, plural, one {# abandonnée} other {# abandonnées}}"
 msgstr "{abandonnees, plural, one {# abandonnée} other {# abandonnées}}"
 
+#: src/composants/Priorites.tsx
+msgid "{aCommencerAutres, plural, one {# autre tâche à commencer au-delà des cinq} other {# autres tâches à commencer au-delà des cinq}}"
+msgstr "{aCommencerAutres, plural, one {# autre tâche à commencer au-delà des cinq} other {# autres tâches à commencer au-delà des cinq}}"
+
+#: src/composants/Priorites.tsx
+msgid "{aCommencerCachees, plural, one {Voir l’autre tâche à commencer} other {Voir les # autres tâches à commencer}}"
+msgstr "{aCommencerCachees, plural, one {Voir l’autre tâche à commencer} other {Voir les # autres tâches à commencer}}"
+
 #: src/lib/commentaires.ts
 msgid "{acteur} a abandonné la tâche."
 msgstr "{acteur} a abandonné la tâche."
@@ -1421,6 +1429,10 @@ msgstr "← Rétroplanning"
 msgid "<b>Cette balise reste du texte.</b>"
 msgstr "<b>Cette balise reste du texte.</b>"
 
+#: src/lib/durees.ts
+msgid "1 à 2 mois"
+msgstr "1 à 2 mois"
+
 #: src/composants/Demandes.tsx
 msgid "1 souhait d’un membre attend aussi une affectation dans <0>Équipe</0>."
 msgstr "1 souhait d’un membre attend aussi une affectation dans <0>Équipe</0>."
@@ -1432,6 +1444,14 @@ msgstr "1 tâche, dont <0>{enRetard} en retard</0>"
 #: src/lib/guide-markdown.ts
 msgid "14 h"
 msgstr "14 h"
+
+#: src/lib/durees.ts
+msgid "2 à 3 mois"
+msgstr "2 à 3 mois"
+
+#: src/lib/durees.ts
+msgid "2 à 3 semaines"
+msgstr "2 à 3 semaines"
 
 #: src/composants/DepotFiches.tsx
 msgid "2 Mo par fichier, 50 fichiers et 20 Mo par dépôt au plus."
@@ -1472,6 +1492,15 @@ msgstr "A accès"
 #: src/composants/Repartition.tsx
 msgid "A choisi"
 msgstr "A choisi"
+
+#: src/composants/LigneTache.tsx
+#: src/composants/Priorites.tsx
+msgid "À commencer"
+msgstr "À commencer"
+
+#: src/composants/TacheCarte.tsx
+msgid "À commencer : période de travail du {dateDebutPeriode} au {dateEcheance}"
+msgstr "À commencer : période de travail du {dateDebutPeriode} au {dateEcheance}"
 
 #. Statut d’une place de bénévole
 #: src/composants/Jauge.tsx
@@ -2609,6 +2638,10 @@ msgstr "Aucune demande traitée pour {periodeCette}."
 msgid "Aucune description pour ce périmètre."
 msgstr "Aucune description pour ce périmètre."
 
+#: src/composants/TacheFormulaire.tsx
+msgid "Aucune durée"
+msgstr "Aucune durée"
+
 #: src/pages/Benevoles.tsx
 msgid "Aucune fiche bénévole pour cette activité."
 msgstr "Aucune fiche bénévole pour cette activité."
@@ -2693,6 +2726,10 @@ msgstr "Aucune personne ne correspond à ces filtres."
 #: src/composants/Priorites.tsx
 msgid "Aucune priorité jusqu’au {fin}."
 msgstr "Aucune priorité jusqu’au {fin}."
+
+#: src/composants/Priorites.tsx
+msgid "Aucune priorité jusqu’au {fin}. Les tâches ci-dessous peuvent commencer."
+msgstr "Aucune priorité jusqu’au {fin}. Les tâches ci-dessous peuvent commencer."
 
 #: src/composants/EcrireMessage.tsx
 msgid "Aucune priorité n’est prévue avant le prochain point."
@@ -2836,6 +2873,10 @@ msgstr "Avec cette connexion, Relaytour vérifie les accès sans pouvoir les cha
 #: src/pages/Benevoles.tsx
 msgid "Avec une adresse, la première place envoie à la personne un mail avec son lien personnel. Ses places restent à confirmer. Décochez pour une personne jointe autrement."
 msgstr "Avec une adresse, la première place envoie à la personne un mail avec son lien personnel. Ses places restent à confirmer. Décochez pour une personne jointe autrement."
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Avec une échéance, la durée indique à l’équipe quand commencer la tâche. Elle apparaît alors dans la section « À commencer » des priorités."
+msgstr "Avec une échéance, la durée indique à l’équipe quand commencer la tâche. Elle apparaît alors dans la section « À commencer » des priorités."
 
 #: src/composants/EcrireMessage.tsx
 msgid "Avez-vous envoyé ce message ?"
@@ -4605,6 +4646,10 @@ msgstr "du périmètre"
 #: src/composants/PreferenceJetons.tsx
 msgid "Durée du jeton"
 msgstr "Durée du jeton"
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Durée estimée (facultatif)"
+msgstr "Durée estimée (facultatif)"
 
 #: src/composants/AssistantTableur.tsx
 msgid "Écartée"
@@ -8985,6 +9030,14 @@ msgstr "Période"
 msgid "Période de lecture"
 msgstr "Période de lecture"
 
+#: src/composants/TacheCarte.tsx
+msgid "Période de travail : du {dateDebutPeriode} au {dateEcheance}"
+msgstr "Période de travail : du {dateDebutPeriode} au {dateEcheance}"
+
+#: src/composants/Priorites.tsx
+msgid "Période de travail commencée le {dateDebut}"
+msgstr "Période de travail commencée le {dateDebut}"
+
 #: src/pages/Preferences.tsx
 msgid "Personnalisé : vos réglages ne suivent aucun modèle."
 msgstr "Personnalisé : vos réglages ne suivent aucun modèle."
@@ -9074,6 +9127,10 @@ msgstr "Personnes placées"
 #: src/composants/SondageFormulaire.tsx
 msgid "Personnes visées"
 msgstr "Personnes visées"
+
+#: src/composants/Priorites.tsx
+msgid "Peut commencer dès le {dateDebut}"
+msgstr "Peut commencer dès le {dateDebut}"
 
 #. Réponse à une convocation, en minuscules, après « Vous êtes convoqué·e, »
 #: src/pages/Agenda.tsx
@@ -9439,6 +9496,10 @@ msgstr "Quand vous préparez un message, l’espace organisateur ouvre votre mes
 #: src/pages/admin/Activites.tsx
 msgid "Quelques heures pendant l’événement"
 msgstr "Quelques heures pendant l’événement"
+
+#: src/lib/durees.ts
+msgid "Quelques jours"
+msgstr "Quelques jours"
 
 #: src/composants/Demandes.tsx
 #: src/pages/admin/Activites.tsx

@@ -10,6 +10,7 @@ taches:
     description: >-
       Les référent·es rassemblent les horaires de chaque sport, font relire l'affiche par la coordination et lancent l'impression.
     echeance: J-45
+    duree: deux-a-trois-semaines
   - modele: publier-le-bilan
     titre: Publier le bilan de l'édition
     description: >-

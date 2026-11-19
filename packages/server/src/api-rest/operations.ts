@@ -31,6 +31,8 @@ const TACHE_COURTE = `
   titre
   statut
   echeance
+  duree
+  debutTravail
   enRetard
   jalon
   version
@@ -43,6 +45,8 @@ const TACHE = `
   description
   statut
   echeance
+  duree
+  debutTravail
   enRetard
   jalon
   version
@@ -172,6 +176,24 @@ export const OPERATIONS_REST: readonly OperationRest[] = [
     }`,
   },
   {
+    nom: 'tachesACommencer',
+    methode: 'GET',
+    chemin: '/editions/:editionId/a-commencer',
+    groupe: 'taches',
+    resume:
+      'Les tâches à commencer d’une période, par périmètre : leur période de travail commence avant le prochain point, et leur échéance tombe après (ADR 0068).',
+    document: `query TachesACommencer($editionId: ID!) {
+      tachesACommencer(editionId: $editionId) {
+        fin
+        perimetres {
+          perimetre { id slug nom }
+          autres
+          taches { id titre statut echeance duree debutTravail }
+        }
+      }
+    }`,
+  },
+  {
     nom: 'tache',
     methode: 'GET',
     chemin: '/taches/:id',
@@ -206,6 +228,7 @@ export const OPERATIONS_REST: readonly OperationRest[] = [
       $titre: String!
       $description: String
       $echeance: Date
+      $duree: DureeTache
       $mAssigner: Boolean
     ) {
       creerTache(
@@ -214,6 +237,7 @@ export const OPERATIONS_REST: readonly OperationRest[] = [
         titre: $titre
         description: $description
         echeance: $echeance
+        duree: $duree
         mAssigner: $mAssigner
       ) { ${TACHE} }
     }`,
@@ -230,6 +254,7 @@ export const OPERATIONS_REST: readonly OperationRest[] = [
       $titre: String
       $description: String
       $echeance: Date
+      $duree: DureeTache
       $versionAttendue: Int
       $confirmer: Boolean
     ) {
@@ -238,6 +263,7 @@ export const OPERATIONS_REST: readonly OperationRest[] = [
         titre: $titre
         description: $description
         echeance: $echeance
+        duree: $duree
         versionAttendue: $versionAttendue
         confirmer: $confirmer
       ) { ${TACHE} }

@@ -76,6 +76,40 @@ describe('filtrerPriorites', () => {
   })
 })
 
+// Tâches à commencer (ADR 0068) : le filtre « À prendre » les trie aussi.
+describe('filtrerPriorites et tâches à commencer', () => {
+  const avecACommencer = [
+    {
+      perimetre: { id: 'natation', groupe: 'sport' },
+      priorites: [{ tache: { id: 'a', assignes: [{}] } }],
+      aCommencer: [
+        { id: 'x', assignes: [{}] },
+        { id: 'y', assignes: [] },
+      ],
+    },
+    {
+      perimetre: { id: 'buvette', groupe: 'pole' },
+      priorites: [],
+      aCommencer: [{ id: 'z', assignes: [] }],
+    },
+  ]
+
+  it('garde les tâches à commencer que personne n’a prises', () => {
+    const filtre = { ...FILTRE_PAR_DEFAUT, aPrendre: true }
+    const vus = filtrerPriorites(avecACommencer, filtre, new Set())
+    expect(
+      vus.map(p => [
+        p.perimetre.id,
+        p.priorites.map(x => x.tache.id),
+        p.aCommencer.map(x => x.id),
+      ])
+    ).toEqual([
+      ['natation', [], ['y']],
+      ['buvette', [], ['z']],
+    ])
+  })
+})
+
 describe('mémoire du filtre', () => {
   it('relit le filtre enregistré pour une activité', () => {
     const d = depot()

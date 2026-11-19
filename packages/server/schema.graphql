@@ -1026,6 +1026,16 @@ type DroitRedaction {
   personne: Personne!
 }
 
+"""
+Durée estimée d’une tâche. Jours retenus : QUELQUES_JOURS 7, DEUX_A_TROIS_SEMAINES 21, UN_A_DEUX_MOIS 60, DEUX_A_TROIS_MOIS 90.
+"""
+enum DureeTache {
+  DEUX_A_TROIS_MOIS
+  DEUX_A_TROIS_SEMAINES
+  QUELQUES_JOURS
+  UN_A_DEUX_MOIS
+}
+
 type Edition {
   activite: Activite!
   annee: Int!
@@ -2263,7 +2273,7 @@ type Mutation {
     personneIds: [ID!]
     titre: String!
   ): Sondage!
-  creerTache(declinaison: DeclinaisonInput, description: String, echeance: Date, editionId: ID!, ficheId: ID, jalon: Boolean = false, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
+  creerTache(declinaison: DeclinaisonInput, description: String, duree: DureeTache, echeance: Date, editionId: ID!, ficheId: ID, jalon: Boolean = false, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
 
   """
   Décline une tâche dans d’autres périmètres de son activité : elle devient une tâche partagée. Chaque déclinaison attend l’accord de son périmètre, sauf quand un admin de l’activité l’ajoute. Un périmètre déjà servi est ignoré.
@@ -2702,9 +2712,9 @@ type Mutation {
   ): Sondage!
 
   """
-  Modifie le contenu d’une tâche. Un champ absent ne change pas ; null efface la description, l’échéance ou la fiche. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).
+  Modifie le contenu d’une tâche. Un champ absent ne change pas ; null efface la description, l’échéance, la durée ou la fiche. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).
   """
-  modifierTache(confirmer: Boolean = false, description: String, echeance: Date, ficheId: ID, id: ID!, titre: String, versionAttendue: Int): Tache!
+  modifierTache(confirmer: Boolean = false, description: String, duree: DureeTache, echeance: Date, ficheId: ID, id: ID!, titre: String, versionAttendue: Int): Tache!
 
   """
   Ouvre un document lié à toute personne qui lit sa fiche, partage compris, ou retire cette ouverture (ADR 0043). Le reste du dossier lié ne s’ouvre pas.
@@ -3565,7 +3575,7 @@ type PrioritesDuPerimetre {
   autres: Int!
 
   """
-  La prochaine tâche ouverte, quand le périmètre n’a aucune priorité. Ce n’est pas une priorité.
+  La prochaine tâche ouverte, quand le périmètre n’a ni priorité ni tâche à commencer (`tachesACommencer`). Ce n’est pas une priorité.
   """
   ensuite: Tache
   perimetre: Perimetre!
@@ -3979,6 +3989,11 @@ type Query {
   """
   sondages(editionId: ID!): [Sondage!]!
   tache(id: ID!): Tache!
+
+  """
+  Les tâches à commencer d’une période (ADR 0068), par périmètre. Elles se lisent avec la consultation, comme les priorités.
+  """
+  tachesACommencer(editionId: ID!): TachesACommencer!
   tachesAPrendre(editionId: ID!): [Tache!]!
 
   """
@@ -4588,10 +4603,18 @@ type Tache {
   creeLe: DateTime!
 
   """
+  Premier jour de la période de travail : l’échéance moins la durée estimée. Null sans durée ou sans échéance (ADR 0068).
+  """
+  debutTravail: Date
+
+  """
   Les déclinaisons de cette tâche partagée, une par périmètre cible, quel que soit leur accord. Vide pour une tâche ordinaire et pour une déclinaison.
   """
   declinaisons: [Tache!]!
   description: String
+
+  """Durée estimée de la tâche (ADR 0068)."""
+  duree: DureeTache
   echeance: Date
   edition: Edition!
   enRetard: Boolean!
@@ -4646,6 +4669,29 @@ type TacheLieeReunion {
   id: ID!
   perimetreId: ID!
   titre: String!
+}
+
+type TachesACommencer {
+  """
+  Dernier jour de l’horizon (AAAA-MM-JJ), le même que celui des priorités.
+  """
+  fin: String!
+
+  """
+  Les périmètres non archivés de l’activité qui ont des tâches à commencer, dans leur ordre.
+  """
+  perimetres: [TachesACommencerDuPerimetre!]!
+}
+
+type TachesACommencerDuPerimetre {
+  """Tâches à commencer au-delà du plafond de cinq."""
+  autres: Int!
+  perimetre: Perimetre!
+
+  """
+  Tâches à faire dont la période de travail commence au plus tard le dernier jour de l’horizon, et dont l’échéance tombe après. Cinq au plus, par premier jour de la période de travail. Elles ne reçoivent pas de score.
+  """
+  taches: [Tache!]!
 }
 
 """

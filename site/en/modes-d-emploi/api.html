@@ -197,9 +197,10 @@
               <tr><th><span class="route">GET /activites/{activiteId}/taches</span></th><td>The tasks of a period, by area.</td></tr>
               <tr><th><span class="route">GET /editions/{editionId}/mes-taches</span></th><td>The tasks assigned to the person.</td></tr>
               <tr><th><span class="route">GET /editions/{editionId}/priorites</span></th><td>The priorities of the period.</td></tr>
+              <tr><th><span class="route">GET /editions/{editionId}/a-commencer</span></th><td>The tasks to start in the period, with the first day of their work period.</td></tr>
               <tr><th><span class="route">GET /taches/{id}</span></th><td>A task, and <span class="route">/commentaires</span> for its thread.</td></tr>
               <tr><th><span class="route">POST /taches</span></th><td>Create a task in an area where the person writes.</td></tr>
-              <tr><th><span class="route">PATCH /taches/{id}</span></th><td>Edit the title, the description or the due date of a task.</td></tr>
+              <tr><th><span class="route">PATCH /taches/{id}</span></th><td>Edit the title, the description, the due date or the estimated duration of a task.</td></tr>
               <tr><th><span class="route">POST /taches/{id}/statut</span></th><td>Change the status of a task.</td></tr>
               <tr><th><span class="route">POST /taches/{id}/assignation</span></th><td>Assign a task, or remove an assigned person.</td></tr>
               <tr><th><span class="route">POST /taches/{id}/commentaires</span></th><td>Comment on a task.</td></tr>
