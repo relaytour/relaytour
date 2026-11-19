@@ -2727,6 +2727,10 @@ msgstr "No one matches these filters."
 msgid "Aucune priorité jusqu’au {fin}."
 msgstr "No priority until {fin}."
 
+#: src/composants/Priorites.tsx
+msgid "Aucune priorité jusqu’au {fin}. Les tâches ci-dessous peuvent commencer."
+msgstr "No priority until {fin}. The tasks below can start."
+
 #: src/composants/EcrireMessage.tsx
 msgid "Aucune priorité n’est prévue avant le prochain point."
 msgstr "No priority is planned before the next check-in."

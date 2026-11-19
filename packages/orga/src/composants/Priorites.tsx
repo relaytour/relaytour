@@ -7,10 +7,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 
 import { graphql } from '../gql'
-import type {
-  PrioritesQuery,
-  TachesACommencerQuery,
-} from '../gql/graphql'
+import type { PrioritesQuery, TachesACommencerQuery } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { jourLocal } from '../lib/agenda'
 import { debutDeLaPeriode } from '../lib/durees'
@@ -585,7 +582,15 @@ export default function Priorites({
               )}
               {nombre === 0 && (
                 <p className="rt-texte-secondaire">
-                  <Trans>Aucune priorité jusqu’au {fin}.</Trans>
+                  {nombreAffiche === 0 ? (
+                    <Trans>Aucune priorité jusqu’au {fin}.</Trans>
+                  ) : (
+                    // Seules des tâches à commencer s'affichent (ADR 0068).
+                    <Trans>
+                      Aucune priorité jusqu’au {fin}. Les tâches ci-dessous
+                      peuvent commencer.
+                    </Trans>
+                  )}
                 </p>
               )}
               {affiches.map(bloc => (

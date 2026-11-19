@@ -2727,6 +2727,10 @@ msgstr "Aucune personne ne correspond à ces filtres."
 msgid "Aucune priorité jusqu’au {fin}."
 msgstr "Aucune priorité jusqu’au {fin}."
 
+#: src/composants/Priorites.tsx
+msgid "Aucune priorité jusqu’au {fin}. Les tâches ci-dessous peuvent commencer."
+msgstr "Aucune priorité jusqu’au {fin}. Les tâches ci-dessous peuvent commencer."
+
 #: src/composants/EcrireMessage.tsx
 msgid "Aucune priorité n’est prévue avant le prochain point."
 msgstr "Aucune priorité n’est prévue avant le prochain point."
