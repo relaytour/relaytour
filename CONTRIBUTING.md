@@ -18,6 +18,7 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 - `outils/versionner.mjs` et `notes/` : journal des changements et publication des versions (`noter`, `valider`, `compiler`, `publier`, `release`).
 - `docs/adr/` : décisions d'architecture. `docs/design-system.md` : identité, matériau et composants.
 - `site/` : site de présentation publié sur GitHub Pages. `outils/site.mjs` y écrit les jetons, les palettes et les polices ; la CI vérifie qu'il est à jour.
+- `site/recherche.js` : recherche des modes d'emploi, par les mots puis par le sens. `outils/recherche.mjs` écrit dans `site/recherche/` (ignoré par Git) les passages, leurs vecteurs, le modèle multilingual-e5-small et transformers.js. Le workflow `pages.yml` le relance avant chaque publication, et le navigateur ne contacte aucun tiers.
 - `site/captures/` et `site/captures/mobile/` : les écrans des modes d'emploi, en version ordinateur et en version téléphone. `outils/captures.mjs` produit les deux. La version téléphone se prend dans l'application installée sur un simulateur iOS (macOS, Xcode et `cwebp`) : le script relaie l'espace organisateur à l'adresse de `--origine` et pilote l'application par ce relais. Le bouton « Ordinateur / Téléphone » du site (`site/bascule.js`) passe de l'une à l'autre. Les captures anglaises vivent dans `site/en/captures/` : `--langue en` les prend sur une instance au contenu `content/exemple-en`.
 - `docs/feuille-de-route.md` et `docs/publication.md` : évolutions envisagées, liste de publication.
 
@@ -41,6 +42,7 @@ yarn workspace @relaytour/orga langues:extraire   # catalogues de traduction, ap
 yarn workspace @relaytour/server langues:extraire   # catalogues du serveur (mails, notifications, erreurs), extraits puis compilés
 node outils/langues.mjs etat   # taux de traduction de chaque langue ; une langue se propose à 90 % (ADR 0047)
 node outils/site.mjs   # site de présentation, après un changement des jetons
+node outils/recherche.mjs   # index et modèle de la recherche des modes d'emploi (site/recherche/, hors Git)
 node outils/captures.mjs --origine http://localhost:5305   # captures du site, avec le contenu d'exemple et un compte fictif d'admin de l'organisation
 node outils/captures.mjs --compte referent   # écrans d'un autre rôle : referent ou admin-activite, avec un compte de ce rôle
 node outils/captures.mjs --seulement editions,equipe   # quelques écrans seulement

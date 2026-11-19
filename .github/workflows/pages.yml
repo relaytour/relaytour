@@ -2,7 +2,9 @@ name: Site
 
 # Publie le site de présentation (site/) sur GitHub Pages quand main change ce
 # qu'il affiche. Le site est statique : outils/site.mjs l'a déjà généré depuis
-# les jetons, et la CI vérifie qu'il est à jour avant la fusion.
+# les jetons, et la CI vérifie qu'il est à jour avant la fusion. Seule la
+# recherche des modes d'emploi se prépare ici (outils/recherche.mjs), car son
+# modèle ne vit pas dans Git.
 on:
   push:
     branches: [main]
@@ -10,6 +12,7 @@ on:
       - 'site/**'
       - 'packages/tokens/src/**'
       - 'outils/site.mjs'
+      - 'outils/recherche.mjs'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -33,6 +36,36 @@ jobs:
       url: ${{ steps.deploiement.outputs.page_url }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Activer Yarn 4
+        run: corepack enable
+
+      - name: Cache Yarn
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.yarn/berry/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
+
+      - name: Installer
+        run: yarn install --immutable
+
+      # Le modèle de la recherche (environ 135 Mo) se télécharge une fois par
+      # révision : la clé change avec outils/recherche.mjs, qui fixe la révision.
+      - name: Cache du modèle de recherche
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: site/recherche/modeles
+          key: modele-recherche-${{ hashFiles('outils/recherche.mjs') }}
+
+      # Les passages des modes d'emploi, leurs vecteurs, le modèle et
+      # transformers.js, servis depuis le site (outils/recherche.mjs).
+      - name: Préparer la recherche des modes d'emploi
+        run: node outils/recherche.mjs
 
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 

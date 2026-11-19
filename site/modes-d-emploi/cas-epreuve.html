@@ -28,7 +28,11 @@
           </svg>
           <span class="logotype">Relay<span>tour</span></span>
         </a>
-        <ul class="liens">
+        <button class="menu-bouton" type="button" aria-expanded="false" aria-controls="liens-site" hidden>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+          Menu
+        </button>
+        <ul class="liens" id="liens-site">
           <li><a href="../">Présentation</a></li>
           <li><a href="../hebergement.html">Hébergement</a></li>
           <li><a href="../design-system.html">Design system</a></li>
@@ -193,6 +197,7 @@
         Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Cas pratique à jour de la version 0.29.0.
       </footer>
     </main>
+    <script src="../menu.js"></script>
     <script src="../bascule.js"></script>
     <script src="../sommaire.js"></script>
   </body>

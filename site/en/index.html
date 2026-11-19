@@ -28,7 +28,11 @@
           </svg>
           <span class="logotype">Relay<span>tour</span></span>
         </a>
-        <ul class="liens">
+        <button class="menu-bouton" type="button" aria-expanded="false" aria-controls="liens-site" hidden>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+          Menu
+        </button>
+        <ul class="liens" id="liens-site">
           <li><a href="./" aria-current="page">Overview</a></li>
           <li><a href="hebergement.html">Hosting</a></li>
           <li><a href="../design-system.html" hreflang="fr">Design system</a></li>
@@ -428,6 +432,7 @@
         <span class="pied-mentions"><a href="https://designhorizon.io">Design Horizon</a> provides the relaytour.org domain to the project. Relaytour Cloud is a service provided by <a href="https://designhorizon.io">Design Horizon</a>.</span>
       </footer>
     </main>
+    <script src="../menu.js"></script>
     <script src="../bascule.js"></script>
   </body>
 </html>
