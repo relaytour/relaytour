@@ -79,6 +79,14 @@ msgstr "{0, plural, one {One slot uses this venue.} other {# slots use this venu
 msgid "{abandonnees, plural, one {# abandonnée} other {# abandonnées}}"
 msgstr "{abandonnees, plural, one {# abandoned} other {# abandoned}}"
 
+#: src/composants/Priorites.tsx
+msgid "{aCommencerAutres, plural, one {# autre tâche à commencer au-delà des cinq} other {# autres tâches à commencer au-delà des cinq}}"
+msgstr "{aCommencerAutres, plural, one {# more task to start beyond the five} other {# more tasks to start beyond the five}}"
+
+#: src/composants/Priorites.tsx
+msgid "{aCommencerCachees, plural, one {Voir l’autre tâche à commencer} other {Voir les # autres tâches à commencer}}"
+msgstr "{aCommencerCachees, plural, one {Show the other task to start} other {Show the # other tasks to start}}"
+
 #: src/lib/commentaires.ts
 msgid "{acteur} a abandonné la tâche."
 msgstr "{acteur} abandoned the task."
@@ -1421,6 +1429,10 @@ msgstr "← Timeline"
 msgid "<b>Cette balise reste du texte.</b>"
 msgstr "<b>This tag stays as text.</b>"
 
+#: src/lib/durees.ts
+msgid "1 à 2 mois"
+msgstr "1 to 2 months"
+
 #: src/composants/Demandes.tsx
 msgid "1 souhait d’un membre attend aussi une affectation dans <0>Équipe</0>."
 msgstr "1 member interest also awaits an appointment in <0>Team</0>."
@@ -1432,6 +1444,14 @@ msgstr "1 task, including <0>{enRetard} overdue</0>"
 #: src/lib/guide-markdown.ts
 msgid "14 h"
 msgstr "2:00 PM"
+
+#: src/lib/durees.ts
+msgid "2 à 3 mois"
+msgstr "2 to 3 months"
+
+#: src/lib/durees.ts
+msgid "2 à 3 semaines"
+msgstr "2 to 3 weeks"
 
 #: src/composants/DepotFiches.tsx
 msgid "2 Mo par fichier, 50 fichiers et 20 Mo par dépôt au plus."
@@ -1472,6 +1492,15 @@ msgstr "Has access"
 #: src/composants/Repartition.tsx
 msgid "A choisi"
 msgstr "Chose"
+
+#: src/composants/LigneTache.tsx
+#: src/composants/Priorites.tsx
+msgid "À commencer"
+msgstr "To start"
+
+#: src/composants/TacheCarte.tsx
+msgid "À commencer : période de travail du {dateDebutPeriode} au {dateEcheance}"
+msgstr "To start: work period from {dateDebutPeriode} to {dateEcheance}"
 
 #. Statut d’une place de bénévole
 #: src/composants/Jauge.tsx
@@ -2609,6 +2638,10 @@ msgstr "No join requests processed for {periodeCette}."
 msgid "Aucune description pour ce périmètre."
 msgstr "No description for this area."
 
+#: src/composants/TacheFormulaire.tsx
+msgid "Aucune durée"
+msgstr "No duration"
+
 #: src/pages/Benevoles.tsx
 msgid "Aucune fiche bénévole pour cette activité."
 msgstr "No volunteer records for this activity."
@@ -2836,6 +2869,10 @@ msgstr "With this connection, Relaytour checks access but cannot change it."
 #: src/pages/Benevoles.tsx
 msgid "Avec une adresse, la première place envoie à la personne un mail avec son lien personnel. Ses places restent à confirmer. Décochez pour une personne jointe autrement."
 msgstr "With an email address, the first placement sends the person an email with their personal link. Their places stay unconfirmed. Clear the box for a person reached another way."
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Avec une échéance, la durée indique à l’équipe quand commencer la tâche. Elle apparaît alors dans la section « À commencer » des priorités."
+msgstr "With a due date, the duration tells the team when to start the task. The task then appears in the “To start” section of the priorities."
 
 #: src/composants/EcrireMessage.tsx
 msgid "Avez-vous envoyé ce message ?"
@@ -4605,6 +4642,10 @@ msgstr "of the area"
 #: src/composants/PreferenceJetons.tsx
 msgid "Durée du jeton"
 msgstr "Token lifetime"
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Durée estimée (facultatif)"
+msgstr "Estimated duration (optional)"
 
 #: src/composants/AssistantTableur.tsx
 msgid "Écartée"
@@ -8985,6 +9026,14 @@ msgstr "Period"
 msgid "Période de lecture"
 msgstr "Time frame"
 
+#: src/composants/TacheCarte.tsx
+msgid "Période de travail : du {dateDebutPeriode} au {dateEcheance}"
+msgstr "Work period: from {dateDebutPeriode} to {dateEcheance}"
+
+#: src/composants/Priorites.tsx
+msgid "Période de travail commencée le {dateDebut}"
+msgstr "Work period started on {dateDebut}"
+
 #: src/pages/Preferences.tsx
 msgid "Personnalisé : vos réglages ne suivent aucun modèle."
 msgstr "Custom: your settings do not follow any preset."
@@ -9074,6 +9123,10 @@ msgstr "People placed"
 #: src/composants/SondageFormulaire.tsx
 msgid "Personnes visées"
 msgstr "Target people"
+
+#: src/composants/Priorites.tsx
+msgid "Peut commencer dès le {dateDebut}"
+msgstr "Can start from {dateDebut}"
 
 #. Réponse à une convocation, en minuscules, après « Vous êtes convoqué·e, »
 #: src/pages/Agenda.tsx
@@ -9439,6 +9492,10 @@ msgstr "When you prepare a message, the organizer workspace opens your mail app 
 #: src/pages/admin/Activites.tsx
 msgid "Quelques heures pendant l’événement"
 msgstr "A few hours during the event"
+
+#: src/lib/durees.ts
+msgid "Quelques jours"
+msgstr "A few days"
 
 #: src/composants/Demandes.tsx
 #: src/pages/admin/Activites.tsx

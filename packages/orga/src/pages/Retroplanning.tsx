@@ -46,6 +46,7 @@ const RETROPLANNING = graphql(`
       id
       titre
       echeance
+      duree
       statut
       enRetard
       perimetre {

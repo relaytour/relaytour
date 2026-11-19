@@ -4,11 +4,11 @@ import { Trans, useLingui } from '@lingui/react/macro'
 import { useId, useState } from 'react'
 import { Link } from 'react-router'
 
-import type { StatutTache } from '../gql/graphql'
+import type { DureeTache, StatutTache } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { PARAMETRE_DETAIL } from '../lib/fenetre-tache'
 import { dateCourte } from '../lib/erreurs'
-import { estOuverte, etatEcheance } from '../lib/taches'
+import { classeDate, estOuverte, etatEcheance } from '../lib/taches'
 
 import EtiquettePerimetre from './EtiquettePerimetre'
 import { PastilleEtat, PastilleStatut } from './Etat'
@@ -18,6 +18,8 @@ export interface TacheLigne {
   id: string
   titre: string
   echeance?: string | null
+  /** Durée estimée (ADR 0068) : avec l'échéance, elle donne la période de travail. */
+  duree?: DureeTache | null
   statut: StatutTache
   enRetard: boolean
   perimetre: { slug: string; nom: string; couleur?: string | null }
@@ -64,10 +66,7 @@ export default function LigneTache({
           }}
           aria-hidden="true"
         />
-        <span
-          className={`rt-date${echeance === 'retard' ? ' rt-date-retard' : echeance === 'proche' ? ' rt-date-proche' : ''}`}
-          style={{ fontSize: 13 }}
-        >
+        <span className={classeDate(echeance)} style={{ fontSize: 13 }}>
           {tache.echeance ? dateCourte(tache.echeance) : t`Sans échéance`}
         </span>
         <span className="rt-ligne-tache-titre">
@@ -111,6 +110,11 @@ export default function LigneTache({
               <Trans>En retard</Trans>
             </PastilleEtat>
           )}
+          {echeance === 'aCommencer' && (
+            <PastilleEtat variante="alerte">
+              <Trans>À commencer</Trans>
+            </PastilleEtat>
+          )}
           <PastilleStatut statut={tache.statut} />
         </span>
       </Link>
@@ -145,7 +149,10 @@ export function LigneDeclinaisons({
   // L'échéance est commune au groupe : la plus pressante de ses tâches donne l'état.
   const echeance = enRetard
     ? 'retard'
-    : taches.some(x => etatEcheance(x) === 'proche')
+    : taches.some(x => {
+          const signal = etatEcheance(x)
+          return signal === 'proche' || signal === 'aCommencer'
+        })
       ? 'proche'
       : 'normale'
   return (
@@ -162,10 +169,7 @@ export function LigneDeclinaisons({
           style={{ background: 'var(--rt-encre-40)' }}
           aria-hidden="true"
         />
-        <span
-          className={`rt-date${echeance === 'retard' ? ' rt-date-retard' : echeance === 'proche' ? ' rt-date-proche' : ''}`}
-          style={{ fontSize: 13 }}
-        >
+        <span className={classeDate(echeance)} style={{ fontSize: 13 }}>
           {premiere.echeance ? dateCourte(premiere.echeance) : t`Sans échéance`}
         </span>
         <span className="rt-ligne-tache-titre">

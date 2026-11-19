@@ -88,6 +88,7 @@ const TACHES_DE = graphql(`
       id
       titre
       echeance
+      duree
       statut
       enRetard
       perimetre {
