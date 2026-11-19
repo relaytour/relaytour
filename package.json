@@ -58,6 +58,7 @@
     "eslint": "^9.39.0",
     "eslint-config-prettier": "^10.1.0",
     "globals": "^17.13.0",
+    "pagefind": "1.6.0",
     "prettier": "^3.9.10",
     "typescript": "~5.9.0",
     "typescript-eslint": "^8.71.2"

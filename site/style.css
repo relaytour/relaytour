@@ -1764,7 +1764,8 @@ footer {
 }
 
 /* Recherche dans les modes d'emploi (recherche.js). Le formulaire reste caché
-   tant que le script n'a pas trouvé l'index de la recherche sur le site. */
+   tant que le script n'a pas trouvé l'index Pagefind sur le site. La case du
+   modèle d'IA n'apparaît que sur un écran d'ordinateur. */
 .recherche {
   display: grid;
   gap: 10px;
@@ -1823,27 +1824,26 @@ footer {
   color: var(--rt-encre-55);
 }
 
-.recherche-sens {
-  justify-self: start;
-  padding: 8px 14px;
-  border: 0;
-  border-radius: 18px;
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--rt-encre-14);
-  font: inherit;
+.recherche-ia {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--rt-encre);
-  text-align: left;
+  color: var(--rt-encre-70);
   cursor: pointer;
 }
 
-.recherche-sens:hover {
-  background: var(--rt-encre-08);
+.recherche-ia[hidden] {
+  display: none;
 }
 
-.recherche-sens[hidden] {
-  display: none;
+.recherche-ia input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: var(--rt-encre);
+  cursor: pointer;
 }
 
 .recherche-resultats {

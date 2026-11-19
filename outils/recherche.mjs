@@ -1,8 +1,11 @@
-// recherche : prépare la recherche par le sens des modes d'emploi du site.
+// recherche : prépare la recherche des modes d'emploi du site.
 //
-// Le script découpe chaque mode d'emploi (français et anglais) en passages, un
-// par partie et par écran, puis calcule le vecteur de chaque passage avec le
-// modèle multilingual-e5-small. Il écrit dans site/recherche/, ignoré par Git :
+// La recherche par défaut est un index Pagefind, par les mots. Le script prépare
+// aussi la recherche par le sens, qu'une personne active sur un ordinateur : il
+// découpe chaque mode d'emploi (français et anglais) en passages, un par partie
+// et par écran, puis calcule le vecteur de chaque passage avec le modèle
+// multilingual-e5-small. Il écrit dans site/recherche/, ignoré par Git :
+//   - pagefind/ : l'index Pagefind, une partie par langue ;
 //   - fr.json et en.json : les passages et leurs vecteurs ;
 //   - modeles/ : le modèle, téléchargé une fois depuis Hugging Face à une
 //     révision fixée, et vérifié par son empreinte SHA-256 ;
@@ -24,6 +27,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as cheerio from 'cheerio'
 import { env, pipeline } from '@huggingface/transformers'
+import * as pagefind from 'pagefind'
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..')
 const SITE = join(RACINE, 'site')
@@ -56,8 +60,16 @@ const BIBLIOTHEQUES = [
 ]
 
 const LANGUES = [
-  { code: 'fr', dossier: join(SITE, 'modes-d-emploi') },
-  { code: 'en', dossier: join(SITE, 'en', 'modes-d-emploi') },
+  {
+    code: 'fr',
+    dossier: join(SITE, 'modes-d-emploi'),
+    url: '/modes-d-emploi/',
+  },
+  {
+    code: 'en',
+    dossier: join(SITE, 'en', 'modes-d-emploi'),
+    url: '/en/modes-d-emploi/',
+  },
 ]
 
 // Un passage garde 120 mots au plus : le modèle lit 512 jetons, et un passage
@@ -254,7 +266,51 @@ async function indexer(extraire, langue) {
   return passages.length
 }
 
+// Pagefind indexe le contenu principal de chaque mode d'emploi, sans la barre,
+// le pied de page ni les boutons. Un titre d'écran reçoit l'identifiant de sa
+// carte : Pagefind en fait un résultat qui mène à cet écran.
+function pourPagefind(html) {
+  const $ = cheerio.load(html)
+  $('nav, footer, script, .bascule, img, picture, svg, form').remove()
+  $('main').attr('data-pagefind-body', '')
+  $('h1').first().attr('data-pagefind-meta', 'title')
+  $('article[id]').each((_, carte) => {
+    const titre = $(carte).find('h3').first()
+    if (titre.length > 0 && !titre.attr('id')) {
+      titre.attr('id', $(carte).attr('id'))
+      $(carte).removeAttr('id')
+    }
+  })
+  return $.html()
+}
+
+async function indexerPagefind() {
+  const { index, errors } = await pagefind.createIndex({})
+  if (!index) throw new Error(`✖ Pagefind : ${errors.join(', ')}`)
+  let nombre = 0
+  for (const langue of LANGUES) {
+    const fichiers = (await readdir(langue.dossier)).filter(nom =>
+      nom.endsWith('.html')
+    )
+    for (const fichier of fichiers) {
+      const html = await readFile(join(langue.dossier, fichier), 'utf8')
+      const reponse = await index.addHTMLFile({
+        url: `${langue.url}${fichier === 'index.html' ? '' : fichier}`,
+        content: pourPagefind(html),
+      })
+      if (reponse.errors.length > 0) {
+        throw new Error(`✖ Pagefind, ${fichier} : ${reponse.errors.join(', ')}`)
+      }
+      nombre++
+    }
+  }
+  await index.writeFiles({ outputPath: join(SORTIE, 'pagefind') })
+  await pagefind.close()
+  return nombre
+}
+
 await mkdir(SORTIE, { recursive: true })
+console.log(`✔ site/recherche/pagefind : ${await indexerPagefind()} pages`)
 const dossierModeles = await preparerModele()
 await copierBibliotheques()
 
