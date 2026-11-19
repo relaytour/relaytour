@@ -28,6 +28,7 @@ import { useCopieLien, useEntreesPartage } from '../lib/copie-lien'
 import { cheminTache, useOuvrirTache } from '../lib/fenetre-tache'
 import type { ResumeDeclinaisons } from '../lib/declinaisons'
 import type { ResumeJalon } from '../lib/jalons'
+import { debutDeLaPeriode } from '../lib/durees'
 import { dateCourte } from '../lib/erreurs'
 import {
   AJUSTER_PRIORITE,
@@ -207,6 +208,10 @@ export default function TacheCarte({
     tache.realisateurs.map(p => (p.id === moiId ? t`vous` : p.nom))
   )
   const dateEcheance = tache.echeance ? dateCourte(tache.echeance) : ''
+  // La période de travail (ADR 0068) : de l'échéance moins la durée estimée
+  // jusqu'à l'échéance.
+  const debutPeriode = debutDeLaPeriode(tache)
+  const dateDebutPeriode = debutPeriode ? dateCourte(debutPeriode) : ''
   // Le menu « Autres actions » ne s'affiche que s'il propose au moins une entrée :
   // une tâche faite ou abandonnée, hors page du périmètre, n'en a aucune.
   const autresActions = [
@@ -579,6 +584,15 @@ export default function TacheCarte({
               {echeance === 'retard'
                 ? t`En retard : ${dateEcheance}`
                 : t`Échéance ${dateEcheance}`}
+            </span>
+          )}
+          {debutPeriode && ouverte && echeance !== 'retard' && (
+            <span
+              className={`rt-date${echeance === 'aCommencer' ? ' rt-date-proche' : ''}`}
+            >
+              {echeance === 'aCommencer'
+                ? t`À commencer : période de travail du ${dateDebutPeriode} au ${dateEcheance}`
+                : t`Période de travail : du ${dateDebutPeriode} au ${dateEcheance}`}
             </span>
           )}
           {tache.assignes.length === 0 && ouverte ? (

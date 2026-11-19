@@ -73,11 +73,14 @@ export function ecrireFiltre(
 export interface PerimetreAFiltrer<T> {
   perimetre: { id: string; groupe: string }
   priorites: T[]
+  /** Les tâches à commencer (ADR 0068). */
+  aCommencer?: readonly { assignes: readonly unknown[] }[]
 }
 
 /**
  * Les périmètres et les priorités que le filtre laisse voir. Avec « À prendre »,
- * un périmètre dont aucune priorité n'est à prendre disparaît.
+ * un périmètre dont aucune priorité ni aucune tâche à commencer n'est à prendre
+ * disparaît.
  */
 export function filtrerPriorites<
   T extends { tache: { assignes: readonly unknown[] } },
@@ -86,14 +89,17 @@ export function filtrerPriorites<
   perimetres: readonly P[],
   filtre: FiltrePriorites,
   miens: ReadonlySet<string>
-) {
+): P[] {
   return perimetres
     .filter(p => !filtre.mesPerimetres || miens.has(p.perimetre.id))
     .filter(p => filtre.groupe === null || p.perimetre.groupe === filtre.groupe)
     .flatMap(p => {
       if (!filtre.aPrendre) return [p]
       const priorites = p.priorites.filter(x => x.tache.assignes.length === 0)
-      return priorites.length > 0 ? [{ ...p, priorites }] : []
+      const aCommencer = p.aCommencer?.filter(x => x.assignes.length === 0)
+      return priorites.length > 0 || (aCommencer?.length ?? 0) > 0
+        ? [{ ...p, priorites, ...(aCommencer ? { aCommencer } : {}) } as P]
+        : []
     })
 }
 
