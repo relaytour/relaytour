@@ -28,7 +28,11 @@
           </svg>
           <span class="logotype">Relay<span>tour</span></span>
         </a>
-        <ul class="liens">
+        <button class="menu-bouton" type="button" aria-expanded="false" aria-controls="liens-site" hidden>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+          Menu
+        </button>
+        <ul class="liens" id="liens-site">
           <li><a href="../">Overview</a></li>
           <li><a href="../hebergement.html">Hosting</a></li>
           <li><a href="../../design-system.html" hreflang="fr">Design system</a></li>
@@ -47,6 +51,16 @@
         <p class="renvoi">
           A user guide only describes the features specific to its role. Admins also read the coordinators’ guide, which presents the screens common to everyone.
         </p>
+        <form class="recherche" role="search" data-recherche hidden>
+          <label class="recherche-libelle" for="recherche-champ">Search the user guides</label>
+          <div class="recherche-ligne">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <input id="recherche-champ" type="search" autocomplete="off" spellcheck="false" placeholder="For example: invite someone to the team" aria-describedby="recherche-etat" aria-controls="recherche-resultats" />
+          </div>
+          <p class="recherche-etat" id="recherche-etat" aria-live="polite"></p>
+          <label class="recherche-ia" hidden><input type="checkbox" /><span>Search by meaning with a lightweight AI model that runs on your computer (150&nbsp;MB, downloaded once)</span></label>
+          <ol class="recherche-resultats" id="recherche-resultats"></ol>
+        </form>
       </header>
 
       <section aria-labelledby="t-roles">
@@ -155,5 +169,7 @@
         Relaytour is free software distributed under the GNU AGPL-3.0 license. Each user guide states at the bottom of the page the version it is up to date with. These user guides are the basis for the ones that organizations send to their members.
       </footer>
     </main>
+    <script src="../../menu.js"></script>
+    <script src="../../recherche.js"></script>
   </body>
 </html>
