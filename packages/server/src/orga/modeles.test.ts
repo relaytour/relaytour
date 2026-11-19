@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import {
   ciblesDeLaDeclinaison,
   dateEcheance,
+  dureeDuModele,
   ErreurModeles,
   lireModeles,
   textesDeLaDeclinaison,
@@ -394,6 +395,34 @@ groupes:
     expect(erreurs(racine).join()).toMatch(
       /cite la fiche accueil, qui n'existe pas dans cette activité/
     )
+  })
+})
+
+describe('durée estimée (ADR 0068)', () => {
+  it('lit la durée d’une tâche type', () => {
+    const modeles = lireModeles(
+      dossier({
+        'perimetres.yaml': PERIMETRES,
+        'taches/natation.yaml':
+          'taches:\n  - modele: piscine\n    titre: Réserver\n    echeance: J-30\n    duree: un-a-deux-mois\n',
+      })
+    )
+    const tache = modeles.activites[0]!.taches.get('natation')![0]!
+    expect(tache.duree).toBe('un-a-deux-mois')
+    expect(dureeDuModele(tache.duree)).toBe('UN_A_DEUX_MOIS')
+    expect(dureeDuModele(undefined)).toBeNull()
+  })
+
+  it('refuse une durée inconnue', () => {
+    expect(
+      erreurs(
+        dossier({
+          'perimetres.yaml': PERIMETRES,
+          'taches/natation.yaml':
+            'taches:\n  - modele: piscine\n    titre: Réserver\n    duree: un-an\n',
+        })
+      ).join()
+    ).toMatch(/durée attendue parmi/)
   })
 })
 

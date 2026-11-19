@@ -18,13 +18,20 @@ import { i18n, langueCourante } from './langue.ts'
 // résumé de ses déclinaisons.
 
 export type Rubrique =
-  'RETARD' | 'PROCHE' | 'A_VENIR' | 'DECLINAISONS' | 'PRIORITES' | 'AUTRES'
+  | 'RETARD'
+  | 'PROCHE'
+  | 'A_VENIR'
+  | 'DECLINAISONS'
+  | 'PRIORITES'
+  | 'A_COMMENCER'
+  | 'AUTRES'
 
 const ORDRE_RUBRIQUES: Rubrique[] = [
   'RETARD',
   'PROCHE',
   'A_VENIR',
   'PRIORITES',
+  'A_COMMENCER',
   'DECLINAISONS',
   'AUTRES',
 ]
@@ -39,6 +46,8 @@ function titreRubrique(rubrique: Rubrique): string {
       return i18n._('À venir')
     case 'PRIORITES':
       return i18n._('À traiter avant le point')
+    case 'A_COMMENCER':
+      return i18n._('À commencer')
     case 'DECLINAISONS':
       return i18n._('Déclinaisons en retard')
     case 'AUTRES':

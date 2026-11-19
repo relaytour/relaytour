@@ -158,10 +158,22 @@ taches:
     titre: Réserver le gymnase
     description: Demande écrite au service des sports.
     echeance: J-180                   # 180 jours avant le premier jour de la période
+    duree: deux-a-trois-semaines      # facultatif
     fiche: reserver-le-gymnase        # facultatif
 ```
 
 `echeance` accepte `J-<jours>` (avant le premier jour) et `J+<jours>` (après).
+
+`duree` donne la durée estimée de la tâche (ADR 0068). La période de travail commence alors avant l'échéance, du nombre de jours retenu :
+
+| `duree` | Libellé | Jours retenus |
+|---|---|---|
+| `quelques-jours` | Quelques jours | 7 |
+| `deux-a-trois-semaines` | 2 à 3 semaines | 21 |
+| `un-a-deux-mois` | 1 à 2 mois | 60 |
+| `deux-a-trois-mois` | 2 à 3 mois | 90 |
+
+Une tâche sans `duree` n'a pas de période de travail.
 
 ### Tâches partagées
 
@@ -184,7 +196,7 @@ taches:
 - La tâche du fichier est la **tâche partagée**. Elle reste dans son périmètre, avec son statut.
 - Chaque périmètre cible reçoit une **déclinaison** : une tâche à part entière, avec son statut, ses personnes assignées et son échéance. Le périmètre d'origine lit l'état de chaque déclinaison sur sa tâche partagée.
 - `declinaison` porte `groupe` ou `perimetres`, jamais les deux. Le périmètre d'origine ne reçoit pas de déclinaison.
-- `titre`, `description` et `echeance` remplacent ceux de la tâche partagée. Absents, la déclinaison reprend les siens.
+- `titre`, `description`, `echeance` et `duree` remplacent ceux de la tâche partagée. Absents, la déclinaison reprend les siens.
 - Une déclinaison ne cite qu'une fiche commune, que tous les périmètres lisent. Sans `fiche`, elle reprend celle de la tâche partagée si cette fiche est commune.
 - Un périmètre cible ne déclare pas lui-même le `modele` qu'il reçoit, et deux tâches partagées ne déclinent pas le même `modele` dans un même périmètre.
 

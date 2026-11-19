@@ -6,6 +6,7 @@ import { LIENS_JALON_MAX } from '../lib/saisie.ts'
 import {
   ciblesDeLaDeclinaison,
   dateEcheance,
+  dureeDuModele,
   textesDeLaDeclinaison,
   type TacheModele,
 } from './modeles.ts'
@@ -183,6 +184,7 @@ export async function creerTachesDeLaPeriode(
               titre: tache.titre,
               description: tache.description?.trim() || null,
               echeance: dateEcheance(tache.echeance, periode.debut),
+              duree: dureeDuModele(tache.duree),
               ficheId: await ficheEnBase(
                 tx,
                 ficheDe(tache.fiche),
@@ -261,6 +263,7 @@ export async function creerTachesDeLaPeriode(
               titre: textes.titre,
               description: textes.description?.trim() || null,
               echeance: dateEcheance(textes.echeance, periode.debut),
+              duree: dureeDuModele(textes.duree),
               ficheId,
               origineId: tacheId,
               accord: 'ACCEPTE',

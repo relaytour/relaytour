@@ -4,9 +4,12 @@ import { plural, t } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react/macro'
 import { App } from 'antd'
 
-import { graphql } from '../gql'
-import type { StatutTache } from '../gql/graphql'
+import { signalEcheance } from '@relaytour/commun'
 
+import { graphql } from '../gql'
+import type { DureeTache, StatutTache } from '../gql/graphql'
+
+import { jourLocal } from './agenda'
 import { lireConflit, texteConflit } from './conflit'
 import { messageErreur } from './erreurs'
 import { relireLesVues, VUES_TACHES } from './rafraichissement'
@@ -56,29 +59,36 @@ export const CLASSE_STATUT: Record<StatutTache, string> = {
 export const estOuverte = (tache: { statut: StatutTache }) =>
   tache.statut === 'A_FAIRE' || tache.statut === 'EN_COURS'
 
-/** Nombre de jours pendant lesquels une échéance ouverte est signalée comme proche. */
-export const JOURS_ECHEANCE_PROCHE = 7
-
 /**
- * Situation d'une échéance : en retard (le serveur le calcule), proche (ouverte
- * et due dans les sept jours) ou normale. La date se lit dans le texte, sans
- * décalage de fuseau.
+ * Signal d'une échéance (ADR 0068) : en retard (le serveur le calcule), à
+ * commencer (à faire, période de travail commencée), proche (sans période de
+ * travail, due dans les sept jours) ou normale. Une tâche en cours dans sa
+ * période de travail ne reçoit aucun signal avant son échéance. La date se lit
+ * dans le texte, sans décalage de fuseau.
  */
 export function etatEcheance(
-  tache: { statut: StatutTache; echeance?: string | null; enRetard: boolean },
+  tache: {
+    statut: StatutTache
+    echeance?: string | null
+    duree?: DureeTache | null
+    enRetard: boolean
+  },
   aujourdhui = new Date()
-): 'retard' | 'proche' | 'normale' {
+): 'retard' | 'aCommencer' | 'proche' | 'normale' {
   if (tache.enRetard) return 'retard'
-  if (!tache.echeance || !estOuverte(tache)) return 'normale'
-  const [annee, mois, jour] = tache.echeance.slice(0, 10).split('-').map(Number)
-  const echeance = new Date(annee ?? 0, (mois ?? 1) - 1, jour ?? 1)
-  const debut = new Date(
-    aujourdhui.getFullYear(),
-    aujourdhui.getMonth(),
-    aujourdhui.getDate()
-  )
-  const jours = Math.round((echeance.getTime() - debut.getTime()) / 86_400_000)
-  return jours >= 0 && jours <= JOURS_ECHEANCE_PROCHE ? 'proche' : 'normale'
+  const signal = signalEcheance(tache, jourLocal(aujourdhui))
+  // Le serveur juge le retard au jour de l'organisation : un poste en avance
+  // d'un jour ne le devance pas.
+  return signal === 'retard' ? 'proche' : signal
+}
+
+/** La classe de la date d'une tâche, selon son signal. */
+export function classeDate(signal: ReturnType<typeof etatEcheance>): string {
+  return signal === 'retard'
+    ? 'rt-date rt-date-retard'
+    : signal === 'aCommencer' || signal === 'proche'
+      ? 'rt-date rt-date-proche'
+      : 'rt-date'
 }
 
 export { VUES_TACHES }
@@ -89,6 +99,7 @@ export const TACHE_CHAMPS = graphql(`
     titre
     description
     echeance
+    duree
     statut
     version
     enRetard
@@ -342,6 +353,7 @@ export const CREER_TACHE = graphql(`
     $titre: String!
     $description: String
     $echeance: Date
+    $duree: DureeTache
     $ficheId: ID
     $mAssigner: Boolean
     $jalon: Boolean
@@ -353,6 +365,7 @@ export const CREER_TACHE = graphql(`
       titre: $titre
       description: $description
       echeance: $echeance
+      duree: $duree
       ficheId: $ficheId
       mAssigner: $mAssigner
       jalon: $jalon
@@ -369,6 +382,7 @@ export const MODIFIER_TACHE = graphql(`
     $titre: String!
     $description: String
     $echeance: Date
+    $duree: DureeTache
     $ficheId: ID
     $versionAttendue: Int
     $confirmer: Boolean
@@ -378,6 +392,7 @@ export const MODIFIER_TACHE = graphql(`
       titre: $titre
       description: $description
       echeance: $echeance
+      duree: $duree
       ficheId: $ficheId
       versionAttendue: $versionAttendue
       confirmer: $confirmer

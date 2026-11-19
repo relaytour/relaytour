@@ -7,8 +7,10 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 
 import { graphql } from '../gql'
-import type { PrioritesQuery } from '../gql/graphql'
+import type { PrioritesQuery, TachesACommencerQuery } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
+import { jourLocal } from '../lib/agenda'
+import { debutDeLaPeriode } from '../lib/durees'
 import { dateCourte, jourDeLInstant } from '../lib/erreurs'
 import { heureCourte, minutes } from '../lib/programme'
 import {
@@ -53,7 +55,6 @@ const PRIORITES = graphql(`
           score
           raisons {
             code
-            points
             jours
             nombre
             titre
@@ -63,6 +64,7 @@ const PRIORITES = graphql(`
             id
             titre
             echeance
+            duree
             statut
             enRetard
             perimetre {
@@ -93,6 +95,7 @@ const PRIORITES = graphql(`
         id
         titre
         echeance
+        duree
         statut
         enRetard
         perimetre {
@@ -114,9 +117,43 @@ const PRIORITES = graphql(`
   }
 `)
 
+// Les tâches à commencer (ADR 0068) se lisent à part : dans la requête des
+// priorités, elles dépasseraient le plafond de complexité du serveur.
+const A_COMMENCER = graphql(`
+  query TachesACommencer($editionId: ID!) {
+    tachesACommencer(editionId: $editionId) {
+      perimetres {
+        perimetre {
+          id
+        }
+        taches {
+          id
+          titre
+          echeance
+          duree
+          statut
+          enRetard
+          assignes {
+            id
+            nom
+          }
+        }
+        autres
+      }
+    }
+  }
+`)
+
+type TacheACommencer = NonNullable<
+  TachesACommencerQuery['tachesACommencer']
+>['perimetres'][number]['taches'][number]
+
 type PerimetrePriorites = NonNullable<
   PrioritesQuery['priorites']
->['perimetres'][number]
+>['perimetres'][number] & {
+  aCommencer: TacheACommencer[]
+  aCommencerAutres: number
+}
 type RaisonLue = PerimetrePriorites['priorites'][number]['raisons'][number]
 
 function useTexteRaison() {
@@ -177,9 +214,22 @@ function BlocPerimetre({
   const { lien } = useActivite()
   const texteRaison = useTexteRaison()
   const [tout, setTout] = useState(false)
-  const { perimetre, priorites, autres, ensuite } = bloc
+  const [toutACommencer, setToutACommencer] = useState(false)
+  const {
+    perimetre,
+    priorites,
+    autres,
+    ensuite,
+    aCommencer,
+    aCommencerAutres,
+  } = bloc
   const visibles = tout ? priorites : priorites.slice(0, PRIORITES_VISIBLES)
   const cachees = priorites.length - visibles.length
+  const aCommencerVisibles = toutACommencer
+    ? aCommencer
+    : aCommencer.slice(0, PRIORITES_VISIBLES)
+  const aCommencerCachees = aCommencer.length - aCommencerVisibles.length
+  const aujourdhui = jourLocal()
   const nomPerimetre = perimetre.nom
   const titreEnsuite = ensuite?.titre ?? ''
   const dateEnsuite = ensuite?.echeance ? dateCourte(ensuite.echeance) : ''
@@ -201,19 +251,22 @@ function BlocPerimetre({
         )}
       </h3>
       {priorites.length === 0 ? (
-        <p className="rt-texte-secondaire rt-priorites-ensuite">
-          {ensuite ? (
-            dateEnsuite ? (
-              <Trans>
-                Ensuite : {titreEnsuite}, le {dateEnsuite}.
-              </Trans>
+        // La ligne « Ensuite » cède la place aux tâches à commencer (ADR 0068).
+        aCommencer.length === 0 && (
+          <p className="rt-texte-secondaire rt-priorites-ensuite">
+            {ensuite ? (
+              dateEnsuite ? (
+                <Trans>
+                  Ensuite : {titreEnsuite}, le {dateEnsuite}.
+                </Trans>
+              ) : (
+                <Trans>Ensuite : {titreEnsuite}.</Trans>
+              )
             ) : (
-              <Trans>Ensuite : {titreEnsuite}.</Trans>
-            )
-          ) : (
-            <Trans>Aucune tâche ouverte avec une échéance.</Trans>
-          )}
-        </p>
+              <Trans>Aucune tâche ouverte avec une échéance.</Trans>
+            )}
+          </p>
+        )
       ) : (
         <div className="rt-priorites-liste">
           {visibles.map(p => {
@@ -268,6 +321,60 @@ function BlocPerimetre({
             </Link>
           )}
         </p>
+      )}
+      {aCommencer.length > 0 && (
+        <div className="rt-priorites-a-commencer">
+          <h4 className="rt-priorites-sous-titre">
+            <Trans>À commencer</Trans>
+          </h4>
+          <div className="rt-priorites-liste">
+            {aCommencerVisibles.map(tache => {
+              const debut = debutDeLaPeriode(tache) ?? ''
+              const dateDebut = debut ? dateCourte(debut) : ''
+              return (
+                <div key={tache.id} className="rt-priorite">
+                  <ul className="rt-liste-liens">
+                    <LigneTache
+                      // Le périmètre est celui du bloc : la requête ne le relit
+                      // pas, pour rester sous le plafond de complexité.
+                      tache={{ ...tache, perimetre }}
+                      moiId={moiId}
+                      editionId={editionId}
+                      sansPerimetre
+                    />
+                  </ul>
+                  <p className="rt-priorite-raisons">
+                    {debut <= aujourdhui
+                      ? t`Période de travail commencée le ${dateDebut}`
+                      : t`Peut commencer dès le ${dateDebut}`}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+          {(aCommencerCachees > 0 || aCommencerAutres > 0) && (
+            <p className="rt-priorites-suite">
+              {aCommencerCachees > 0 && (
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => setToutACommencer(true)}
+                >
+                  {t`${plural(aCommencerCachees, { one: 'Voir l’autre tâche à commencer', other: 'Voir les # autres tâches à commencer' })}`}
+                </Button>
+              )}
+              {aCommencerAutres > 0 && !aPrendre && (
+                <Link
+                  to={lien(
+                    `/perimetres/${perimetre.slug}?edition=${editionId}`
+                  )}
+                >
+                  {t`${plural(aCommencerAutres, { one: '# autre tâche à commencer au-delà des cinq', other: '# autres tâches à commencer au-delà des cinq' })}`}
+                </Link>
+              )}
+            </p>
+          )}
+        </div>
       )}
     </section>
   )
@@ -335,6 +442,9 @@ export default function Priorites({
   const { t } = useLingui()
   const { activite, libelleGroupe } = useActivite()
   const { data, loading } = useQuery(PRIORITES, { variables: { editionId } })
+  const { data: donneesACommencer } = useQuery(A_COMMENCER, {
+    variables: { editionId },
+  })
   const [filtre, setFiltre] = useState<FiltrePriorites>(() =>
     lireFiltre(activite.slug)
   )
@@ -344,7 +454,17 @@ export default function Priorites({
     ecrireFiltre(activite.slug, suivant)
   }
   const lues = data?.priorites
-  const tous = lues?.perimetres ?? []
+  const aCommencerPar = new Map(
+    (donneesACommencer?.tachesACommencer?.perimetres ?? []).map(p => [
+      p.perimetre.id,
+      p,
+    ])
+  )
+  const tous: PerimetrePriorites[] = (lues?.perimetres ?? []).map(p => ({
+    ...p,
+    aCommencer: aCommencerPar.get(p.perimetre.id)?.taches ?? [],
+    aCommencerAutres: aCommencerPar.get(p.perimetre.id)?.autres ?? 0,
+  }))
   const groupes = [...new Set(tous.map(p => p.perimetre.groupe))]
   // Un groupe enregistré qui n'existe plus ne filtre rien.
   const filtreEffectif: FiltrePriorites = {
@@ -356,7 +476,14 @@ export default function Priorites({
   }
   const affiches = filtrerPriorites(tous, filtreEffectif, mesPerimetres)
   const nombre = affiches.reduce((s, p) => s + p.priorites.length, 0)
-  const ailleurs = tous.some(p => p.priorites.length > 0)
+  // Les tâches à commencer comptent pour dire qu'un filtre vide la liste (ADR 0068).
+  const nombreAffiche = affiches.reduce(
+    (s, p) => s + p.priorites.length + p.aCommencer.length,
+    0
+  )
+  const ailleurs = tous.some(
+    p => p.priorites.length > 0 || p.aCommencer.length > 0
+  )
   const filtreActif =
     filtreEffectif.mesPerimetres ||
     filtreEffectif.aPrendre ||
@@ -391,8 +518,8 @@ export default function Priorites({
               </>
             ) : (
               <Trans>
-                Aucun point d’équipe n’est prévu : les priorités couvrent les
-                14 prochains jours.
+                Aucun point d’équipe n’est prévu : les priorités couvrent les 14
+                prochains jours.
               </Trans>
             )}
           </p>
@@ -427,7 +554,7 @@ export default function Priorites({
               <Trans>À prendre</Trans>
             </PuceBascule>
           </div>
-          {filtreActif && nombre === 0 && ailleurs ? (
+          {filtreActif && nombreAffiche === 0 && ailleurs ? (
             <p className="rt-texte-secondaire">
               <Trans>Aucune priorité ne correspond à ce filtre.</Trans>{' '}
               <Button
@@ -455,7 +582,15 @@ export default function Priorites({
               )}
               {nombre === 0 && (
                 <p className="rt-texte-secondaire">
-                  <Trans>Aucune priorité jusqu’au {fin}.</Trans>
+                  {nombreAffiche === 0 ? (
+                    <Trans>Aucune priorité jusqu’au {fin}.</Trans>
+                  ) : (
+                    // Seules des tâches à commencer s'affichent (ADR 0068).
+                    <Trans>
+                      Aucune priorité jusqu’au {fin}. Les tâches ci-dessous
+                      peuvent commencer.
+                    </Trans>
+                  )}
                 </p>
               )}
               {affiches.map(bloc => (

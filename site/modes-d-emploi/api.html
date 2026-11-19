@@ -197,9 +197,10 @@
               <tr><th><span class="route">GET /activites/{activiteId}/taches</span></th><td>Les tâches d'une période, par périmètre.</td></tr>
               <tr><th><span class="route">GET /editions/{editionId}/mes-taches</span></th><td>Les tâches assignées à la personne.</td></tr>
               <tr><th><span class="route">GET /editions/{editionId}/priorites</span></th><td>Les priorités de la période.</td></tr>
+              <tr><th><span class="route">GET /editions/{editionId}/a-commencer</span></th><td>Les tâches à commencer de la période, avec le premier jour de leur période de travail.</td></tr>
               <tr><th><span class="route">GET /taches/{id}</span></th><td>Une tâche, et <span class="route">/commentaires</span> pour son fil.</td></tr>
               <tr><th><span class="route">POST /taches</span></th><td>Créer une tâche dans un périmètre où la personne écrit.</td></tr>
-              <tr><th><span class="route">PATCH /taches/{id}</span></th><td>Modifier le titre, la description ou l'échéance d'une tâche.</td></tr>
+              <tr><th><span class="route">PATCH /taches/{id}</span></th><td>Modifier le titre, la description, l'échéance ou la durée estimée d'une tâche.</td></tr>
               <tr><th><span class="route">POST /taches/{id}/statut</span></th><td>Changer le statut d'une tâche.</td></tr>
               <tr><th><span class="route">POST /taches/{id}/assignation</span></th><td>Assigner une tâche, ou retirer une personne assignée.</td></tr>
               <tr><th><span class="route">POST /taches/{id}/commentaires</span></th><td>Commenter une tâche.</td></tr>

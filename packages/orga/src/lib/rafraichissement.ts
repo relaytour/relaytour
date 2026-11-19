@@ -37,6 +37,7 @@ import { ouvrirLeFluxSse } from './flux-sse'
 export const VUES_TACHES = [
   'PagePerimetre',
   'MesTaches',
+  'TachesAPrendre',
   'AvancementGlobal',
   'Retroplanning',
   // La charge de l'équipe et le détail d'une personne (ADR 0055).
@@ -44,6 +45,8 @@ export const VUES_TACHES = [
   'TachesDe',
   // Les priorités d'une période (ADR 0059).
   'Priorites',
+  // Les tâches à commencer d'une période (ADR 0068).
+  'TachesACommencer',
   // Tâches partagées (ADR 0026) : les tâches proposées à un périmètre, et le détail
   // des déclinaisons d'une tâche quand il est ouvert.
   'DeclinaisonsProposees',

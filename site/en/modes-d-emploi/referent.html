@@ -100,6 +100,7 @@
             <li><span><span class="libelle">More actions</span></span><span>Mark as in progress, set back to to do, or abandon. A task is never deleted: it is abandoned.</span></li>
           </ul>
           <p>The “Priorities” panel opens the page. Its “Milestones before the next team check-in” section lists the milestones of the whole activity whose due date is near. Each milestone shows how many of its linked tasks are still open.</p>
+          <p>Below the priorities of each area, the “To start” section lists the tasks that the team can start before the next check-in. A task appears there when it is to do, has an estimated duration and is due after the next check-in. Each task shows the day its work period starts.</p>
           <p class="note">Only you and the admins can see your score. It counts the tasks you completed, those completed on time, the tasks you created and the sheets you wrote.</p>
         </article>
 
@@ -259,11 +260,12 @@
           </figure>
           <ul class="gestes">
             <li><span><span class="libelle">By phase</span><span class="libelle">By due date</span><span class="libelle">By sheet</span></span><span>Choose how tasks are grouped. Your browser remembers this choice. Grouping by sheet requires an appointment in the area.</span></li>
-            <li><span><span class="libelle">New task</span></span><span>Add a task to your area: title, description, due date and linked sheet. The “I’ll take care of it” checkbox is checked by default.</span></li>
+            <li><span><span class="libelle">New task</span></span><span>Add a task to your area: title, description, due date, estimated duration and linked sheet. The “I’ll take care of it” checkbox is checked by default.</span></li>
             <li><span><span class="libelle">Edit</span></span><span>Correct an existing task from the “More actions” menu on its card.</span></li>
             <li><span><span class="libelle">Upcoming meetings</span></span><span>Read the next five meetings of the area in the right-hand column, and create one with “New”.</span></li>
             <li><span><span class="libelle">Refer a person</span></span><span>Refer to an admin a person who wants to join your area: their first and last name, their email address, and an optional note. An admin reviews the referral, then invites the person. They receive no email before the decision.</span></li>
           </ul>
+          <p>A task can have an <strong>estimated duration</strong>: a few days, 2 to 3 weeks, 1 to 2 months or 2 to 3 months. With the due date, the duration gives the task’s <strong>work period</strong>, which its card shows. A task to do whose work period has started shows “To start”, in orange. A task in progress within its work period shows no signal before its due date. A task past its due date remains “Overdue”.</p>
           <p class="note">These actions are open to the people appointed to the area for the period being viewed. An archived period makes its tasks read-only.</p>
           <p>Each task has a <strong>thread</strong>. The “Comment” button opens it. You note where you stand there, and you read your team’s comments and the task history. The people assigned to the task receive a notification, with no immediate email.</p>
           <figure>
@@ -394,7 +396,7 @@
           <ul class="gestes">
             <li><span><span class="libelle">Edit my name</span></span><span>Correct your first and last name, in the “Your account” panel. This name appears in all your organizations.</span></li>
             <li><span><span class="libelle">Every day</span><span class="libelle">Every Monday</span><span class="libelle">Never</span></span><span>Set the email digest. It gathers the news from your areas and your due dates for the next 14 days, and is sent at 7 a.m.</span></li>
-            <li><span><span class="libelle">My areas</span><span class="libelle">Whole activity</span><span class="libelle">Never</span></span><span>Set the priorities email. It lists the priorities of the Priorities panel, sorted by area, and is sent at 7 a.m. the day before each team check-in, or on Monday when no check-in is planned that week.</span></li>
+            <li><span><span class="libelle">My areas</span><span class="libelle">Whole activity</span><span class="libelle">Never</span></span><span>Set the priorities email. It lists the priorities and the tasks to start of the Priorities panel, sorted by area, and is sent at 7 a.m. the day before each team check-in, or on Monday when no check-in is planned that week.</span></li>
             <li><span><span class="libelle">Changes to your tasks</span></span><span>Receive an email when another person edits a task assigned to you.</span></li>
             <li><span><span class="libelle">Due dates</span></span><span>Receive an email when one of your tasks reaches its due date or becomes overdue. The email sorts tasks by area, overdue ones first. It also reports the overdue derived tasks of the shared tasks assigned to you.</span></li>
             <li><span><span class="libelle">Requests to join the team</span></span><span>Receive an email, at most once an hour, when an activity you administer receives requests. This setting is shown to admins only.</span></li>

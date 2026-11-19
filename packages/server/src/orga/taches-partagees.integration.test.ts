@@ -49,6 +49,7 @@ const tachesDuPole = (partagee: boolean) =>
     titre: Recenser les besoins de lieux
     description: Le pôle réunit les besoins de chaque sport.
     echeance: J-300
+    duree: deux-a-trois-semaines
     fiche: missions-${s}
 ${
   partagee
@@ -62,6 +63,7 @@ ${
 }  - modele: visite
     titre: Visiter les lieux
     echeance: J-30
+    duree: quelques-jours
 `
 
 const importer = (simulation = false) =>
@@ -240,6 +242,28 @@ describe('import des tâches partagées', () => {
         accord: 'ACCEPTE',
       },
     ])
+  })
+
+  // Durée estimée (ADR 0068) : la tâche type la porte, et la déclinaison créée
+  // reprend celle de sa tâche partagée.
+  it('écrit la durée des tâches types et de leurs déclinaisons', async () => {
+    const lignes = await prisma.tache.findMany({
+      where: { editionId },
+      select: {
+        modeleSlug: true,
+        duree: true,
+        perimetre: { select: { slug: true } },
+      },
+    })
+    const duree = (perimetre: string, modele: string) =>
+      lignes.find(
+        t => t.perimetre.slug === perimetre && t.modeleSlug === modele
+      )?.duree
+    expect(duree('lieux', 'besoins-de-lieux')).toBe('DEUX_A_TROIS_SEMAINES')
+    expect(duree('lieux', 'visite')).toBe('QUELQUES_JOURS')
+    expect(duree('natation', 'besoins-de-lieux')).toBe('DEUX_A_TROIS_SEMAINES')
+    // La tâche déjà présente, rattachée, ne change pas.
+    expect(duree('volley', 'besoins-de-lieux')).toBeNull()
   })
 
   it('ne change rien à un second import', async () => {

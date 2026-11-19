@@ -1,5 +1,7 @@
+import { debutTravail } from '@relaytour/commun'
 import {
   AccordDeclinaison,
+  DureeTache,
   prisma,
   Prisma,
   StatutTache,
@@ -53,6 +55,13 @@ import { i18n } from '../lib/langue.ts'
 
 export const StatutTacheEnum = builder.enumType(StatutTache, {
   name: 'StatutTache',
+})
+
+// Durée estimée d'une tâche (ADR 0068).
+export const DureeTacheEnum = builder.enumType(DureeTache, {
+  name: 'DureeTache',
+  description:
+    'Durée estimée d’une tâche. Jours retenus : QUELQUES_JOURS 7, DEUX_A_TROIS_SEMAINES 21, UN_A_DEUX_MOIS 60, DEUX_A_TROIS_MOIS 90.',
 })
 
 // Accord d'un périmètre cible sur une déclinaison (ADR 0026).
@@ -119,6 +128,24 @@ export const TacheRef = builder.prismaObject('Tache', {
     titre: t.exposeString('titre'),
     description: t.exposeString('description', { nullable: true }),
     echeance: t.expose('echeance', { type: 'Date', nullable: true }),
+    duree: t.expose('duree', {
+      type: DureeTacheEnum,
+      nullable: true,
+      description: 'Durée estimée de la tâche (ADR 0068).',
+    }),
+    debutTravail: t.field({
+      type: 'Date',
+      nullable: true,
+      description:
+        'Premier jour de la période de travail : l’échéance moins la durée estimée. Null sans durée ou sans échéance (ADR 0068).',
+      resolve: tache => {
+        const jour = debutTravail(
+          tache.echeance?.toISOString() ?? null,
+          tache.duree
+        )
+        return jour === null ? null : new Date(`${jour}T00:00:00.000Z`)
+      },
+    }),
     statut: t.expose('statut', { type: StatutTacheEnum }),
     version: t.exposeInt('version', {
       description:
@@ -980,6 +1007,7 @@ async function creerDeclinaisons(
     titre: string
     description: string | null
     echeance: Date | null
+    duree: DureeTache | null
     ficheId: string | null
   },
   cibles: readonly CibleValide[],
@@ -1010,6 +1038,8 @@ async function creerDeclinaisons(
         titre,
         description,
         echeance,
+        // La déclinaison reprend la durée de sa tâche partagée (ADR 0068).
+        duree: origine.duree,
         ficheId: origine.ficheId,
         creeParId: acteurId,
         origineId: origine.id,
@@ -1097,6 +1127,7 @@ builder.mutationFields(t => ({
       titre: t.arg.string({ required: true }),
       description: t.arg.string(),
       echeance: t.arg({ type: 'Date' }),
+      duree: t.arg({ type: DureeTacheEnum }),
       ficheId: t.arg.id(),
       mAssigner: t.arg.boolean({ defaultValue: false }),
       // Vrai : la tâche créée est un jalon (ADR 0062).
@@ -1128,6 +1159,7 @@ builder.mutationFields(t => ({
               DESCRIPTION_TACHE_MAX
             ),
             echeance: echeanceValide(args.echeance),
+            duree: args.duree ?? null,
             ficheId,
             creeParId: acteur.id,
             ...(args.mAssigner
@@ -1195,12 +1227,13 @@ builder.mutationFields(t => ({
     type: TacheRef,
     authScopes: { connecte: true },
     description:
-      'Modifie le contenu d’une tâche. Un champ absent ne change pas ; null efface la description, l’échéance ou la fiche. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).',
+      'Modifie le contenu d’une tâche. Un champ absent ne change pas ; null efface la description, l’échéance, la durée ou la fiche. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).',
     args: {
       id: t.arg.id({ required: true }),
       titre: t.arg.string(),
       description: t.arg.string(),
       echeance: t.arg({ type: 'Date' }),
+      duree: t.arg({ type: DureeTacheEnum }),
       ficheId: t.arg.id(),
       versionAttendue: t.arg.int(),
       confirmer: t.arg.boolean({ defaultValue: false }),
@@ -1241,6 +1274,7 @@ builder.mutationFields(t => ({
         ...(args.echeance === undefined
           ? {}
           : { echeance: echeanceValide(args.echeance) }),
+        ...(args.duree === undefined ? {} : { duree: args.duree }),
         ...(args.ficheId === undefined
           ? {}
           : {

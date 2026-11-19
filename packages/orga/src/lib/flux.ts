@@ -29,6 +29,7 @@ export type EntiteChangee = (typeof ENTITES)[number]
 const VUES_DES_TACHES = [
   'PagePerimetre',
   'MesTaches',
+  'TachesAPrendre',
   'AvancementGlobal',
   'Retroplanning',
   'TachesFiche',
@@ -40,6 +41,8 @@ const VUES_DES_TACHES = [
   'Agenda',
   // Les priorités d'une période (ADR 0059).
   'Priorites',
+  // Les tâches à commencer d'une période (ADR 0068).
+  'TachesACommencer',
   // La charge de l'équipe et le détail d'une personne (ADR 0055).
   'ChargeEquipe',
   'TachesDe',

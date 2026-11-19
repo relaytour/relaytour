@@ -563,3 +563,123 @@ describe('ajusterPriorite', () => {
     expect(r.errors?.[0]?.message).toMatch(/attend l’accord/)
   })
 })
+
+// Périodes de travail (ADR 0068). L'horizon va jusqu'au point d'équipe, à J+21.
+const A_COMMENCER = `query ($e: ID!) {
+  tachesACommencer(editionId: $e) {
+    fin
+    perimetres { perimetre { id } taches { id } autres }
+  }
+}`
+
+interface ACommencerLues {
+  fin: string
+  perimetres: {
+    perimetre: { id: string }
+    taches: { id: string }[]
+    autres: number
+  }[]
+}
+
+async function lireACommencer(userId: string) {
+  const r = await executer(userId, A_COMMENCER, { e: ids.edition })
+  expect(r.errors).toBeUndefined()
+  return (r.data as { tachesACommencer: ACommencerLues }).tachesACommencer
+}
+
+describe('tâches à commencer', () => {
+  it('montre une tâche longue avant que son échéance entre dans l’horizon', async () => {
+    const longue = await prisma.tache.create({
+      data: {
+        editionId: ids.edition,
+        perimetreId: ids.basket,
+        titre: 'Rechercher des partenaires',
+        echeance: dans(40),
+      },
+    })
+    try {
+      // Chloé écrit au basket : elle donne une durée de 1 à 2 mois.
+      const modifiee = await executer(
+        ids.chloe,
+        `mutation ($id: ID!) {
+          modifierTache(id: $id, duree: UN_A_DEUX_MOIS) { duree debutTravail version }
+        }`,
+        { id: longue.id }
+      )
+      expect(modifiee.errors).toBeUndefined()
+      expect(modifiee.data?.modifierTache).toEqual({
+        duree: 'UN_A_DEUX_MOIS',
+        debutTravail: decalerJour(JOUR, -20),
+        version: 1,
+      })
+      // Alice lit le basket en consultation.
+      const lues = await lireACommencer(ids.alice)
+      expect(lues.fin).toBe(decalerJour(JOUR, 21))
+      // Seul le basket a une tâche à commencer.
+      expect(lues.perimetres).toEqual([
+        {
+          perimetre: { id: ids.basket },
+          taches: [{ id: longue.id }],
+          autres: 0,
+        },
+      ])
+      const priorites = await lire(ids.alice)
+      expect(
+        priorites.de(ids.basket).priorites.map(p => p.tache.id)
+      ).not.toContain(longue.id)
+
+      // Une tâche en cours est déjà commencée : elle sort de la section.
+      await prisma.tache.update({
+        where: { id: longue.id },
+        data: { statut: 'EN_COURS' },
+      })
+      expect((await lireACommencer(ids.alice)).perimetres).toEqual([])
+    } finally {
+      await prisma.journal.deleteMany({ where: { tacheId: longue.id } })
+      await prisma.notification.deleteMany({ where: { tacheId: longue.id } })
+      await prisma.tache.delete({ where: { id: longue.id } })
+    }
+  })
+
+  it('refuse une personne en découverte, sans lien ou sans session', async () => {
+    for (const userId of [ids.noa, ids.emma, null]) {
+      const r = await executer(userId, A_COMMENCER, { e: ids.edition })
+      expect(r.data).toBeNull()
+      expect(code(r)).toMatch(/FORBIDDEN|UNAUTHENTICATED/)
+    }
+  })
+
+  it('efface la durée par null, et la refuse à une personne en consultation', async () => {
+    const tache = await prisma.tache.create({
+      data: {
+        editionId: ids.edition,
+        perimetreId: ids.basket,
+        titre: 'Durée à effacer',
+        echeance: dans(40),
+        duree: 'QUELQUES_JOURS',
+      },
+    })
+    try {
+      const refus = await executer(
+        ids.alice,
+        `mutation ($id: ID!) { modifierTache(id: $id, duree: null) { duree } }`,
+        { id: tache.id }
+      )
+      expect(code(refus)).toBe('FORBIDDEN')
+      const effacee = await executer(
+        ids.chloe,
+        `mutation ($id: ID!) { modifierTache(id: $id, duree: null) { duree debutTravail } }`,
+        { id: tache.id }
+      )
+      expect(effacee.errors).toBeUndefined()
+      expect(effacee.data?.modifierTache).toEqual({
+        duree: null,
+        debutTravail: null,
+      })
+    } finally {
+      await prisma.journal.deleteMany({ where: { tacheId: tache.id } })
+      await prisma.notification.deleteMany({ where: { tacheId: tache.id } })
+      await prisma.tache.delete({ where: { id: tache.id } })
+    }
+  })
+})

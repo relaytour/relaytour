@@ -3,7 +3,8 @@ import { useLingui } from '@lingui/react/macro'
 import { Checkbox, Form, Input, Modal, Select } from 'antd'
 import { useEffect, useState } from 'react'
 
-import type { TacheChampsFragment } from '../gql/graphql'
+import type { DureeTache, TacheChampsFragment } from '../gql/graphql'
+import { useOptionsDuree } from '../lib/durees'
 import {
   CREER_TACHE,
   MODIFIER_TACHE,
@@ -28,6 +29,8 @@ interface Valeurs {
   titre: string
   description?: string
   echeance?: string
+  /** Durée estimée (ADR 0068) : avec l'échéance, elle donne la période de travail. */
+  duree?: DureeTache | null
   mAssigner?: boolean
   /** Vrai : la tâche créée est un jalon (ADR 0062). */
   jalon?: boolean
@@ -78,6 +81,7 @@ export default function TacheFormulaire({
     onFermer()
   }
   const cibles = Form.useWatch('cibles', form) ?? []
+  const optionsDuree = useOptionsDuree()
   const executer = useActionTache()
   const [creer, creation] = useMutation(CREER_TACHE, {
     refetchQueries: VUES_TACHES,
@@ -94,6 +98,7 @@ export default function TacheFormulaire({
             titre: '',
             description: '',
             echeance: '',
+            duree: null,
             ficheId: null,
             mAssigner: true,
             jalon: false,
@@ -108,6 +113,7 @@ export default function TacheFormulaire({
             titre: tache.titre,
             description: tache.description ?? '',
             echeance: tache.echeance?.slice(0, 10) ?? '',
+            duree: tache.duree ?? null,
           }
     )
   }, [tache, form])
@@ -117,6 +123,7 @@ export default function TacheFormulaire({
       titre: v.titre,
       description: v.description?.trim() || null,
       echeance: v.echeance || null,
+      duree: v.duree ?? null,
       ficheId: v.ficheId ?? null,
     }
     const ok =
@@ -208,6 +215,18 @@ export default function TacheFormulaire({
         </Form.Item>
         <Form.Item label={t`Échéance`} name="echeance">
           <Input type="date" style={{ maxWidth: 200 }} />
+        </Form.Item>
+        <Form.Item
+          label={t`Durée estimée (facultatif)`}
+          name="duree"
+          extra={t`Avec une échéance, la durée indique à l’équipe quand commencer la tâche. Elle apparaît alors dans la section « À commencer » des priorités.`}
+        >
+          <Select
+            allowClear
+            style={{ maxWidth: 240 }}
+            placeholder={t`Aucune durée`}
+            options={optionsDuree}
+          />
         </Form.Item>
         {fiches.length > 0 && (
           <Form.Item label={t`Fiche méthode`} name="ficheId">

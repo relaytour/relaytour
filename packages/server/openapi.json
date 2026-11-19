@@ -947,6 +947,23 @@
                               "format": "date",
                               "nullable": true
                             },
+                            "duree": {
+                              "type": "string",
+                              "enum": [
+                                "DEUX_A_TROIS_MOIS",
+                                "DEUX_A_TROIS_SEMAINES",
+                                "QUELQUES_JOURS",
+                                "UN_A_DEUX_MOIS"
+                              ],
+                              "nullable": true,
+                              "description": "Durée estimée de la tâche (ADR 0068)."
+                            },
+                            "debutTravail": {
+                              "type": "string",
+                              "format": "date",
+                              "nullable": true,
+                              "description": "Premier jour de la période de travail : l’échéance moins la durée estimée. Null sans durée ou sans échéance (ADR 0068)."
+                            },
                             "enRetard": {
                               "type": "boolean"
                             },
@@ -1100,6 +1117,23 @@
                         "type": "string",
                         "format": "date",
                         "nullable": true
+                      },
+                      "duree": {
+                        "type": "string",
+                        "enum": [
+                          "DEUX_A_TROIS_MOIS",
+                          "DEUX_A_TROIS_SEMAINES",
+                          "QUELQUES_JOURS",
+                          "UN_A_DEUX_MOIS"
+                        ],
+                        "nullable": true,
+                        "description": "Durée estimée de la tâche (ADR 0068)."
+                      },
+                      "debutTravail": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "description": "Premier jour de la période de travail : l’échéance moins la durée estimée. Null sans durée ou sans échéance (ADR 0068)."
                       },
                       "enRetard": {
                         "type": "boolean"
@@ -1494,6 +1528,195 @@
         }
       }
     },
+    "/api/v1/editions/{editionId}/a-commencer": {
+      "get": {
+        "operationId": "tachesACommencer",
+        "summary": "Les tâches à commencer d’une période, par périmètre : leur période de travail commence avant le prochain point, et leur échéance tombe après (ADR 0068).",
+        "tags": [
+          "taches"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "editionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse réussie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fin": {
+                      "type": "string",
+                      "description": "Dernier jour de l’horizon (AAAA-MM-JJ), le même que celui des priorités."
+                    },
+                    "perimetres": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "perimetre": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "slug": {
+                                "type": "string"
+                              },
+                              "nom": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "slug",
+                              "nom"
+                            ]
+                          },
+                          "autres": {
+                            "type": "integer",
+                            "description": "Tâches à commencer au-delà du plafond de cinq."
+                          },
+                          "taches": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "titre": {
+                                  "type": "string"
+                                },
+                                "statut": {
+                                  "type": "string",
+                                  "enum": [
+                                    "ABANDONNEE",
+                                    "A_FAIRE",
+                                    "EN_COURS",
+                                    "FAITE"
+                                  ]
+                                },
+                                "echeance": {
+                                  "type": "string",
+                                  "format": "date",
+                                  "nullable": true
+                                },
+                                "duree": {
+                                  "type": "string",
+                                  "enum": [
+                                    "DEUX_A_TROIS_MOIS",
+                                    "DEUX_A_TROIS_SEMAINES",
+                                    "QUELQUES_JOURS",
+                                    "UN_A_DEUX_MOIS"
+                                  ],
+                                  "nullable": true,
+                                  "description": "Durée estimée de la tâche (ADR 0068)."
+                                },
+                                "debutTravail": {
+                                  "type": "string",
+                                  "format": "date",
+                                  "nullable": true,
+                                  "description": "Premier jour de la période de travail : l’échéance moins la durée estimée. Null sans durée ou sans échéance (ADR 0068)."
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "titre",
+                                "statut"
+                              ]
+                            },
+                            "description": "Tâches à faire dont la période de travail commence au plus tard le dernier jour de l’horizon, et dont l’échéance tombe après. Cinq au plus, par premier jour de la période de travail. Elles ne reçoivent pas de score."
+                          }
+                        },
+                        "required": [
+                          "perimetre",
+                          "autres",
+                          "taches"
+                        ]
+                      },
+                      "description": "Les périmètres non archivés de l’activité qui ont des tâches à commencer, dans leur ordre."
+                    }
+                  },
+                  "required": [
+                    "fin",
+                    "perimetres"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Saisie invalide (`SAISIE_INVALIDE`, `BAD_USER_INPUT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent ou invalide (`JETON_REQUIS`, `JETON_INVALIDE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé, portée insuffisante, API fermée, organisation en lecture seule ou module inactif.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit de version, ou confirmation requise (`CONFLIT_VERSION`, `CONFIRMATION_REQUISE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite de l’organisation atteinte, ou requête trop lourde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite de débit du jeton (`LIMITE_DE_DEBIT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erreurs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/taches/{id}": {
       "get": {
         "operationId": "tache",
@@ -1542,6 +1765,23 @@
                       "type": "string",
                       "format": "date",
                       "nullable": true
+                    },
+                    "duree": {
+                      "type": "string",
+                      "enum": [
+                        "DEUX_A_TROIS_MOIS",
+                        "DEUX_A_TROIS_SEMAINES",
+                        "QUELQUES_JOURS",
+                        "UN_A_DEUX_MOIS"
+                      ],
+                      "nullable": true,
+                      "description": "Durée estimée de la tâche (ADR 0068)."
+                    },
+                    "debutTravail": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true,
+                      "description": "Premier jour de la période de travail : l’échéance moins la durée estimée. Null sans durée ou sans échéance (ADR 0068)."
                     },
                     "enRetard": {
                       "type": "boolean"
@@ -1739,6 +1979,16 @@
                     "format": "date",
                     "nullable": true
                   },
+                  "duree": {
+                    "type": "string",
+                    "enum": [
+                      "DEUX_A_TROIS_MOIS",
+                      "DEUX_A_TROIS_SEMAINES",
+                      "QUELQUES_JOURS",
+                      "UN_A_DEUX_MOIS"
+                    ],
+                    "nullable": true
+                  },
                   "versionAttendue": {
                     "type": "integer",
                     "nullable": true
@@ -1784,6 +2034,23 @@
                       "type": "string",
                       "format": "date",
                       "nullable": true
+                    },
+                    "duree": {
+                      "type": "string",
+                      "enum": [
+                        "DEUX_A_TROIS_MOIS",
+                        "DEUX_A_TROIS_SEMAINES",
+                        "QUELQUES_JOURS",
+                        "UN_A_DEUX_MOIS"
+                      ],
+                      "nullable": true,
+                      "description": "Durée estimée de la tâche (ADR 0068)."
+                    },
+                    "debutTravail": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true,
+                      "description": "Premier jour de la période de travail : l’échéance moins la durée estimée. Null sans durée ou sans échéance (ADR 0068)."
                     },
                     "enRetard": {
                       "type": "boolean"
@@ -2296,6 +2563,16 @@
                     "format": "date",
                     "nullable": true
                   },
+                  "duree": {
+                    "type": "string",
+                    "enum": [
+                      "DEUX_A_TROIS_MOIS",
+                      "DEUX_A_TROIS_SEMAINES",
+                      "QUELQUES_JOURS",
+                      "UN_A_DEUX_MOIS"
+                    ],
+                    "nullable": true
+                  },
                   "mAssigner": {
                     "type": "boolean",
                     "nullable": true
@@ -2341,6 +2618,23 @@
                       "type": "string",
                       "format": "date",
                       "nullable": true
+                    },
+                    "duree": {
+                      "type": "string",
+                      "enum": [
+                        "DEUX_A_TROIS_MOIS",
+                        "DEUX_A_TROIS_SEMAINES",
+                        "QUELQUES_JOURS",
+                        "UN_A_DEUX_MOIS"
+                      ],
+                      "nullable": true,
+                      "description": "Durée estimée de la tâche (ADR 0068)."
+                    },
+                    "debutTravail": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true,
+                      "description": "Premier jour de la période de travail : l’échéance moins la durée estimée. Null sans durée ou sans échéance (ADR 0068)."
                     },
                     "enRetard": {
                       "type": "boolean"
@@ -2597,6 +2891,23 @@
                       "format": "date",
                       "nullable": true
                     },
+                    "duree": {
+                      "type": "string",
+                      "enum": [
+                        "DEUX_A_TROIS_MOIS",
+                        "DEUX_A_TROIS_SEMAINES",
+                        "QUELQUES_JOURS",
+                        "UN_A_DEUX_MOIS"
+                      ],
+                      "nullable": true,
+                      "description": "Durée estimée de la tâche (ADR 0068)."
+                    },
+                    "debutTravail": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true,
+                      "description": "Premier jour de la période de travail : l’échéance moins la durée estimée. Null sans durée ou sans échéance (ADR 0068)."
+                    },
                     "enRetard": {
                       "type": "boolean"
                     },
@@ -2828,6 +3139,23 @@
                       "type": "string",
                       "format": "date",
                       "nullable": true
+                    },
+                    "duree": {
+                      "type": "string",
+                      "enum": [
+                        "DEUX_A_TROIS_MOIS",
+                        "DEUX_A_TROIS_SEMAINES",
+                        "QUELQUES_JOURS",
+                        "UN_A_DEUX_MOIS"
+                      ],
+                      "nullable": true,
+                      "description": "Durée estimée de la tâche (ADR 0068)."
+                    },
+                    "debutTravail": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true,
+                      "description": "Premier jour de la période de travail : l’échéance moins la durée estimée. Null sans durée ou sans échéance (ADR 0068)."
                     },
                     "enRetard": {
                       "type": "boolean"

@@ -48,6 +48,13 @@ const MES_TACHES = graphql(`
     mesTaches(editionId: $editionId) {
       ...TacheChamps
     }
+  }
+`)
+
+// Les tâches à prendre se lisent à part : avec les tâches de la personne, la
+// requête dépasserait le plafond de 100 champs du serveur.
+const TACHES_A_PRENDRE = graphql(`
+  query TachesAPrendre($editionId: ID!) {
     tachesAPrendre(editionId: $editionId) {
       ...TacheChamps
     }
@@ -67,13 +74,17 @@ export default function MonEspace() {
     variables: { editionId: edition?.id ?? '' },
     skip: !edition,
   })
+  const { data: donneesAPrendre } = useQuery(TACHES_A_PRENDRE, {
+    variables: { editionId: edition?.id ?? '' },
+    skip: !edition,
+  })
   const moiId = session?.moi?.id ?? ''
   const prenomPersonne = prenom(session?.moi?.nom)
   // Les admins de l'activité gèrent les assignations de toute personne.
   const estAdmin = gere
   const affectations = data?.moi?.affectations ?? []
   const mesTaches = data?.mesTaches ?? []
-  const aPrendre = data?.tachesAPrendre ?? []
+  const aPrendre = donneesAPrendre?.tachesAPrendre ?? []
   const enRetard = mesTaches.filter(tache => tache.enRetard).length
   const referentsDe = (perimetreId: string) =>
     affectations.find(a => a.perimetre.id === perimetreId)?.perimetre

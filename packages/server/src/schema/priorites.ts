@@ -153,7 +153,7 @@ const PrioritesDuPerimetreRef = builder
         type: TacheRef,
         nullable: true,
         description:
-          'La prochaine tâche ouverte, quand le périmètre n’a aucune priorité. Ce n’est pas une priorité.',
+          'La prochaine tâche ouverte, quand le périmètre n’a ni priorité ni tâche à commencer (`tachesACommencer`). Ce n’est pas une priorité.',
         resolve: p => p.ensuite,
       }),
     }),
@@ -199,7 +199,68 @@ const PrioritesRef = builder.objectRef<PrioritesLues>('Priorites').implement({
   }),
 })
 
+// Tâches à commencer (ADR 0068). Elles se lisent par une requête à part : ajoutées
+// à `priorites`, elles feraient dépasser à l'espace organisateur le plafond de
+// complexité du serveur. Le calcul reste celui des priorités.
+const ACommencerDuPerimetreRef = builder
+  .objectRef<PrioritesDuPerimetreLues>('TachesACommencerDuPerimetre')
+  .implement({
+    fields: t => ({
+      perimetre: t.field({ type: PerimetreRef, resolve: p => p.perimetre }),
+      taches: t.field({
+        type: [TacheRef],
+        description:
+          'Tâches à faire dont la période de travail commence au plus tard le dernier jour de l’horizon, et dont l’échéance tombe après. Cinq au plus, par premier jour de la période de travail. Elles ne reçoivent pas de score.',
+        complexity: { field: 1, multiplier: 5 },
+        resolve: p => p.aCommencer,
+      }),
+      autres: t.exposeInt('aCommencerAutres', {
+        description: 'Tâches à commencer au-delà du plafond de cinq.',
+      }),
+    }),
+  })
+
+const ACommencerRef = builder
+  .objectRef<{ fin: string; perimetres: PrioritesDuPerimetreLues[] }>(
+    'TachesACommencer'
+  )
+  .implement({
+    fields: t => ({
+      fin: t.string({
+        description:
+          'Dernier jour de l’horizon (AAAA-MM-JJ), le même que celui des priorités.',
+        resolve: p => p.fin,
+      }),
+      perimetres: t.field({
+        type: [ACommencerDuPerimetreRef],
+        description:
+          'Les périmètres non archivés de l’activité qui ont des tâches à commencer, dans leur ordre.',
+        complexity: { field: 1, multiplier: 4 },
+        resolve: p => p.perimetres,
+      }),
+    }),
+  })
+
 builder.queryFields(t => ({
+  tachesACommencer: t.field({
+    type: ACommencerRef,
+    authScopes: { connecte: true },
+    description:
+      'Les tâches à commencer d’une période (ADR 0068), par périmètre. Elles se lisent avec la consultation, comme les priorités.',
+    args: { editionId: t.arg.id({ required: true }) },
+    resolve: async (_root, { editionId }, ctx) => {
+      const edition = await ctx.exigerEdition(editionId)
+      const lues = await lirePrioritesDeLaPeriode(
+        edition,
+        ctx.organisation!.fuseauHoraire,
+        new Date()
+      )
+      return {
+        fin: lues.fin,
+        perimetres: lues.perimetres.filter(p => p.aCommencer.length > 0),
+      }
+    },
+  }),
   priorites: t.field({
     type: PrioritesRef,
     authScopes: { connecte: true },
