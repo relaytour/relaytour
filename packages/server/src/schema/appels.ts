@@ -897,6 +897,10 @@ builder.mutationFields(t => ({
               ? null
               : candidature.courriel
           if (candidature.statut === 'TRAITEE' && courrielEnAttente !== null) {
+            // Une lecture simple suffit : le dépôt public, l'import et cette
+            // mutation écrivent une adresse en attente sous le verrou de
+            // l'organisation, tenu ici jusqu'à la fin de la transaction. Aucune
+            // candidature de la même adresse ne naît donc avant l'écriture.
             const autre = await tx.candidature.findFirst({
               where: {
                 appelId: candidature.appelId,
