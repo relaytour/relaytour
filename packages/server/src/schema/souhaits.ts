@@ -17,6 +17,7 @@ import {
 } from '../lib/souhaits.ts'
 
 import { publierPourActivite, publierPourPerimetre } from '../lib/flux.ts'
+import { aLaLecture } from '../lib/rattachements.ts'
 import { notifierLesAdmins } from '../lib/notifications-admin.ts'
 
 import { builder } from './builder.ts'
@@ -373,6 +374,8 @@ async function cibleDuSouhait(
   ) {
     throw accesRefuse()
   }
+  // Un robot qui a la lecture de l'activité ne formule aucun souhait (ADR 0069).
+  if (await aLaLecture(ctx, perimetre.activiteId)) throw accesRefuse()
   // Le réglage « ouverte aux souhaits » dit si l'équipe formule elle-même ses
   // souhaits (ADR 0045). Sinon, seuls les admins de l'activité les notent.
   if (

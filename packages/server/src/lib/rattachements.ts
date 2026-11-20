@@ -1,4 +1,4 @@
-import type { Prisma } from '@relaytour/database'
+import { prisma, type Prisma } from '@relaytour/database'
 
 // Rattachement d'une personne à une activité, sans périmètre ni période (ADR 0045).
 // Il fait entrer la personne dans l'équipe de l'activité et lui ouvre la page
@@ -57,5 +57,28 @@ export async function estRattachee(
 ): Promise<boolean> {
   return (
     (await db.rattachementActivite.count({ where: { userId, activiteId } })) > 0
+  )
+}
+
+/**
+ * Vrai quand la personne de la requête est un robot qui a la lecture de
+ * l'activité (ADR 0069). Seul un robot reçoit la lecture : la colonne suffit.
+ * Une écriture que la découverte ouvrirait (souhait, place au programme) le
+ * refuse.
+ */
+export async function aLaLecture(
+  ctx: { personne: { id: string } | null; organisation: { id: string } | null },
+  activiteId: string
+): Promise<boolean> {
+  if (ctx.personne === null || ctx.organisation === null) return false
+  return (
+    (await prisma.rattachementActivite.count({
+      where: {
+        userId: ctx.personne.id,
+        activiteId,
+        organisationId: ctx.organisation.id,
+        lecture: true,
+      },
+    })) > 0
   )
 }

@@ -241,6 +241,9 @@ model RattachementActivite {
   organisationId String
   creeParId      String?
   createdAt      DateTime @default(now())
+  // Lecture de l'activité (ADR 0069) : réservée aux robots. Le robot voit
+  // l'activité en consultation, pour toutes ses périodes, sans aucune écriture.
+  lecture        Boolean  @default(false)
 
   user         User         @relation("RattachementPersonne", fields: [userId], references: [id], onDelete: Cascade)
   activite     Activite     @relation(fields: [activiteId], references: [id], onDelete: Cascade)

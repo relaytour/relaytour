@@ -1,5 +1,6 @@
 import {
   CheckOutlined,
+  EyeOutlined,
   MailOutlined,
   RobotOutlined,
   SendOutlined,
@@ -76,6 +77,7 @@ const PERSONNES = graphql(`
       email
       estAdmin
       activitesAdministrees
+      activitesLues
       archive
       nomModifiable
       affectations(editionId: $editionId) {
@@ -102,6 +104,7 @@ const PERSONNES = graphql(`
         affectee
         interessee
         admin
+        lecture
       }
     }
   }
@@ -116,6 +119,7 @@ const EQUIPE = graphql(`
       email
       estAdmin
       activitesAdministrees
+      activitesLues
       archive
       # Réservé aux admins de l'organisation, qui corrigent le nom d'une personne
       # jamais connectée (ADR 0031).
@@ -258,6 +262,20 @@ const RATTACHER = graphql(`
   }
 `)
 
+// Lecture de l'activité par un robot (ADR 0069) : il consulte l'activité pour
+// toutes ses périodes, sans aucune écriture.
+const DONNER_LECTURE = graphql(`
+  mutation DonnerLectureActivite($robotId: ID!, $activiteId: ID!) {
+    donnerLectureActivite(robotId: $robotId, activiteId: $activiteId)
+  }
+`)
+
+const RETIRER_LECTURE = graphql(`
+  mutation RetirerLectureActivite($robotId: ID!, $activiteId: ID!) {
+    retirerLectureActivite(robotId: $robotId, activiteId: $activiteId)
+  }
+`)
+
 const RETIRER_DE_L_ACTIVITE = graphql(`
   mutation RetirerDeLActivite($userId: ID!, $activiteId: ID!) {
     retirerDeLActivite(userId: $userId, activiteId: $activiteId)
@@ -284,6 +302,12 @@ const SANS_ACTIVITE = 'sans-activite'
 function libelleAttribution(a: Membre['attributions'][number]): string {
   // Le commentaire s'écrit en toutes lettres : l'extraction ne lit pas une variable.
   const roles = [
+    a.lecture
+      ? t({
+          message: 'lecture',
+          comment: 'Rôle d’une personne dans une activité, en liste',
+        })
+      : null,
     a.admin
       ? t({
           message: 'admin',
@@ -300,7 +324,7 @@ function libelleAttribution(a: Membre['attributions'][number]): string {
             message: 'intéressé·e',
             comment: 'Rôle d’une personne dans une activité, en liste',
           })
-        : a.rattachee
+        : a.rattachee && !a.lecture
           ? t({
               message: 'sans périmètre',
               comment: 'Rôle d’une personne dans une activité, en liste',
@@ -659,6 +683,8 @@ export default function Personnes({
   const [renvoyer] = useMutation(RENVOYER)
   const [rattacher, rattachement] = useMutation(RATTACHER, rafraichir)
   const [retirerDeLActivite] = useMutation(RETIRER_DE_L_ACTIVITE, rafraichir)
+  const [donnerLecture] = useMutation(DONNER_LECTURE, rafraichir)
+  const [retirerLecture] = useMutation(RETIRER_LECTURE, rafraichir)
   const [definirAdminActivite] = useMutation(DEFINIR_ADMIN_ACTIVITE, rafraichir)
   const { data: toutesActivites } = useQuery(ACTIVITES)
   const moiId = session?.moi?.id
@@ -1319,6 +1345,13 @@ export default function Personnes({
                         <Trans>robot</Trans>
                       </Tag>
                     )}
+                    {p.robot &&
+                      !modeAnnuaire &&
+                      p.activitesLues.includes(activite.id) && (
+                        <Tag icon={<EyeOutlined />}>
+                          <Trans>lecture</Trans>
+                        </Tag>
+                      )}
                     {p.id === moiId && (
                       <Tag>
                         <Trans>Vous</Trans>
@@ -1526,6 +1559,57 @@ export default function Personnes({
                           <Trans>Renvoyer l’invitation</Trans>
                         </Button>
                       )}
+                      {/* Un admin de l'activité donne ou retire la lecture à un
+                          robot de l'équipe (ADR 0069). */}
+                      {!modeAnnuaire &&
+                        p.robot &&
+                        (p.activitesLues.includes(activite.id) ? (
+                          <Popconfirm
+                            title={t`Retirer la lecture de l’activité ?`}
+                            description={t`Le robot ne consulte plus l’activité. Il reste dans l’équipe.`}
+                            okText={t`Retirer`}
+                            cancelText={t`Annuler`}
+                            onConfirm={() =>
+                              executer(
+                                () =>
+                                  retirerLecture({
+                                    variables: {
+                                      robotId: p.id,
+                                      activiteId: activite.id,
+                                    },
+                                  }),
+                                t`Lecture retirée.`
+                              )
+                            }
+                          >
+                            <Button size="small">
+                              <Trans>Retirer la lecture</Trans>
+                            </Button>
+                          </Popconfirm>
+                        ) : (
+                          <Popconfirm
+                            title={t`Donner la lecture de l’activité ?`}
+                            description={t`Le robot consulte l’activité pour toutes ses périodes : éditions, lieux, programme, agenda, fiches communes et flux des changements. Il n’écrit rien et ne lit aucune coordonnée.`}
+                            okText={t`Donner la lecture`}
+                            cancelText={t`Annuler`}
+                            onConfirm={() =>
+                              executer(
+                                () =>
+                                  donnerLecture({
+                                    variables: {
+                                      robotId: p.id,
+                                      activiteId: activite.id,
+                                    },
+                                  }),
+                                t`Lecture donnée.`
+                              )
+                            }
+                          >
+                            <Button size="small" icon={<EyeOutlined />}>
+                              <Trans>Donner la lecture</Trans>
+                            </Button>
+                          </Popconfirm>
+                        ))}
                       {/* Une personne sans affectation pour la période quitte
                           l'équipe de l'activité (ADR 0045). Le serveur refuse si
                           elle reste affectée dans une autre période en cours. */}

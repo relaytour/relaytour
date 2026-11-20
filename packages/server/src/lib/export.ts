@@ -579,6 +579,7 @@ export async function construireExport(organisationId: string) {
       email: x.user.email,
       activite: x.activite.slug,
       creeLe: x.createdAt.toISOString(),
+      lecture: x.lecture,
     })),
     souhaits: souhaits.map(x => ({
       email: x.user.email,

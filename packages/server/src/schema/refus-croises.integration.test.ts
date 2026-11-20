@@ -1538,6 +1538,22 @@ const CAS: Cas[] = [
       sansEffet: data => expect(data).toEqual({ revoquerJetonRobot: false }),
     },
   },
+  // Lecture d'une activité par un robot (ADR 0069) : elle ne se donne ni ne se
+  // retire depuis une autre organisation.
+  {
+    operation: 'donnerLectureActivite',
+    query:
+      'mutation ($r: ID!, $a: ID!) { donnerLectureActivite(robotId: $r, activiteId: $a) }',
+    variables: () => ({ r: a.robot, a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'retirerLectureActivite',
+    query:
+      'mutation ($r: ID!, $a: ID!) { retirerLectureActivite(robotId: $r, activiteId: $a) }',
+    variables: () => ({ r: a.robot, a: a.activite }),
+    attente: INTERDIT,
+  },
   // Un admin d'une autre organisation ne révoque pas un jeton de A.
   {
     operation: 'revoquerJetonOrganisation',

@@ -98,8 +98,9 @@ export interface AppContext {
   /** Oublie l'équipe mémorisée, après une écriture qui change un lien d'équipe. */
   oublierLesEquipes: () => void
   /**
-   * Activités que la personne voit : celles qu'elle administre, et celles où elle a
-   * été affectée à un périmètre, toutes périodes confondues. Une activité hors de
+   * Activités que la personne voit : celles qu'elle administre, celles où elle a
+   * été affectée à un périmètre, toutes périodes confondues, et, pour un robot,
+   * celles dont il a la lecture (ADR 0069). Une activité hors de
    * cette liste n'existe pas pour elle : le serveur la refuse comme une activité
    * d'une autre organisation.
    */
@@ -206,6 +207,7 @@ export async function buildContext(
             name: true,
             email: true,
             langue: true,
+            robot: true,
             // Seules les appartenances actives comptent : une personne archivée dans
             // une organisation ne peut plus la choisir, et garde les autres (ADR 0031).
             appartenances: {
@@ -246,6 +248,7 @@ export async function buildContext(
         estAdmin: organisation?.role === 'ADMIN',
       }
     : null
+  const estRobot = user?.robot === true
 
   // La langue de la requête (ADR 0047) : le choix de la personne, sinon la langue
   // de son organisation active, sinon le français. Sans personne, ou pour un compte
@@ -391,9 +394,28 @@ export async function buildContext(
             select: { activiteId: true },
             distinct: ['activiteId'],
           }),
+      // La lecture de l'activité (ADR 0069) ne compte que pour un robot, dans
+      // l'organisation active. Elle n'entre dans aucun ensemble d'écriture.
+      estRobot
+        ? prisma.rattachementActivite.findMany({
+            where: {
+              userId: personne.id,
+              organisationId: organisation.id,
+              lecture: true,
+              activite: { organisationId: organisation.id },
+            },
+            select: { activiteId: true },
+          })
+        : Promise.resolve([]),
     ]).then(
-      ([admin, affectees]) =>
-        new Set(dansLeJeton([...admin, ...affectees.map(p => p.activiteId)]))
+      ([admin, affectees, lues]) =>
+        new Set(
+          dansLeJeton([
+            ...admin,
+            ...affectees.map(p => p.activiteId),
+            ...lues.map(r => r.activiteId),
+          ])
+        )
     )
     return visibles
   }

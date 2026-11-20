@@ -218,6 +218,8 @@ export interface AttributionActivite {
   affectee: boolean
   interessee: boolean
   admin: boolean
+  /** Vrai quand un robot a la lecture de l'activité (ADR 0069). */
+  lecture: boolean
 }
 
 // Les attributions de tous les membres d'une organisation, lues une fois par requête :
@@ -240,7 +242,7 @@ export function attributionsDeLOrganisation(
     attributions = Promise.all([
       prisma.rattachementActivite.findMany({
         where: { organisationId },
-        select: { userId: true, activiteId: true },
+        select: { userId: true, activiteId: true, lecture: true },
       }),
       prisma.affectation.findMany(parPerimetre),
       prisma.souhait.findMany(parPerimetre),
@@ -253,7 +255,7 @@ export function attributionsDeLOrganisation(
       const noter = (
         userId: string,
         activiteId: string,
-        lien: 'rattachee' | 'affectee' | 'interessee' | 'admin'
+        lien: 'rattachee' | 'affectee' | 'interessee' | 'admin' | 'lecture'
       ) => {
         const activites =
           parPersonne.get(userId) ?? new Map<string, AttributionActivite>()
@@ -264,11 +266,15 @@ export function attributionsDeLOrganisation(
           affectee: false,
           interessee: false,
           admin: false,
+          lecture: false,
         }
         attribution[lien] = true
         activites.set(activiteId, attribution)
       }
-      for (const r of rattachements) noter(r.userId, r.activiteId, 'rattachee')
+      for (const r of rattachements) {
+        noter(r.userId, r.activiteId, 'rattachee')
+        if (r.lecture) noter(r.userId, r.activiteId, 'lecture')
+      }
       for (const a of affectations)
         noter(a.userId, a.perimetre.activiteId, 'affectee')
       for (const s of souhaits)
