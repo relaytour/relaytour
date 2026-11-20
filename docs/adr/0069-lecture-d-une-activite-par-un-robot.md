@@ -2,6 +2,7 @@
 
 - **Statut** : proposée
 - **Date** : 2026-11-20
+- Option retenue le 2026-11-20 : la lecture de l'activité, attachée au rattachement d'un robot. Les autres options figurent sous « Options écartées ».
 - Complète l'ADR 0064 (robots et jetons d'accès), l'ADR 0010 (visibilité des activités), l'ADR 0014 (consultation) et l'ADR 0045 (rattachement).
 - Ne remplace aucune règle d'une ADR acceptée. Une personne garde les accès décrits par le tableau de l'ADR 0045.
 
@@ -24,65 +25,34 @@ Pour ouvrir la lecture, un admin doit aujourd'hui affecter le robot à un périm
 
 Le besoin est donc un droit de lecture sur une activité entière, valable pour toutes ses éditions, sans aucun des effets d'une affectation.
 
-## Options
+## Décision
 
-### Option A : la lecture de l'activité, attachée au rattachement d'un robot
+### La lecture de l'activité
 
 - Le rattachement d'un robot à une activité porte un réglage nouveau : la **lecture de l'activité**. La colonne `RattachementActivite.lecture` le garde, fausse par défaut.
 - Un robot qui a la lecture voit l'activité au sens de l'ADR 0010. `activitesVisibles` ajoute ses activités, et l'ensemble reste réduit par la liste d'activités du jeton.
 - Le robot consulte alors chaque périmètre, pour chaque période, comme le prévoit l'ADR 0014. Il lit aussi les éditions, les lieux, le programme, l'agenda, les fiches communes et le flux des changements de l'activité.
 - La lecture n'ajoute le robot à aucun ensemble d'écriture. `perimetresConnus`, `perimetresAffectes`, `activitesAdministrees` et `equipeAdministree` ne changent pas.
 
-Effet sur le cloisonnement :
+### Cloisonnement
 
 - Le droit se calcule dans l'organisation active, comme tous les autres (ADR 0030). Un rattachement d'une autre organisation ne compte pas.
 - Le droit vaut pour une activité et une seule. Il n'ouvre ni l'annuaire, ni les notifications d'admin, ni une autre activité de l'organisation.
 - La table des refus croisés reçoit les deux mutations nouvelles. Un admin d'une autre activité ne donne pas la lecture d'une activité qu'il n'administre pas.
 
-Effet sur les données personnelles :
+### Données personnelles
 
 - Le robot lit ce que lit une personne en consultation (ADR 0014). Il lit le nom des référentes et des référents, des personnes assignées et du contact principal.
 - Il lit aussi le nom des personnes placées au programme. Une fiche bénévole n'y montre que son nom (ADR 0040).
 - Il ne lit ni les adresses des membres, ni les coordonnées des bénévoles, ni les candidatures, ni les demandes, ni les fiches de périmètre. Ces règles passent par l'écriture ou par l'administration, que la lecture n'ouvre pas.
 
-Effet sur la révocation :
+### Révocation
 
 - Un admin de l'activité retire la lecture en un geste. Le retrait du rattachement la retire aussi, puisqu'elle en fait partie.
 - Les gestes de l'ADR 0064 restent valables : révoquer le jeton, archiver le robot, désactiver le module « API ».
 - Le contexte relit les droits à chaque requête. Le flux des changements perd l'activité à sa prochaine relecture des droits.
 
-### Option B : une portée de jeton « lecture de l'activité »
-
-- Le jeton d'un robot porte une liste d'activités qu'il lit, même quand le robot ne les voit pas.
-- Cette option contredit l'ADR 0064 : un jeton réduit les droits de sa personne et n'en crée aucun. Le contrôle des champs devrait lire le jeton en plus de la personne, à chaque résolveur.
-- Le cloisonnement deviendrait plus difficile à prouver. Deux sources de droits coexisteraient, et chaque test de refus croisé devrait les couvrir toutes les deux.
-- Les données personnelles visibles seraient les mêmes que pour l'option A.
-- La révocation passerait par le jeton seul. L'écran Équipe ne montrerait pas qui lit l'activité, puisque le droit ne serait plus porté par un membre.
-
-### Option C : une affectation reconduite à chaque nouvelle édition
-
-- Le serveur affecterait le robot à un périmètre choisi, à chaque création ou reconduction d'une édition (ADR 0048).
-- Cette option ne règle aucun défaut du contournement actuel. L'écriture, les coordonnées des bénévoles, l'effectif et la charge restent ouverts.
-- Elle ajoute une règle cachée à la création d'une édition. Un admin qui retire l'affectation la verrait revenir à l'édition suivante.
-- Le cloisonnement ne change pas, mais le robot écrit dans un périmètre de chaque édition.
-- La révocation demande de retirer l'affectation dans chaque édition, puis de couper la reconduction.
-
-### Option D : le rôle d'admin de l'activité pour le robot
-
-- L'ADR 0064 permet déjà ce rôle. Il ouvre toutes les éditions sans geste répété.
-- Le robot lirait l'équipe avec ses adresses, les demandes, les candidatures et les coordonnées de tous les bénévoles. Un jeton en lecture garderait ces lectures.
-- Le risque d'une fuite du jeton serait celui d'une session d'admin de l'activité, en lecture. Cette option est écartée.
-
-## Recommandation
-
-L'option A est recommandée.
-
-- Elle donne au client en lecture le seul droit dont il a besoin, sans écriture et sans données personnelles au-delà de la consultation.
-- Elle garde une seule source de droits, la personne, comme le veut l'ADR 0064.
-- Elle se lit et se retire là où un admin gère déjà le robot : son rattachement.
-- Elle ne demande qu'une migration additive, sans reprise de données.
-
-### Règles proposées pour l'option A
+### Règles
 
 - La lecture de l'activité est réservée aux robots en v1. Une personne garde le tableau de l'ADR 0045. Une personne qui observe une activité sans y travailler reste un besoin à part.
 - Un admin de l'organisation la donne à la création du robot, activité par activité (`creerRobot`), ou plus tard. Un admin de l'activité la donne et la retire dans son activité (`donnerLectureActivite`, `retirerLectureActivite`). Il peut déjà affecter le robot, ce qui ouvre davantage.
@@ -93,6 +63,37 @@ L'option A est recommandée.
 - L'écran Équipe affiche l'étiquette « lecture » à côté du robot. Le panneau « API » de l'écran « Organisation » montre, pour chaque robot, les activités qu'il lit.
 - Le don et le retrait de la lecture entrent au journal, avec leur auteur, et publient un signal du flux. Ils ne changent aucun jeton.
 - Un robot déjà affecté garde son affectation. L'admin peut ensuite lui donner la lecture et retirer l'affectation.
+
+### Raisons du choix
+
+- La lecture donne au client en lecture le seul droit dont il a besoin, sans écriture et sans données personnelles au-delà de la consultation.
+- Elle garde une seule source de droits, la personne, comme le veut l'ADR 0064.
+- Elle se lit et se retire là où un admin gère déjà le robot : son rattachement.
+- Elle ne demande qu'une migration additive, sans reprise de données.
+
+## Options écartées
+
+### Une portée de jeton « lecture de l'activité »
+
+- Le jeton d'un robot porte une liste d'activités qu'il lit, même quand le robot ne les voit pas.
+- Cette option contredit l'ADR 0064 : un jeton réduit les droits de sa personne et n'en crée aucun. Le contrôle des champs devrait lire le jeton en plus de la personne, à chaque résolveur.
+- Le cloisonnement deviendrait plus difficile à prouver. Deux sources de droits coexisteraient, et chaque test de refus croisé devrait les couvrir toutes les deux.
+- Les données personnelles visibles seraient les mêmes que pour la lecture de l'activité.
+- La révocation passerait par le jeton seul. L'écran Équipe ne montrerait pas qui lit l'activité, puisque le droit ne serait plus porté par un membre.
+
+### Une affectation reconduite à chaque nouvelle édition
+
+- Le serveur affecterait le robot à un périmètre choisi, à chaque création ou reconduction d'une édition (ADR 0048).
+- Cette option ne règle aucun défaut du contournement actuel. L'écriture, les coordonnées des bénévoles, l'effectif et la charge restent ouverts.
+- Elle ajoute une règle cachée à la création d'une édition. Un admin qui retire l'affectation la verrait revenir à l'édition suivante.
+- Le cloisonnement ne change pas, mais le robot écrit dans un périmètre de chaque édition.
+- La révocation demande de retirer l'affectation dans chaque édition, puis de couper la reconduction.
+
+### Le rôle d'admin de l'activité pour le robot
+
+- L'ADR 0064 permet déjà ce rôle. Il ouvre toutes les éditions sans geste répété.
+- Le robot lirait l'équipe avec ses adresses, les demandes, les candidatures et les coordonnées de tous les bénévoles. Un jeton en lecture garderait ces lectures.
+- Le risque d'une fuite du jeton serait celui d'une session d'admin de l'activité, en lecture.
 
 ## Conséquences
 
