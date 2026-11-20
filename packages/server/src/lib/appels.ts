@@ -4,7 +4,7 @@ import type { AppContext } from '../context.ts'
 
 import { decalerJour, jourISO } from './agenda.ts'
 import { BENEVOLES_MAX } from './benevoles.ts'
-import { erreurSaisie } from './erreurs.ts'
+import { conflitDeVersion, erreurSaisie } from './erreurs.ts'
 import { journal } from './journal.ts'
 import { empreinte, jetonDe } from './liens.ts'
 import { heureLocale, instantDepuisHeureLocale } from './heures.ts'
@@ -471,6 +471,13 @@ export async function recalculerCandidature(
  * Le choix de la séquence passe à « accepté », créé s'il n'existait pas. La
  * séquence est verrouillée : deux acceptations simultanées ne se croisent pas.
  * Rend l'identifiant de la fiche, et vrai si la place est nouvelle.
+ *
+ * La garde d'état (ADR 0070) se vérifie sous les verrous, avant toute écriture :
+ * - `dejaAcceptee` dit quand un choix déjà accepté se rend sans rien écrire :
+ *   `'toujours'`, ou `'placee'` quand la fiche tient déjà sa place sur la
+ *   séquence. Le résultat vaut alors `{ dejaAcceptee: true }` ;
+ * - avec `statutAttendu`, un autre statut courant lève `CONFLIT_VERSION`. Une
+ *   candidature sans choix sur la séquence a pour statut courant null.
  */
 export async function accepterSurSequence(
   tx: Prisma.TransactionClient,
@@ -479,8 +486,13 @@ export async function accepterSurSequence(
     sequenceId: string
     acteurId: string
     maintenant: Date
+    statutAttendu?: StatutChoix
+    dejaAcceptee?: 'toujours' | 'placee'
   }
-): Promise<{ benevoleId: string; placeCreee: boolean }> {
+): Promise<
+  | { dejaAcceptee: false; benevoleId: string; placeCreee: boolean }
+  | { dejaAcceptee: true }
+> {
   const { candidatureId, sequenceId, acteurId, maintenant } = entree
   // Ordre des verrous, commun à tout traitement d'une candidature : la
   // candidature, puis la séquence. L'appelant tient déjà le verrou de
@@ -491,6 +503,35 @@ export async function accepterSurSequence(
     where: { id: candidatureId },
     include: { plages: true, appel: { select: { perimetreId: true } } },
   })
+  const courant = await tx.choixCandidature.findUnique({
+    where: { candidatureId_sequenceId: { candidatureId, sequenceId } },
+    select: { statut: true },
+  })
+  const statutCourant = courant?.statut ?? null
+  if (statutCourant === 'ACCEPTE' && entree.dejaAcceptee !== undefined) {
+    // Une décision simultanée a déjà accepté ce choix : rien ne s'écrit, et
+    // aucune place ni aucun mail ne s'ajoute.
+    const placee =
+      entree.dejaAcceptee === 'toujours' ||
+      (candidature.benevoleId !== null &&
+        (await tx.placeSequence.findUnique({
+          where: {
+            sequenceId_benevoleId: {
+              sequenceId,
+              benevoleId: candidature.benevoleId,
+            },
+          },
+          select: { id: true },
+        })) !== null)
+    if (placee) return { dejaAcceptee: true }
+  }
+  if (
+    entree.statutAttendu !== undefined &&
+    statutCourant !== 'ACCEPTE' &&
+    statutCourant !== entree.statutAttendu
+  ) {
+    throw conflitDeChoix(statutCourant)
+  }
   // Une candidature importée avec un identifiant externe désigne une ligne du
   // fichier, comme un billet : l'adresse d'un acheteur peut couvrir plusieurs
   // billets, donc plusieurs personnes. Elle rejoint par l'adresse une fiche qui
@@ -620,7 +661,19 @@ export async function accepterSurSequence(
     })
   }
   await recalculerCandidature(tx, candidature.id)
-  return { benevoleId, placeCreee: place === null }
+  return { dejaAcceptee: false, benevoleId, placeCreee: place === null }
+}
+
+/**
+ * Le statut d'un choix a changé depuis la lecture (ADR 0070). `statutCourant`
+ * vaut null quand la candidature n'a pas choisi la séquence. L'erreur ne nomme
+ * personne, comme pour une tâche.
+ */
+export function conflitDeChoix(statut: StatutChoix | null) {
+  return conflitDeVersion(
+    i18n._('Le statut de ce choix a changé depuis votre lecture.'),
+    { statutCourant: statut }
+  )
 }
 
 /** Les places en renfort d'une séquence : confirmées et à confirmer. */

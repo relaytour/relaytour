@@ -11,6 +11,7 @@ import {
   accepterSurSequence,
   APPELS_OUVERTS_MAX,
   CHOIX_EN_ATTENTE,
+  conflitDeChoix,
   datesAppelValides,
   jetonAppel,
   etatAppel,
@@ -21,6 +22,7 @@ import {
   perimetresEcrits,
   recalculerCandidature,
 } from '../lib/appels.ts'
+import { sequenceAuDepot, statutAuDepot } from '../lib/candidatures.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { annoncerPlace } from '../lib/espace-benevole.ts'
 import { empreinte, jetonDe, nouveauSel } from '../lib/liens.ts'
@@ -46,7 +48,9 @@ const PorteeAppelEnum = builder.enumType(PorteeAppel, { name: 'PorteeAppel' })
 const StatutCandidatureEnum = builder.enumType(StatutCandidature, {
   name: 'StatutCandidature',
 })
-const StatutChoixEnum = builder.enumType(StatutChoix, { name: 'StatutChoix' })
+export const StatutChoixEnum = builder.enumType(StatutChoix, {
+  name: 'StatutChoix',
+})
 const EtatAppelEnum = builder.enumType('EtatAppel', {
   values: ['A_VENIR', 'OUVERT', 'FERME'] as const,
 })
@@ -786,36 +790,151 @@ builder.mutationFields(t => ({
     type: CandidatureRef,
     authScopes: { connecte: true },
     description:
-      'Accepte une séquence choisie : la fiche bénévole naît ou se rattache par l’adresse, avec une place à confirmer en renfort.',
-    args: { id: t.arg.id({ required: true }) },
+      'Accepte une séquence choisie : la fiche bénévole naît ou se rattache par l’adresse, avec une place à confirmer en renfort. Un choix déjà accepté rend la candidature sans rien écrire. Avec `statutAttendu`, le serveur refuse d’accepter un choix dont le statut a changé depuis la lecture (code `CONFLIT_VERSION`, extension `statutCourant`) ; aucun mail ne part alors (ADR 0070).',
+    args: {
+      id: t.arg.id({ required: true }),
+      statutAttendu: t.arg({
+        type: StatutChoixEnum,
+        description:
+          'Le statut du choix tel que la personne l’a lu. Sans valeur : aucune comparaison.',
+      }),
+    },
     resolve: async (_root, args, ctx) => {
       const choix = await choixTraitable(ctx, String(args.id))
       if (choix.statut === 'ACCEPTE') return relire(ctx, choix.candidatureId)
       // Le verrou de l'organisation protège la recherche et la création de la
       // fiche, comme creerBenevole.
-      const { benevoleId } = await sousVerrouOrganisation(
+      const acceptee = await sousVerrouOrganisation(
         choix.candidature.organisationId,
         async tx => {
-          const acceptee = await accepterSurSequence(tx, {
+          const resultat = await accepterSurSequence(tx, {
             candidatureId: choix.candidatureId,
             sequenceId: choix.sequenceId,
             acteurId: ctx.personne!.id,
             maintenant: new Date(),
+            statutAttendu: args.statutAttendu ?? undefined,
+            dejaAcceptee: 'toujours',
           })
+          if (resultat.dejaAcceptee) return resultat
           await tx.sequence.update({
             where: { id: choix.sequenceId },
             data: { version: { increment: 1 } },
           })
-          return acceptee
+          return resultat
         }
       )
+      // Une acceptation simultanée a déjà tout écrit et annoncé la place.
+      if (acceptee.dejaAcceptee) return relire(ctx, choix.candidatureId)
       // Le mail suit la validation de la transaction : la file relit la fiche.
       await annoncerPlace(prisma, {
-        benevoleId,
+        benevoleId: acceptee.benevoleId,
         organisationId: choix.candidature.organisationId,
         activiteId: choix.sequence.activiteId,
       })
       signaux(choix)
+      return relire(ctx, choix.candidatureId)
+    },
+  }),
+
+  remettreChoixEnAttente: t.field({
+    type: CandidatureRef,
+    authScopes: { connecte: true },
+    description:
+      'Remet en attente une séquence refusée : « en attente » tant que les renforts restent sous le besoin, « en liste d’attente » sinon. Un choix dans un autre statut répond `CONFLIT_VERSION`, avec l’extension `statutCourant`. Aucun mail ne part (ADR 0070).',
+    args: {
+      id: t.arg.id({ required: true }),
+      statutAttendu: t.arg({
+        type: StatutChoixEnum,
+        description: 'Le statut lu du choix. Seule valeur admise : `REFUSE`.',
+      }),
+    },
+    resolve: async (_root, args, ctx) => {
+      if (
+        args.statutAttendu !== null &&
+        args.statutAttendu !== undefined &&
+        args.statutAttendu !== 'REFUSE'
+      ) {
+        throw erreurSaisie(i18n._('Seul un choix refusé se remet en attente.'))
+      }
+      const choix = await choixTraitable(ctx, String(args.id))
+      if (choix.statut !== 'REFUSE') throw conflitDeChoix(choix.statut)
+      await sousVerrouOrganisation(
+        choix.candidature.organisationId,
+        async tx => {
+          // L'ordre commun à tout traitement d'une candidature : la candidature,
+          // puis la séquence (accepterSurSequence). Les renforts se lisent sous
+          // le verrou de la séquence, après toute acceptation concurrente.
+          const [candidature] = await tx.$queryRaw<
+            {
+              statut: string
+              appelId: string
+              courriel: string | null
+              origine: string
+              refExterne: string | null
+            }[]
+          >`SELECT statut, appelId, courriel, origine, refExterne
+            FROM Candidature WHERE id = ${choix.candidatureId} FOR UPDATE`
+          const sequence = await sequenceAuDepot(tx, choix.sequenceId)
+          if (candidature === undefined || sequence === null) {
+            throw accesRefuse()
+          }
+          if (candidature.statut === 'RETIREE') {
+            throw erreurSaisie(
+              i18n._('La personne a retiré cette candidature.')
+            )
+          }
+          // Le statut se relit sous les verrous : un choix accepté entre-temps
+          // ne revient pas en attente.
+          const [courant] = await tx.$queryRaw<{ statut: StatutChoix }[]>`
+            SELECT statut FROM ChoixCandidature WHERE id = ${choix.id} FOR UPDATE`
+          if (courant === undefined) throw accesRefuse()
+          if (courant.statut !== 'REFUSE') throw conflitDeChoix(courant.statut)
+          // L'adresse en attente reprend sa valeur du dépôt ou de l'import. Une
+          // ligne importée avec un identifiant externe n'en a pas : l'adresse
+          // d'un acheteur peut couvrir plusieurs billets (ADR 0042).
+          const courrielEnAttente =
+            candidature.origine === 'IMPORT' && candidature.refExterne !== null
+              ? null
+              : candidature.courriel
+          if (candidature.statut === 'TRAITEE' && courrielEnAttente !== null) {
+            // Une lecture simple suffit : le dépôt public, l'import et cette
+            // mutation écrivent une adresse en attente sous le verrou de
+            // l'organisation, tenu ici jusqu'à la fin de la transaction. Aucune
+            // candidature de la même adresse ne naît donc avant l'écriture.
+            const autre = await tx.candidature.findFirst({
+              where: {
+                appelId: candidature.appelId,
+                courrielEnAttente,
+                id: { not: choix.candidatureId },
+              },
+              select: { id: true },
+            })
+            if (autre !== null) {
+              throw erreurSaisie(
+                i18n._(
+                  'Une autre candidature de cette adresse attend sur cet appel : traitez-la d’abord.'
+                )
+              )
+            }
+          }
+          await tx.choixCandidature.update({
+            where: { id: choix.id },
+            data: {
+              statut: statutAuDepot(sequence),
+              traiteParId: null,
+              traiteLe: null,
+            },
+          })
+          if (candidature.statut === 'TRAITEE') {
+            await tx.candidature.update({
+              where: { id: choix.candidatureId },
+              data: { statut: 'EN_ATTENTE', courrielEnAttente },
+            })
+          }
+          await recalculerCandidature(tx, choix.candidatureId)
+        }
+      )
+      signalCandidature({ ...choix.candidature, id: choix.candidatureId })
       return relire(ctx, choix.candidatureId)
     },
   }),

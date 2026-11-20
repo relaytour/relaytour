@@ -170,7 +170,9 @@
             <li><span><span class="libelle">Accept</span></span><span>Place the person as a helper in the slot. The volunteer record is created, or joins the record that has the same email address. The place waits for the person’s confirmation.</span></li>
             <li><span><span class="libelle">Decline</span></span><span>Set aside one chosen slot. No email is sent.</span></li>
             <li><span><span class="libelle">Decline the entire application</span></span><span>Set aside all slots still pending. The person can submit a new application.</span></li>
+            <li><span><span class="libelle">Set back to pending</span></span><span>Undo the decline of a slot. It returns to pending, or to the waiting list when its helpers are reached. No email is sent.</span></li>
           </ul>
+          <p>An acceptance carries the state of the slot shown on screen. Another person may have processed the slot in the meantime. The screen then flags it and offers two choices: reload the application, or accept it anyway. No email is sent until you choose.</p>
           <p>A slot chosen after its helpers are reached goes onto the <strong>waiting list</strong>. You can still accept it: the screen then flags the excess. A freed place moves nobody up without your decision.</p>
           <p class="note">A received application notifies you in the app, once a day at most and without a name. A period’s applications are deleted when it is archived.</p>
         </article>
@@ -214,7 +216,7 @@
             <li><span><span class="libelle">Place</span></span><span>Place the person in the selected slot. On a computer, you can also drag them onto the slot.</span></li>
             <li><span><span class="libelle">Remove</span></span><span>Remove a place from the chart. The person returns to the unplaced volunteers.</span></li>
           </ul>
-          <p>Hovering over a name shows the person’s notes, their message, their choices, and their places. Placing an application accepts the slot, like the “Accept” button.</p>
+          <p>Hovering over a name shows the person’s notes, their message, their choices, and their places. Placing an application accepts the slot, like the “Accept” button. The placement checks the state of the slot shown on screen in the same way.</p>
           <p class="note">A placement outside the person’s availability, overlapping another, or beyond the helpers wanted asks for confirmation. On a phone, the view lists the slots that fall short, each with its unplaced volunteers.</p>
         </article>
       </section>
@@ -340,7 +342,7 @@
       </section>
 
       <footer>
-        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. This user guide is up to date with version 0.30.0.
+        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. This user guide is up to date with version 0.34.0.
       </footer>
     </main>
     <script src="../../menu.js"></script>

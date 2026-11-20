@@ -193,6 +193,21 @@ msgstr "Cet appel a passé sa date de fermeture : changez d’abord ses dates."
 
 #. js-lingui-explicit-id
 #: src/schema/appels.ts
+msgid "Seul un choix refusé se remet en attente."
+msgstr "Seul un choix refusé se remet en attente."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "La personne a retiré cette candidature."
+msgstr "La personne a retiré cette candidature."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "Une autre candidature de cette adresse attend sur cet appel : traitez-la d’abord."
+msgstr "Une autre candidature de cette adresse attend sur cet appel : traitez-la d’abord."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
 msgid "Ce choix est déjà traité : retirez la place depuis le programme."
 msgstr "Ce choix est déjà traité : retirez la place depuis le programme."
 
@@ -200,11 +215,6 @@ msgstr "Ce choix est déjà traité : retirez la place depuis le programme."
 #: src/schema/appels.ts
 msgid "Cette candidature est déjà traitée."
 msgstr "Cette candidature est déjà traitée."
-
-#. js-lingui-explicit-id
-#: src/schema/appels.ts
-msgid "La personne a retiré cette candidature."
-msgstr "La personne a retiré cette candidature."
 
 #. js-lingui-explicit-id
 #: src/schema/applications-tierces.ts
@@ -1542,6 +1552,11 @@ msgstr "Une plage dure 24 heures au plus."
 #: src/lib/appels.ts
 msgid "Une plage tombe dans les jours de la période ou de son programme."
 msgstr "Une plage tombe dans les jours de la période ou de son programme."
+
+#. js-lingui-explicit-id
+#: src/lib/appels.ts
+msgid "Le statut de ce choix a changé depuis votre lecture."
+msgstr "Le statut de ce choix a changé depuis votre lecture."
 
 #. js-lingui-explicit-id
 #: src/lib/application.ts

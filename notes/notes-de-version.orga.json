@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-11-20-orga-une-sequence-refusee-par-erreur-se-remet-en-attente",
+          "date": "2026-11-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une séquence refusée par erreur se remet en attente",
+            "texte": "Le bouton « Remettre en attente » apparaît à côté d'une séquence refusée dans une candidature. La séquence repasse en attente, ou en liste d'attente quand ses renforts sont atteints, et aucun mail ne part. Une acceptation vérifie aussi l'état affiché de la séquence. Si une autre personne l'a traitée entre-temps, l'écran propose de recharger la candidature ou de l'accepter quand même.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A slot declined by mistake can be set back to pending",
+            "texte": "The “Set back to pending” button appears next to a declined slot in an application. The slot returns to pending, or to the waiting list when its helpers are reached, and no email is sent. An acceptance also checks the state of the slot shown on screen. If another person processed it in the meantime, the screen offers to reload the application or to accept it anyway.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-11-20-orga-un-message-prepare-par-une-application-indique-son-origine",
           "date": "2026-11-20",
           "type": "fonctionnalite",

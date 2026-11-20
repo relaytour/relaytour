@@ -1795,6 +1795,12 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'remettreChoixEnAttente',
+    query: 'mutation ($id: ID!) { remettreChoixEnAttente(id: $id) { id } }',
+    variables: () => ({ id: a.choix }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'refuserCandidature',
     query: 'mutation ($id: ID!) { refuserCandidature(id: $id) { id } }',
     variables: () => ({ id: a.candidature }),

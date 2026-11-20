@@ -1,19 +1,21 @@
-import { CheckOutlined, CloseOutlined } from '@ant-design/icons'
-import { useMutation, useQuery } from '@apollo/client/react'
-import type { MessageDescriptor } from '@lingui/core'
-import { msg, t } from '@lingui/core/macro'
+import { CheckOutlined, CloseOutlined, UndoOutlined } from '@ant-design/icons'
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
+import { t } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Empty, Result, Segmented, Skeleton, Tag } from 'antd'
 import { useState } from 'react'
 
 import { graphql } from '../gql'
-import type {
-  CandidaturesQuery,
-  StatutCandidature,
-  StatutChoix,
-} from '../gql/graphql'
+import type { CandidaturesQuery, StatutCandidature } from '../gql/graphql'
 import { libelleJours } from '../lib/agenda'
+import {
+  accepterAvecStatutLu,
+  lireConflitChoix,
+  STATUTS_CHOIX as STATUTS,
+  VUES_CANDIDATURES as RELIRE,
+} from '../lib/decisions-candidature'
 import { jourDeLInstant, messageErreur } from '../lib/erreurs'
+import { relireLesVues } from '../lib/rafraichissement'
 import { CANDIDATURES } from '../lib/requetes-benevoles'
 
 import PastillePerimetre from './PastillePerimetre'
@@ -21,11 +23,20 @@ import PastillePerimetre from './PastillePerimetre'
 // File de revue des candidatures d'une période (ADR 0041). Le serveur ne montre
 // à une personne qui écrit dans un périmètre que les choix de ses séquences.
 // Accepter crée la fiche bénévole avec une place à confirmer ; refuser n'envoie
-// rien.
+// rien. Une acceptation porte le statut affiché du choix (ADR 0070) ; un choix
+// refusé se remet en attente sans mail.
 
 const ACCEPTER = graphql(`
-  mutation AccepterChoixCandidature($id: ID!) {
-    accepterChoixCandidature(id: $id) {
+  mutation AccepterChoixCandidature($id: ID!, $statutAttendu: StatutChoix) {
+    accepterChoixCandidature(id: $id, statutAttendu: $statutAttendu) {
+      id
+    }
+  }
+`)
+
+const REMETTRE = graphql(`
+  mutation RemettreChoixEnAttente($id: ID!) {
+    remettreChoixEnAttente(id: $id, statutAttendu: REFUSE) {
       id
     }
   }
@@ -48,49 +59,6 @@ const ECARTER = graphql(`
 `)
 
 type Candidature = CandidaturesQuery['candidatures'][number]
-
-const STATUTS: Record<
-  StatutChoix,
-  { libelle: MessageDescriptor; couleur: string }
-> = {
-  EN_ATTENTE: {
-    libelle: msg({
-      message: 'En attente',
-      comment: 'Statut du choix de séquence d’une candidature de bénévole',
-    }),
-    couleur: 'processing',
-  },
-  LISTE_ATTENTE: {
-    libelle: msg({
-      message: 'Liste d’attente',
-      comment: 'Statut du choix de séquence d’une candidature de bénévole',
-    }),
-    couleur: 'warning',
-  },
-  ACCEPTE: {
-    libelle: msg({
-      message: 'Acceptée',
-      comment: 'Statut du choix de séquence d’une candidature de bénévole',
-    }),
-    couleur: 'success',
-  },
-  REFUSE: {
-    libelle: msg({
-      message: 'Refusée',
-      comment: 'Statut du choix de séquence d’une candidature de bénévole',
-    }),
-    couleur: 'default',
-  },
-}
-
-const RELIRE = [
-  'Candidatures',
-  'Benevoles',
-  'Programme',
-  'BenevolesARepartir',
-  'CouvertureProgramme',
-  'AppelsBenevoles',
-]
 
 /** Une plage de disponibilité en clair : « sam. 5 juin, 8:00 → 13:00 ». */
 function plageEnClair(p: Candidature['plages'][number]): string {
@@ -142,6 +110,8 @@ export default function CandidaturesBenevoles({
   const relire = { refetchQueries: RELIRE }
   const [accepter] = useMutation(ACCEPTER, relire)
   const [refuser] = useMutation(REFUSER, relire)
+  const [remettre] = useMutation(REMETTRE, relire)
+  const client = useApolloClient()
   const [ecarter] = useMutation(ECARTER, relire)
   const [enCours, setEnCours] = useState<string | null>(null)
 
@@ -156,6 +126,48 @@ export default function CandidaturesBenevoles({
       message.success(ok)
     } catch (e) {
       message.error(messageErreur(e))
+    } finally {
+      setEnCours(null)
+    }
+  }
+
+  const accepterChoix = async (x: Candidature['choix'][number]) => {
+    setEnCours(`accepter-${x.id}`)
+    try {
+      const ecrite = await accepterAvecStatutLu(
+        statutAttendu => accepter({ variables: { id: x.id, statutAttendu } }),
+        x.statut,
+        {
+          client,
+          confirmer: async options => await modal.confirm(options),
+          signalerErreur: texte => void message.error(texte),
+        }
+      )
+      if (ecrite) {
+        message.success(
+          t`Séquence acceptée : la place attend la confirmation de la personne.`
+        )
+      }
+    } finally {
+      setEnCours(null)
+    }
+  }
+
+  const remettreEnAttente = async (x: Candidature['choix'][number]) => {
+    setEnCours(`remettre-${x.id}`)
+    try {
+      await remettre({ variables: { id: x.id } })
+      message.success(t`Séquence remise en attente. Aucun mail ne part.`)
+    } catch (e) {
+      if (lireConflitChoix(e) !== undefined) {
+        // Une autre personne a traité ce choix entre-temps : l'écran se relit.
+        message.warning(
+          t`Ce choix a changé entre-temps. La candidature est rechargée.`
+        )
+        await relireLesVues(client, RELIRE)
+      } else {
+        message.error(messageErreur(e))
+      }
     } finally {
       setEnCours(null)
     }
@@ -292,13 +304,7 @@ export default function CandidaturesBenevoles({
                                 type="primary"
                                 icon={<CheckOutlined />}
                                 loading={enCours === `accepter-${x.id}`}
-                                onClick={() =>
-                                  void agir(
-                                    `accepter-${x.id}`,
-                                    () => accepter({ variables: { id: x.id } }),
-                                    t`Séquence acceptée : la place attend la confirmation de la personne.`
-                                  )
-                                }
+                                onClick={() => void accepterChoix(x)}
                               >
                                 {t`Accepter`}
                               </Button>
@@ -317,6 +323,16 @@ export default function CandidaturesBenevoles({
                                   }
                                 >
                                   {t`Refuser`}
+                                </Button>
+                              )}
+                              {x.statut === 'REFUSE' && (
+                                <Button
+                                  size="small"
+                                  icon={<UndoOutlined />}
+                                  loading={enCours === `remettre-${x.id}`}
+                                  onClick={() => void remettreEnAttente(x)}
+                                >
+                                  {t`Remettre en attente`}
                                 </Button>
                               )}
                             </span>
@@ -346,8 +362,9 @@ export default function CandidaturesBenevoles({
         <Trans>
           Accepter une séquence crée la fiche bénévole avec une place à
           confirmer. La première place envoie à la personne un mail avec son
-          lien personnel. Refuser n’envoie rien. Les candidatures disparaissent
-          à l’archivage de la période.
+          lien personnel. Refuser n’envoie rien. Une séquence refusée par erreur
+          se remet en attente, sans mail. Les candidatures disparaissent à
+          l’archivage de la période.
         </Trans>
       </p>
     </div>
