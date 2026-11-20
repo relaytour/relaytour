@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.34.0
 fr:
   titre: >-
     L'écran Personnes donne et retire la lecture d'une activité à un robot
