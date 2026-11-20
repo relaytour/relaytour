@@ -310,6 +310,14 @@ describe('ce que lit un robot', () => {
         )
       )
     ).toBe('FORBIDDEN')
+    // L'organigramme reste réduit : contacts principaux, sans aucune adresse.
+    const organigramme = await executer(
+      qui,
+      'query ($a: ID) { organigramme(activiteId: $a) { complet } }',
+      { a: ids.tournoi }
+    )
+    expect(organigramme.errors).toBeUndefined()
+    expect(organigramme.data).toEqual({ organigramme: { complet: false } })
     const perimetres = await executer(
       qui,
       'query ($a: ID) { perimetres(activiteId: $a) { id fiches { id } } }',

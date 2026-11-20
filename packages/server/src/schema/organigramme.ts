@@ -8,6 +8,7 @@ import {
 import { membreActif } from '../lib/appartenances.ts'
 import { organisationEnLectureSeule } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
+import { aLaLecture } from '../lib/rattachements.ts'
 
 import { AdressesOrganigrammeEnum } from './activites.ts'
 import { builder } from './builder.ts'
@@ -134,7 +135,10 @@ builder.queryFields(t => ({
     resolve: async (_root, args, ctx) => {
       const organisationId = ctx.organisation!.id
       const id = await ctx.exigerActiviteDecouverte(args.activiteId)
-      const complet = (await ctx.activitesVisibles()).has(id)
+      // Un robot qui a la lecture de l'activité (ADR 0069) lit l'organigramme
+      // réduit : il ne lit aucune adresse, et seulement les contacts principaux.
+      const complet =
+        (await ctx.activitesVisibles()).has(id) && !(await aLaLecture(ctx, id))
       const moi = ctx.personne!.id
       // Une personne archivée dans l'organisation (ADR 0031), ou qui n'y appartient
       // plus, n'apparaît pas.

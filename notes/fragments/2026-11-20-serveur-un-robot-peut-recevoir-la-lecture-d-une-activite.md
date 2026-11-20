@@ -31,4 +31,5 @@ par `activitesVisibles` pour un robot seulement. Mutations
 `donnerLectureActivite` et `retirerLectureActivite` (session d'un admin de
 l'activité), argument `lectureActiviteIds` de `creerRobot`, champs
 `ActiviteDuRobot.lecture`, `AttributionActivite.lecture` et
-`Personne.activitesLues`. Un robot qui a la lecture ne formule aucun souhait.
+`Personne.activitesLues`. Un robot qui a la lecture ne formule aucun souhait et
+lit l'organigramme réduit, sans adresse.
