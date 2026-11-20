@@ -70,5 +70,6 @@
 | [0066](0066-reunion-terminee-et-compte-rendu.md) | Réunion terminée et compte rendu | Proposée |
 | [0067](0067-autorisation-d-applications-tierces.md) | Autorisation d'applications tierces | Acceptée |
 | [0068](0068-periodes-de-travail.md) | Périodes de travail des tâches | Proposée |
+| [0069](0069-lecture-d-une-activite-par-un-robot.md) | Lecture d'une activité par un robot | Acceptée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
