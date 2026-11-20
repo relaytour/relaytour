@@ -53,7 +53,9 @@ Un statut « brouillon » n'apporte rien. Le statut « en cours » joue déjà c
 
 - La révocation d'une autorisation ne change pas l'origine d'un message. L'origine décrit un fait passé.
 - Le refus d'une application par un admin de l'organisation ou par l'installation (ADR 0067) ne change pas non plus l'origine.
-- L'installation oublie une application 30 jours après la fin de sa dernière autorisation (ADR 0067). La référence `clientApplicationId` devient alors nulle (`onDelete: SetNull`). Le nom, l'hôte et la source copiés restent, et l'écran les affiche toujours.
+- L'ADR 0067 prévoit la suppression d'un client enregistré dynamiquement (DCR) qui reste 30 jours sans autorisation.
+- La purge des applications (`purgerApplications`) applique la même règle à la copie d'un document CIMD. Une application, CIMD ou DCR, s'efface donc quand aucune autorisation ne la cite depuis 30 jours.
+- Après cet effacement, la référence `clientApplicationId` devient nulle (`onDelete: SetNull`). Le nom, l'hôte et la source copiés restent, et l'écran les affiche toujours.
 - La suppression d'un jeton d'accès met de même `jetonAccesId` à null. Le libellé copié reste.
 - Le panneau « API » de l'écran « Organisation » indique, pour chaque autorisation, le nombre de messages en cours que l'application a préparés. L'admin qui révoque une application sait ainsi quels messages relire.
 - La révocation ne supprime aucun message et n'en change pas le statut. L'auteur décide de chaque message, comme aujourd'hui.
@@ -85,8 +87,8 @@ Un statut « brouillon » n'apporte rien. Le statut « en cours » joue déjà c
 ### Une simple référence à l'application
 
 - Le message garderait seulement `clientApplicationId`.
-- L'oubli d'une application, 30 jours après sa dernière autorisation, effacerait l'origine de ses messages.
-- Un nom changé dans le document de métadonnées changerait l'origine affichée d'un message ancien.
+- L'effacement d'une application par la purge, 30 jours après sa dernière autorisation, effacerait l'origine de ses messages. Un client DCR est concerné par l'ADR 0067, et un client CIMD par la purge actuelle.
+- Une application peut changer de nom dans son document de métadonnées. Une simple référence afficherait ce nouveau nom, et non celui du jour de la création du message.
 
 ### Interdire la création de messages aux applications
 
