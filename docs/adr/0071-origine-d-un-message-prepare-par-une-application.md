@@ -1,7 +1,8 @@
 # ADR 0071 — Origine d'un message préparé par une application
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-11-20
+- Acceptée le 2026-11-20 : l'origine d'un message, déduite du jeton de la requête, avec une copie du nom et de l'hôte de l'application. Les autres options figurent sous « Options écartées ». La mise en œuvre viendra dans une PR séparée.
 - Complète l'ADR 0020 (messages écrits dans l'application), l'ADR 0027 (écran « Messages »), l'ADR 0064 (jetons d'accès) et l'ADR 0067 (autorisation d'applications tierces).
 - Ne remplace aucune règle d'une ADR acceptée. Relaytour n'envoie toujours aucun message.
 

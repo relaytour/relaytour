@@ -1,7 +1,8 @@
 # ADR 0070 — Garde d'état des décisions de candidature
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-11-20
+- Acceptée le 2026-11-20 : le statut vu sur les deux acceptations et la remise en attente d'un choix refusé, avec un statut recalculé comme au dépôt. Les autres options figurent sous « Options écartées ». La mise en œuvre viendra dans une PR séparée.
 - Complète l'ADR 0041 (appels à bénévoles, candidatures et répartition) et l'ADR 0067 (autorisation d'applications tierces).
 - Ne remplace aucune règle d'une ADR acceptée. Un appel sans le nouvel argument garde le comportement actuel.
 
