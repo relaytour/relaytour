@@ -32,6 +32,8 @@ Les tâches ont déjà réglé ce problème. `changerStatutTache` reçoit le sta
 - `placerBenevole` reçoit le même argument. Il désigne le statut du choix de la candidature sur la séquence visée.
 - Avec `statutAttendu`, le serveur compare ce statut au statut courant du choix. Un écart répond `CONFLIT_VERSION`, avec l'extension `statutCourant`, comme `changerStatutTache`.
 - La comparaison se fait sous les verrous de la candidature et de la séquence, dans la transaction qui accepte. Deux décisions simultanées ne peuvent donc pas passer toutes les deux.
+- Un choix déjà accepté rend la candidature sans erreur ni écriture, quel que soit `statutAttendu`. Le serveur le vérifie sous les verrous, avant la comparaison. Cette règle suit `changerStatutTache`, où demander le statut déjà en place ne change rien.
+- Deux acceptations simultanées du même choix reçoivent donc toutes les deux la candidature acceptée. Une seule place est créée, et `annoncerPlace` ne part qu'une fois.
 - Pour `placerBenevole`, une candidature sans choix sur la séquence a pour statut courant « aucun ». Un `statutAttendu` fourni répond alors `CONFLIT_VERSION`, avec `statutCourant` nul. Une application qui place une candidature sur une séquence non choisie omet l'argument.
 - Le conflit est vérifié avant toute écriture et avant `annoncerPlace`. Aucun mail ne part après un conflit.
 - Sans `statutAttendu`, le comportement actuel reste le même. Les écrans actuels et les scripts existants continuent de fonctionner.
@@ -42,10 +44,14 @@ Les tâches ont déjà réglé ce problème. `changerStatutTache` reçoit le sta
 - Une nouvelle mutation `remettreChoixEnAttente(id, statutAttendu)` remet un choix refusé en attente.
 - Elle demande les mêmes droits que `accepterChoixCandidature` : écrire la séquence, avec le module « Bénévoles » actif. Une candidature retirée par la personne candidate ne se modifie pas.
 - Elle ne traite qu'un choix refusé. Un choix dans un autre statut répond `CONFLIT_VERSION`, avec `statutCourant`. Le `statutAttendu` est facultatif et ne peut valoir que `REFUSE`.
-- Le choix reprend le statut qu'il aurait reçu au dépôt à ce moment : « en attente » tant que les renforts de la séquence restent sous son besoin, « en liste d'attente » sinon (`statutAuDepot`).
+- La mutation prend les verrous dans l'ordre commun à tout traitement d'une candidature : la candidature, puis la séquence (`accepterSurSequence`).
+- Sous ces verrous, l'écriture vérifie de nouveau que le choix est refusé. Un choix accepté entre-temps n'est pas remis en attente, et la mutation répond `CONFLIT_VERSION`.
+- Le choix reprend le statut qu'il aurait reçu au dépôt à ce moment : « en attente » tant que les renforts de la séquence restent sous son besoin, « en liste d'attente » sinon (`statutAuDepot`). Les renforts se lisent sous le verrou de la séquence, après toute acceptation concurrente.
 - `traiteParId` et `traiteLe` reviennent à null, comme pour un choix jamais traité.
-- Une candidature close par ce refus redevient « en attente ». Son adresse en attente (`courrielEnAttente`) reprend la valeur de son adresse.
-- Une autre candidature de la même adresse peut attendre sur le même appel. La remise en attente répond alors une erreur de saisie et ne change rien. L'équipe traite d'abord l'autre candidature.
+- Une candidature close par ce refus redevient « en attente ». Son adresse en attente (`courrielEnAttente`) reprend la valeur qu'elle avait au dépôt ou à l'import.
+- Cette valeur est l'adresse de la candidature pour un dépôt en ligne et pour une ligne importée sans identifiant externe.
+- Elle reste nulle pour une ligne importée avec un identifiant externe, car l'adresse d'un acheteur peut couvrir plusieurs billets (ADR 0042). Elle reste nulle aussi pour une candidature sans adresse.
+- Quand l'adresse en attente n'est pas nulle, une autre candidature de la même adresse peut attendre sur le même appel. La remise en attente répond alors une erreur de saisie et ne change rien. L'équipe traite d'abord l'autre candidature.
 - La candidature est ensuite recalculée (`recalculerCandidature`), comme après un refus.
 - Aucun mail ne part. La personne candidate n'a jamais appris le refus, puisque le refus n'envoie rien (ADR 0041).
 - La mutation publie le signal de la candidature, comme un refus.
@@ -95,13 +101,17 @@ Les tâches ont déjà réglé ce problème. `changerStatutTache` reçoit le sta
 Les tests de la mise en œuvre prouvent chaque contrôle par le refus :
 
 - une acceptation avec `statutAttendu` sur un choix refusé entre-temps répond `CONFLIT_VERSION`, n'écrit rien et ne met aucun mail en file ;
-- deux acceptations simultanées avec le même `statutAttendu` ne créent qu'une place ;
+- deux acceptations simultanées avec le même `statutAttendu` ne créent qu'une place, rendent toutes les deux la candidature acceptée et ne mettent qu'un mail en file ;
+- une acceptation avec `statutAttendu` sur un choix déjà accepté rend la candidature sans erreur et n'écrit rien ;
 - `placerBenevole` avec `statutAttendu` sur une séquence sans choix répond `CONFLIT_VERSION` ;
 - une personne qui n'écrit pas la séquence ne remet pas un choix en attente ;
 - un jeton d'accès ou d'application en lecture ne remet pas un choix en attente ;
 - une personne d'une autre activité ou d'une autre organisation ne remet pas un choix en attente ;
 - un choix d'une candidature retirée ne revient pas en attente ;
 - une remise en attente ne met aucun mail en file ;
+- une remise en attente simultanée d'une acceptation du même choix ne laisse jamais un choix en attente à côté d'une place acceptée ;
+- une remise en attente simultanée d'une acceptation sur la même séquence calcule le statut avec les renforts de cette acceptation ;
+- une ligne importée avec un identifiant externe revient en attente avec une adresse en attente nulle, même quand un autre billet de la même adresse attend sur l'appel ;
 - une remise en attente qui créerait une seconde candidature en attente pour la même adresse sur le même appel répond une erreur de saisie.
 
 ## Plan de mise en œuvre
