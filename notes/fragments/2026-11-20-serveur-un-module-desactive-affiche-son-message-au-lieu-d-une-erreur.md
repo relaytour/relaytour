@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.33.0
 fr:
   titre: >-
     Un module désactivé affiche son message au lieu d'une erreur du serveur

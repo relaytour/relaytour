@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.33.0
 fr:
   titre: >-
     L'API lit la durée estimée d'une tâche et les tâches à commencer

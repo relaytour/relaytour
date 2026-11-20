@@ -2,10 +2,10 @@
   "schemaVersion": 5,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.32.0",
+  "version": "0.33.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.33.0",
       "notes": [
         {
           "id": "2026-11-19-orga-une-duree-estimee-montre-les-taches-a-commencer",
