@@ -862,6 +862,7 @@ msgstr "The chosen areas belong to another activity."
 
 #. js-lingui-explicit-id
 #: src/schema/personnes.ts
+#: src/schema/robots.ts
 msgid "Cette activité est archivée."
 msgstr "This activity is archived."
 
@@ -1097,6 +1098,11 @@ msgstr "The robot name"
 #: src/schema/robots.ts
 msgid "Choisissez au moins une activité."
 msgstr "Choose at least one activity."
+
+#. js-lingui-explicit-id
+#: src/schema/robots.ts
+msgid "La lecture ne se donne que pour une activité où le robot est rattaché."
+msgstr "Read access can only be given for an activity the robot belongs to."
 
 #. js-lingui-explicit-id
 #: src/schema/robots.ts

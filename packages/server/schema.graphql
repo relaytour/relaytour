@@ -122,6 +122,11 @@ type Activite {
 
 type ActiviteDuRobot {
   id: ID!
+
+  """
+  Vrai quand le robot a la lecture de l’activité (ADR 0069) : il la consulte pour toutes ses périodes, sans aucune écriture.
+  """
+  lecture: Boolean!
   nom: String!
 }
 
@@ -399,6 +404,11 @@ type AttributionActivite {
 
   """Vrai quand la personne y a au moins un souhait."""
   interessee: Boolean!
+
+  """
+  Vrai quand un robot a la lecture de l’activité (ADR 0069) : il la consulte pour toutes ses périodes, sans aucune écriture.
+  """
+  lecture: Boolean!
 
   """
   Vrai quand la personne est rattachée à l’activité (ADR 0045). Toute affectation la rattache aussi.
@@ -2242,7 +2252,15 @@ type Mutation {
   """
   Crée un robot, rattaché aux activités choisies. Il prend une place de membre. Cinq robots actifs au plus par organisation.
   """
-  creerRobot(activiteIds: [ID!]!, nom: String!): Robot!
+  creerRobot(
+    activiteIds: [ID!]!
+
+    """
+    Activités dont le robot reçoit la lecture (ADR 0069). Chacune doit figurer parmi `activiteIds`.
+    """
+    lectureActiviteIds: [ID!]
+    nom: String!
+  ): Robot!
   creerSequence(
     """Le nombre de renforts recherchés ; 0 ou rien : aucun."""
     besoinBenevoles: Int
@@ -2348,6 +2366,11 @@ type Mutation {
   Détache une déclinaison acceptée de sa tâche partagée : elle redevient une tâche ordinaire de son périmètre, avec son statut, ses personnes assignées et son fil. Demande d’écrire dans les deux périmètres (ADR 0061). Rend la tâche détachée.
   """
   detacherDeclinaison(id: ID!): Tache!
+
+  """
+  Donne à un robot la lecture d’une activité où il est rattaché (ADR 0069) : il la consulte pour toutes ses périodes, sans aucune écriture. Réservé à un admin de l’activité. Rend faux quand le robot avait déjà la lecture.
+  """
+  donnerLectureActivite(activiteId: ID!, robotId: ID!): Boolean!
 
   """
   Écarte une proposition : rien ne change chez le fournisseur. Elle ne revient pas tant que la situation de la personne ne change pas.
@@ -2847,6 +2870,11 @@ type Mutation {
   retirerInvitation(id: ID!): Boolean!
 
   """
+  Retire à un robot la lecture d’une activité (ADR 0069). Son rattachement reste. Réservé à un admin de l’activité. Rend faux quand le robot n’avait pas la lecture.
+  """
+  retirerLectureActivite(activiteId: ID!, robotId: ID!): Boolean!
+
+  """
   La personne connectée retire son propre souhait. Hors de ses activités, rien ne change.
   """
   retirerMonSouhait(editionId: ID!, perimetreId: ID!): Boolean!
@@ -3220,6 +3248,11 @@ type PeriodeInstallation {
 
 type Personne {
   activitesAdministrees: [ID!]!
+
+  """
+  Les activités dont ce robot a la lecture (ADR 0069), parmi celles que la personne connectée administre. Vide pour une personne.
+  """
+  activitesLues: [ID!]!
 
   """
   L’adresse de la personne est une adresse de rôle de son organisation active. Lue par la personne seule.

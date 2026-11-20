@@ -13,6 +13,8 @@ import {
 } from '../lib/jetons-acces.ts'
 import { journal } from '../lib/journal.ts'
 import { i18n } from '../lib/langue.ts'
+import { equipesModifiees } from '../lib/appartenances.ts'
+import { publierPourActivite } from '../lib/flux.ts'
 import { creerRobot } from '../lib/robots.ts'
 import { texteRequis } from '../lib/saisie.ts'
 
@@ -31,14 +33,27 @@ interface Robot {
   id: string
   nom: string
   archive: boolean
-  activites: { id: string; nom: string }[]
+  activites: ActiviteDuRobot[]
   jetons: JetonAcces[]
 }
 
+interface ActiviteDuRobot {
+  id: string
+  nom: string
+  lecture: boolean
+}
+
 const ActiviteDuRobotRef = builder
-  .objectRef<{ id: string; nom: string }>('ActiviteDuRobot')
+  .objectRef<ActiviteDuRobot>('ActiviteDuRobot')
   .implement({
-    fields: t => ({ id: t.exposeID('id'), nom: t.exposeString('nom') }),
+    fields: t => ({
+      id: t.exposeID('id'),
+      nom: t.exposeString('nom'),
+      lecture: t.exposeBoolean('lecture', {
+        description:
+          'Vrai quand le robot a la lecture de l’activité (ADR 0069) : il la consulte pour toutes ses périodes, sans aucune écriture.',
+      }),
+    }),
   })
 
 const RobotRef = builder.objectRef<Robot>('Robot').implement({
@@ -83,7 +98,10 @@ async function lireRobots(
       },
       rattachementsActivite: {
         where: { organisationId },
-        select: { activite: { select: { id: true, nom: true } } },
+        select: {
+          lecture: true,
+          activite: { select: { id: true, nom: true } },
+        },
       },
       jetonsAcces: {
         where: {
@@ -101,7 +119,10 @@ async function lireRobots(
     id: c.id,
     nom: c.name,
     archive: c.appartenances[0]?.archiveLe !== null,
-    activites: c.rattachementsActivite.map(r => r.activite),
+    activites: c.rattachementsActivite.map(r => ({
+      ...r.activite,
+      lecture: r.lecture,
+    })),
     jetons: c.jetonsAcces,
   }))
 }
@@ -131,6 +152,10 @@ builder.mutationFields(t => ({
     args: {
       nom: t.arg.string({ required: true }),
       activiteIds: t.arg.idList({ required: true }),
+      lectureActiviteIds: t.arg.idList({
+        description:
+          'Activités dont le robot reçoit la lecture (ADR 0069). Chacune doit figurer parmi `activiteIds`.',
+      }),
     },
     resolve: async (_root, args, ctx) => {
       const nom = texteRequis(args.nom, i18n._('Le nom du robot'))
@@ -139,10 +164,21 @@ builder.mutationFields(t => ({
         throw erreurSaisie(i18n._('Choisissez au moins une activité.'))
       }
       for (const id of activiteIds) await ctx.exigerActivite(id)
+      const lectureActiviteIds = [
+        ...new Set((args.lectureActiviteIds ?? []).map(String)),
+      ]
+      if (lectureActiviteIds.some(a => !activiteIds.includes(a))) {
+        throw erreurSaisie(
+          i18n._(
+            'La lecture ne se donne que pour une activité où le robot est rattaché.'
+          )
+        )
+      }
       const { id } = await creerRobot({
         organisationId: ctx.organisation!.id,
         nom,
         activiteIds,
+        lectureActiviteIds,
         creeParId: ctx.personne!.id,
       })
       journal.info(
@@ -154,6 +190,9 @@ builder.mutationFields(t => ({
         },
         'Un robot a été créé.'
       )
+      for (const activiteId of lectureActiviteIds) {
+        noterLecture(ctx, id, activiteId, true)
+      }
       return exigerRobot(ctx, id)
     },
   }),
@@ -279,4 +318,101 @@ builder.mutationFields(t => ({
       return count > 0
     },
   }),
+
+  donnerLectureActivite: t.boolean({
+    authScopes: { $all: { gestion: true, session: true } },
+    description:
+      'Donne à un robot la lecture d’une activité où il est rattaché (ADR 0069) : il la consulte pour toutes ses périodes, sans aucune écriture. Réservé à un admin de l’activité. Rend faux quand le robot avait déjà la lecture.',
+    args: {
+      robotId: t.arg.id({ required: true }),
+      activiteId: t.arg.id({ required: true }),
+    },
+    resolve: (_root, args, ctx) =>
+      changerLecture(ctx, String(args.robotId), String(args.activiteId), true),
+  }),
+
+  retirerLectureActivite: t.boolean({
+    authScopes: { $all: { gestion: true, session: true } },
+    // Une lecture se retire même dans une organisation en lecture seule, comme un
+    // jeton se révoque.
+    skipTypeScopes: true,
+    description:
+      'Retire à un robot la lecture d’une activité (ADR 0069). Son rattachement reste. Réservé à un admin de l’activité. Rend faux quand le robot n’avait pas la lecture.',
+    args: {
+      robotId: t.arg.id({ required: true }),
+      activiteId: t.arg.id({ required: true }),
+    },
+    resolve: (_root, args, ctx) =>
+      changerLecture(ctx, String(args.robotId), String(args.activiteId), false),
+  }),
 }))
+
+/**
+ * Donne ou retire la lecture d'une activité à un robot (ADR 0069). L'auteur
+ * administre l'activité, et le robot est actif et rattaché à l'activité. Chaque
+ * refus vaut une activité d'une autre organisation : il ne dit pas lequel de ces
+ * contrôles a échoué.
+ */
+async function changerLecture(
+  ctx: AppContext,
+  robotId: string,
+  activiteId: string,
+  lecture: boolean
+): Promise<boolean> {
+  const organisationId = ctx.organisation!.id
+  if (!(await ctx.estAdminDe(activiteId))) throw accesRefuse()
+  const rattachement = await prisma.rattachementActivite.findFirst({
+    where: {
+      userId: robotId,
+      activiteId,
+      organisationId,
+      activite: { organisationId },
+      user: {
+        robot: true,
+        appartenances: { some: { organisationId, archiveLe: null } },
+      },
+    },
+    select: {
+      id: true,
+      lecture: true,
+      activite: { select: { archivedAt: true } },
+    },
+  })
+  if (rattachement === null) throw accesRefuse()
+  if (rattachement.lecture === lecture) return false
+  if (lecture && rattachement.activite.archivedAt !== null) {
+    throw erreurSaisie(i18n._('Cette activité est archivée.'))
+  }
+  const { count } = await prisma.rattachementActivite.updateMany({
+    where: { id: rattachement.id, lecture: !lecture },
+    data: { lecture },
+  })
+  if (count === 0) return false
+  equipesModifiees(ctx)
+  noterLecture(ctx, robotId, activiteId, lecture)
+  return true
+}
+
+/** Journal et signal du flux d'un don ou d'un retrait de la lecture. */
+function noterLecture(
+  ctx: AppContext,
+  robotId: string,
+  activiteId: string,
+  lecture: boolean
+): void {
+  journal.info(
+    {
+      evenement: lecture
+        ? 'lecture-activite-donnee'
+        : 'lecture-activite-retiree',
+      robotId,
+      activiteId,
+      organisationId: ctx.organisation!.id,
+      par: ctx.personne!.id,
+    },
+    lecture
+      ? 'La lecture d’une activité a été donnée à un robot.'
+      : 'La lecture d’une activité a été retirée à un robot.'
+  )
+  publierPourActivite('EQUIPE', ctx.organisation!.id, activiteId)
+}

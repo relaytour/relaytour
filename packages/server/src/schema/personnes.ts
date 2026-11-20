@@ -93,6 +93,10 @@ const AttributionActiviteRef = builder
       admin: t.exposeBoolean('admin', {
         description: 'Vrai quand la personne administre l’activité.',
       }),
+      lecture: t.exposeBoolean('lecture', {
+        description:
+          'Vrai quand un robot a la lecture de l’activité (ADR 0069) : il la consulte pour toutes ses périodes, sans aucune écriture.',
+      }),
     }),
   })
 
@@ -211,6 +215,21 @@ export const PersonneRef = builder.prismaObject('User', {
       complexity: { field: 1, multiplier: 1 },
       resolve: async (personne, _args, ctx) =>
         (await attributionsDeLOrganisation(ctx)).get(personne.id) ?? [],
+    }),
+    // Les activités dont un robot a la lecture (ADR 0069), parmi celles que la
+    // personne qui lit administre. L'écran Personnes en tire l'étiquette « lecture ».
+    activitesLues: t.idList({
+      authScopes: { gestion: true },
+      description:
+        'Les activités dont ce robot a la lecture (ADR 0069), parmi celles que la personne connectée administre. Vide pour une personne.',
+      complexity: { field: 1, multiplier: 1 },
+      resolve: async (personne, _args, ctx) => {
+        // Seul un robot reçoit la lecture : la colonne suffit.
+        const administrees = await ctx.activitesAdministrees()
+        return ((await attributionsDeLOrganisation(ctx)).get(personne.id) ?? [])
+          .filter(a => a.lecture && administrees.has(a.activiteId))
+          .map(a => a.activiteId)
+      },
     }),
     // Les activités que la personne administre (ADR 0010), parmi celles que la
     // personne qui lit administre elle-même.

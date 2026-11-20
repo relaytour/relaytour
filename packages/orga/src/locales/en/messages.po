@@ -659,6 +659,10 @@ msgstr "{nom} (Cc)"
 msgid "{nom} (vous)"
 msgstr "{nom} (you)"
 
+#: src/composants/RobotsApi.tsx
+msgid "{nomActivite} (lecture)"
+msgstr "{nomActivite} (read access)"
+
 #: src/pages/admin/Personnes.tsx
 msgid "{nomAffiche} (archivée)"
 msgstr "{nomAffiche} (archived)"
@@ -4589,6 +4593,14 @@ msgstr "Role address domains"
 msgid "Donnée sensible : ignorée"
 msgstr "Sensitive data: ignored"
 
+#: src/pages/admin/Personnes.tsx
+msgid "Donner la lecture"
+msgstr "Give read access"
+
+#: src/pages/admin/Personnes.tsx
+msgid "Donner la lecture de l’activité ?"
+msgstr "Give read access to the activity?"
+
 #: src/composants/AppelsBenevoles.tsx
 msgid "Donner une nouvelle adresse à cet appel ?"
 msgstr "Give this call a new address?"
@@ -6459,6 +6471,10 @@ msgstr "The sheet can be read, but not edited, in these areas. A group also cove
 msgid "La gestion des accès est activée."
 msgstr "Access management is enabled."
 
+#: src/composants/RobotsApi.tsx
+msgid "La lecture d’une activité permet au robot de consulter toutes ses périodes, sans aucune écriture : c’est le réglage d’un client en lecture. Les affectations et le rôle d’admin d’une activité se donnent depuis l’écran « Équipe » de chaque activité, et la lecture aussi depuis son écran « Personnes »."
+msgstr "Read access to an activity lets the robot view all its periods, with no write access. Use it for a read-only client. Assignments and the activity admin role are given from the “Team” screen of each activity, and read access also from its “People” screen."
+
 #: src/lib/import-benevoles.ts
 msgid "La ligne ne porte ni nom, ni adresse, ni téléphone."
 msgstr "The row has no name, email address, or phone number."
@@ -7100,6 +7116,14 @@ msgstr "The digest also includes your unread admin notifications, in a separate 
 msgid "Le rétroplanning n’a pas pu être chargé."
 msgstr "The timeline couldn’t be loaded."
 
+#: src/pages/admin/Personnes.tsx
+msgid "Le robot consulte l’activité pour toutes ses périodes : éditions, lieux, programme, agenda, fiches communes et flux des changements. Il n’écrit rien et ne lit aucune coordonnée."
+msgstr "The robot views every period of the activity: editions, venues, schedule, agenda, shared sheets and change feed. It writes nothing and reads no contact details."
+
+#: src/pages/admin/Personnes.tsx
+msgid "Le robot ne consulte plus l’activité. Il reste dans l’équipe."
+msgstr "The robot no longer views the activity. It stays in the team."
+
 #: src/composants/RobotsApi.tsx
 msgid "Le robot reprend une place de membre. Ses anciens jetons restent révoqués."
 msgstr "The robot takes a member seat again. Its former tokens stay revoked."
@@ -7204,9 +7228,22 @@ msgstr "The title is empty."
 msgid "Le titre et le lien sont copiés."
 msgstr "The title and link are copied."
 
+#. Rôle d’une personne dans une activité, en liste
+#: src/pages/admin/Personnes.tsx
+msgid "lecture"
+msgstr "read access"
+
 #: src/composants/GestionAcces.tsx
 msgid "Lecture"
 msgstr "Read"
+
+#: src/composants/RobotsApi.tsx
+msgid "Lecture de ces activités"
+msgstr "Read access to these activities"
+
+#: src/pages/admin/Personnes.tsx
+msgid "Lecture donnée."
+msgstr "Read access given."
 
 #: src/composants/ApplicationsAutorisees.tsx
 #: src/composants/JetonsOrganisation.tsx
@@ -7215,6 +7252,10 @@ msgstr "Read"
 #: src/pages/Autoriser.tsx
 msgid "Lecture et écriture"
 msgstr "Read and write"
+
+#: src/pages/admin/Personnes.tsx
+msgid "Lecture retirée."
+msgstr "Read access removed."
 
 #: src/composants/ApplicationsAutorisees.tsx
 #: src/composants/FichesConnexes.tsx
@@ -7264,10 +7305,6 @@ msgstr "Admins write all sheets. Other people need editing rights."
 #: src/pages/admin/Activites.tsx
 msgid "Les admins, les contacts principaux, les référentes et les référents."
 msgstr "Admins, main contacts and coordinators."
-
-#: src/composants/RobotsApi.tsx
-msgid "Les affectations et le rôle d’admin d’une activité se donnent depuis l’écran « Équipe » de chaque activité, comme pour une personne."
-msgstr "Appointments and the activity admin role are given from the “Team” screen of each activity, as for a person."
 
 #: src/composants/SequenceFormulaire.tsx
 msgid "Les appels à bénévoles proposent la séquence tant que ce nombre n’est pas atteint. Les responsables n’y comptent pas."
@@ -10181,6 +10218,14 @@ msgstr "Remove from the milestone {titreJalon}"
 #: src/composants/TacheCarte.tsx
 msgid "Retirer l’ajustement"
 msgstr "Remove the adjustment"
+
+#: src/pages/admin/Personnes.tsx
+msgid "Retirer la lecture"
+msgstr "Remove read access"
+
+#: src/pages/admin/Personnes.tsx
+msgid "Retirer la lecture de l’activité ?"
+msgstr "Remove read access to the activity?"
 
 #: src/pages/admin/Activites.tsx
 msgid "Retirer la phase"

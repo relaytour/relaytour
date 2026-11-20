@@ -659,6 +659,10 @@ msgstr "{nom} (Cc)"
 msgid "{nom} (vous)"
 msgstr "{nom} (vous)"
 
+#: src/composants/RobotsApi.tsx
+msgid "{nomActivite} (lecture)"
+msgstr "{nomActivite} (lecture)"
+
 #: src/pages/admin/Personnes.tsx
 msgid "{nomAffiche} (archivée)"
 msgstr "{nomAffiche} (archivée)"
@@ -4589,6 +4593,14 @@ msgstr "Domaines des adresses de rôle"
 msgid "Donnée sensible : ignorée"
 msgstr "Donnée sensible : ignorée"
 
+#: src/pages/admin/Personnes.tsx
+msgid "Donner la lecture"
+msgstr "Donner la lecture"
+
+#: src/pages/admin/Personnes.tsx
+msgid "Donner la lecture de l’activité ?"
+msgstr "Donner la lecture de l’activité ?"
+
 #: src/composants/AppelsBenevoles.tsx
 msgid "Donner une nouvelle adresse à cet appel ?"
 msgstr "Donner une nouvelle adresse à cet appel ?"
@@ -6459,6 +6471,10 @@ msgstr "La fiche se lit, sans s’y modifier, dans ces périmètres. Un groupe c
 msgid "La gestion des accès est activée."
 msgstr "La gestion des accès est activée."
 
+#: src/composants/RobotsApi.tsx
+msgid "La lecture d’une activité permet au robot de consulter toutes ses périodes, sans aucune écriture : c’est le réglage d’un client en lecture. Les affectations et le rôle d’admin d’une activité se donnent depuis l’écran « Équipe » de chaque activité, et la lecture aussi depuis son écran « Personnes »."
+msgstr "La lecture d’une activité permet au robot de consulter toutes ses périodes, sans aucune écriture : c’est le réglage d’un client en lecture. Les affectations et le rôle d’admin d’une activité se donnent depuis l’écran « Équipe » de chaque activité, et la lecture aussi depuis son écran « Personnes »."
+
 #: src/lib/import-benevoles.ts
 msgid "La ligne ne porte ni nom, ni adresse, ni téléphone."
 msgstr "La ligne ne porte ni nom, ni adresse, ni téléphone."
@@ -7100,6 +7116,14 @@ msgstr "Le résumé reprend aussi vos notifications d’admin non lues, dans une
 msgid "Le rétroplanning n’a pas pu être chargé."
 msgstr "Le rétroplanning n’a pas pu être chargé."
 
+#: src/pages/admin/Personnes.tsx
+msgid "Le robot consulte l’activité pour toutes ses périodes : éditions, lieux, programme, agenda, fiches communes et flux des changements. Il n’écrit rien et ne lit aucune coordonnée."
+msgstr "Le robot consulte l’activité pour toutes ses périodes : éditions, lieux, programme, agenda, fiches communes et flux des changements. Il n’écrit rien et ne lit aucune coordonnée."
+
+#: src/pages/admin/Personnes.tsx
+msgid "Le robot ne consulte plus l’activité. Il reste dans l’équipe."
+msgstr "Le robot ne consulte plus l’activité. Il reste dans l’équipe."
+
 #: src/composants/RobotsApi.tsx
 msgid "Le robot reprend une place de membre. Ses anciens jetons restent révoqués."
 msgstr "Le robot reprend une place de membre. Ses anciens jetons restent révoqués."
@@ -7204,9 +7228,22 @@ msgstr "Le titre est vide."
 msgid "Le titre et le lien sont copiés."
 msgstr "Le titre et le lien sont copiés."
 
+#. Rôle d’une personne dans une activité, en liste
+#: src/pages/admin/Personnes.tsx
+msgid "lecture"
+msgstr "lecture"
+
 #: src/composants/GestionAcces.tsx
 msgid "Lecture"
 msgstr "Lecture"
+
+#: src/composants/RobotsApi.tsx
+msgid "Lecture de ces activités"
+msgstr "Lecture de ces activités"
+
+#: src/pages/admin/Personnes.tsx
+msgid "Lecture donnée."
+msgstr "Lecture donnée."
 
 #: src/composants/ApplicationsAutorisees.tsx
 #: src/composants/JetonsOrganisation.tsx
@@ -7215,6 +7252,10 @@ msgstr "Lecture"
 #: src/pages/Autoriser.tsx
 msgid "Lecture et écriture"
 msgstr "Lecture et écriture"
+
+#: src/pages/admin/Personnes.tsx
+msgid "Lecture retirée."
+msgstr "Lecture retirée."
 
 #: src/composants/ApplicationsAutorisees.tsx
 #: src/composants/FichesConnexes.tsx
@@ -7264,10 +7305,6 @@ msgstr "Les admins rédigent toutes les fiches. Les autres personnes ont besoin 
 #: src/pages/admin/Activites.tsx
 msgid "Les admins, les contacts principaux, les référentes et les référents."
 msgstr "Les admins, les contacts principaux, les référentes et les référents."
-
-#: src/composants/RobotsApi.tsx
-msgid "Les affectations et le rôle d’admin d’une activité se donnent depuis l’écran « Équipe » de chaque activité, comme pour une personne."
-msgstr "Les affectations et le rôle d’admin d’une activité se donnent depuis l’écran « Équipe » de chaque activité, comme pour une personne."
 
 #: src/composants/SequenceFormulaire.tsx
 msgid "Les appels à bénévoles proposent la séquence tant que ce nombre n’est pas atteint. Les responsables n’y comptent pas."
@@ -10181,6 +10218,14 @@ msgstr "Retirer du jalon {titreJalon}"
 #: src/composants/TacheCarte.tsx
 msgid "Retirer l’ajustement"
 msgstr "Retirer l’ajustement"
+
+#: src/pages/admin/Personnes.tsx
+msgid "Retirer la lecture"
+msgstr "Retirer la lecture"
+
+#: src/pages/admin/Personnes.tsx
+msgid "Retirer la lecture de l’activité ?"
+msgstr "Retirer la lecture de l’activité ?"
 
 #: src/pages/admin/Activites.tsx
 msgid "Retirer la phase"

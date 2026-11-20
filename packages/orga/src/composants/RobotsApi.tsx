@@ -1,7 +1,7 @@
 import { KeyOutlined, RobotOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { App, Button, Input, Radio, Select, Space, Tag } from 'antd'
+import { App, Button, Checkbox, Input, Radio, Select, Space, Tag } from 'antd'
 import { useState } from 'react'
 
 import { graphql } from '../gql'
@@ -24,6 +24,7 @@ const ROBOTS = graphql(`
       activites {
         id
         nom
+        lecture
       }
       jetons {
         id
@@ -39,8 +40,16 @@ const ROBOTS = graphql(`
 `)
 
 const CREER_ROBOT = graphql(`
-  mutation CreerRobot($nom: String!, $activiteIds: [ID!]!) {
-    creerRobot(nom: $nom, activiteIds: $activiteIds) {
+  mutation CreerRobot(
+    $nom: String!
+    $activiteIds: [ID!]!
+    $lectureActiviteIds: [ID!]
+  ) {
+    creerRobot(
+      nom: $nom
+      activiteIds: $activiteIds
+      lectureActiviteIds: $lectureActiviteIds
+    ) {
       id
     }
   }
@@ -228,13 +237,21 @@ export default function RobotsApi() {
   const [archiver] = useMutation(ARCHIVER_ROBOT)
   const [nom, setNom] = useState('')
   const [choisies, setChoisies] = useState<string[]>([])
+  const [lecture, setLecture] = useState(false)
   const robots = data?.robots ?? []
 
   const creerRobot = async () => {
     try {
-      await creer({ variables: { nom, activiteIds: choisies } })
+      await creer({
+        variables: {
+          nom,
+          activiteIds: choisies,
+          lectureActiviteIds: lecture ? choisies : [],
+        },
+      })
       setNom('')
       setChoisies([])
+      setLecture(false)
       await refetch()
       message.success(t`Robot créé.`)
     } catch (e) {
@@ -303,6 +320,12 @@ export default function RobotsApi() {
             .filter(a => !a.archive)
             .map(a => ({ value: a.id, label: a.nom }))}
         />
+        <Checkbox
+          checked={lecture}
+          onChange={e => setLecture(e.target.checked)}
+        >
+          <Trans>Lecture de ces activités</Trans>
+        </Checkbox>
         <Button
           icon={<RobotOutlined />}
           loading={creation.loading}
@@ -329,7 +352,12 @@ export default function RobotsApi() {
           </div>
           <span className="rt-note">
             {robot.activites.length > 0
-              ? robot.activites.map(a => a.nom).join(', ')
+              ? robot.activites
+                  .map(a => {
+                    const nomActivite = a.nom
+                    return a.lecture ? t`${nomActivite} (lecture)` : nomActivite
+                  })
+                  .join(', ')
               : t`Aucune activité.`}
           </span>
           {!robot.archive && (
@@ -339,8 +367,11 @@ export default function RobotsApi() {
       ))}
       <p className="rt-note" style={{ margin: 0 }}>
         <Trans>
-          Les affectations et le rôle d’admin d’une activité se donnent depuis
-          l’écran « Équipe » de chaque activité, comme pour une personne.
+          La lecture d’une activité permet au robot de consulter toutes ses
+          périodes, sans aucune écriture : c’est le réglage d’un client en
+          lecture. Les affectations et le rôle d’admin d’une activité se donnent
+          depuis l’écran « Équipe » de chaque activité, et la lecture aussi
+          depuis son écran « Personnes ».
         </Trans>
       </p>
     </div>

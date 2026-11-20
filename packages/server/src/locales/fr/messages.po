@@ -862,6 +862,7 @@ msgstr "Les périmètres choisis relèvent d’une autre activité."
 
 #. js-lingui-explicit-id
 #: src/schema/personnes.ts
+#: src/schema/robots.ts
 msgid "Cette activité est archivée."
 msgstr "Cette activité est archivée."
 
@@ -1097,6 +1098,11 @@ msgstr "Le nom du robot"
 #: src/schema/robots.ts
 msgid "Choisissez au moins une activité."
 msgstr "Choisissez au moins une activité."
+
+#. js-lingui-explicit-id
+#: src/schema/robots.ts
+msgid "La lecture ne se donne que pour une activité où le robot est rattaché."
+msgstr "La lecture ne se donne que pour une activité où le robot est rattaché."
 
 #. js-lingui-explicit-id
 #: src/schema/robots.ts

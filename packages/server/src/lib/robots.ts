@@ -63,6 +63,8 @@ export async function creerRobot(demande: {
   organisationId: string
   nom: string
   activiteIds: string[]
+  /** Activités dont le robot reçoit la lecture (ADR 0069), parmi `activiteIds`. */
+  lectureActiviteIds?: string[]
   creeParId: string
 }): Promise<{ id: string }> {
   const id = randomUUID()
@@ -88,6 +90,19 @@ export async function creerRobot(demande: {
       organisationId: demande.organisationId,
       creeParId: demande.creeParId,
     })
+    const lues = (demande.lectureActiviteIds ?? []).filter(a =>
+      demande.activiteIds.includes(a)
+    )
+    if (lues.length > 0) {
+      await tx.rattachementActivite.updateMany({
+        where: {
+          userId: id,
+          organisationId: demande.organisationId,
+          activiteId: { in: lues },
+        },
+        data: { lecture: true },
+      })
+    }
     return { id }
   })
 }
