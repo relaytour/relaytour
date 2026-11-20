@@ -72,5 +72,6 @@
 | [0068](0068-periodes-de-travail.md) | Périodes de travail des tâches | Proposée |
 | [0069](0069-lecture-d-une-activite-par-un-robot.md) | Lecture d'une activité par un robot | Acceptée |
 | [0070](0070-garde-d-etat-des-decisions-de-candidature.md) | Garde d'état des décisions de candidature | Proposée |
+| [0071](0071-origine-d-un-message-prepare-par-une-application.md) | Origine d'un message préparé par une application | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
