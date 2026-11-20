@@ -5,9 +5,17 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { contexteDeJetonAcces } from '../contexte-jeton.ts'
 import { construireExport } from '../lib/export.ts'
 import { peutRecevoir } from '../lib/flux.ts'
+import {
+  apercuJeton,
+  empreinteJetonAcces,
+  nouveauJetonAcces,
+} from '../lib/jetons-acces.ts'
 import { CORPS_MAX } from '../lib/messages.ts'
+import { purgerApplications } from '../oauth/entretien.ts'
+import { emettreJetons } from '../oauth/jetons.ts'
 
 import { schema } from './index.ts'
 
@@ -218,6 +226,13 @@ beforeAll(async () => {
 afterAll(async () => {
   const dansLOrganisation = { perimetre: { organisationId: ids.org } }
   await prisma.message.deleteMany({ where: { organisationId: ids.org } })
+  await prisma.applicationRefusee.deleteMany({
+    where: { organisationId: ids.org },
+  })
+  await prisma.jetonAcces.deleteMany({ where: { organisationId: ids.org } })
+  await prisma.clientApplication.deleteMany({
+    where: { clientId: { contains: s } },
+  })
   await prisma.souhait.deleteMany({ where: dansLOrganisation })
   await prisma.affectation.deleteMany({ where: dansLOrganisation })
   await prisma.adminActivite.deleteMany({ where: { organisationId: ids.org } })
@@ -489,5 +504,433 @@ describe('signal et export', () => {
     expect(annuaire?.destinataires.map(d => d.email).sort()).toEqual(
       [adresse('eve'), adresse('fay')].sort()
     )
+  })
+})
+
+// Origine d'un message préparé par un programme (ADR 0071). Chaque point de la
+// revue de sécurité de l'ADR se prouve ici, par le refus quand il s'agit d'un
+// contrôle d'accès.
+describe('origine d’un message', () => {
+  const ip = '127.0.0.1'
+  const CIMD = `https://outil-${s}.exemple.org/client.json`
+  const DCR = `dcr_${s}-assistant`
+  const jetons = {
+    acces: '', // valeur du jeton d'accès d'Anna
+    accesId: '',
+    accesApercu: '',
+    accesEmpreinte: '',
+    cimd: '', // autorisation de l'application CIMD
+    dcr: '', // autorisation de l'application DCR
+    clientCimd: '',
+    clientDcr: '',
+  }
+  const enUnAn = () => new Date(Date.now() + 365 * 86_400_000)
+
+  const executerAvec = async (
+    ctx: AppContext,
+    query: string,
+    variables: Record<string, unknown> = {}
+  ) => {
+    const reponse = await apollo.executeOperation(
+      { query, variables },
+      { contextValue: ctx }
+    )
+    if (reponse.body.kind !== 'single')
+      throw new Error('Réponse incrémentale inattendue.')
+    return reponse.body.singleResult
+  }
+
+  /** Un jeton d'application tout neuf pour une autorisation. */
+  const jetonApplication = async (autorisationId: string) => {
+    const a = await prisma.jetonAcces.findUniqueOrThrow({
+      where: { id: autorisationId },
+    })
+    const emis = await prisma.$transaction(tx => emettreJetons(tx, a))
+    return emis.access_token
+  }
+
+  const saisie = (objet: string) => ({
+    activiteId: ids.tournoi,
+    modele: 'message-libre',
+    objet,
+    corps: 'Bonjour à toutes et à tous,\n\nLe planning est en ligne.',
+    champ: 'CCI',
+    destinataireIds: [ids.carla, ids.dan],
+  })
+
+  const creerAvec = async (ctx: AppContext, objet: string) => {
+    const r = await executerAvec(ctx, CREER, { m: saisie(objet) })
+    expect(r.errors).toBeUndefined()
+    return idCree(r)
+  }
+
+  const LIRE_ORIGINE = `query ($a: ID) {
+    messages(activiteId: $a) { id objet corps origine { sorte nom hote nonVerifiee } }
+  }`
+
+  interface Lu {
+    id: string
+    objet: string
+    corps: string
+    origine: {
+      sorte: string
+      nom: string
+      hote: string | null
+      nonVerifiee: boolean
+    } | null
+  }
+  const lire = async (userId: string, id: string) => {
+    const r = await executer(userId, LIRE_ORIGINE, { a: ids.tournoi })
+    expect(r.errors).toBeUndefined()
+    return (r.data?.messages as Lu[]).find(m => m.id === id)
+  }
+
+  beforeAll(async () => {
+    await prisma.organisation.update({
+      where: { id: ids.org },
+      data: { apiActivee: true },
+    })
+    const client = (clientId: string, source: 'CIMD' | 'DCR', nom: string) =>
+      prisma.clientApplication.create({
+        data: {
+          clientId,
+          source,
+          nom,
+          redirectUris: ['https://outil.exemple.org/retour'],
+          valideJusquau: new Date(Date.now() + 86_400_000),
+        },
+      })
+    jetons.clientCimd = (await client(CIMD, 'CIMD', 'Outil de rédaction')).id
+    jetons.clientDcr = (await client(DCR, 'DCR', 'Assistant libre')).id
+    const autorisation = async (clientApplicationId: string, nom: string) =>
+      (
+        await prisma.jetonAcces.create({
+          data: {
+            organisationId: ids.org,
+            userId: ids.anna,
+            nom,
+            empreinte: randomUUID().replaceAll('-', '').padEnd(64, '0'),
+            apercu: randomUUID().slice(0, 8),
+            portee: 'LECTURE_ECRITURE',
+            expireLe: enUnAn(),
+            clientApplicationId,
+          },
+        })
+      ).id
+    jetons.cimd = await autorisation(jetons.clientCimd, 'Outil de rédaction')
+    jetons.dcr = await autorisation(jetons.clientDcr, 'Assistant libre')
+    jetons.acces = nouveauJetonAcces()
+    jetons.accesApercu = apercuJeton(jetons.acces)
+    jetons.accesEmpreinte = empreinteJetonAcces(jetons.acces)
+    jetons.accesId = (
+      await prisma.jetonAcces.create({
+        data: {
+          organisationId: ids.org,
+          userId: ids.anna,
+          nom: 'Script d’annonces',
+          empreinte: jetons.accesEmpreinte,
+          apercu: jetons.accesApercu,
+          portee: 'LECTURE_ECRITURE',
+          expireLe: enUnAn(),
+        },
+      })
+    ).id
+  })
+
+  it('ne donne aucune origine à un message créé avec une session', async () => {
+    const id = idCree(await creer(ids.anna))
+    expect((await lire(ids.anna, id))?.origine).toBeNull()
+    const ligne = await prisma.message.findUniqueOrThrow({ where: { id } })
+    expect(ligne).toMatchObject({
+      origineSorte: null,
+      origineNom: null,
+      origineHote: null,
+      origineNonVerifiee: null,
+      clientApplicationId: null,
+      jetonAccesId: null,
+    })
+  })
+
+  it('donne au message d’une application son nom et l’hôte de son client_id', async () => {
+    const ctx = await contexteDeJetonAcces(
+      ip,
+      await jetonApplication(jetons.cimd),
+      null
+    )
+    expect(ctx.refus).toBeNull()
+    const id = await creerAvec(ctx, 'Par une application vérifiée')
+    expect((await lire(ids.anna, id))?.origine).toEqual({
+      sorte: 'APPLICATION',
+      nom: 'Outil de rédaction',
+      hote: `outil-${s}.exemple.org`,
+      nonVerifiee: false,
+    })
+    const ligne = await prisma.message.findUniqueOrThrow({ where: { id } })
+    expect(ligne.clientApplicationId).toBe(jetons.clientCimd)
+    expect(ligne.jetonAccesId).toBe(jetons.cimd)
+    expect(ligne.auteurId).toBe(ids.anna)
+  })
+
+  it('marque « non vérifiée » l’application enregistrée seule, sans hôte', async () => {
+    const ctx = await contexteDeJetonAcces(
+      ip,
+      await jetonApplication(jetons.dcr),
+      null
+    )
+    const id = await creerAvec(ctx, 'Par une application non vérifiée')
+    expect((await lire(ids.anna, id))?.origine).toEqual({
+      sorte: 'APPLICATION',
+      nom: 'Assistant libre',
+      hote: null,
+      nonVerifiee: true,
+    })
+  })
+
+  it('donne au message d’un jeton d’accès le libellé du jeton', async () => {
+    const ctx = await contexteDeJetonAcces(ip, jetons.acces, null)
+    expect(ctx.refus).toBeNull()
+    const id = await creerAvec(ctx, 'Par un script')
+    expect((await lire(ids.anna, id))?.origine).toEqual({
+      sorte: 'JETON_ACCES',
+      nom: 'Script d’annonces',
+      hote: null,
+      nonVerifiee: false,
+    })
+    const ligne = await prisma.message.findUniqueOrThrow({ where: { id } })
+    expect(ligne.jetonAccesId).toBe(jetons.accesId)
+    expect(ligne.clientApplicationId).toBeNull()
+  })
+
+  it('refuse tout argument qui déclarerait une origine', async () => {
+    const ctx = await contexteDeJetonAcces(
+      ip,
+      await jetonApplication(jetons.cimd),
+      null
+    )
+    const avant = await compter()
+    for (const champ of [
+      { origine: { sorte: 'APPLICATION', nom: 'Autre application' } },
+      { origineNom: 'Autre application' },
+      { origineHote: 'ailleurs.exemple.org' },
+      { clientApplicationId: jetons.clientDcr },
+      { jetonAccesId: jetons.accesId },
+    ]) {
+      for (const contexte of [ctx, await buildContext(ip, ids.anna, slug)]) {
+        const r = await executerAvec(contexte, CREER, {
+          m: { ...saisie('Origine choisie'), ...champ },
+        })
+        expect(r.errors).toBeDefined()
+      }
+    }
+    expect(await compter()).toBe(avant)
+    // L'origine tirée du jeton reste celle de l'application qui écrit.
+    const id = await creerAvec(ctx, 'Origine du jeton')
+    expect((await lire(ids.anna, id))?.origine?.nom).toBe('Outil de rédaction')
+  })
+
+  it('n’ajoute aucune mention à l’objet ni au corps du message', async () => {
+    const ctx = await contexteDeJetonAcces(
+      ip,
+      await jetonApplication(jetons.cimd),
+      null
+    )
+    const id = await creerAvec(ctx, 'Objet inchangé')
+    const ligne = await prisma.message.findUniqueOrThrow({ where: { id } })
+    expect(ligne.objet).toBe('Objet inchangé')
+    expect(ligne.corps).toBe(saisie('').corps)
+    const lu = await lire(ids.anna, id)
+    expect(lu?.objet).toBe('Objet inchangé')
+    expect(lu?.corps).toBe(saisie('').corps)
+  })
+
+  it('refuse l’origine à un admin d’une autre activité et à une autre organisation', async () => {
+    const ctx = await contexteDeJetonAcces(ip, jetons.acces, null)
+    const id = await creerAvec(ctx, 'Lu par les seuls admins du tournoi')
+    for (const userId of [null, ids.boris, ids.carla, ids.hors]) {
+      const r = await executer(userId, LIRE_ORIGINE, { a: ids.tournoi })
+      expect(r.errors).toBeDefined()
+      expect(JSON.stringify(r)).not.toContain('Script d’annonces')
+    }
+    const club = await executer(ids.boris, LIRE_ORIGINE, { a: ids.club })
+    expect(club.errors).toBeUndefined()
+    expect((club.data?.messages as Lu[]).some(m => m.id === id)).toBe(false)
+    // Un message de l'annuaire, sans activité, ne s'ouvre qu'aux admins de
+    // l'organisation : Anna n'y lit rien.
+    expect((await executer(ids.anna, LIRE_ORIGINE, {})).errors).toBeDefined()
+    // L'admin de l'organisation lit l'origine, comme le message.
+    expect((await lire(ids.admin, id))?.origine?.nom).toBe('Script d’annonces')
+  })
+
+  it('ne rend ni l’identifiant du jeton, ni son aperçu, ni son empreinte', async () => {
+    const champs = await executer(
+      ids.anna,
+      '{ __type(name: "OrigineMessage") { fields { name } } }'
+    )
+    expect(
+      (champs.data?.__type as { fields: { name: string }[] }).fields
+        .map(f => f.name)
+        .sort()
+    ).toEqual(['hote', 'nom', 'nonVerifiee', 'sorte'])
+    const r = await executer(ids.anna, LIRE_ORIGINE, { a: ids.tournoi })
+    const texte = JSON.stringify(r)
+    for (const secret of [
+      jetons.accesId,
+      jetons.accesApercu,
+      jetons.accesEmpreinte,
+      jetons.acces,
+      jetons.cimd,
+      jetons.dcr,
+      jetons.clientCimd,
+      CIMD,
+      DCR,
+    ]) {
+      expect(texte).not.toContain(secret)
+    }
+    const { messages } = await construireExport(ids.org)
+    const exporte = JSON.stringify(messages)
+    for (const secret of [jetons.accesId, jetons.accesEmpreinte, jetons.cimd]) {
+      expect(exporte).not.toContain(secret)
+    }
+    expect(messages.some(m => m.origine?.nom === 'Script d’annonces')).toBe(
+      true
+    )
+  })
+
+  it('compte dans le panneau « API » les messages en cours de chaque autorisation', async () => {
+    const LISTE = `{ jetonsAccesOrganisation { jeton { id } messagesEnCours } }`
+    const compte = async (id: string) => {
+      const r = await executer(ids.admin, LISTE)
+      expect(r.errors).toBeUndefined()
+      return (
+        r.data?.jetonsAccesOrganisation as {
+          jeton: { id: string }
+          messagesEnCours: number
+        }[]
+      ).find(l => l.jeton.id === id)?.messagesEnCours
+    }
+    const attendus = (jetonAccesId: string) =>
+      prisma.message.count({ where: { jetonAccesId, statut: 'EN_COURS' } })
+    const avant = await compte(jetons.cimd)
+    expect(avant).toBe(await attendus(jetons.cimd))
+    expect(avant).toBeGreaterThan(0)
+    // Un message déclaré envoyé sort du compte.
+    const ctx = await contexteDeJetonAcces(
+      ip,
+      await jetonApplication(jetons.cimd),
+      null
+    )
+    const id = await creerAvec(ctx, 'Compté puis envoyé')
+    expect(await compte(jetons.cimd)).toBe((avant ?? 0) + 1)
+    await executer(ids.anna, STATUT, { id, s: 'ENVOYE' })
+    expect(await compte(jetons.cimd)).toBe(avant)
+    expect(await compte(jetons.accesId)).toBe(await attendus(jetons.accesId))
+    // Le panneau reste aux admins de l'organisation.
+    for (const userId of [null, ids.anna, ids.hors]) {
+      expect((await executer(userId, LISTE)).errors).toBeDefined()
+    }
+  })
+
+  it('garde la mention après la révocation de l’autorisation', async () => {
+    const ctx = await contexteDeJetonAcces(
+      ip,
+      await jetonApplication(jetons.cimd),
+      null
+    )
+    const id = await creerAvec(ctx, 'Avant la révocation')
+    const avant = await lire(ids.anna, id)
+    const r = await executer(
+      ids.anna,
+      'mutation ($id: ID!) { revoquerJetonAcces(id: $id) }',
+      { id: jetons.cimd }
+    )
+    expect(r.errors).toBeUndefined()
+    expect(
+      (
+        await prisma.jetonAcces.findUniqueOrThrow({
+          where: { id: jetons.cimd },
+        })
+      ).revoqueLe
+    ).not.toBeNull()
+    expect((await lire(ids.anna, id))?.origine).toEqual(avant?.origine)
+    const ligne = await prisma.message.findUniqueOrThrow({ where: { id } })
+    expect(ligne.statut).toBe('EN_COURS')
+    expect(ligne.jetonAccesId).toBe(jetons.cimd)
+  })
+
+  it('garde la mention après le refus de l’application par l’organisation', async () => {
+    const ctx = await contexteDeJetonAcces(
+      ip,
+      await jetonApplication(jetons.dcr),
+      null
+    )
+    const id = await creerAvec(ctx, 'Avant le refus')
+    const avant = await lire(ids.anna, id)
+    const r = await executer(
+      ids.admin,
+      'mutation ($c: String!) { refuserApplicationOrganisation(clientId: $c) }',
+      { c: DCR }
+    )
+    expect(r.errors).toBeUndefined()
+    expect(r.data?.refuserApplicationOrganisation).toBe(1)
+    expect((await lire(ids.anna, id))?.origine).toEqual({
+      sorte: 'APPLICATION',
+      nom: 'Assistant libre',
+      hote: null,
+      nonVerifiee: true,
+    })
+    expect((await lire(ids.anna, id))?.origine).toEqual(avant?.origine)
+  })
+
+  it('garde la mention après l’oubli de l’application par la purge', async () => {
+    const ids0 = await prisma.message.findMany({
+      where: { clientApplicationId: jetons.clientCimd },
+      select: { id: true },
+    })
+    expect(ids0.length).toBeGreaterThan(0)
+    // L'autorisation est révoquée depuis 40 jours : la purge oublie l'application.
+    const il_y_a_40_jours = new Date(Date.now() - 40 * 86_400_000)
+    await prisma.jetonAcces.update({
+      where: { id: jetons.cimd },
+      data: { revoqueLe: il_y_a_40_jours },
+    })
+    await prisma.clientApplication.update({
+      where: { id: jetons.clientCimd },
+      data: { updatedAt: il_y_a_40_jours },
+    })
+    await purgerApplications(prisma)
+    expect(
+      await prisma.clientApplication.findUnique({
+        where: { id: jetons.clientCimd },
+      })
+    ).toBeNull()
+    for (const { id } of ids0) {
+      const ligne = await prisma.message.findUniqueOrThrow({ where: { id } })
+      expect(ligne.clientApplicationId).toBeNull()
+      expect(ligne.jetonAccesId).toBeNull()
+      expect((await lire(ids.anna, id))?.origine).toEqual({
+        sorte: 'APPLICATION',
+        nom: 'Outil de rédaction',
+        hote: `outil-${s}.exemple.org`,
+        nonVerifiee: false,
+      })
+    }
+  })
+
+  it('garde le libellé après la suppression du jeton d’accès', async () => {
+    const id = (
+      await prisma.message.findFirstOrThrow({
+        where: { jetonAccesId: jetons.accesId },
+        select: { id: true },
+      })
+    ).id
+    await prisma.jetonAcces.delete({ where: { id: jetons.accesId } })
+    const ligne = await prisma.message.findUniqueOrThrow({ where: { id } })
+    expect(ligne.jetonAccesId).toBeNull()
+    expect((await lire(ids.anna, id))?.origine).toEqual({
+      sorte: 'JETON_ACCES',
+      nom: 'Script d’annonces',
+      hote: null,
+      nonVerifiee: false,
+    })
   })
 })

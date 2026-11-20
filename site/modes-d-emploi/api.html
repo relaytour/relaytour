@@ -118,6 +118,7 @@
           </table>
         </div>
         <p class="note">Une organisation en lecture seule garde l'API en lecture : les jetons lisent, et toute écriture est refusée.</p>
+        <p class="note">La liste « Jetons de l'organisation » indique, pour chaque jeton et chaque application autorisée, le nombre de messages en cours qu'il a préparés. Une révocation ne supprime aucun de ces messages. Leur auteur les relit et décide de leur envoi.</p>
       </section>
 
       <section aria-labelledby="t-jetons">
@@ -164,6 +165,7 @@
   -d '{"query":"{ moi { nom } jetonCourant { portee activiteIds expireLe } }"}'</pre>
         </div>
         <p class="note">La requête <span class="route">jetonCourant</span> rend les bornes du jeton : sa portée, ses activités et sa date de fin. Un programme la lit au démarrage pour savoir ce qu'il peut faire.</p>
+        <p class="note">Un message créé par <span class="route">creerMessage</span> avec un jeton porte son origine, dans le champ <span class="route">Message.origine</span> : le libellé du jeton, ou le nom et l'hôte de l'application. Le serveur tire cette origine du jeton, et aucun argument ne la change. Les admins qui lisent le message voient la mention « Préparé par un programme » ou « Préparé par une application » dans l'écran « Messages ».</p>
         <p class="note">Le contrat du schéma est publié dans le dépôt du code source, dans le fichier <span class="route">packages/server/schema.graphql</span>. Les opérations du compte restent réservées à une connexion dans l'espace organisateur : la gestion des jetons, les préférences, les abonnements et les exports complets.</p>
       </section>
 
@@ -324,7 +326,7 @@
       </section>
 
       <footer>
-        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.33.0.
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.34.0.
       </footer>
     </main>
     <script src="../menu.js"></script>

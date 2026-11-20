@@ -624,6 +624,17 @@ export async function construireExport(organisationId: string) {
       statut: m.statut,
       statutLe: m.statutLe?.toISOString() ?? null,
       creeLe: m.createdAt.toISOString(),
+      // L'origine d'un message préparé par un programme (ADR 0071), sans
+      // identifiant de jeton.
+      origine:
+        m.origineSorte === null
+          ? null
+          : {
+              sorte: m.origineSorte,
+              nom: m.origineNom,
+              hote: m.origineHote,
+              nonVerifiee: m.origineNonVerifiee === true,
+            },
       destinataires: m.destinataires.map(d => ({
         email: d.user.email,
         enCopie: d.enCopie,

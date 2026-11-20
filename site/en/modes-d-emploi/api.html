@@ -118,6 +118,7 @@
           </table>
         </div>
         <p class="note">A read-only organization keeps the API in read mode: tokens read, and every write is refused.</p>
+        <p class="note">The “Organization tokens” list shows, for each token and each authorized application, the number of in-progress messages it prepared. A revocation deletes none of these messages. Their author reviews them and decides whether to send them.</p>
       </section>
 
       <section aria-labelledby="t-jetons">
@@ -164,6 +165,7 @@
   -d '{"query":"{ moi { nom } jetonCourant { portee activiteIds expireLe } }"}'</pre>
         </div>
         <p class="note">The <span class="route">jetonCourant</span> query returns the bounds of the token: its scope, its activities and its end date. A program reads it at startup to know what it can do. The names in the schema are in French.</p>
+        <p class="note">A message created by <span class="route">creerMessage</span> with a token carries its origin, in the <span class="route">Message.origine</span> field: the label of the token, or the name and host of the application. The server takes this origin from the token, and no argument changes it. The admins who read the message see the mention “Prepared by a program” or “Prepared by an application” on the “Messages” screen.</p>
         <p class="note">The schema contract is published in the source code repository, in the <span class="route">packages/server/schema.graphql</span> file. Account operations stay reserved to a sign-in in the organizer workspace: token management, preferences, subscriptions and full exports.</p>
       </section>
 
@@ -324,7 +326,7 @@
       </section>
 
       <footer>
-        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.33.0.
+        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.34.0.
       </footer>
     </main>
     <script src="../../menu.js"></script>

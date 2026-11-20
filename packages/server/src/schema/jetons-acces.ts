@@ -94,10 +94,14 @@ export const JetonAccesRef = builder
     }),
   })
 
-/** Un jeton de l'organisation, avec sa porteuse et l'admin qui l'a révoqué. */
+/**
+ * Un jeton de l'organisation, avec sa porteuse, l'admin qui l'a révoqué et le
+ * nombre de messages en cours qu'il a préparés (ADR 0071).
+ */
 type JetonDeLOrganisation = JetonAcces & {
   user: { id: string; name: string; robot: boolean }
   revoquePar: { name: string } | null
+  messagesEnCours: number
 }
 
 const PorteurDeJetonRef = builder
@@ -124,6 +128,10 @@ const JetonOrganisationRef = builder
         description:
           'Le nom de l’admin qui a révoqué le jeton. Nul quand la porteuse l’a révoqué elle-même, par l’écran ou par le lien de son mail.',
         resolve: j => j.revoquePar?.name ?? null,
+      }),
+      messagesEnCours: t.exposeInt('messagesEnCours', {
+        description:
+          'Les messages en cours que le jeton ou l’application a préparés (ADR 0071). L’admin qui révoque un accès sait ainsi quels messages relire.',
       }),
     }),
   })
@@ -264,11 +272,12 @@ builder.queryFields(t => ({
     authScopes: { $all: { admin: true, session: true } },
     description:
       'Les jetons d’accès de toute l’organisation, pour ses admins : les jetons actifs, puis ceux révoqués ou expirés depuis moins de 30 jours. La valeur d’un jeton ne se relit jamais.',
-    resolve: (_root, _args, ctx) => {
+    resolve: async (_root, _args, ctx) => {
+      const organisationId = ctx.organisation!.id
       const recents = new Date(Date.now() - 30 * 86_400_000)
-      return prisma.jetonAcces.findMany({
+      const jetons = await prisma.jetonAcces.findMany({
         where: {
-          organisationId: ctx.organisation!.id,
+          organisationId,
           OR: [
             { revoqueLe: null, expireLe: { gt: recents } },
             { revoqueLe: { gt: recents } },
@@ -281,6 +290,23 @@ builder.queryFields(t => ({
         orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
         take: 200,
       })
+      // Un seul comptage groupé pour toute la liste.
+      const comptes = await prisma.message.groupBy({
+        by: ['jetonAccesId'],
+        where: {
+          organisationId,
+          statut: 'EN_COURS',
+          jetonAccesId: { in: jetons.map(j => j.id) },
+        },
+        _count: { _all: true },
+      })
+      const parJeton = new Map(
+        comptes.map(c => [c.jetonAccesId, c._count._all])
+      )
+      return jetons.map(j => ({
+        ...j,
+        messagesEnCours: parJeton.get(j.id) ?? 0,
+      }))
     },
   }),
 

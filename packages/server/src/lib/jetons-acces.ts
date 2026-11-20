@@ -4,6 +4,7 @@ import {
   prisma,
   type PorteeJeton,
   type Prisma,
+  type SourceClientApplication,
   type StatutOrganisation,
 } from '@relaytour/database'
 
@@ -116,6 +117,11 @@ export function lireActivitesDuJeton(brut: unknown): Set<string> | null {
 
 export interface JetonDuContexte {
   id: string
+  /**
+   * Le libellé choisi à la création du jeton. Un message préparé par le jeton en
+   * garde une copie (ADR 0071).
+   */
+  nom: string
   portee: PorteeJeton
   /** Activités ouvertes au jeton. Nul : toutes celles que la personne voit. */
   activites: Set<string> | null
@@ -129,7 +135,12 @@ export interface JetonDuContexte {
    * L'application tierce qui porte la requête (ADR 0067). Nulle pour un jeton
    * d'accès créé dans « Jetons et API ».
    */
-  application: { clientId: string; nom: string } | null
+  application: {
+    id: string
+    clientId: string
+    nom: string
+    source: SourceClientApplication
+  } | null
 }
 
 export type ResolutionJeton =
@@ -197,12 +208,15 @@ async function resoudreLigne(
       id: true,
       userId: true,
       organisationId: true,
+      nom: true,
       portee: true,
       activiteIds: true,
       expireLe: true,
       revoqueLe: true,
       gestionMembres: true,
-      clientApplication: { select: { clientId: true, nom: true } },
+      clientApplication: {
+        select: { id: true, clientId: true, nom: true, source: true },
+      },
       organisation: {
         select: {
           slug: true,
@@ -261,6 +275,7 @@ async function resoudreLigne(
     organisationSlug: ligne.organisation.slug,
     jeton: {
       id: ligne.id,
+      nom: ligne.nom,
       portee: ligne.portee,
       activites: lireActivitesDuJeton(ligne.activiteIds),
       expireLe: ligne.expireLe,

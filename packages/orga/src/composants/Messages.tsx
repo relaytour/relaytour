@@ -28,6 +28,7 @@ import { useSession } from '../lib/session'
 import { comparer } from '../lib/tableau'
 
 import CopierAdresses from './CopierAdresses'
+import OrigineMessage from './OrigineMessage'
 import Tableau, { type ColonneTableau } from './Tableau'
 
 // Historique des messages (ADR 0020). L'application n'envoie aucun de ces messages :
@@ -226,7 +227,19 @@ export default function Messages({ annuaire, personnes }: Props) {
     {
       key: 'auteur',
       title: t`Écrit par`,
-      render: (_, m) => m.auteur?.nom ?? t`Compte supprimé`,
+      // L'origine d'un message préparé par un programme s'affiche sous l'auteur
+      // (ADR 0071).
+      render: (_, m) => (
+        <>
+          {m.auteur?.nom ?? t`Compte supprimé`}
+          {m.origine && (
+            <>
+              <br />
+              <OrigineMessage origine={m.origine} />
+            </>
+          )}
+        </>
+      ),
       tri: m => m.auteur?.nom,
       filtre: {
         options: unique(messages.flatMap(m => m.auteur?.nom ?? []))
@@ -375,6 +388,11 @@ export default function Messages({ annuaire, personnes }: Props) {
               .join(', ')
             return (
               <div className="rt-message">
+                {m.origine && (
+                  <Typography.Paragraph>
+                    <OrigineMessage origine={m.origine} />
+                  </Typography.Paragraph>
+                )}
                 {perimetre && (
                   <Typography.Paragraph type="secondary">
                     <Trans>Périmètre : {perimetre}</Trans>

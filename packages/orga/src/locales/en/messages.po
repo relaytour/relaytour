@@ -679,6 +679,10 @@ msgstr "{nomApplication} wants to access your account in {organisation}"
 msgid "{nomBenevole} · bénévole"
 msgstr "{nomBenevole} · volunteer"
 
+#: src/composants/JetonsOrganisation.tsx
+msgid "{nombre, plural, =0 {Aucun message en cours préparé par cette application.} one {Un message en cours préparé par cette application, à relire dans l’écran « Messages ».} other {# messages en cours préparés par cette application, à relire dans l’écran « Messages ».}}"
+msgstr "{nombre, plural, =0 {No in-progress message prepared by this application.} one {One in-progress message prepared by this application, to review in the “Messages” screen.} other {# in-progress messages prepared by this application, to review in the “Messages” screen.}}"
+
 #: src/composants/DocumentsActivite.tsx
 msgid "{nombre, plural, one {# dossier} other {# dossiers}}"
 msgstr "{nombre, plural, one {# folder} other {# folders}}"
@@ -710,6 +714,10 @@ msgstr "{nombre, plural, one {Milestone: # linked task is still open} other {Mil
 #: src/composants/Priorites.tsx
 msgid "{nombre, plural, one {Reprise dans # autre périmètre} other {Reprise dans # autres périmètres}}"
 msgstr "{nombre, plural, one {Taken up in # other area} other {Taken up in # other areas}}"
+
+#: src/composants/JetonsOrganisation.tsx
+msgid "{nombre, plural, one {Un message en cours préparé par ce jeton, à relire dans l’écran « Messages ».} other {# messages en cours préparés par ce jeton, à relire dans l’écran « Messages ».}}"
+msgstr "{nombre, plural, one {One in-progress message prepared by this token, to review in the “Messages” screen.} other {# in-progress messages prepared by this token, to review in the “Messages” screen.}}"
 
 #: src/composants/AvisNotifications.tsx
 msgid "{nombre} nouvelles notifications"
@@ -8435,6 +8443,10 @@ msgstr "Unconfirmed"
 msgid "Non proposée par votre hébergeur"
 msgstr "Not offered by your hosting provider"
 
+#: src/composants/OrigineMessage.tsx
+msgid "non vérifiée"
+msgstr "not verified"
+
 #: src/composants/ApplicationsAutorisees.tsx
 #: src/pages/Autoriser.tsx
 msgid "Non vérifiée"
@@ -9399,6 +9411,18 @@ msgstr "Preparation"
 #: src/composants/Messages.tsx
 msgid "Préparé le"
 msgstr "Prepared on"
+
+#: src/composants/OrigineMessage.tsx
+msgid "Préparé par un programme : {nom}"
+msgstr "Prepared by a program: {nom}"
+
+#: src/composants/OrigineMessage.tsx
+msgid "Préparé par une application : {nom}"
+msgstr "Prepared by an application: {nom}"
+
+#: src/composants/OrigineMessage.tsx
+msgid "Préparé par une application : {nom} ({hote})"
+msgstr "Prepared by an application: {nom} ({hote})"
 
 #: src/composants/PremiersPas.tsx
 msgid "Préparer les tâches"
