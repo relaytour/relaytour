@@ -21,6 +21,12 @@ export const MESSAGES = graphql(`
         id
         nom
       }
+      origine {
+        sorte
+        nom
+        hote
+        nonVerifiee
+      }
       destinataires {
         id
         enCopie

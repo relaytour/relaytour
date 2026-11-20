@@ -94,10 +94,14 @@ export const JetonAccesRef = builder
     }),
   })
 
-/** Un jeton de l'organisation, avec sa porteuse et l'admin qui l'a révoqué. */
+/**
+ * Un jeton de l'organisation, avec sa porteuse, l'admin qui l'a révoqué et le
+ * nombre de messages en cours qu'il a préparés (ADR 0071).
+ */
 type JetonDeLOrganisation = JetonAcces & {
   user: { id: string; name: string; robot: boolean }
   revoquePar: { name: string } | null
+  messagesEnCours: number
 }
 
 const PorteurDeJetonRef = builder
@@ -124,6 +128,10 @@ const JetonOrganisationRef = builder
         description:
           'Le nom de l’admin qui a révoqué le jeton. Nul quand la porteuse l’a révoqué elle-même, par l’écran ou par le lien de son mail.',
         resolve: j => j.revoquePar?.name ?? null,
+      }),
+      messagesEnCours: t.exposeInt('messagesEnCours', {
+        description:
+          'Les messages en cours que le jeton a préparés, ou que l’application a préparés pour sa personne, réautorisations comprises (ADR 0071). L’admin qui révoque un accès sait ainsi quels messages relire.',
       }),
     }),
   })
@@ -264,11 +272,12 @@ builder.queryFields(t => ({
     authScopes: { $all: { admin: true, session: true } },
     description:
       'Les jetons d’accès de toute l’organisation, pour ses admins : les jetons actifs, puis ceux révoqués ou expirés depuis moins de 30 jours. La valeur d’un jeton ne se relit jamais.',
-    resolve: (_root, _args, ctx) => {
+    resolve: async (_root, _args, ctx) => {
+      const organisationId = ctx.organisation!.id
       const recents = new Date(Date.now() - 30 * 86_400_000)
-      return prisma.jetonAcces.findMany({
+      const jetons = await prisma.jetonAcces.findMany({
         where: {
-          organisationId: ctx.organisation!.id,
+          organisationId,
           OR: [
             { revoqueLe: null, expireLe: { gt: recents } },
             { revoqueLe: { gt: recents } },
@@ -281,6 +290,45 @@ builder.queryFields(t => ({
         orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
         take: 200,
       })
+      // Deux comptages groupés pour toute la liste (ADR 0071). Un jeton d'accès
+      // compte ses propres messages. Une autorisation d'application compte ceux
+      // de son application pour sa personne : une réautorisation du même client
+      // remplace la ligne, et les messages préparés avant restent à relire.
+      const acces = jetons.filter(j => j.clientApplicationId === null)
+      const applications = jetons.flatMap(j =>
+        j.clientApplicationId === null ? [] : [j.clientApplicationId]
+      )
+      const enCours = { organisationId, statut: 'EN_COURS' as const }
+      const [parAcces, parApplication] = await Promise.all([
+        prisma.message.groupBy({
+          by: ['jetonAccesId'],
+          where: { ...enCours, jetonAccesId: { in: acces.map(j => j.id) } },
+          _count: { _all: true },
+        }),
+        prisma.message.groupBy({
+          by: ['auteurId', 'clientApplicationId'],
+          where: { ...enCours, clientApplicationId: { in: applications } },
+          _count: { _all: true },
+        }),
+      ])
+      const parJeton = new Map(
+        parAcces.map(c => [c.jetonAccesId, c._count._all])
+      )
+      const cleApplication = (userId: string | null, clientId: string | null) =>
+        `${userId ?? ''}:${clientId ?? ''}`
+      const parPersonneEtApplication = new Map(
+        parApplication.map(c => [
+          cleApplication(c.auteurId, c.clientApplicationId),
+          c._count._all,
+        ])
+      )
+      const compte = (j: (typeof jetons)[number]) =>
+        j.clientApplicationId === null
+          ? (parJeton.get(j.id) ?? 0)
+          : (parPersonneEtApplication.get(
+              cleApplication(j.userId, j.clientApplicationId)
+            ) ?? 0)
+      return jetons.map(j => ({ ...j, messagesEnCours: compte(j) }))
     },
   }),
 

@@ -1703,6 +1703,11 @@ Un jeton d’accès de l’organisation, vu par un admin : ses bornes et sa port
 """
 type JetonOrganisation {
   jeton: JetonAcces!
+
+  """
+  Les messages en cours que le jeton a préparés, ou que l’application a préparés pour sa personne, réautorisations comprises (ADR 0071). L’admin qui révoque un accès sait ainsi quels messages relire.
+  """
+  messagesEnCours: Int!
   porteur: PorteurDeJeton!
 
   """
@@ -1922,6 +1927,11 @@ type Message {
   """Clé du modèle de départ, connue de l’espace organisateur."""
   modele: String!
   objet: String!
+
+  """
+  Le programme qui a préparé le message au nom de son auteur. Nul pour un message créé avec une session. La révocation ou l’oubli de l’application ne l’efface pas.
+  """
+  origine: OrigineMessage
   perimetreId: ID
   statut: StatutMessage!
 
@@ -3152,6 +3162,27 @@ enum OrigineConnexe {
 enum OrigineDemande {
   FORMULAIRE
   PROPOSITION
+}
+
+"""
+Le programme qui a préparé un message au nom de son auteur (ADR 0071) : une application autorisée, ou un jeton d’accès.
+"""
+type OrigineMessage {
+  """
+  L’hôte qui publie le document de métadonnées de l’application. Nul pour un jeton d’accès et pour une application enregistrée seule.
+  """
+  hote: String
+
+  """
+  Le nom de l’application, ou le libellé du jeton d’accès, au moment de la création du message.
+  """
+  nom: String!
+
+  """
+  Vrai pour une application enregistrée seule (DCR) : son nom n’est pas vérifié.
+  """
+  nonVerifiee: Boolean!
+  sorte: SorteOrigineMessage!
 }
 
 type Perimetre {
@@ -4505,6 +4536,14 @@ enum SorteElementAgenda {
 
   """Une phase de l’activité, de son premier à son dernier jour."""
   PHASE
+}
+
+"""
+APPLICATION : une application tierce autorisée par l’auteur (ADR 0067). JETON_ACCES : un programme qui utilise un jeton d’accès de l’auteur (ADR 0064).
+"""
+enum SorteOrigineMessage {
+  APPLICATION
+  JETON_ACCES
 }
 
 type Souhait {

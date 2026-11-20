@@ -1,4 +1,10 @@
-import { ChampDestinataires, prisma, StatutMessage } from '@relaytour/database'
+import {
+  ChampDestinataires,
+  prisma,
+  SorteOrigineMessage,
+  StatutMessage,
+  type Message,
+} from '@relaytour/database'
 
 import { dansLEquipe, membreActif } from '../lib/appartenances.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
@@ -12,8 +18,10 @@ import {
   modeleValide,
   OBJET_MAX,
 } from '../lib/messages.ts'
+import type { JetonDuContexte } from '../lib/jetons-acces.ts'
 import { texteRequis } from '../lib/saisie.ts'
 
+import { hoteDe } from './application-tierce.ts'
 import { builder } from './builder.ts'
 import { PersonneRef } from './personnes.ts'
 
@@ -31,6 +39,115 @@ const ChampDestinatairesEnum = builder.enumType(ChampDestinataires, {
   description:
     'Le champ de la messagerie qui reçoit les destinataires : « À » pour une seule personne, « Cc » (adresses visibles) ou « Cci » (adresses cachées).',
 })
+
+const SorteOrigineMessageEnum = builder.enumType(SorteOrigineMessage, {
+  name: 'SorteOrigineMessage',
+  description:
+    'APPLICATION : une application tierce autorisée par l’auteur (ADR 0067). JETON_ACCES : un programme qui utilise un jeton d’accès de l’auteur (ADR 0064).',
+})
+
+// ── Origine (ADR 0071) ───────────────────────────────────────────────────────
+
+type ColonnesOrigine = Pick<
+  Message,
+  | 'origineSorte'
+  | 'origineNom'
+  | 'origineHote'
+  | 'origineNonVerifiee'
+  | 'clientApplicationId'
+  | 'jetonAccesId'
+>
+
+/**
+ * L'origine d'un message, tirée du jeton de la requête et jamais d'un argument :
+ * un programme ne choisit pas l'origine qu'il déclare. Les copies du nom, de
+ * l'hôte et de la source figent ce que la personne a autorisé. Une session ne
+ * laisse aucune origine.
+ */
+export function origineDuJeton(jeton: JetonDuContexte | null): ColonnesOrigine {
+  if (jeton === null) {
+    return {
+      origineSorte: null,
+      origineNom: null,
+      origineHote: null,
+      origineNonVerifiee: null,
+      clientApplicationId: null,
+      jetonAccesId: null,
+    }
+  }
+  const application = jeton.application
+  if (application === null) {
+    return {
+      origineSorte: 'JETON_ACCES',
+      origineNom: jeton.nom,
+      origineHote: null,
+      origineNonVerifiee: null,
+      clientApplicationId: null,
+      jetonAccesId: jeton.id,
+    }
+  }
+  // L'identifiant d'un client DCR est tiré par l'installation : il n'a pas d'hôte.
+  const cimd = application.source === 'CIMD'
+  return {
+    origineSorte: 'APPLICATION',
+    origineNom: application.nom,
+    origineHote: cimd ? hoteDe(application.clientId) : null,
+    origineNonVerifiee: !cimd,
+    clientApplicationId: application.id,
+    // L'autorisation d'application qui a préparé le message.
+    jetonAccesId: jeton.id,
+  }
+}
+
+interface OrigineMessage {
+  sorte: SorteOrigineMessage
+  nom: string
+  hote: string | null
+  nonVerifiee: boolean
+}
+
+// L'origine ne porte ni l'identifiant du jeton, ni son aperçu, ni son empreinte :
+// le nom et l'hôte suffisent à reconnaître l'accès dans « Jetons et API ».
+const OrigineMessageRef = builder
+  .objectRef<OrigineMessage>('OrigineMessage')
+  .implement({
+    description:
+      'Le programme qui a préparé un message au nom de son auteur (ADR 0071) : une application autorisée, ou un jeton d’accès.',
+    fields: t => ({
+      sorte: t.field({
+        type: SorteOrigineMessageEnum,
+        resolve: o => o.sorte,
+      }),
+      nom: t.exposeString('nom', {
+        description:
+          'Le nom de l’application, ou le libellé du jeton d’accès, au moment de la création du message.',
+      }),
+      hote: t.exposeString('hote', {
+        nullable: true,
+        description:
+          'L’hôte qui publie le document de métadonnées de l’application. Nul pour un jeton d’accès et pour une application enregistrée seule.',
+      }),
+      nonVerifiee: t.exposeBoolean('nonVerifiee', {
+        description:
+          'Vrai pour une application enregistrée seule (DCR) : son nom n’est pas vérifié.',
+      }),
+    }),
+  })
+
+const origineDe = (
+  m: Pick<
+    Message,
+    'origineSorte' | 'origineNom' | 'origineHote' | 'origineNonVerifiee'
+  >
+): OrigineMessage | null =>
+  m.origineSorte === null || m.origineNom === null
+    ? null
+    : {
+        sorte: m.origineSorte,
+        nom: m.origineNom,
+        hote: m.origineHote,
+        nonVerifiee: m.origineNonVerifiee === true,
+      }
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,6 +186,19 @@ const MessageRef = builder.prismaObject('Message', {
     editionId: t.exposeID('editionId', { nullable: true }),
     perimetreId: t.exposeID('perimetreId', { nullable: true }),
     auteur: t.relation('auteur', { type: PersonneRef, nullable: true }),
+    origine: t.field({
+      type: OrigineMessageRef,
+      nullable: true,
+      description:
+        'Le programme qui a préparé le message au nom de son auteur. Nul pour un message créé avec une session. La révocation ou l’oubli de l’application ne l’efface pas.',
+      select: {
+        origineSorte: true,
+        origineNom: true,
+        origineHote: true,
+        origineNonVerifiee: true,
+      },
+      resolve: origineDe,
+    }),
     estLeMien: t.boolean({
       description:
         'Vrai pour l’auteur du message, qui seul en change le statut.',
@@ -232,6 +362,7 @@ builder.mutationFields(t => ({
           objet,
           corps,
           champ: saisie.champ,
+          ...origineDuJeton(ctx.jeton),
           destinataires: {
             createMany: {
               data: ids.map(userId => ({
@@ -248,6 +379,8 @@ builder.mutationFields(t => ({
           messageId: message.id,
           destinataires: ids.length,
           par: ctx.personne?.id,
+          // L'identifiant du jeton, jamais sa valeur (invariant 6).
+          jetonAccesId: ctx.jeton?.id ?? null,
         },
         'Un message a été préparé.'
       )

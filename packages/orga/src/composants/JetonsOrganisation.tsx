@@ -1,5 +1,6 @@
 import { AppstoreOutlined, KeyOutlined, RobotOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Tag } from 'antd'
 import { useState } from 'react'
@@ -38,6 +39,7 @@ const JETONS_ORGANISATION = graphql(`
         robot
       }
       revoquePar
+      messagesEnCours
     }
   }
 `)
@@ -60,6 +62,25 @@ export default function JetonsOrganisation() {
   const [maintenant] = useState(() => Date.now())
   const lignes = data?.jetonsAccesOrganisation ?? []
   const nomsActivites = new Map(activites.map(a => [a.id, a.nom]))
+  // Les messages en cours qu'un jeton ou une application a préparés (ADR 0071).
+  // Le compte s'affiche toujours pour une application, et pour un jeton quand il
+  // a préparé au moins un message.
+  const messagesEnCours = (l: Ligne): string | null => {
+    const nombre = l.messagesEnCours
+    if (nombre === 0 && l.jeton.application === null) return null
+    return l.jeton.application
+      ? plural(nombre, {
+          0: 'Aucun message en cours préparé par cette application.',
+          one: 'Un message en cours préparé par cette application, à relire dans l’écran « Messages ».',
+          other:
+            '# messages en cours préparés par cette application, à relire dans l’écran « Messages ».',
+        })
+      : plural(nombre, {
+          one: 'Un message en cours préparé par ce jeton, à relire dans l’écran « Messages ».',
+          other:
+            '# messages en cours préparés par ce jeton, à relire dans l’écran « Messages ».',
+        })
+  }
   const actif = (l: Ligne) =>
     l.jeton.revoqueLe === null &&
     new Date(l.jeton.expireLe).getTime() > maintenant
@@ -67,11 +88,15 @@ export default function JetonsOrganisation() {
   const revoquerJeton = (l: Ligne) => {
     const porteur = l.porteur.nom
     const libelle = l.jeton.nom
+    const acces = l.porteur.robot
+      ? t`Le jeton cesse aussitôt de servir. Le programme qui l’utilise perd son accès.`
+      : t`Le jeton cesse aussitôt de servir, et ${porteur} en est prévenu par mail.`
+    // La révocation ne touche aucun message : l'admin sait quels messages relire
+    // (ADR 0071).
+    const messages = messagesEnCours(l)
     void modal.confirm({
       title: t`Révoquer le jeton « ${libelle} » de ${porteur} ?`,
-      content: l.porteur.robot
-        ? t`Le jeton cesse aussitôt de servir. Le programme qui l’utilise perd son accès.`
-        : t`Le jeton cesse aussitôt de servir, et ${porteur} en est prévenu par mail.`,
+      content: messages === null ? acces : `${acces} ${messages}`,
       okText: t`Révoquer`,
       okButtonProps: { danger: true },
       cancelText: t`Annuler`,
@@ -172,6 +197,9 @@ export default function JetonsOrganisation() {
                       ? t`Dernier usage le ${dernier}.`
                       : t`Jamais utilisé.`}
                   </span>
+                  {messagesEnCours(l) !== null && (
+                    <span className="rt-note">{messagesEnCours(l)}</span>
+                  )}
                 </span>
                 {actif(l) ? (
                   <Button size="small" danger onClick={() => revoquerJeton(l)}>
