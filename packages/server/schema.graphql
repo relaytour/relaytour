@@ -1705,7 +1705,7 @@ type JetonOrganisation {
   jeton: JetonAcces!
 
   """
-  Les messages en cours que le jeton ou l’application a préparés (ADR 0071). L’admin qui révoque un accès sait ainsi quels messages relire.
+  Les messages en cours que le jeton a préparés, ou que l’application a préparés pour sa personne, réautorisations comprises (ADR 0071). L’admin qui révoque un accès sait ainsi quels messages relire.
   """
   messagesEnCours: Int!
   porteur: PorteurDeJeton!

@@ -784,7 +784,8 @@ model Message {
   origineNonVerifiee  Boolean?
   clientApplicationId String?
   // Le jeton d'accès, ou l'autorisation d'application, qui a préparé le message.
-  // Le panneau « API » compte par lui les messages en cours d'une autorisation.
+  // Le panneau « API » compte par lui les messages en cours d'un jeton d'accès,
+  // et par l'application et l'auteur ceux d'une autorisation.
   jetonAccesId        String?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
@@ -803,7 +804,7 @@ model Message {
   @@index([editionId])
   @@index([perimetreId])
   @@index([auteurId])
-  @@index([clientApplicationId])
+  @@index([clientApplicationId, auteurId, statut])
   @@index([jetonAccesId, statut])
 }
 

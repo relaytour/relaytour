@@ -94,7 +94,7 @@ export function origineDuJeton(jeton: JetonDuContexte | null): ColonnesOrigine {
     origineHote: cimd ? hoteDe(application.clientId) : null,
     origineNonVerifiee: !cimd,
     clientApplicationId: application.id,
-    // L'autorisation d'application : le panneau « API » compte par elle.
+    // L'autorisation d'application qui a préparé le message.
     jetonAccesId: jeton.id,
   }
 }

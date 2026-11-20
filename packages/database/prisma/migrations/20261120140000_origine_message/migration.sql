@@ -10,7 +10,7 @@ ALTER TABLE `Message` ADD COLUMN `clientApplicationId` VARCHAR(191) NULL,
     ADD COLUMN `origineSorte` ENUM('APPLICATION', 'JETON_ACCES') NULL;
 
 -- CreateIndex
-CREATE INDEX `Message_clientApplicationId_idx` ON `Message`(`clientApplicationId`);
+CREATE INDEX `Message_clientApplicationId_auteurId_statut_idx` ON `Message`(`clientApplicationId`, `auteurId`, `statut`);
 
 -- CreateIndex
 CREATE INDEX `Message_jetonAccesId_statut_idx` ON `Message`(`jetonAccesId`, `statut`);

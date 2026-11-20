@@ -37,5 +37,7 @@ Le serveur remplit l'origine depuis le jeton de la requête dans `creerMessage`
 garde des copies du nom, de l'hôte et de la source, et les références
 `clientApplicationId` et `jetonAccesId` en `onDelete: SetNull`. La révocation, le
 refus et la purge des applications laissent la mention intacte. Le panneau lit
-`JetonOrganisation.messagesEnCours`, compté par un seul `groupBy`. L'export
+`JetonOrganisation.messagesEnCours` : un jeton d'accès compte par
+`jetonAccesId`, une autorisation par son application et sa personne, pour garder
+les messages d'une autorisation remplacée par une réautorisation. L'export
 complet d'une organisation porte l'origine, sans identifiant de jeton. ADR 0071.

@@ -933,4 +933,59 @@ describe('origine d’un message', () => {
       nonVerifiee: false,
     })
   })
+
+  it('garde dans le compte d’une réautorisation les messages de l’autorisation remplacée', async () => {
+    const client = await prisma.clientApplication.create({
+      data: {
+        clientId: `https://planning-${s}.exemple.org/client.json`,
+        source: 'CIMD',
+        nom: 'Planning partagé',
+        redirectUris: ['https://planning.exemple.org/retour'],
+        valideJusquau: new Date(Date.now() + 86_400_000),
+      },
+    })
+    const autoriser = (userId: string) =>
+      prisma.jetonAcces.create({
+        data: {
+          organisationId: ids.org,
+          userId,
+          nom: 'Planning partagé',
+          empreinte: randomUUID().replaceAll('-', '').padEnd(64, '0'),
+          apercu: randomUUID().slice(0, 8),
+          portee: 'LECTURE_ECRITURE',
+          expireLe: enUnAn(),
+          clientApplicationId: client.id,
+        },
+      })
+    const premiere = await autoriser(ids.anna)
+    const ctx = await contexteDeJetonAcces(
+      ip,
+      await jetonApplication(premiere.id),
+      null
+    )
+    await creerAvec(ctx, 'Préparé avant la réautorisation')
+    await creerAvec(ctx, 'Préparé avant la réautorisation, bis')
+    // Une réautorisation du même client remplace la ligne, comme
+    // `autoriserApplication` : l'ancienne est révoquée, une nouvelle est créée.
+    await prisma.jetonAcces.update({
+      where: { id: premiere.id },
+      data: { revoqueLe: new Date() },
+    })
+    const seconde = await autoriser(ids.anna)
+    // La même application autorisée par une autre personne compte à part.
+    const autre = await autoriser(ids.admin)
+
+    const LISTE = `{ jetonsAccesOrganisation { jeton { id } messagesEnCours } }`
+    const r = await executer(ids.admin, LISTE)
+    expect(r.errors).toBeUndefined()
+    const lignes = r.data?.jetonsAccesOrganisation as {
+      jeton: { id: string }
+      messagesEnCours: number
+    }[]
+    const compte = (id: string) =>
+      lignes.find(l => l.jeton.id === id)?.messagesEnCours
+    expect(compte(seconde.id)).toBe(2)
+    expect(compte(premiere.id)).toBe(2)
+    expect(compte(autre.id)).toBe(0)
+  })
 })
