@@ -1648,9 +1648,9 @@ msgstr "Accent"
 #. Statut du choix de séquence d’une candidature de bénévole
 #. Statut d’une demande pour rejoindre l’équipe
 #. Statut d’une demande pour rejoindre l’équipe
-#: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/Demandes.tsx
 #: src/composants/ProposerPersonne.tsx
+#: src/lib/decisions-candidature.ts
 msgid "Acceptée"
 msgstr "Acceptée"
 
@@ -1673,13 +1673,17 @@ msgstr "Accepter la demande de {nomDemandeur}"
 msgid "Accepter la demande de {nomEnAcceptation}"
 msgstr "Accepter la demande de {nomEnAcceptation}"
 
+#: src/lib/decisions-candidature.ts
+msgid "Accepter quand même"
+msgstr "Accepter quand même"
+
 #: src/pages/ImportBenevoles.tsx
 msgid "Accepter tout : les séquences associées sont acceptées dès l’import."
 msgstr "Accepter tout : les séquences associées sont acceptées dès l’import."
 
 #: src/composants/CandidaturesBenevoles.tsx
-msgid "Accepter une séquence crée la fiche bénévole avec une place à confirmer. La première place envoie à la personne un mail avec son lien personnel. Refuser n’envoie rien. Les candidatures disparaissent à l’archivage de la période."
-msgstr "Accepter une séquence crée la fiche bénévole avec une place à confirmer. La première place envoie à la personne un mail avec son lien personnel. Refuser n’envoie rien. Les candidatures disparaissent à l’archivage de la période."
+msgid "Accepter une séquence crée la fiche bénévole avec une place à confirmer. La première place envoie à la personne un mail avec son lien personnel. Refuser n’envoie rien. Une séquence refusée par erreur se remet en attente, sans mail. Les candidatures disparaissent à l’archivage de la période."
+msgstr "Accepter une séquence crée la fiche bénévole avec une place à confirmer. La première place envoie à la personne un mail avec son lien personnel. Refuser n’envoie rien. Une séquence refusée par erreur se remet en attente, sans mail. Les candidatures disparaissent à l’archivage de la période."
 
 #: src/composants/GestionAcces.tsx
 msgid "Accès chez le fournisseur : « {nomDossier} »"
@@ -2999,6 +3003,18 @@ msgstr "Cc"
 #: src/lib/messages.ts
 msgid "Cci"
 msgstr "Cci"
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Ce choix a changé entre-temps. La candidature est rechargée."
+msgstr "Ce choix a changé entre-temps. La candidature est rechargée."
+
+#: src/lib/decisions-candidature.ts
+msgid "Ce choix a encore changé. La candidature est rechargée : décidez sur son état actuel."
+msgstr "Ce choix a encore changé. La candidature est rechargée : décidez sur son état actuel."
+
+#: src/lib/decisions-candidature.ts
+msgid "Ce choix est maintenant « {statut} ». « Accepter quand même » l’accepte, et la personne peut recevoir un mail. « Recharger » affiche son état actuel."
+msgstr "Ce choix est maintenant « {statut} ». « Accepter quand même » l’accepte, et la personne peut recevoir un mail. « Recharger » affiche son état actuel."
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Ce choix vaut pour ce navigateur, sur cet appareil. Vous pouvez le changer pour un message dans la fenêtre « Écrire un message »."
@@ -4853,9 +4869,9 @@ msgstr "Elle redevient une tâche ordinaire de ce périmètre. Elle garde son st
 #. Statut d’une demande pour rejoindre l’équipe
 #. Statut d’une demande pour rejoindre l’équipe
 #: src/composants/AppelsBenevoles.tsx
-#: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/Demandes.tsx
 #: src/composants/ProposerPersonne.tsx
+#: src/lib/decisions-candidature.ts
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "En attente"
 msgstr "En attente"
@@ -6364,6 +6380,10 @@ msgstr "La candidature de chaque billet annulé se retire, et ses places listée
 msgid "La candidature de chaque billet annulé se retire. Ses places listées ici restent : retirez-les dans le programme, ou cochez « Retirer les places des billets annulés ». La fiche reste."
 msgstr "La candidature de chaque billet annulé se retire. Ses places listées ici restent : retirez-les dans le programme, ou cochez « Retirer les places des billets annulés ». La fiche reste."
 
+#: src/lib/decisions-candidature.ts
+msgid "La candidature n’a pas pu être rechargée. Réessayez dans un instant."
+msgstr "La candidature n’a pas pu être rechargée. Réessayez dans un instant."
+
 #: src/lib/guide-markdown.ts
 msgid "La case se coche en modifiant la fiche, et non d’un clic. Une case de fiche ne crée pas de tâche."
 msgstr "La case se coche en modifiant la fiche, et non d’un clic. Une case de fiche ne crée pas de tâche."
@@ -6534,6 +6554,10 @@ msgstr "La personne garde son compte, ses affectations et ses souhaits."
 #: src/lib/repartition.ts
 msgid "La personne n’a donné aucune disponibilité sur cet horaire."
 msgstr "La personne n’a donné aucune disponibilité sur cet horaire."
+
+#: src/lib/decisions-candidature.ts
+msgid "La personne n’a pas choisi cette séquence. « Accepter quand même » la place sur cette séquence. « Recharger » affiche son état actuel."
+msgstr "La personne n’a pas choisi cette séquence. « Accepter quand même » la place sur cette séquence. « Recharger » affiche son état actuel."
 
 #: src/composants/Jauge.tsx
 msgid "La personne n’a pas confirmé depuis sept jours, ou la séquence arrive demain."
@@ -6759,6 +6783,10 @@ msgstr "Le champ Cc affiche toutes les adresses. Nous vous conseillons le champ 
 #: src/composants/GestionAcces.tsx
 msgid "Le changement est appliqué."
 msgstr "Le changement est appliqué."
+
+#: src/lib/decisions-candidature.ts
+msgid "Le choix de cette séquence a changé"
+msgstr "Le choix de cette séquence a changé"
 
 #: src/composants/ChampsActivite.tsx
 msgid "Le classement des scores de participation devient visible par toute l’équipe. Sans ce module, seuls les admins le lisent."
@@ -7155,6 +7183,10 @@ msgstr "Le sondage et ses réponses disparaissent. Une réunion déjà créée r
 #: src/composants/SondageFormulaire.tsx
 msgid "Le sondage n’a pas pu être rechargé. Votre saisie reste à l’écran : réessayez dans un instant."
 msgstr "Le sondage n’a pas pu être rechargé. Votre saisie reste à l’écran : réessayez dans un instant."
+
+#: src/lib/decisions-candidature.ts
+msgid "Le statut de ce choix a changé"
+msgstr "Le statut de ce choix a changé"
 
 #: src/lib/conflit.ts
 msgid "Le statut de cette tâche a changé"
@@ -7871,8 +7903,8 @@ msgid "Liste condensée"
 msgstr "Liste condensée"
 
 #. Statut du choix de séquence d’une candidature de bénévole
-#: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/Repartition.tsx
+#: src/lib/decisions-candidature.ts
 msgid "Liste d’attente"
 msgstr "Liste d’attente"
 
@@ -9635,6 +9667,7 @@ msgstr "Recevoir un code"
 
 #: src/composants/AvisMiseAJour.tsx
 #: src/composants/ReglagePerimetre.tsx
+#: src/lib/decisions-candidature.ts
 #: src/lib/taches.ts
 msgid "Recharger"
 msgstr "Recharger"
@@ -9747,10 +9780,10 @@ msgstr "Référent·es :"
 #. Statut d’une demande pour rejoindre l’équipe
 #. Statut d’une demande pour rejoindre l’équipe
 #. État d’une déclinaison de tâche refusée par un périmètre
-#: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/DeclinaisonsTache.tsx
 #: src/composants/Demandes.tsx
 #: src/composants/ProposerPersonne.tsx
+#: src/lib/decisions-candidature.ts
 msgid "Refusée"
 msgstr "Refusée"
 
@@ -9929,6 +9962,10 @@ msgstr "Remerciements"
 #: src/composants/TacheCarte.tsx
 msgid "Remettre à faire"
 msgstr "Remettre à faire"
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Remettre en attente"
+msgstr "Remettre en attente"
 
 #: src/composants/Messages.tsx
 msgid "Remettre en cours"
@@ -10709,6 +10746,10 @@ msgstr "Séquence enregistrée."
 #: src/composants/CandidaturesBenevoles.tsx
 msgid "Séquence refusée."
 msgstr "Séquence refusée."
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Séquence remise en attente. Aucun mail ne part."
+msgstr "Séquence remise en attente. Aucun mail ne part."
 
 #: src/composants/AppelsBenevoles.tsx
 msgid "Séquence supprimée"

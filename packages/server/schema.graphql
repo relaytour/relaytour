@@ -646,6 +646,10 @@ type ChargePlaces {
 }
 
 type ChoixARepartir {
+  """
+  La candidature qui porte ce choix. Une fiche reprend les choix de toutes ses candidatures.
+  """
+  candidatureId: ID!
   sequenceId: ID!
   statut: String!
 }
@@ -2018,9 +2022,16 @@ type Mutation {
   ): Boolean!
 
   """
-  Accepte une séquence choisie : la fiche bénévole naît ou se rattache par l’adresse, avec une place à confirmer en renfort.
+  Accepte une séquence choisie : la fiche bénévole naît ou se rattache par l’adresse, avec une place à confirmer en renfort. Un choix déjà accepté rend la candidature sans rien écrire. Avec `statutAttendu`, le serveur refuse d’accepter un choix dont le statut a changé depuis la lecture (code `CONFLIT_VERSION`, extension `statutCourant`) ; aucun mail ne part alors (ADR 0070).
   """
-  accepterChoixCandidature(id: ID!): Candidature!
+  accepterChoixCandidature(
+    id: ID!
+
+    """
+    Le statut du choix tel que la personne l’a lu. Sans valeur : aucune comparaison.
+    """
+    statutAttendu: StatutChoix
+  ): Candidature!
   accepterDemande(affecter: [ID!]!, id: ID!): Demande!
 
   """
@@ -2755,9 +2766,18 @@ type Mutation {
   ouvrirDocumentLie(id: ID!, ouvert: Boolean!): RessourceFiche!
 
   """
-  Place une personne à répartir dans une séquence, en renfort. Une candidature y est acceptée ; une fiche y reçoit une place, à confirmer si elle est née d’une candidature.
+  Place une personne à répartir dans une séquence, en renfort. Une candidature y est acceptée ; une fiche y reçoit une place, à confirmer si elle est née d’une candidature. Une candidature sans choix sur la séquence s’y place sans `statutAttendu`.
   """
-  placerBenevole(benevoleId: ID, candidatureId: ID, sequenceId: ID!): Sequence!
+  placerBenevole(
+    benevoleId: ID
+    candidatureId: ID
+    sequenceId: ID!
+
+    """
+    Avec `candidatureId` : le statut lu du choix de la candidature sur la séquence. Un autre statut répond `CONFLIT_VERSION`, avec l’extension `statutCourant` (nulle sans choix). Un choix déjà accepté et placé rend la séquence sans rien écrire. Sans valeur : aucune comparaison (ADR 0070).
+    """
+    statutAttendu: StatutChoix
+  ): Sequence!
 
   """
   Écrit l’export complet d’une organisation pour l’admin qui porte cette adresse, et tire le jeton de son lien (ADR 0057). Nul quand l’adresse n’appartient à aucun admin actif, ou quand un lien est parti depuis moins de 24 heures. Sans adresse, prépare le dernier export pour tous les admins, sans limite.
@@ -2841,6 +2861,16 @@ type Mutation {
   Renvoie le mail d’une invitation en attente, une fois par heure au plus.
   """
   relancerInvitation(id: ID!): Boolean!
+
+  """
+  Remet en attente une séquence refusée : « en attente » tant que les renforts restent sous le besoin, « en liste d’attente » sinon. Un choix dans un autre statut répond `CONFLIT_VERSION`, avec l’extension `statutCourant`. Aucun mail ne part (ADR 0070).
+  """
+  remettreChoixEnAttente(
+    id: ID!
+
+    """Le statut lu du choix. Seule valeur admise : `REFUSE`."""
+    statutAttendu: StatutChoix
+  ): Candidature!
 
   """Remplace l’adresse publique d’un appel : l’ancienne cesse de répondre."""
   renouvelerAdresseAppelBenevoles(id: ID!): AppelEtAdresse!

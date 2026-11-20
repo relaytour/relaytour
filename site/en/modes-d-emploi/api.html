@@ -167,6 +167,8 @@
         <p class="note">The <span class="route">jetonCourant</span> query returns the bounds of the token: its scope, its activities and its end date. A program reads it at startup to know what it can do. The names in the schema are in French.</p>
         <p class="note">A message created by <span class="route">creerMessage</span> with a token carries its origin, in the <span class="route">Message.origine</span> field: the label of the token, or the name and host of the application. The server takes this origin from the token, and no argument changes it. The admins who read the message see the mention “Prepared by a program” or “Prepared by an application” on the “Messages” screen.</p>
         <p class="note">The schema contract is published in the source code repository, in the <span class="route">packages/server/schema.graphql</span> file. Account operations stay reserved to a sign-in in the organizer workspace: token management, preferences, subscriptions and full exports.</p>
+        <p class="note">The acceptances of an application (<span class="route">accepterChoixCandidature</span> and <span class="route">placerBenevole</span>) can carry the status of the choice as read (<span class="route">statutAttendu</span>). A choice that changed in the meantime returns <span class="route">CONFLIT_VERSION</span>, with its status in <span class="route">extensions.statutCourant</span>. Nothing is written then, and no email is sent. A choice already accepted returns the application without writing anything. Without <span class="route">statutAttendu</span>, the acceptance compares nothing, and a placement on a slot that was not chosen omits the argument.</p>
+        <p class="note">The <span class="route">remettreChoixEnAttente</span> mutation sets a declined choice back to pending, without sending an email. The choice takes the status it would receive on submission: pending, or on the waiting list when the slot’s helpers are reached.</p>
       </section>
 
       <section aria-labelledby="t-rest">
@@ -236,7 +238,7 @@
               <tr><th><span class="route">PORTEE_INSUFFISANTE</span></th><td>403</td><td>A read-only token asked for a write.</td></tr>
               <tr><th><span class="route">FORBIDDEN</span></th><td>403</td><td>The person does not have this right, or the activity is outside the limits of the token.</td></tr>
               <tr><th><span class="route">SAISIE_INVALIDE</span></th><td>400</td><td>A value sent is invalid. The message names the field.</td></tr>
-              <tr><th><span class="route">CONFLIT_VERSION</span></th><td>409</td><td>The task changed since it was read.</td></tr>
+              <tr><th><span class="route">CONFLIT_VERSION</span></th><td>409</td><td>The task or the choice of an application changed since it was read.</td></tr>
               <tr><th><span class="route">LIMITE_DE_DEBIT</span></th><td>429</td><td>The token exceeded its rate. The <span class="route">Retry-After</span> header gives the wait in seconds.</td></tr>
             </tbody>
           </table>

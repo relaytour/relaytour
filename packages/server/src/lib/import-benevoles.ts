@@ -1361,7 +1361,7 @@ async function ecrireLot(
             acteurId,
             maintenant: lot.maintenant,
           })
-          placeCreee ||= acceptee.placeCreee
+          placeCreee ||= !acceptee.dejaAcceptee && acceptee.placeCreee
           touchees.add(sequenceId)
         }
         if (placeCreee && ficheId !== null && !p.remplace) {

@@ -193,6 +193,21 @@ msgstr "This call has passed its closing date: change its dates first."
 
 #. js-lingui-explicit-id
 #: src/schema/appels.ts
+msgid "Seul un choix refusé se remet en attente."
+msgstr "Only a declined choice can be set back to pending."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "La personne a retiré cette candidature."
+msgstr "The person withdrew this application."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "Une autre candidature de cette adresse attend sur cet appel : traitez-la d’abord."
+msgstr "Another application from this address is pending on this call: process it first."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
 msgid "Ce choix est déjà traité : retirez la place depuis le programme."
 msgstr "This choice has already been processed: remove the place from the schedule."
 
@@ -200,11 +215,6 @@ msgstr "This choice has already been processed: remove the place from the schedu
 #: src/schema/appels.ts
 msgid "Cette candidature est déjà traitée."
 msgstr "This application has already been processed."
-
-#. js-lingui-explicit-id
-#: src/schema/appels.ts
-msgid "La personne a retiré cette candidature."
-msgstr "The person withdrew this application."
 
 #. js-lingui-explicit-id
 #: src/schema/applications-tierces.ts
@@ -1542,6 +1552,11 @@ msgstr "A window lasts 24 hours at most."
 #: src/lib/appels.ts
 msgid "Une plage tombe dans les jours de la période ou de son programme."
 msgstr "A window falls within the days of the period or of its schedule."
+
+#. js-lingui-explicit-id
+#: src/lib/appels.ts
+msgid "Le statut de ce choix a changé depuis votre lecture."
+msgstr "The status of this choice has changed since you read it."
 
 #. js-lingui-explicit-id
 #: src/lib/application.ts

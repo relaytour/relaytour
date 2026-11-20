@@ -26,7 +26,7 @@ import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { heureLocale } from '../lib/heures.ts'
 import { peutEcrireSequence, PLACES_MAX } from '../lib/programme.ts'
 
-import { PlageRef } from './appels.ts'
+import { PlageRef, StatutChoixEnum } from './appels.ts'
 import { builder } from './builder.ts'
 import {
   lireSequence,
@@ -51,6 +51,7 @@ const AdequationEnum = builder.enumType('Adequation', {
 })
 
 interface ChoixResume {
+  candidatureId: string
   sequenceId: string
   statut: string
 }
@@ -81,6 +82,10 @@ const ChoixResumeRef = builder
   .objectRef<ChoixResume>('ChoixARepartir')
   .implement({
     fields: t => ({
+      candidatureId: t.exposeID('candidatureId', {
+        description:
+          'La candidature qui porte ce choix. Une fiche reprend les choix de toutes ses candidatures.',
+      }),
       sequenceId: t.exposeID('sequenceId'),
       statut: t.exposeString('statut'),
     }),
@@ -215,7 +220,9 @@ async function benevolesARepartir(
       include: {
         appel: { select: { nom: true } },
         plages: true,
-        choix: { select: { sequenceId: true, statut: true } },
+        choix: {
+          select: { candidatureId: true, sequenceId: true, statut: true },
+        },
       },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     }),
@@ -259,7 +266,9 @@ async function benevolesARepartir(
           where: candidaturesVues,
           include: {
             appel: { select: { nom: true } },
-            choix: { select: { sequenceId: true, statut: true } },
+            choix: {
+              select: { candidatureId: true, sequenceId: true, statut: true },
+            },
           },
           orderBy: { createdAt: 'asc' },
         },
@@ -444,11 +453,16 @@ builder.mutationFields(t => ({
     type: SequenceRef,
     authScopes: { connecte: true },
     description:
-      'Place une personne à répartir dans une séquence, en renfort. Une candidature y est acceptée ; une fiche y reçoit une place, à confirmer si elle est née d’une candidature.',
+      'Place une personne à répartir dans une séquence, en renfort. Une candidature y est acceptée ; une fiche y reçoit une place, à confirmer si elle est née d’une candidature. Une candidature sans choix sur la séquence s’y place sans `statutAttendu`.',
     args: {
       sequenceId: t.arg.id({ required: true }),
       candidatureId: t.arg.id(),
       benevoleId: t.arg.id(),
+      statutAttendu: t.arg({
+        type: StatutChoixEnum,
+        description:
+          'Avec `candidatureId` : le statut lu du choix de la candidature sur la séquence. Un autre statut répond `CONFLIT_VERSION`, avec l’extension `statutCourant` (nulle sans choix). Un choix déjà accepté et placé rend la séquence sans rien écrire. Sans valeur : aucune comparaison (ADR 0070).',
+      }),
     },
     resolve: async (_root, args, ctx) => {
       if (!args.candidatureId === !args.benevoleId) {
@@ -476,21 +490,32 @@ builder.mutationFields(t => ({
         }
         // Le verrou de l'organisation protège la recherche et la création de
         // la fiche, comme creerBenevole.
-        const { benevoleId } = await sousVerrouOrganisation(
+        const statutAttendu = args.statutAttendu ?? undefined
+        const acceptee = await sousVerrouOrganisation(
           sequence.organisationId,
           async tx => {
-            const acceptee = await accepterSurSequence(tx, {
+            const resultat = await accepterSurSequence(tx, {
               candidatureId: candidature.id,
               sequenceId: sequence.id,
               acteurId: ctx.personne!.id,
               maintenant,
+              statutAttendu,
+              // Avec le statut lu, un choix déjà accepté et placé ne s'écrit
+              // pas une seconde fois. Sans lui, le comportement d'avant l'ADR
+              // 0070 reste le même.
+              dejaAcceptee: statutAttendu === undefined ? undefined : 'placee',
             })
-            await incrementer(tx, sequence.id)
-            return acceptee
+            if (!resultat.dejaAcceptee) await incrementer(tx, sequence.id)
+            return resultat
           }
         )
+        // Une acceptation simultanée a déjà placé la personne et annoncé la
+        // place : rien de plus ne part.
+        if (acceptee.dejaAcceptee) {
+          return lireSequence(ctx, await sequenceVisible(ctx, sequence.id))
+        }
         await annoncerPlace(prisma, {
-          benevoleId,
+          benevoleId: acceptee.benevoleId,
           organisationId: sequence.organisationId,
           activiteId: sequence.activiteId,
         })

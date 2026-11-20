@@ -1,5 +1,5 @@
 import { CloseOutlined, HolderOutlined } from '@ant-design/icons'
-import { useMutation, useQuery } from '@apollo/client/react'
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import type { MessageDescriptor } from '@lingui/core'
 import { msg, plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
@@ -19,8 +19,13 @@ import {
 import { useMemo, useState, type DragEvent } from 'react'
 
 import { graphql } from '../gql'
-import type { BenevolesARepartirQuery, ProgrammeQuery } from '../gql/graphql'
+import type {
+  BenevolesARepartirQuery,
+  ProgrammeQuery,
+  StatutChoix,
+} from '../gql/graphql'
 import type { AgendaEcrit } from '../lib/agendas-ecrits'
+import { accepterAvecStatutLu } from '../lib/decisions-candidature'
 import { messageErreur } from '../lib/erreurs'
 import { libelleJours } from '../lib/agenda'
 import { heureCourte, minutes, segmentDuJour } from '../lib/programme'
@@ -65,6 +70,7 @@ const A_REPARTIR = graphql(`
         heureFin
       }
       choix {
+        candidatureId
         sequenceId
         statut
       }
@@ -101,11 +107,13 @@ const PLACER = graphql(`
     $sequenceId: ID!
     $candidatureId: ID
     $benevoleId: ID
+    $statutAttendu: StatutChoix
   ) {
     placerBenevole(
       sequenceId: $sequenceId
       candidatureId: $candidatureId
       benevoleId: $benevoleId
+      statutAttendu: $statutAttendu
     ) {
       id
     }
@@ -270,6 +278,7 @@ export default function Repartition({
   })
   const relire = { refetchQueries: RELIRE }
   const [placer, placement] = useMutation(PLACER, relire)
+  const client = useApolloClient()
   const [retirer] = useMutation(RETIRER, relire)
 
   const parId = new Map(sequences.map(s => [s.id, s] as const))
@@ -295,21 +304,36 @@ export default function Repartition({
   const executerPlacement = async (p: Personne, s: Sequence) => {
     const nomPersonne = p.nom
     const titreSequence = s.titre
-    try {
-      await placer({
-        variables: {
-          sequenceId: s.id,
-          // Une candidature en attente passe en premier : le placement accepte
-          // son choix et recalcule son statut, même quand une fiche existe déjà.
-          candidatureId: p.candidatureId,
-          benevoleId: p.candidatureId ? null : p.benevoleId,
-        },
-      })
+    // Le statut affiché du choix de la candidature sur la séquence (ADR 0070).
+    // Une séquence qu'elle n'a pas choisie se place sans statut attendu.
+    const choixIci = p.candidatureId
+      ? p.choix.find(
+          c => c.candidatureId === p.candidatureId && c.sequenceId === s.id
+        )
+      : undefined
+    const place = await accepterAvecStatutLu(
+      statutAttendu =>
+        placer({
+          variables: {
+            sequenceId: s.id,
+            // Une candidature en attente passe en premier : le placement accepte
+            // son choix et recalcule son statut, même quand une fiche existe déjà.
+            candidatureId: p.candidatureId,
+            benevoleId: p.candidatureId ? null : p.benevoleId,
+            statutAttendu,
+          },
+        }),
+      (choixIci?.statut as StatutChoix | undefined) ?? null,
+      {
+        client,
+        confirmer: async options => await modal.confirm(options),
+        signalerErreur: texte => void message.error(texte),
+      }
+    )
+    if (place) {
       message.success(
         t`${nomPersonne} est placé·e dans « ${titreSequence} ». La place attend sa confirmation si la personne reçoit les mails.`
       )
-    } catch (e) {
-      message.error(messageErreur(e))
     }
   }
 
