@@ -1,8 +1,8 @@
 # ADR 0069 — Lecture d'une activité par un robot
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-11-20
-- Option retenue le 2026-11-20 : la lecture de l'activité, attachée au rattachement d'un robot. Les autres options figurent sous « Options écartées ».
+- Acceptée le 2026-11-20 : la lecture de l'activité, attachée au rattachement d'un robot. Les autres options figurent sous « Options écartées ». La mise en œuvre est dans la PR #393.
 - Complète l'ADR 0064 (robots et jetons d'accès), l'ADR 0010 (visibilité des activités), l'ADR 0014 (consultation) et l'ADR 0045 (rattachement).
 - Ne remplace aucune règle d'une ADR acceptée. Une personne garde les accès décrits par le tableau de l'ADR 0045.
 
@@ -44,7 +44,8 @@ Le besoin est donc un droit de lecture sur une activité entière, valable pour 
 
 - Le robot lit ce que lit une personne en consultation (ADR 0014). Il lit le nom des référentes et des référents, des personnes assignées et du contact principal.
 - Il lit aussi le nom des personnes placées au programme. Une fiche bénévole n'y montre que son nom (ADR 0040).
-- Il ne lit ni les adresses des membres, ni les coordonnées des bénévoles, ni les candidatures, ni les demandes, ni les fiches de périmètre. Ces règles passent par l'écriture ou par l'administration, que la lecture n'ouvre pas.
+- Il ne lit ni les adresses des membres, ni les coordonnées des bénévoles, ni les candidatures, ni les demandes, ni les fiches de périmètre.
+- Il lit l'organigramme réduit d'une personne en découverte : les contacts principaux, sans aucune adresse. Ces règles passent par l'écriture ou par l'administration, que la lecture n'ouvre pas.
 
 ### Révocation
 
@@ -60,7 +61,7 @@ Le besoin est donc un droit de lecture sur une activité entière, valable pour 
 - Un robot qui n'a que la lecture ne formule aucun souhait et ne se place pas au programme. Les mutations qui lui ouvriraient une écriture en découverte le refusent.
 - La lecture ne compte ni dans l'effectif ni dans les postes à pourvoir. Le robot n'entre ni dans la charge, ni dans les listes d'assignation. Le classement et l'organigramme l'excluent déjà (ADR 0064).
 - Le robot ne reçoit aucune notification au titre de la lecture.
-- L'écran Équipe affiche l'étiquette « lecture » à côté du robot. Le panneau « API » de l'écran « Organisation » montre, pour chaque robot, les activités qu'il lit.
+- L'écran « Personnes » de l'activité affiche l'étiquette « lecture » à côté du robot, avec les gestes de don et de retrait. Le panneau « API » de l'écran « Organisation » montre, pour chaque robot, les activités qu'il lit.
 - Le don et le retrait de la lecture entrent au journal, avec leur auteur, et publient un signal du flux. Ils ne changent aucun jeton.
 - Un robot déjà affecté garde son affectation. L'admin peut ensuite lui donner la lecture et retirer l'affectation.
 
@@ -79,7 +80,7 @@ Le besoin est donc un droit de lecture sur une activité entière, valable pour 
 - Cette option contredit l'ADR 0064 : un jeton réduit les droits de sa personne et n'en crée aucun. Le contrôle des champs devrait lire le jeton en plus de la personne, à chaque résolveur.
 - Le cloisonnement deviendrait plus difficile à prouver. Deux sources de droits coexisteraient, et chaque test de refus croisé devrait les couvrir toutes les deux.
 - Les données personnelles visibles seraient les mêmes que pour la lecture de l'activité.
-- La révocation passerait par le jeton seul. L'écran Équipe ne montrerait pas qui lit l'activité, puisque le droit ne serait plus porté par un membre.
+- La révocation passerait par le jeton seul. L'écran « Personnes » ne montrerait pas qui lit l'activité, puisque le droit ne serait plus porté par un membre.
 
 ### Une affectation reconduite à chaque nouvelle édition
 
@@ -118,5 +119,5 @@ Les tests de la mise en œuvre prouvent chaque contrôle par le refus :
 ## Plan de mise en œuvre
 
 1. Serveur : colonne, calcul de `activitesVisibles`, mutations, refus croisés, tests (cette ADR, une fois acceptée).
-2. Espace organisateur : étiquette dans l'écran Équipe, case à la création du robot, liste des activités lues dans le panneau « API ».
+2. Espace organisateur : étiquette et gestes dans l'écran « Personnes », case à la création du robot, liste des activités lues dans le panneau « API ».
 3. Mode d'emploi de l'API, glossaire, et passage de l'ADR à « acceptée ».
