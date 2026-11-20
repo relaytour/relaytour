@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-11-20-serveur-un-module-desactive-affiche-son-message-au-lieu-d-une-erreur",
+          "date": "2026-11-20",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un module désactivé affiche son message au lieu d'une erreur du serveur",
+            "texte": "Une action sur un module désactivé de l'activité (agenda, bénévoles, documents) affichait « Le serveur a rencontré une erreur ». Elle affiche maintenant le message prévu, qui indique comment activer le module. Les erreurs du fournisseur cloud non connecté ou qui ne répond pas affichent aussi leur message.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A disabled module shows its message instead of a server error",
+            "texte": "An action on a disabled module of the activity (agenda, volunteers, documents) showed \"The server encountered an error\". It now shows the intended message, which explains how to enable the module. The errors for a cloud provider that is not connected or does not respond also show their message.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-11-19-serveur-l-api-lit-la-duree-estimee-et-les-taches-a-commencer",
           "date": "2026-11-19",
           "type": "fonctionnalite",

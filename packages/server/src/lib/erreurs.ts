@@ -202,16 +202,19 @@ export function requeteTropLourde(
   })
 }
 
-// Codes d'erreur qui sortent du serveur tels quels : ceux de ce fichier, et ceux
-// qu'Apollo pose sur une requête mal formée. Toute autre erreur (Prisma, exécution)
-// est remplacée par un message générique, pour ne pas révéler le schéma de la base
-// ni le détail d'une requête.
+// Codes d'erreur qui sortent du serveur tels quels : ceux de ce fichier, ceux des
+// autres modules du serveur (flux, espace de fichiers), et ceux qu'Apollo pose
+// sur une requête mal formée. Toute autre erreur (Prisma, exécution) est
+// remplacée par un message générique, pour ne pas révéler le schéma de la base
+// ni le détail d'une requête. Un test vérifie que chaque code levé par le
+// serveur figure dans cette liste.
 const CODES_CONNUS = new Set([
   'SAISIE_INVALIDE',
   'FORBIDDEN',
   'CONFLIT_VERSION',
   'CONFIRMATION_REQUISE',
   'LECTURE_SEULE',
+  'MODULE_INACTIF',
   'LIMITE_ATTEINTE',
   'JETON_INVALIDE',
   'API_INACTIVE',
@@ -220,6 +223,8 @@ const CODES_CONNUS = new Set([
   'ABONNEMENT_ATTENDU',
   'TROP_DE_FLUX',
   'FLUX_INDISPONIBLE',
+  'ESPACE_FICHIERS_INDISPONIBLE',
+  'FOURNISSEUR_INDISPONIBLE',
   'REQUETE_TROP_PROFONDE',
   'REQUETE_TROP_LARGE',
   'REQUETE_TROP_COMPLEXE',
