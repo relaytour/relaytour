@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.36.0
 fr:
   titre: >-
     Une case ouvre la lecture du texte des documents à un jeton ou à une
