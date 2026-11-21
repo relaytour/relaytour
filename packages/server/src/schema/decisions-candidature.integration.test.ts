@@ -319,6 +319,7 @@ beforeAll(async () => {
       emettreJetons(tx, {
         id: autorisation.id,
         portee: 'LECTURE',
+        lectureDocuments: false,
         expireLe,
       })
     )

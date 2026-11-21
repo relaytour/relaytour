@@ -1511,6 +1511,7 @@ export async function composer(
         apercu: true,
         portee: true,
         gestionMembres: true,
+        lectureDocuments: true,
         activiteIds: true,
         expireLe: true,
         revoqueLe: true,
@@ -1545,6 +1546,9 @@ export async function composer(
         ? i18n._('toutes les activités')
         : i18n._('certaines activités seulement'),
       ...(jeton.gestionMembres ? [i18n._('gestion des membres')] : []),
+      ...(jeton.lectureDocuments
+        ? [i18n._('lecture du texte des documents')]
+        : []),
     ]
     variables.droits = i18n._('Portée : {droits}.', {
       droits: droits.join(', '),

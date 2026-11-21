@@ -73,6 +73,7 @@
             <li><a href="#t-module">Activer le module « API »</a> : le choix des admins de l'organisation.</li>
             <li><a href="#t-jetons">Créer un jeton</a> : son nom, sa portée, ses activités et sa durée.</li>
             <li><a href="#t-graphql">Appeler l'API GraphQL</a> : le schéma complet de l'espace organisateur.</li>
+            <li><a href="#t-documents">Lire le texte d'un document</a> : une dimension facultative du jeton.</li>
             <li><a href="#t-rest">Appeler l'API REST</a> : les tâches, les fiches et l'équipe, avec un contrat OpenAPI.</li>
             <li><a href="#t-erreurs">Lire les erreurs et les limites</a> : les codes rendus et les débits permis.</li>
             <li><a href="#t-robots">Confier une automatisation à un robot</a> : un membre sans connexion qui porte des jetons.</li>
@@ -137,6 +138,7 @@
             <li><span><span class="libelle">Lecture seule</span></span><span>Limiter le programme à la lecture. Ce choix est proposé par défaut.</span></li>
             <li><span><span class="libelle">Lecture et écriture</span></span><span>Permettre au programme de créer, de modifier et de commenter des tâches, dans la limite de vos droits.</span></li>
             <li><span><span class="libelle">Seulement ces activités</span></span><span>Choisir les activités que le programme voit. Sans ce choix, le jeton couvre toutes vos activités.</span></li>
+            <li><span><span class="libelle">Lire le texte des documents du fournisseur cloud</span></span><span>Permettre au programme de lire le texte des documents que vous ouvrez déjà. Cette case est décochée par défaut (voir « Lire le texte d'un document »).</span></li>
             <li><span><span class="libelle">Durée</span></span><span>Choisir la date de fin du jeton. Un jeton vaut un an au plus, et un an par défaut.</span></li>
             <li><span><span class="libelle">Créer le jeton</span></span><span>Afficher le jeton. Copiez-le aussitôt dans votre programme : il ne s'affichera plus.</span></li>
             <li><span><span class="libelle">Révoquer</span></span><span>Mettre fin au jeton. Le programme reçoit un refus dès sa requête suivante.</span></li>
@@ -169,6 +171,43 @@
         <p class="note">Le contrat du schéma est publié dans le dépôt du code source, dans le fichier <span class="route">packages/server/schema.graphql</span>. Les opérations du compte restent réservées à une connexion dans l'espace organisateur : la gestion des jetons, les préférences, les abonnements et les exports complets.</p>
         <p class="note">Les acceptations d'une candidature (<span class="route">accepterChoixCandidature</span> et <span class="route">placerBenevole</span>) peuvent porter le statut lu du choix (<span class="route">statutAttendu</span>). Un choix qui a changé entre-temps répond <span class="route">CONFLIT_VERSION</span>, avec son statut dans <span class="route">extensions.statutCourant</span>. Rien ne s'écrit alors, et aucun mail ne part. Un choix déjà accepté rend la candidature sans rien écrire. Sans <span class="route">statutAttendu</span>, l'acceptation ne compare rien, et un placement sur une séquence non choisie omet l'argument.</p>
         <p class="note">La mutation <span class="route">remettreChoixEnAttente</span> remet en attente un choix refusé, sans envoyer de mail. Le choix reprend le statut qu'il recevrait au dépôt : en attente, ou en liste d'attente quand les renforts de la séquence sont atteints.</p>
+      </section>
+
+      <section aria-labelledby="t-documents">
+        <div class="entete">
+          <span class="etiquette">Dimension facultative</span>
+          <h2 id="t-documents">Lire le texte d'un document</h2>
+          <p class="texte">
+            La requête <span class="route">texteDocument</span> rend le texte d'un fichier d'un dossier lié. Elle applique les droits de la liseuse : le programme lit le texte d'un document que vous ouvrez déjà dans l'espace organisateur, et rien de plus.
+          </p>
+          <p class="texte">
+            Un jeton lit ce texte seulement si vous avez coché « Lire le texte des documents du fournisseur cloud » à sa création. Une application autorisée le lit seulement si elle a demandé la portée <span class="route">documents</span> et si vous avez coché la même case sur l'écran de consentement. La case est décochée par défaut, et un jeton de robot ne la reçoit jamais.
+          </p>
+        </div>
+        <div class="verre panneau">
+          <pre class="source-markdown">query {
+  texteDocument(dossierLieId: "…", chemin: ["Comptes rendus", "Réunion de mars.docx"]) {
+    nom format texte caracteres tronque
+  }
+}</pre>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Formats</h3>
+            <p>Relaytour lit un fichier texte, un fichier Markdown, un document Word (.docx) et un PDF. Le format se déduit du nom du fichier. Un document Word arrive en Markdown, sans ses images.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Bornes</h3>
+            <p>Un document pèse 10 Mo au plus. Le texte rendu compte 200 000 caractères au plus, et un PDF rend ses 200 premières pages. Au-delà, <span class="route">tronque</span> vaut vrai.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Débit</h3>
+            <p>Une personne lit au plus 60 textes de document par heure. Ce compte réunit ses sessions et tous ses jetons.</p>
+          </div>
+        </div>
+        <p class="note">Un fichier absent et un fichier que vous ne lisez pas rendent tous deux <span class="route">null</span>. Un argument <span class="route">ressourceId</span> désigne un document lié ouvert aux lecteurs de sa fiche : le programme lit alors ce document, et aucun autre fichier du dossier.</p>
+        <p class="note">Le texte d'un document est écrit par des personnes, parfois hors de votre organisation. Il peut contenir des instructions écrites pour détourner un programme, et Relaytour ne les retire pas. Votre programme traite ce texte comme une donnée, jamais comme une instruction. Ne cochez la case que pour un programme qui en a besoin.</p>
+        <p class="note">Le journal du serveur note chaque lecture par un jeton : l'identifiant du jeton, celui du dossier lié et le format. Il ne note ni le nom du fichier, ni son chemin, ni son texte.</p>
       </section>
 
       <section aria-labelledby="t-rest">
@@ -235,11 +274,14 @@
               <tr><th><span class="route">JETON_REQUIS</span></th><td>401</td><td>La requête ne porte aucun jeton.</td></tr>
               <tr><th><span class="route">JETON_INVALIDE</span></th><td>401</td><td>Le jeton est inconnu, révoqué ou expiré, ou sa personne est archivée. Le message est le même dans tous ces cas.</td></tr>
               <tr><th><span class="route">API_INACTIVE</span></th><td>403</td><td>Le module est inactif, interdit ou suspendu. La réponse indique la cause, et le motif d'une suspension.</td></tr>
-              <tr><th><span class="route">PORTEE_INSUFFISANTE</span></th><td>403</td><td>Un jeton en lecture seule a demandé une écriture.</td></tr>
+              <tr><th><span class="route">PORTEE_INSUFFISANTE</span></th><td>403</td><td>Un jeton en lecture seule a demandé une écriture, ou un jeton sans la dimension demandée a voulu gérer les membres ou lire le texte d'un document.</td></tr>
               <tr><th><span class="route">FORBIDDEN</span></th><td>403</td><td>La personne n'a pas ce droit, ou l'activité est hors des limites du jeton.</td></tr>
               <tr><th><span class="route">SAISIE_INVALIDE</span></th><td>400</td><td>Une valeur envoyée est invalide. Le message nomme le champ.</td></tr>
               <tr><th><span class="route">CONFLIT_VERSION</span></th><td>409</td><td>La tâche ou le choix d'une candidature a changé depuis sa lecture.</td></tr>
-              <tr><th><span class="route">LIMITE_DE_DEBIT</span></th><td>429</td><td>Le jeton a dépassé son débit. L'en-tête <span class="route">Retry-After</span> indique l'attente en secondes.</td></tr>
+              <tr><th><span class="route">LIMITE_DE_DEBIT</span></th><td>429</td><td>Le jeton a dépassé son débit. L'en-tête <span class="route">Retry-After</span> indique l'attente en secondes. Pour <span class="route">texteDocument</span>, la personne a lu 60 textes de document dans l'heure.</td></tr>
+              <tr><th><span class="route">FORMAT_NON_LU</span></th><td>—</td><td>Le texte de ce format ne se lit pas : seuls le texte, le Markdown, Word (.docx) et le PDF se lisent.</td></tr>
+              <tr><th><span class="route">FICHIER_TROP_LOURD</span></th><td>—</td><td>Le document pèse plus de 10 Mo.</td></tr>
+              <tr><th><span class="route">EXTRACTION_IMPOSSIBLE</span></th><td>—</td><td>Le texte du document n'a pas pu être extrait, ou son extraction a dépassé 20 secondes.</td></tr>
             </tbody>
           </table>
         </div>
@@ -328,7 +370,7 @@
       </section>
 
       <footer>
-        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.34.0.
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.35.0.
       </footer>
     </main>
     <script src="../menu.js"></script>

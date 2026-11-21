@@ -4,6 +4,9 @@ export default defineConfig({
   entry: {
     server: 'src/server.ts',
     worker: 'src/worker.ts',
+    // Le fil d'extraction du texte d'un document (ADR 0072), lancé à côté du
+    // serveur compilé.
+    'extraction-texte': 'src/espace-fichiers/extraction-texte.ts',
     // Compilé pour exister dans l'image, qui n'embarque ni tsx ni scripts/.
     'creer-admin': 'scripts/creer-admin.ts',
     'creer-edition': 'scripts/creer-edition.ts',

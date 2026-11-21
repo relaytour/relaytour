@@ -16,6 +16,7 @@ import type { AppContext } from '../context.ts'
 import {
   accesRefuse,
   gestionMembresRefusee,
+  lectureDocumentsRefusee,
   organisationEnLectureSeule,
   porteeInsuffisante,
   requeteTropLourde,
@@ -57,6 +58,7 @@ export const builder = new SchemaBuilder<{
     session: boolean
     toutesActivites: boolean
     gestionMembres: boolean
+    lectureDocuments: boolean
   }
 }>({
   plugins: [ScopeAuthPlugin, ComplexityPlugin, PrismaPlugin],
@@ -104,6 +106,12 @@ export const builder = new SchemaBuilder<{
       gestionMembres:
         ctx.personne !== null &&
         (ctx.jeton === null || ctx.jeton.gestionMembres),
+      // ADR 0072 : le texte d'un document se lit avec une session, ou avec un jeton
+      // créé avec cette dimension. La dimension ne crée aucun droit : la requête
+      // vérifie ensuite ceux de la liseuse.
+      lectureDocuments:
+        ctx.personne !== null &&
+        (ctx.jeton === null || ctx.jeton.lectureDocuments),
     }),
     unauthorizedError: (_parent, ctx, info, resultat) => {
       // Un jeton d'accès refusé répond sa cause sur tout champ protégé.
@@ -122,6 +130,15 @@ export const builder = new SchemaBuilder<{
         echecDeLaPortee(resultat.failure, 'gestionMembres')
       ) {
         return gestionMembresRefusee()
+      }
+      // Un jeton sans la lecture des documents l'apprend avant tout contrôle du
+      // fichier : la réponse ne dit rien du document demandé.
+      if (
+        ctx.jeton !== null &&
+        !ctx.jeton.lectureDocuments &&
+        echecDeLaPortee(resultat.failure, 'lectureDocuments')
+      ) {
+        return lectureDocumentsRefusee()
       }
       return accesRefuse()
     },

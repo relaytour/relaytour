@@ -139,11 +139,25 @@ const ENTETES_PAGE = {
     "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
 }
 
-/** Les portées demandées : `lecture`, ou `lecture ecriture`. Null pour une portée inconnue. */
+/**
+ * Les portées demandées : `lecture` ou `lecture ecriture`, suivies de `documents`
+ * quand l'application demande la lecture du texte des documents (ADR 0072). Null
+ * pour une portée inconnue.
+ */
 export function porteesDemandees(scope: string | undefined): string | null {
   const demandees = (scope ?? '').split(' ').filter(Boolean)
-  if (demandees.some(p => p !== 'lecture' && p !== 'ecriture')) return null
-  return demandees.includes('ecriture') ? 'lecture ecriture' : 'lecture'
+  if (
+    demandees.some(
+      p => p !== 'lecture' && p !== 'ecriture' && p !== 'documents'
+    )
+  ) {
+    return null
+  }
+  return [
+    'lecture',
+    ...(demandees.includes('ecriture') ? ['ecriture'] : []),
+    ...(demandees.includes('documents') ? ['documents'] : []),
+  ].join(' ')
 }
 
 async function autoriser(req: Request, res: Response) {
@@ -362,7 +376,7 @@ async function echangerCode(corps: Record<string, unknown>): Promise<Echange> {
   if (controle !== null) return controle
   const autorisation = await prisma.jetonAcces.findUniqueOrThrow({
     where: { id: jetonAccesId },
-    select: { id: true, portee: true, expireLe: true },
+    select: { id: true, portee: true, lectureDocuments: true, expireLe: true },
   })
   const jetons = await prisma.$transaction(tx =>
     emettreJetons(tx, autorisation, maintenant)
@@ -392,6 +406,7 @@ async function renouveler(corps: Record<string, unknown>): Promise<Echange> {
         select: {
           id: true,
           portee: true,
+          lectureDocuments: true,
           expireLe: true,
           clientApplication: { select: { clientId: true } },
         },

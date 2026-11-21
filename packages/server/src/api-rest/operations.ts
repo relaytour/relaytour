@@ -72,8 +72,9 @@ export const OPERATIONS_REST: readonly OperationRest[] = [
     methode: 'GET',
     chemin: '/jeton',
     groupe: 'compte',
-    resume: 'Les bornes du jeton : sa portée, ses activités et sa date de fin.',
-    document: `query JetonCourant { jetonCourant { portee gestionMembres activiteIds expireLe } }`,
+    resume:
+      'Les bornes du jeton : sa portée, ses dimensions, ses activités et sa date de fin.',
+    document: `query JetonCourant { jetonCourant { portee gestionMembres lectureDocuments activiteIds expireLe } }`,
   },
   {
     nom: 'activites',

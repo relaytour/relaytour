@@ -95,6 +95,11 @@ const DemandeAutorisationRef = builder
           'Vrai quand l’application demande aussi l’écriture. La personne peut la limiter à la lecture.',
         resolve: d => d.portees.split(' ').includes('ecriture'),
       }),
+      lectureDocumentsDemandee: t.boolean({
+        description:
+          'Vrai quand l’application demande aussi la lecture du texte des documents (portée `documents`, ADR 0072). La personne décide : la case reste décochée par défaut.',
+        resolve: d => d.portees.split(' ').includes('documents'),
+      }),
       expireLe: t.expose('expireLe', { type: 'DateTime' }),
     }),
   })
@@ -163,11 +168,15 @@ builder.mutationFields(t => ({
     // lire et exporter, comme un jeton d'accès.
     skipTypeScopes: true,
     description:
-      'Accepte une demande d’autorisation pour l’organisation active. Crée l’autorisation et rend l’adresse de retour de l’application, avec le code. La portée et les activités peuvent réduire la demande, jamais l’étendre.',
+      'Accepte une demande d’autorisation pour l’organisation active. Crée l’autorisation et rend l’adresse de retour de l’application, avec le code. La portée, la lecture des documents et les activités peuvent réduire la demande, jamais l’étendre.',
     args: {
       id: t.arg.id({ required: true }),
       portee: t.arg({ type: PorteeJetonEnum, required: true }),
       activiteIds: t.arg.idList(),
+      lectureDocuments: t.arg.boolean({
+        description:
+          'Accorde la lecture du texte des documents (ADR 0072), si l’application l’a demandée. Faux par défaut.',
+      }),
     },
     resolve: async (_root, args, ctx) => {
       const maintenant = new Date()
@@ -179,6 +188,17 @@ builder.mutationFields(t => ({
         !demande.portees.split(' ').includes('ecriture')
       ) {
         throw erreurSaisie(i18n._('L’application n’a demandé que la lecture.'))
+      }
+      const lectureDocuments = args.lectureDocuments ?? false
+      if (
+        lectureDocuments &&
+        !demande.portees.split(' ').includes('documents')
+      ) {
+        throw erreurSaisie(
+          i18n._(
+            'L’application n’a pas demandé la lecture du texte des documents.'
+          )
+        )
       }
       if (applicationRefusee(client.clientId)) {
         throw erreurSaisie(
@@ -271,6 +291,7 @@ builder.mutationFields(t => ({
                 maintenant.getTime() + DUREE_AUTORISATION_JOURS * 86_400_000
               ),
               gestionMembres: false,
+              lectureDocuments,
               clientApplicationId: client.id,
             },
           })
@@ -295,6 +316,7 @@ builder.mutationFields(t => ({
           organisationId,
           userId,
           portee: autorisation.portee,
+          lectureDocuments: autorisation.lectureDocuments,
         },
         'Une application tierce a été autorisée.'
       )

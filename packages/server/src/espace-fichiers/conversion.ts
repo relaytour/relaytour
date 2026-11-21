@@ -1,10 +1,9 @@
-import mammoth from 'mammoth'
-import TurndownService from 'turndown'
-import { gfm } from 'turndown-plugin-gfm'
 import { parse } from 'yaml'
 
 import { normaliserContenu } from '../lib/contenu.ts'
 import { TITRE_MAX } from '../lib/saisie.ts'
+
+export { wordVersMarkdown } from './word.ts'
 
 // Conversion des fichiers de l'espace de fichiers en fiches (ADR 0038). Un
 // fichier Markdown ou texte s'importe tel quel ; un document Word se convertit
@@ -35,33 +34,6 @@ export function slugDepuisNom(nom: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 60)
     .replace(/-+$/g, '')
-}
-
-const turndown = new TurndownService({
-  headingStyle: 'atx',
-  bulletListMarker: '-',
-  codeBlockStyle: 'fenced',
-  emDelimiter: '*',
-})
-turndown.use(gfm)
-// Une image d'un document Word ne passe pas dans la fiche.
-turndown.remove(['img', 'style', 'script'])
-
-/** Le Markdown d'un document Word, et ce que la conversion a laissé de côté. */
-export async function wordVersMarkdown(
-  octets: Buffer
-): Promise<{ texte: string; pertes: string[] }> {
-  const resultat = await mammoth.convertToHtml(
-    { buffer: octets },
-    {
-      convertImage: mammoth.images.imgElement(() =>
-        Promise.resolve({ src: '' })
-      ),
-      ignoreEmptyParagraphs: true,
-    }
-  )
-  const pertes = /<img\b/i.test(resultat.value) ? ['images'] : []
-  return { texte: turndown.turndown(resultat.value), pertes }
 }
 
 export interface FicheLue {

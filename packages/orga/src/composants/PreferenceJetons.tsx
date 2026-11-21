@@ -17,7 +17,8 @@ import { Panneau } from './Panneau'
 // Jetons d'accès des programmes tiers (ADR 0064). Une personne crée ses jetons
 // ici, avec sa session : un jeton agit en son nom, dans cette organisation, avec
 // ses droits. Sa valeur ne s'affiche qu'une fois, et sa création arrive par mail,
-// avec un lien de révocation. La gestion des membres se coche à dessein.
+// avec un lien de révocation. La gestion des membres et la lecture du texte des
+// documents (ADR 0072) se cochent à dessein.
 
 const MES_JETONS = graphql(`
   query MesJetonsAcces {
@@ -27,6 +28,7 @@ const MES_JETONS = graphql(`
       apercu
       portee
       gestionMembres
+      lectureDocuments
       activiteIds
       expireLe
       dernierAccesLe
@@ -43,6 +45,7 @@ const CREER = graphql(`
     $activiteIds: [ID!]
     $expireLe: DateTime
     $gestionMembres: Boolean
+    $lectureDocuments: Boolean
   ) {
     creerJetonAcces(
       nom: $nom
@@ -50,6 +53,7 @@ const CREER = graphql(`
       activiteIds: $activiteIds
       expireLe: $expireLe
       gestionMembres: $gestionMembres
+      lectureDocuments: $lectureDocuments
     ) {
       jeton
       jetonAcces {
@@ -182,6 +186,8 @@ export default function PreferenceJetons({
   const [portee, setPortee] = useState<PorteeJeton>('LECTURE')
   // La gestion des membres se coche à dessein : un jeton fuité ne change pas l'équipe.
   const [gestionMembres, setGestionMembres] = useState(false)
+  // La lecture du texte des documents aussi : un jeton fuité ne lit pas leur contenu.
+  const [lectureDocuments, setLectureDocuments] = useState(false)
   // Seule une personne qui gère des membres a un usage de cette dimension.
   const gereDesMembres =
     session?.moi?.estAdmin === true || activites.some(a => a.estAdministree)
@@ -216,6 +222,7 @@ export default function PreferenceJetons({
             Date.now() + duree * 86_400_000 - 60_000
           ).toISOString(),
           gestionMembres: portee === 'LECTURE_ECRITURE' && gestionMembres,
+          lectureDocuments,
         },
       })
       const resultat = r.data?.creerJetonAcces
@@ -223,6 +230,7 @@ export default function PreferenceJetons({
         resultat ? { id: resultat.jetonAcces.id, jeton: resultat.jeton } : null
       )
       setNom('')
+      setLectureDocuments(false)
       await refetch()
     } catch (e) {
       message.error(messageErreur(e))
@@ -337,6 +345,18 @@ export default function PreferenceJetons({
                 </span>
               </Checkbox>
             )}
+            <Checkbox
+              checked={lectureDocuments}
+              onChange={e => setLectureDocuments(e.target.checked)}
+            >
+              <Trans>Lire le texte des documents du fournisseur cloud</Trans>
+              <span className="rt-note rt-note-ligne">
+                <Trans>
+                  Le programme lit le texte des documents que vous ouvrez déjà.
+                  Sans cette case, il lit seulement leurs noms.
+                </Trans>
+              </span>
+            </Checkbox>
             <Select
               aria-label={t`Durée du jeton`}
               value={duree}
@@ -417,6 +437,12 @@ export default function PreferenceJetons({
                             <>
                               {' · '}
                               <Trans>Gestion des membres</Trans>
+                            </>
+                          )}
+                          {j.lectureDocuments && (
+                            <>
+                              {' · '}
+                              <Trans>Texte des documents</Trans>
                             </>
                           )}
                         </span>

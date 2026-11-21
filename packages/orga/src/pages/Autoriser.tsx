@@ -5,6 +5,7 @@ import {
   Alert,
   Button,
   Card,
+  Checkbox,
   Radio,
   Result,
   Select,
@@ -37,6 +38,7 @@ const DEMANDE = graphql(`
       id
       hoteRetour
       ecritureDemandee
+      lectureDocumentsDemandee
       application {
         nom
         clientId
@@ -61,11 +63,13 @@ const ACCORDER = graphql(`
     $id: ID!
     $portee: PorteeJeton!
     $activiteIds: [ID!]
+    $lectureDocuments: Boolean
   ) {
     accorderDemandeAutorisation(
       id: $id
       portee: $portee
       activiteIds: $activiteIds
+      lectureDocuments: $lectureDocuments
     )
   }
 `)
@@ -161,6 +165,8 @@ function Consentement() {
   const portee: PorteeJeton =
     porteeChoisie ??
     (demande?.ecritureDemandee ? 'LECTURE_ECRITURE' : 'LECTURE')
+  // La lecture du texte des documents reste décochée, même demandée (ADR 0072).
+  const [lectureDocuments, setLectureDocuments] = useState(false)
   const [toutes, setToutes] = useState(true)
   const [choisies, setChoisies] = useState<string[]>([])
   const [erreur, setErreur] = useState<string | null>(null)
@@ -207,7 +213,13 @@ function Consentement() {
     setErreur(null)
     try {
       const r = await accorder({
-        variables: { id, portee, activiteIds: toutes ? null : choisies },
+        variables: {
+          id,
+          portee,
+          activiteIds: toutes ? null : choisies,
+          lectureDocuments:
+            demande.lectureDocumentsDemandee && lectureDocuments,
+        },
       })
       suivre(r.data?.accorderDemandeAutorisation)
     } catch (e) {
@@ -313,6 +325,23 @@ function Consentement() {
                     des tâches, et les commenter.
                   </Trans>
                 </Typography.Paragraph>
+              )}
+              {demande.lectureDocumentsDemandee && (
+                <Checkbox
+                  checked={lectureDocuments}
+                  onChange={e => setLectureDocuments(e.target.checked)}
+                  style={{ marginTop: 8 }}
+                >
+                  <Trans>
+                    Lire le texte des documents du fournisseur cloud
+                  </Trans>
+                  <span className="rt-note rt-note-ligne">
+                    <Trans>
+                      Elle pourra lire le texte des documents que vous ouvrez
+                      déjà. Sans cette case, elle lit seulement leurs noms.
+                    </Trans>
+                  </span>
+                </Checkbox>
               )}
             </div>
             <div>

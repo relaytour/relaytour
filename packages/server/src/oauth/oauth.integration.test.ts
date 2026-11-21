@@ -17,6 +17,7 @@ import {
 
 import { buildContext, type AppContext } from '../context.ts'
 import { contexteDeJetonAcces } from '../contexte-jeton.ts'
+import { composer } from '../courriel/messages.ts'
 import { env } from '../env.ts'
 import { journal } from '../lib/journal.ts'
 import { schema } from '../schema/index.ts'
@@ -473,6 +474,85 @@ describe('consentement', () => {
   it('signale l’autorisation par mail', async () => {
     await codeAccorde()
     expect(enFile.map(e => e.sorte)).toContain('application-autorisee')
+  })
+
+  it('n’accorde la lecture des documents que demandée et cochée (ADR 0072)', async () => {
+    const LIRE = `query ($id: ID!) { demandeAutorisation(id: $id) { lectureDocumentsDemandee } }`
+    const ACCORDER_DOCUMENTS = `mutation ($id: ID!, $d: Boolean) {
+      accorderDemandeAutorisation(id: $id, portee: LECTURE, lectureDocuments: $d)
+    }`
+    const demandee = async (id: string) =>
+      (
+        (await executer(session(), LIRE, { id })).data as {
+          demandeAutorisation: { lectureDocumentsDemandee: boolean }
+        }
+      ).demandeAutorisation.lectureDocumentsDemandee
+    /** Accorde la demande, puis échange le code : rend les jetons émis. */
+    const accorder = async (id: string, d: boolean | null) => {
+      const r = await executer(session(), ACCORDER_DOCUMENTS, { id, d })
+      expect(r.errors).toBeUndefined()
+      const retour = new URL(
+        (r.data as { accorderDemandeAutorisation: string })
+          .accorderDemandeAutorisation
+      )
+      const echange = await echanger(retour.searchParams.get('code')!)
+      expect(echange.statut).toBe(200)
+      return JSON.parse(echange.texte) as Jetons
+    }
+
+    // Une application qui ne la demande pas ne la reçoit jamais.
+    const sans = await nouvelleDemande({ scope: 'lecture' })
+    expect(await demandee(sans)).toBe(false)
+    const etendue = await executer(session(), ACCORDER_DOCUMENTS, {
+      id: sans,
+      d: true,
+    })
+    expect(etendue.errors?.[0]?.extensions?.code).toBe('SAISIE_INVALIDE')
+
+    // Demandée, elle reste refusée tant que la personne ne coche pas la case.
+    const decochee = await nouvelleDemande({ scope: 'lecture documents' })
+    expect(await demandee(decochee)).toBe(true)
+    const ordinaires = await accorder(decochee, null)
+    expect(ordinaires.scope).toBe('lecture')
+    const ctx = await contexteDeJetonAcces(ip, ordinaires.access_token, null)
+    expect(ctx.jeton?.lectureDocuments).toBe(false)
+
+    enFile.length = 0
+    const cochee = await nouvelleDemande({ scope: 'lecture documents' })
+    const documents = await accorder(cochee, true)
+    expect(documents.scope).toBe('lecture documents')
+    const avec = await contexteDeJetonAcces(ip, documents.access_token, null)
+    expect(avec.jeton?.lectureDocuments).toBe(true)
+    // Le jeton renouvelé garde la dimension.
+    const renouvele = await renouveler(documents.refresh_token)
+    expect((JSON.parse(renouvele.texte) as Jetons).scope).toBe(
+      'lecture documents'
+    )
+    // Le mail de l'autorisation l'indique.
+    const mail = enFile.find(e => e.sorte === 'application-autorisee')
+    const { jetonAccesId } = mail?.options as { jetonAccesId: string }
+    const message = await composer(prisma, {
+      sorte: 'application-autorisee',
+      userId: ids.personne,
+      organisationId: ids.org,
+      jetonAccesId,
+    })
+    expect(message?.texte).toContain('lecture du texte des documents')
+    // La liste « Applications autorisées » l'affiche.
+    const liste = await executer(
+      session(),
+      '{ mesAutorisationsApplications { id lectureDocuments } }'
+    )
+    expect(
+      (
+        liste.data as {
+          mesAutorisationsApplications: {
+            id: string
+            lectureDocuments: boolean
+          }[]
+        }
+      ).mesAutorisationsApplications.find(a => a.id === jetonAccesId)
+    ).toEqual({ id: jetonAccesId, lectureDocuments: true })
   })
 })
 
