@@ -1987,6 +1987,21 @@ const CAS: Cas[] = [
     variables: () => ({ id: a.dossierLie, r: a.ressource }),
     attente: INTERDIT,
   },
+  // Le texte d'un document (ADR 0072) : un refus rend null, comme un fichier absent.
+  {
+    operation: 'texteDocument',
+    query:
+      'query ($id: ID!) { texteDocument(dossierLieId: $id, chemin: ["Plan.pdf"]) { texte } }',
+    variables: () => ({ id: a.dossierLie }),
+    attente: { sansEffet: d => expect(d.texteDocument).toBeNull() },
+  },
+  {
+    operation: 'texteDocument',
+    query:
+      'query ($id: ID!, $r: ID) { texteDocument(dossierLieId: $id, chemin: ["Plan.pdf"], ressourceId: $r) { texte } }',
+    variables: () => ({ id: a.dossierLie, r: a.ressource }),
+    attente: { sansEffet: d => expect(d.texteDocument).toBeNull() },
+  },
   {
     operation: 'lierDossier',
     query:

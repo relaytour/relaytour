@@ -138,6 +138,55 @@ export function gestionMembresRefusee(): GraphQLError {
   )
 }
 
+/**
+ * Refus de la lecture du texte d'un document par un jeton qui ne l'ouvre pas
+ * (ADR 0072). La réponse ne dit rien du fichier demandé.
+ */
+export function lectureDocumentsRefusee(): GraphQLError {
+  return new GraphQLError(
+    i18n._(
+      'Ce jeton d’accès n’ouvre pas la lecture du texte des documents. La personne peut créer un jeton qui l’ouvre, ou autoriser de nouveau l’application avec cette lecture.'
+    ),
+    { extensions: { code: 'PORTEE_INSUFFISANTE' } }
+  )
+}
+
+/** Refus au-delà de 60 textes de document par heure et par personne (ADR 0072). */
+export function limiteTextesDocuments(): GraphQLError {
+  return new GraphQLError(
+    i18n._(
+      'Vous avez lu 60 textes de document dans l’heure, la limite : réessayez plus tard.'
+    ),
+    { extensions: { code: 'LIMITE_DE_DEBIT' } }
+  )
+}
+
+/** Un document dont le format ne se lit pas en texte (ADR 0072). */
+export function formatNonLu(): GraphQLError {
+  return new GraphQLError(
+    i18n._(
+      'Ce format ne se lit pas en texte. Seuls le texte, le Markdown, Word (.docx) et le PDF se lisent.'
+    ),
+    { extensions: { code: 'FORMAT_NON_LU' } }
+  )
+}
+
+/** Un document de plus de 10 Mo, refusé pour la lecture de son texte (ADR 0072). */
+export function documentTropLourd(): GraphQLError {
+  return new GraphQLError(
+    i18n._('Ce document pèse plus de 10 Mo : son texte ne se lit pas.'),
+    { extensions: { code: 'FICHIER_TROP_LOURD' } }
+  )
+}
+
+/** Une extraction de texte qui échoue ou dépasse sa durée (ADR 0072). */
+export function extractionImpossible(): GraphQLError {
+  return new GraphQLError(
+    i18n._('Le texte de ce document n’a pas pu être extrait.'),
+    { extensions: { code: 'EXTRACTION_IMPOSSIBLE' } }
+  )
+}
+
 /** Refus d'une requête au-delà de la limite de débit d'un jeton (ADR 0064). */
 export function limiteDeDebit(): GraphQLError {
   return new GraphQLError(
@@ -225,6 +274,9 @@ const CODES_CONNUS = new Set([
   'FLUX_INDISPONIBLE',
   'ESPACE_FICHIERS_INDISPONIBLE',
   'FOURNISSEUR_INDISPONIBLE',
+  'FORMAT_NON_LU',
+  'FICHIER_TROP_LOURD',
+  'EXTRACTION_IMPOSSIBLE',
   'REQUETE_TROP_PROFONDE',
   'REQUETE_TROP_LARGE',
   'REQUETE_TROP_COMPLEXE',

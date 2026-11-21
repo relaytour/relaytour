@@ -6,7 +6,8 @@ import { schema } from './index.ts'
 // Portées d'autorisation réservées (ADR 0064). Un jeton d'accès n'ouvre jamais les
 // champs à portée `session` : la gestion des jetons, les opérations du compte, les
 // secrets et les appareils. La gestion des membres demande en plus la dimension
-// `gestionMembres` du jeton. Ce test fige les deux listes : un champ qui entre ou
+// `gestionMembres` du jeton, et la lecture du texte des documents la dimension
+// `lectureDocuments` (ADR 0072). Ce test fige ces listes : un champ qui entre ou
 // sort d'une liste change ce que la détentrice d'un jeton peut faire, et se décide
 // au moment de la revue, pas par oubli.
 
@@ -107,5 +108,19 @@ describe('portée « gestion des membres »', () => {
 
   it('aucune lecture ne l’exige', () => {
     expect(champsAPortee(schema.getQueryType(), 'gestionMembres')).toEqual([])
+  })
+})
+
+describe('portée « lecture des documents »', () => {
+  it('seule la lecture du texte d’un document l’exige', () => {
+    expect(champsAPortee(schema.getQueryType(), 'lectureDocuments')).toEqual([
+      'texteDocument',
+    ])
+  })
+
+  it('aucune mutation ne l’exige', () => {
+    expect(champsAPortee(schema.getMutationType(), 'lectureDocuments')).toEqual(
+      []
+    )
   })
 })

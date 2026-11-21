@@ -132,6 +132,11 @@ export interface JetonDuContexte {
    */
   gestionMembres: boolean
   /**
+   * Le jeton lit le texte des documents que sa personne lit déjà dans la liseuse
+   * (ADR 0072). Faux par défaut, et toujours pour un robot.
+   */
+  lectureDocuments: boolean
+  /**
    * L'application tierce qui porte la requête (ADR 0067). Nulle pour un jeton
    * d'accès créé dans « Jetons et API ».
    */
@@ -214,6 +219,8 @@ async function resoudreLigne(
       expireLe: true,
       revoqueLe: true,
       gestionMembres: true,
+      lectureDocuments: true,
+      user: { select: { robot: true } },
       clientApplication: {
         select: { id: true, clientId: true, nom: true, source: true },
       },
@@ -280,6 +287,9 @@ async function resoudreLigne(
       activites: lireActivitesDuJeton(ligne.activiteIds),
       expireLe: ligne.expireLe,
       gestionMembres: ligne.gestionMembres,
+      // Un robot ne lit jamais le texte des documents, même avec une ligne
+      // modifiée en base (ADR 0072).
+      lectureDocuments: ligne.lectureDocuments && !ligne.user.robot,
       application: ligne.clientApplication,
     },
   }
@@ -350,8 +360,22 @@ export interface JetonACreer {
   expireLe: Date
   /** Le jeton ouvre la gestion des membres. Faux par défaut, jamais pour un robot. */
   gestionMembres?: boolean
+  /**
+   * Le jeton lit le texte des documents (ADR 0072). Faux par défaut, refusé pour
+   * un robot.
+   */
+  lectureDocuments?: boolean
   /** Jetons actifs permis à la porteuse : 10 pour une personne, 5 pour un robot. */
   max?: number
+}
+
+/** Refus de la lecture des documents pour un jeton de robot (ADR 0072). */
+export function lectureDocumentsRobot() {
+  return erreurSaisie(
+    i18n._(
+      'Un jeton de robot ne lit jamais le texte des documents : un robot lit l’activité sans les documents de ses membres.'
+    )
+  )
 }
 
 /**
@@ -367,6 +391,13 @@ export async function creerJetonAcces(
   const ligne = await sousVerrouOrganisation(
     donnees.organisationId,
     async tx => {
+      if (donnees.lectureDocuments === true) {
+        const porteuse = await tx.user.findUniqueOrThrow({
+          where: { id: donnees.userId },
+          select: { robot: true },
+        })
+        if (porteuse.robot) throw lectureDocumentsRobot()
+      }
       const actifs = await tx.jetonAcces.count({
         where: {
           organisationId: donnees.organisationId,
@@ -403,6 +434,7 @@ export async function creerJetonAcces(
           activiteIds: donnees.activiteIds ?? undefined,
           expireLe: donnees.expireLe,
           gestionMembres: donnees.gestionMembres ?? false,
+          lectureDocuments: donnees.lectureDocuments ?? false,
         },
       })
     }

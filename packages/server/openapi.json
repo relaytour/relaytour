@@ -138,7 +138,7 @@
     "/api/v1/jeton": {
       "get": {
         "operationId": "jetonCourant",
-        "summary": "Les bornes du jeton : sa portée, ses activités et sa date de fin.",
+        "summary": "Les bornes du jeton : sa portée, ses dimensions, ses activités et sa date de fin.",
         "tags": [
           "compte"
         ],
@@ -161,6 +161,10 @@
                       "type": "boolean",
                       "description": "Vrai quand le jeton ouvre la gestion des membres : inviter, retirer et promouvoir une personne."
                     },
+                    "lectureDocuments": {
+                      "type": "boolean",
+                      "description": "Vrai quand le jeton lit le texte des documents par `texteDocument` (ADR 0072)."
+                    },
                     "activiteIds": {
                       "type": "array",
                       "items": {
@@ -177,6 +181,7 @@
                   "required": [
                     "portee",
                     "gestionMembres",
+                    "lectureDocuments",
                     "expireLe"
                   ],
                   "nullable": true

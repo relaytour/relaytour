@@ -1687,6 +1687,9 @@ model JetonAcces {
   // Le jeton ouvre la gestion des membres : inviter, retirer et promouvoir une
   // personne. Désactivé par défaut : un jeton fuité ne change pas l'équipe (ADR 0064).
   gestionMembres      Boolean     @default(false)
+  // Le jeton lit le texte des documents que sa personne lit déjà dans la liseuse
+  // (ADR 0072). Désactivé par défaut, et jamais pour un robot.
+  lectureDocuments    Boolean     @default(false)
   // L'application tierce que la personne a autorisée (ADR 0067). Nul pour un jeton
   // d'accès créé dans « Jetons et API ». Une autorisation d'application est un
   // jeton d'accès sans valeur utilisable : l'application reçoit des jetons

@@ -227,6 +227,11 @@ msgid "L’application n’a demandé que la lecture."
 msgstr "The application only requested read access."
 
 #. js-lingui-explicit-id
+#: src/schema/applications-tierces.ts
+msgid "L’application n’a pas demandé la lecture du texte des documents."
+msgstr "The application did not request reading document text."
+
+#. js-lingui-explicit-id
 #: src/oauth/routes.ts
 #: src/schema/applications-tierces.ts
 msgid "Cette installation n’accepte pas cette application."
@@ -2083,6 +2088,31 @@ msgstr "This access token does not open member management: it invites, assigns, 
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts
+msgid "Ce jeton d’accès n’ouvre pas la lecture du texte des documents. La personne peut créer un jeton qui l’ouvre, ou autoriser de nouveau l’application avec cette lecture."
+msgstr "This access token does not allow reading document text. The person can create a token that allows it, or authorize the application again with this access."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Vous avez lu 60 textes de document dans l’heure, la limite : réessayez plus tard."
+msgstr "You have read 60 document texts in the past hour, the limit. Try again later."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Ce format ne se lit pas en texte. Seuls le texte, le Markdown, Word (.docx) et le PDF se lisent."
+msgstr "This format cannot be read as text. Only plain text, Markdown, Word (.docx) and PDF can be read."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Ce document pèse plus de 10 Mo : son texte ne se lit pas."
+msgstr "This document is larger than 10 MB: its text cannot be read."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Le texte de ce document n’a pas pu être extrait."
+msgstr "The text of this document could not be extracted."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
 msgid "Trop de requêtes avec ce jeton : réessayez dans une minute."
 msgstr "Too many requests with this token: try again in a minute."
 
@@ -2385,6 +2415,11 @@ msgstr "The token end date must be in the future."
 #: src/lib/jetons-acces.ts
 msgid "Un jeton vaut un an au plus : choisissez une date plus proche."
 msgstr "A token lasts one year at most: choose an earlier date."
+
+#. js-lingui-explicit-id
+#: src/lib/jetons-acces.ts
+msgid "Un jeton de robot ne lit jamais le texte des documents : un robot lit l’activité sans les documents de ses membres."
+msgstr "A robot token never reads document text: a robot reads the activity without its members’ documents."
 
 #. js-lingui-explicit-id
 #: src/lib/jetons-acces.ts
@@ -4445,6 +4480,11 @@ msgstr "some activities only"
 #: src/courriel/messages.ts
 msgid "gestion des membres"
 msgstr "member management"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "lecture du texte des documents"
+msgstr "document text reading"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts

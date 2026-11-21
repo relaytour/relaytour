@@ -160,6 +160,12 @@ describe('PKCE et portées', () => {
     expect(porteesDemandees('ecriture')).toBe('lecture ecriture')
     expect(porteesDemandees('lecture ecriture')).toBe('lecture ecriture')
     expect(porteesDemandees('openid')).toBeNull()
+    // La lecture du texte des documents se demande à part (ADR 0072).
+    expect(porteesDemandees('documents')).toBe('lecture documents')
+    expect(porteesDemandees('ecriture documents lecture')).toBe(
+      'lecture ecriture documents'
+    )
+    expect(porteesDemandees('documents openid')).toBeNull()
   })
 })
 

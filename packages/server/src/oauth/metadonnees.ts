@@ -18,7 +18,9 @@ export const CHEMIN_METADONNEES_RESSOURCE =
 /** Le chemin de l'écran de consentement dans l'espace organisateur. */
 export const CHEMIN_CONSENTEMENT = '/autoriser'
 
-export const PORTEES = ['lecture', 'ecriture'] as const
+// `documents` demande la lecture du texte des documents (ADR 0072). La personne la
+// coche ou non sur l'écran de consentement.
+export const PORTEES = ['lecture', 'ecriture', 'documents'] as const
 
 /** L'émetteur des jetons, et l'identifiant de la ressource qu'ils ouvrent. */
 export const emetteur = (): string => env.ORIGINE_ORGA

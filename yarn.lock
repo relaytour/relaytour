@@ -4442,6 +4442,7 @@ __metadata:
     mammoth: "npm:^1.13.0"
     mjml: "npm:^5.4.0"
     nodemailer: "npm:^10.1.7"
+    pdfjs-dist: "npm:^6.4.299"
     pino: "npm:^10.4.0"
     pino-pretty: "npm:^13.2.0"
     tsup: "npm:^8.5.0"
