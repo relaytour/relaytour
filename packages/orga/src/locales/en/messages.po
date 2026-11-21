@@ -4856,6 +4856,10 @@ msgstr "It will also be able to write on your behalf: create and edit tasks, and
 msgid "Elle pourra lire ce que vous voyez dans les activités choisies : tâches, fiches, agenda et équipe."
 msgstr "It will be able to read what you can see in the selected activities: tasks, records, calendar and team."
 
+#: src/pages/Autoriser.tsx
+msgid "Elle pourra lire le texte des documents que vous ouvrez déjà. Sans cette case, elle lit seulement leurs noms."
+msgstr "It will be able to read the text of the documents you already open. Without this box, it reads their names only."
+
 #: src/pages/admin/Personnes.tsx
 msgid "Elle quitte l’équipe de l’activité, et ses souhaits des périodes en cours sont retirés. Son compte reste dans l’organisation."
 msgstr "They leave the activity’s team, and their interests for current periods are removed. Their account stays in the organization."
@@ -7124,6 +7128,10 @@ msgstr "The department gets the gyms, the pool and the permits."
 msgid "Le programme {dePeriode} n’a encore aucune séquence."
 msgstr "The schedule {dePeriode} has no slots yet."
 
+#: src/composants/PreferenceJetons.tsx
+msgid "Le programme lit le texte des documents que vous ouvrez déjà. Sans cette case, il lit seulement leurs noms."
+msgstr "The program reads the text of the documents you already open. Without this box, it reads their names only."
+
 #: src/pages/Programme.tsx
 msgid "Le programme n’a pas pu être chargé."
 msgstr "The schedule couldn’t be loaded."
@@ -7888,6 +7896,11 @@ msgstr "Read the user guide “Choose your mail app”"
 #: src/composants/ChoixMessagerie.tsx
 msgid "Lire le mode d’emploi des messageries"
 msgstr "Read the mail app user guide"
+
+#: src/composants/PreferenceJetons.tsx
+#: src/pages/Autoriser.tsx
+msgid "Lire le texte des documents du fournisseur cloud"
+msgstr "Read the text of cloud provider documents"
 
 #. Affichage de l’agenda en liste
 #: src/pages/Agenda.tsx
@@ -11249,6 +11262,12 @@ msgstr "Text"
 #: src/composants/AppelsBenevoles.tsx
 msgid "Texte d’introduction (facultatif)"
 msgstr "Introduction text (optional)"
+
+#: src/composants/ApplicationsAutorisees.tsx
+#: src/composants/JetonsOrganisation.tsx
+#: src/composants/PreferenceJetons.tsx
+msgid "Texte des documents"
+msgstr "Document text"
 
 #. Texte d’exemple inséré dans une fiche par le bouton « Lien ».
 #: src/lib/mise-en-forme.ts

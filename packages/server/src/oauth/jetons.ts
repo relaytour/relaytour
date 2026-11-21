@@ -75,9 +75,20 @@ export interface JetonsEmis {
   scope: string
 }
 
-/** La portée OAuth d'une autorisation : `lecture`, ou `lecture ecriture`. */
-export function porteeOAuth(portee: 'LECTURE' | 'LECTURE_ECRITURE'): string {
-  return portee === 'LECTURE' ? 'lecture' : 'lecture ecriture'
+/**
+ * La portée OAuth d'une autorisation : `lecture` ou `lecture ecriture`, suivie de
+ * `documents` quand la personne a accordé la lecture du texte des documents
+ * (ADR 0072).
+ */
+export function porteeOAuth(
+  portee: 'LECTURE' | 'LECTURE_ECRITURE',
+  lectureDocuments = false
+): string {
+  return [
+    'lecture',
+    ...(portee === 'LECTURE' ? [] : ['ecriture']),
+    ...(lectureDocuments ? ['documents'] : []),
+  ].join(' ')
 }
 
 /**
@@ -89,6 +100,7 @@ export async function emettreJetons(
   autorisation: {
     id: string
     portee: 'LECTURE' | 'LECTURE_ECRITURE'
+    lectureDocuments: boolean
     expireLe: Date
   },
   maintenant = new Date()
@@ -129,7 +141,7 @@ export async function emettreJetons(
       Math.floor((finAcces.getTime() - maintenant.getTime()) / 1000)
     ),
     refresh_token: renouvellement,
-    scope: porteeOAuth(autorisation.portee),
+    scope: porteeOAuth(autorisation.portee, autorisation.lectureDocuments),
   }
 }
 

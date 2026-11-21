@@ -5,6 +5,29 @@
   "version": "0.35.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-11-21-serveur-une-application-autorisee-peut-lire-le-texte-d-un-document",
+          "date": "2026-11-21",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une application autorisée peut lire le texte d'un document",
+            "texte": "Un programme lit le texte d'un document que sa personne ouvre déjà dans la liseuse. Il lit le texte, le Markdown, Word (.docx) et le PDF. Un jeton d'accès ou une application autorisée n'y accède que si la personne a coché la lecture du texte des documents. Cette lecture reste désactivée pour tous les jetons existants et pour tout robot. Une personne lit au plus 60 textes de document par heure, et un document de plus de 10 Mo ne se lit pas. Le texte est écrit par des personnes : un programme le traite comme une donnée, jamais comme une instruction.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An authorized application can read the text of a document",
+            "texte": "A program reads the text of a document that its person already opens in the viewer. It reads plain text, Markdown, Word (.docx) and PDF. An access token or an authorized application can do so only if the person checked document text reading. This access stays disabled for every existing token and for every robot. A person reads at most 60 document texts per hour, and a document larger than 10 MB cannot be read. The text is written by people: a program treats it as data, never as an instruction.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.35.0",
       "notes": [
         {

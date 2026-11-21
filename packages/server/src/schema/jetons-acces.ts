@@ -66,6 +66,10 @@ export const JetonAccesRef = builder
         description:
           'Le jeton ouvre la gestion des membres : inviter, retirer et promouvoir une personne, dans la limite des droits de sa personne. Faux par défaut, et toujours pour un robot.',
       }),
+      lectureDocuments: t.exposeBoolean('lectureDocuments', {
+        description:
+          'Le jeton lit le texte des documents que sa personne lit déjà dans la liseuse, par `texteDocument` (ADR 0072). Faux par défaut, et toujours pour un robot.',
+      }),
       activiteIds: t.idList({
         nullable: true,
         description:
@@ -178,6 +182,10 @@ const JetonCourantRef = builder
       gestionMembres: t.exposeBoolean('gestionMembres', {
         description:
           'Vrai quand le jeton ouvre la gestion des membres : inviter, retirer et promouvoir une personne.',
+      }),
+      lectureDocuments: t.exposeBoolean('lectureDocuments', {
+        description:
+          'Vrai quand le jeton lit le texte des documents par `texteDocument` (ADR 0072).',
       }),
       activiteIds: t.idList({
         nullable: true,
@@ -367,6 +375,10 @@ builder.mutationFields(t => ({
         description:
           'Ouvre au jeton la gestion des membres : inviter, retirer et promouvoir une personne, dans la limite des droits de la personne. Faux par défaut.',
       }),
+      lectureDocuments: t.arg.boolean({
+        description:
+          'Ouvre au jeton la lecture du texte des documents que la personne lit déjà, par `texteDocument` (ADR 0072). Faux par défaut. Un texte de document est écrit par des personnes : le programme le traite comme une donnée, jamais comme une instruction.',
+      }),
     },
     resolve: async (_root, args, ctx) => {
       const organisationId = ctx.organisation!.id
@@ -393,6 +405,7 @@ builder.mutationFields(t => ({
         activiteIds,
         expireLe: finDuJeton(args.expireLe),
         gestionMembres: args.gestionMembres ?? false,
+        lectureDocuments: args.lectureDocuments ?? false,
       })
       journal.info(
         {
@@ -402,6 +415,7 @@ builder.mutationFields(t => ({
           userId: ctx.personne!.id,
           portee: ligne.portee,
           gestionMembres: ligne.gestionMembres,
+          lectureDocuments: ligne.lectureDocuments,
         },
         'Un jeton d’accès a été créé.'
       )

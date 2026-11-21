@@ -4856,6 +4856,10 @@ msgstr "Elle pourra aussi écrire en votre nom : créer et modifier des tâches,
 msgid "Elle pourra lire ce que vous voyez dans les activités choisies : tâches, fiches, agenda et équipe."
 msgstr "Elle pourra lire ce que vous voyez dans les activités choisies : tâches, fiches, agenda et équipe."
 
+#: src/pages/Autoriser.tsx
+msgid "Elle pourra lire le texte des documents que vous ouvrez déjà. Sans cette case, elle lit seulement leurs noms."
+msgstr "Elle pourra lire le texte des documents que vous ouvrez déjà. Sans cette case, elle lit seulement leurs noms."
+
 #: src/pages/admin/Personnes.tsx
 msgid "Elle quitte l’équipe de l’activité, et ses souhaits des périodes en cours sont retirés. Son compte reste dans l’organisation."
 msgstr "Elle quitte l’équipe de l’activité, et ses souhaits des périodes en cours sont retirés. Son compte reste dans l’organisation."
@@ -7124,6 +7128,10 @@ msgstr "Le pôle obtient les gymnases, la piscine et les autorisations."
 msgid "Le programme {dePeriode} n’a encore aucune séquence."
 msgstr "Le programme {dePeriode} n’a encore aucune séquence."
 
+#: src/composants/PreferenceJetons.tsx
+msgid "Le programme lit le texte des documents que vous ouvrez déjà. Sans cette case, il lit seulement leurs noms."
+msgstr "Le programme lit le texte des documents que vous ouvrez déjà. Sans cette case, il lit seulement leurs noms."
+
 #: src/pages/Programme.tsx
 msgid "Le programme n’a pas pu être chargé."
 msgstr "Le programme n’a pas pu être chargé."
@@ -7888,6 +7896,11 @@ msgstr "Lire le mode d’emploi « Choisir votre messagerie »"
 #: src/composants/ChoixMessagerie.tsx
 msgid "Lire le mode d’emploi des messageries"
 msgstr "Lire le mode d’emploi des messageries"
+
+#: src/composants/PreferenceJetons.tsx
+#: src/pages/Autoriser.tsx
+msgid "Lire le texte des documents du fournisseur cloud"
+msgstr "Lire le texte des documents du fournisseur cloud"
 
 #. Affichage de l’agenda en liste
 #: src/pages/Agenda.tsx
@@ -11249,6 +11262,12 @@ msgstr "Texte"
 #: src/composants/AppelsBenevoles.tsx
 msgid "Texte d’introduction (facultatif)"
 msgstr "Texte d’introduction (facultatif)"
+
+#: src/composants/ApplicationsAutorisees.tsx
+#: src/composants/JetonsOrganisation.tsx
+#: src/composants/PreferenceJetons.tsx
+msgid "Texte des documents"
+msgstr "Texte des documents"
 
 #. Texte d’exemple inséré dans une fiche par le bouton « Lien ».
 #: src/lib/mise-en-forme.ts

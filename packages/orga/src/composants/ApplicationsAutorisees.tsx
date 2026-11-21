@@ -20,6 +20,7 @@ const MES_AUTORISATIONS = graphql(`
     mesAutorisationsApplications {
       id
       portee
+      lectureDocuments
       activiteIds
       expireLe
       dernierAccesLe
@@ -120,6 +121,12 @@ export default function ApplicationsAutorisees() {
                       ? t`Lecture seule`
                       : t`Lecture et écriture`}{' '}
                     · {perimetre}
+                    {a.lectureDocuments && (
+                      <>
+                        {' · '}
+                        <Trans>Texte des documents</Trans>
+                      </>
+                    )}
                   </span>
                   <span className="rt-note">
                     {t`Autorisée le ${accordee}.`}{' '}

@@ -23,6 +23,7 @@ const JETONS_ORGANISATION = graphql(`
         apercu
         portee
         gestionMembres
+        lectureDocuments
         activiteIds
         expireLe
         dernierAccesLe
@@ -177,6 +178,12 @@ export default function JetonsOrganisation() {
                       <>
                         {' · '}
                         <Trans>Gestion des membres</Trans>
+                      </>
+                    )}
+                    {j.lectureDocuments && (
+                      <>
+                        {' · '}
+                        <Trans>Texte des documents</Trans>
                       </>
                     )}
                   </span>

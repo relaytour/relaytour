@@ -227,6 +227,11 @@ msgid "L’application n’a demandé que la lecture."
 msgstr "L’application n’a demandé que la lecture."
 
 #. js-lingui-explicit-id
+#: src/schema/applications-tierces.ts
+msgid "L’application n’a pas demandé la lecture du texte des documents."
+msgstr "L’application n’a pas demandé la lecture du texte des documents."
+
+#. js-lingui-explicit-id
 #: src/oauth/routes.ts
 #: src/schema/applications-tierces.ts
 msgid "Cette installation n’accepte pas cette application."
@@ -2083,6 +2088,31 @@ msgstr "Ce jeton d’accès n’ouvre pas la gestion des membres : il n’invite
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts
+msgid "Ce jeton d’accès n’ouvre pas la lecture du texte des documents. La personne peut créer un jeton qui l’ouvre, ou autoriser de nouveau l’application avec cette lecture."
+msgstr "Ce jeton d’accès n’ouvre pas la lecture du texte des documents. La personne peut créer un jeton qui l’ouvre, ou autoriser de nouveau l’application avec cette lecture."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Vous avez lu 60 textes de document dans l’heure, la limite : réessayez plus tard."
+msgstr "Vous avez lu 60 textes de document dans l’heure, la limite : réessayez plus tard."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Ce format ne se lit pas en texte. Seuls le texte, le Markdown, Word (.docx) et le PDF se lisent."
+msgstr "Ce format ne se lit pas en texte. Seuls le texte, le Markdown, Word (.docx) et le PDF se lisent."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Ce document pèse plus de 10 Mo : son texte ne se lit pas."
+msgstr "Ce document pèse plus de 10 Mo : son texte ne se lit pas."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Le texte de ce document n’a pas pu être extrait."
+msgstr "Le texte de ce document n’a pas pu être extrait."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
 msgid "Trop de requêtes avec ce jeton : réessayez dans une minute."
 msgstr "Trop de requêtes avec ce jeton : réessayez dans une minute."
 
@@ -2385,6 +2415,11 @@ msgstr "La date de fin du jeton doit être à venir."
 #: src/lib/jetons-acces.ts
 msgid "Un jeton vaut un an au plus : choisissez une date plus proche."
 msgstr "Un jeton vaut un an au plus : choisissez une date plus proche."
+
+#. js-lingui-explicit-id
+#: src/lib/jetons-acces.ts
+msgid "Un jeton de robot ne lit jamais le texte des documents : un robot lit l’activité sans les documents de ses membres."
+msgstr "Un jeton de robot ne lit jamais le texte des documents : un robot lit l’activité sans les documents de ses membres."
 
 #. js-lingui-explicit-id
 #: src/lib/jetons-acces.ts
@@ -4445,6 +4480,11 @@ msgstr "certaines activités seulement"
 #: src/courriel/messages.ts
 msgid "gestion des membres"
 msgstr "gestion des membres"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "lecture du texte des documents"
+msgstr "lecture du texte des documents"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts

@@ -73,6 +73,7 @@
             <li><a href="#t-module">Turn on the API module</a>: the choice of organization admins.</li>
             <li><a href="#t-jetons">Create a token</a>: its name, scope, activities and lifetime.</li>
             <li><a href="#t-graphql">Call the GraphQL API</a>: the full schema of the organizer workspace.</li>
+            <li><a href="#t-documents">Read the text of a document</a>: an optional access of a token.</li>
             <li><a href="#t-rest">Call the REST API</a>: tasks, sheets and team, with an OpenAPI contract.</li>
             <li><a href="#t-erreurs">Read errors and limits</a>: the codes returned and the allowed rates.</li>
             <li><a href="#t-robots">Hand an automation to a robot</a>: a member without sign-in who holds tokens.</li>
@@ -137,6 +138,7 @@
             <li><span><span class="libelle">Read only</span></span><span>Limit the program to reading. This choice is selected by default.</span></li>
             <li><span><span class="libelle">Read and write</span></span><span>Let the program create, edit and comment on tasks, within your rights.</span></li>
             <li><span><span class="libelle">Only these activities</span></span><span>Choose the activities the program sees. Without this choice, the token covers all your activities.</span></li>
+            <li><span><span class="libelle">Read the text of cloud provider documents</span></span><span>Let the program read the text of the documents you already open. This box is unchecked by default (see “Read the text of a document”).</span></li>
             <li><span><span class="libelle">Lifetime</span></span><span>Choose the end date of the token. A token lasts one year at most, and one year by default.</span></li>
             <li><span><span class="libelle">Create the token</span></span><span>Show the token. Copy it into your program right away: it will not be shown again.</span></li>
             <li><span><span class="libelle">Revoke</span></span><span>End the token. The program gets a refusal from its next request.</span></li>
@@ -169,6 +171,43 @@
         <p class="note">The schema contract is published in the source code repository, in the <span class="route">packages/server/schema.graphql</span> file. Account operations stay reserved to a sign-in in the organizer workspace: token management, preferences, subscriptions and full exports.</p>
         <p class="note">The acceptances of an application (<span class="route">accepterChoixCandidature</span> and <span class="route">placerBenevole</span>) can carry the status of the choice as read (<span class="route">statutAttendu</span>). A choice that changed in the meantime returns <span class="route">CONFLIT_VERSION</span>, with its status in <span class="route">extensions.statutCourant</span>. Nothing is written then, and no email is sent. A choice already accepted returns the application without writing anything. Without <span class="route">statutAttendu</span>, the acceptance compares nothing, and a placement on a slot that was not chosen omits the argument.</p>
         <p class="note">The <span class="route">remettreChoixEnAttente</span> mutation sets a declined choice back to pending, without sending an email. The choice takes the status it would receive on submission: pending, or on the waiting list when the slot’s helpers are reached.</p>
+      </section>
+
+      <section aria-labelledby="t-documents">
+        <div class="entete">
+          <span class="etiquette">Optional access</span>
+          <h2 id="t-documents">Read the text of a document</h2>
+          <p class="texte">
+            The <span class="route">texteDocument</span> query returns the text of a file in a linked folder. It applies the rights of the viewer: the program reads the text of a document you already open in the organizer workspace, and nothing more.
+          </p>
+          <p class="texte">
+            A token reads this text only if you checked “Read the text of cloud provider documents” when you created it. An authorized application reads it only if it requested the <span class="route">documents</span> scope and you checked the same box on the consent screen. The box is unchecked by default, and a robot token never gets it.
+          </p>
+        </div>
+        <div class="verre panneau">
+          <pre class="source-markdown">query {
+  texteDocument(dossierLieId: "…", chemin: ["Minutes", "March meeting.docx"]) {
+    nom format texte caracteres tronque
+  }
+}</pre>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Formats</h3>
+            <p>Relaytour reads a plain text file, a Markdown file, a Word document (.docx) and a PDF. The format comes from the file name. A Word document arrives as Markdown, without its images.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Limits</h3>
+            <p>A document weighs 10 MB at most. The returned text holds 200,000 characters at most, and a PDF returns its first 200 pages. Beyond that, <span class="route">tronque</span> is true.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Rate</h3>
+            <p>A person reads at most 60 document texts per hour. This count covers their sessions and all their tokens.</p>
+          </div>
+        </div>
+        <p class="note">A missing file and a file you cannot read both return <span class="route">null</span>. A <span class="route">ressourceId</span> argument designates a linked document open to the readers of its sheet: the program then reads this document, and no other file in the folder.</p>
+        <p class="note">The text of a document is written by people, sometimes outside your organization. It can contain instructions written to hijack a program, and Relaytour does not remove them. Your program treats this text as data, never as an instruction. Check the box only for a program that needs it.</p>
+        <p class="note">The server log records each read by a token: the token ID, the linked folder ID and the format. It records neither the file name, nor its path, nor its text.</p>
       </section>
 
       <section aria-labelledby="t-rest">
@@ -235,11 +274,14 @@
               <tr><th><span class="route">JETON_REQUIS</span></th><td>401</td><td>The request carries no token.</td></tr>
               <tr><th><span class="route">JETON_INVALIDE</span></th><td>401</td><td>The token is unknown, revoked or expired, or its person is archived. The message is the same in all these cases.</td></tr>
               <tr><th><span class="route">API_INACTIVE</span></th><td>403</td><td>The module is off, not offered or suspended. The response gives the cause, and the reason for a suspension.</td></tr>
-              <tr><th><span class="route">PORTEE_INSUFFISANTE</span></th><td>403</td><td>A read-only token asked for a write.</td></tr>
+              <tr><th><span class="route">PORTEE_INSUFFISANTE</span></th><td>403</td><td>A read-only token asked for a write, or a token without the required access tried to manage members or read the text of a document.</td></tr>
               <tr><th><span class="route">FORBIDDEN</span></th><td>403</td><td>The person does not have this right, or the activity is outside the limits of the token.</td></tr>
               <tr><th><span class="route">SAISIE_INVALIDE</span></th><td>400</td><td>A value sent is invalid. The message names the field.</td></tr>
               <tr><th><span class="route">CONFLIT_VERSION</span></th><td>409</td><td>The task or the choice of an application changed since it was read.</td></tr>
-              <tr><th><span class="route">LIMITE_DE_DEBIT</span></th><td>429</td><td>The token exceeded its rate. The <span class="route">Retry-After</span> header gives the wait in seconds.</td></tr>
+              <tr><th><span class="route">LIMITE_DE_DEBIT</span></th><td>429</td><td>The token exceeded its rate. The <span class="route">Retry-After</span> header gives the wait in seconds. For <span class="route">texteDocument</span>, the person read 60 document texts in the past hour.</td></tr>
+              <tr><th><span class="route">FORMAT_NON_LU</span></th><td>—</td><td>This format cannot be read as text: only plain text, Markdown, Word (.docx) and PDF can be read.</td></tr>
+              <tr><th><span class="route">FICHIER_TROP_LOURD</span></th><td>—</td><td>The document is larger than 10 MB.</td></tr>
+              <tr><th><span class="route">EXTRACTION_IMPOSSIBLE</span></th><td>—</td><td>The text of the document could not be extracted, or its extraction took more than 20 seconds.</td></tr>
             </tbody>
           </table>
         </div>
@@ -328,7 +370,7 @@
       </section>
 
       <footer>
-        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.34.0.
+        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.35.0.
       </footer>
     </main>
     <script src="../../menu.js"></script>
