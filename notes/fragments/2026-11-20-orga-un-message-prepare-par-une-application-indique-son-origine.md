@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.35.0
 fr:
   titre: >-
     Un message préparé par une application indique son origine

@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.35.0
 fr:
   titre: >-
     L'API vérifie le statut lu d'un choix avant de l'accepter
