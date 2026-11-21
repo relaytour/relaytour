@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
+import { archiveZip } from '../lib/zip.ts'
 import { documentWord } from '../test/docx.ts'
 import { documentPdf } from '../test/pdf.ts'
 
@@ -135,6 +136,17 @@ describe('extraireTexte', () => {
     )
     expect(texte).toContain('# Compte rendu')
     expect(texte).toContain('Ordre du **jour**.')
+  })
+
+  it('refuse un document Word qui se décompresse au-delà de 50 Mo', async () => {
+    // Une archive piégée : 60 Mo de zéros tiennent en quelques dizaines de Ko.
+    const piege = archiveZip(
+      new Map([['word/document.xml', Buffer.alloc(60 * 1024 * 1024)]])
+    )
+    expect(piege.length).toBeLessThan(1024 * 1024)
+    await expect(extraireTexte('WORD', piege)).rejects.toBeInstanceOf(
+      ExtractionImpossible
+    )
   })
 
   it('rend le texte des pages d’un PDF', async () => {

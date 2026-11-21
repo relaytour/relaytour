@@ -1,6 +1,20 @@
 import { parentPort, workerData } from 'node:worker_threads'
 
+import { lireArchiveZip } from '../lib/zip.ts'
 import { wordVersMarkdown } from './word.ts'
+
+/**
+ * `resourceLimits` borne le tas JavaScript du fil, pas les tampons hors tas. Un
+ * document Word se décompresse donc d'abord avec une borne réelle : la lecture de
+ * l'archive s'arrête à 50 Mo, quelle que soit la taille qu'elle annonce.
+ */
+const WORD_DECOMPRESSE_MAX = 50 * 1024 * 1024
+/**
+ * Un PDF décompresse ses flux pendant la lecture d'une page. Entre deux pages, le fil
+ * compare la mémoire des tampons du processus à celle du départ, et s'arrête au-delà
+ * de 256 Mo. Un seul flux démesuré reste borné par la durée de 20 secondes.
+ */
+const PDF_TAMPONS_MAX = 256 * 1024 * 1024
 
 // Fil d'extraction du texte d'un document (ADR 0072). Le serveur le lance pour
 // chaque lecture, avec une mémoire bornée, et l'arrête au-delà de 20 secondes. Le
@@ -49,7 +63,11 @@ async function pdfVersTexte(
     const document = await tache.promise
     const lues = Math.min(document.numPages, pagesMax)
     const pages: string[] = []
+    const depart = process.memoryUsage().arrayBuffers
     for (let numero = 1; numero <= lues; numero++) {
+      if (process.memoryUsage().arrayBuffers - depart > PDF_TAMPONS_MAX) {
+        throw new Error('mémoire des tampons dépassée')
+      }
       const page = await document.getPage(numero)
       const contenu = await page.getTextContent()
       pages.push(
@@ -84,11 +102,19 @@ async function extraire(
         texte: new TextDecoder('utf-8').decode(demande.octets),
         pagesTronquees: false,
       }
-    case 'WORD':
+    case 'WORD': {
+      const octets = Buffer.from(demande.octets)
+      // Lève au-delà de la borne : la conversion ne reçoit qu'une archive sûre.
+      lireArchiveZip(octets, {
+        taille: octets.length,
+        decompressee: WORD_DECOMPRESSE_MAX,
+        fichiers: 10_000,
+      })
       return {
-        texte: (await wordVersMarkdown(Buffer.from(demande.octets))).texte,
+        texte: (await wordVersMarkdown(octets)).texte,
         pagesTronquees: false,
       }
+    }
     case 'PDF':
       return pdfVersTexte(demande.octets, demande.pagesMax)
   }
