@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.35.0
 fr:
   titre: >-
     Une séquence refusée par erreur se remet en attente

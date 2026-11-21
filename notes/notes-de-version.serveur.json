@@ -2,10 +2,10 @@
   "schemaVersion": 5,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.34.0",
+  "version": "0.35.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.35.0",
       "notes": [
         {
           "id": "2026-11-20-serveur-l-api-verifie-le-statut-lu-d-un-choix-avant-de-l-accepter",
