@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.36.0
 fr:
   titre: >-
     Une application autorisée peut lire le texte d'un document
