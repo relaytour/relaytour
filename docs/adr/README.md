@@ -73,5 +73,6 @@
 | [0069](0069-lecture-d-une-activite-par-un-robot.md) | Lecture d'une activité par un robot | Acceptée |
 | [0070](0070-garde-d-etat-des-decisions-de-candidature.md) | Garde d'état des décisions de candidature | Acceptée |
 | [0071](0071-origine-d-un-message-prepare-par-une-application.md) | Origine d'un message préparé par une application | Acceptée |
+| [0072](0072-lecture-du-texte-d-un-document-par-un-jeton.md) | Lecture du texte d'un document par un jeton | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
