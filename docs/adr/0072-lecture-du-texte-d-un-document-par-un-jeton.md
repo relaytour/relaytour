@@ -1,7 +1,8 @@
 # ADR 0072 — Lecture du texte d'un document par un jeton
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-11-21
+- Acceptée le 2026-11-21 : une requête `texteDocument` avec les droits de la liseuse, ouverte aux jetons par la dimension `lectureDocuments`, désactivée par défaut, pour le texte, le Markdown, Word et le PDF. Les autres options figurent sous « Options écartées ». La mise en œuvre viendra dans une PR séparée.
 - Complète l'ADR 0038 (fiches et espace de fichiers), l'ADR 0043 (dossiers liés à plusieurs lecteurs), l'ADR 0064 (jetons d'accès) et l'ADR 0067 (autorisation d'applications tierces).
 - Ne remplace aucune règle d'une ADR acceptée. Un jeton sans la nouvelle dimension garde l'accès actuel : il lit les noms des documents, jamais leur contenu.
 
