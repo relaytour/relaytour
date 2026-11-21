@@ -29,7 +29,13 @@ Trois risques accompagnent cette lecture :
 - Le fichier s'adresse comme dans la liseuse : un dossier lié et un chemin de noms qui n'en sort pas. `ressourceId` désigne un document lié ouvert aux lecteurs de sa fiche (ADR 0043).
 - Le résultat porte le nom du fichier, son format, le texte, la longueur du texte d'origine en caractères et un booléen `tronque`.
 - Le texte se normalise comme le contenu d'une fiche (`normaliserContenu`) : fins de ligne unifiées, espaces de fin de ligne retirés. Le serveur retire en plus les caractères de contrôle, sauf le retour à la ligne et la tabulation.
-- La requête rend `null` pour un fichier absent, illisible ou refusé, comme la route de la liseuse. Un refus et une absence ne se distinguent pas.
+- La requête rend `null` pour un fichier absent ou refusé, comme la route de la liseuse. Un refus et une absence ne se distinguent pas.
+
+### Ordre des contrôles
+
+- Le serveur contrôle d'abord la dimension du jeton (`PORTEE_INSUFFISANTE`). Cette réponse ne dit rien d'un fichier.
+- Il vérifie ensuite les droits et l'existence du fichier. Un refus, une absence et un dossier rendent `null`.
+- Viennent ensuite la limite de débit, le format, la taille et l'extraction. Leurs codes ne partent donc que vers une personne qui lit déjà le fichier dans la liseuse. Ils ne révèlent rien de plus que la liseuse.
 
 ### Qui lit le texte
 
@@ -52,13 +58,13 @@ Trois risques accompagnent cette lecture :
 
 - La requête lit un fichier texte, un fichier Markdown, un document Word (`.docx`) et un PDF. Le format se déduit du nom, jamais du type annoncé par le fournisseur, comme dans la liseuse.
 - Un document Word se convertit en Markdown par la conversion de l'import des fiches (`mammoth` et `turndown`). Les images ne passent pas.
-- Un PDF rend le texte de ses pages par `pdfjs-dist`, que la liseuse emploie déjà (licence Apache-2.0). Un PDF sans texte, comme un scan, rend un texte vide.
+- Un PDF rend le texte de ses pages par `pdfjs-dist` (licence Apache-2.0). La liseuse l'emploie déjà dans le navigateur. Le serveur emploie sa version prévue pour Node (`legacy`), sans rendu, sans police et sans worker propre à la bibliothèque : seule l'extraction du texte (`getTextContent`) sert. Un PDF sans texte, comme un scan, rend un texte vide.
 - Un document natif du fournisseur (Google Docs, par exemple) et tout autre format répondent `FORMAT_NON_LU`. Une décision ultérieure pourra les ouvrir.
-- Un fichier de plus de 10 Mo répond `FICHIER_TROP_LOURD`, avant tout téléchargement complet.
+- Un fichier de plus de 10 Mo répond `FICHIER_TROP_LOURD`. Le serveur compare d'abord la taille que rend le fournisseur. Quand le fournisseur ne la rend pas, ou la rend fausse, le serveur coupe le téléchargement au-delà de 10 Mo et répond le même code.
 - Un PDF de plus de 200 pages ne rend que ses 200 premières pages, avec `tronque` à vrai.
 - Le texte rendu compte au plus 200 000 caractères, avec `tronque` à vrai au-delà.
 - L'extraction tourne dans un fil d'exécution séparé (`worker_threads`), avec une mémoire bornée et une durée de 20 secondes au plus. Au-delà, le serveur arrête le fil et répond `EXTRACTION_IMPOSSIBLE`.
-- Une personne lit au plus 60 textes de document par heure, toutes sessions et tous jetons confondus. Au-delà, la requête répond `LIMITE_DE_DEBIT`.
+- Une personne lit au plus 60 textes de document par heure, toutes sessions et tous jetons confondus. Au-delà, la requête répond `LIMITE_DE_DEBIT`. Le compte vit dans Valkey, par `limiterParCle`, comme la limite de débit des jetons : il vaut pour toutes les instances du serveur. Si Valkey ne répond pas, la requête est refusée.
 
 ### Ce que Relaytour ne promet pas
 
@@ -74,7 +80,7 @@ Trois risques accompagnent cette lecture :
 
 - Les droits restent ceux de la liseuse. Un programme ne lit rien que sa personne ne puisse déjà ouvrir.
 - La dimension désactivée par défaut garde l'accès actuel pour tous les jetons existants. La personne choisit en connaissance de cause, sur l'écran où elle autorise le programme.
-- Les formats retenus réutilisent du code et des bibliothèques déjà présents dans le dépôt. Seule `pdfjs-dist` entre dans les dépendances du serveur, et la liseuse l'emploie déjà.
+- Le texte, le Markdown et Word réutilisent la conversion de l'import des fiches. Le PDF demande une dépendance nouvelle du serveur, `pdfjs-dist`. La bibliothèque est déjà vérifiée pour sa licence dans l'espace organisateur, mais son usage sous Node est nouveau dans le dépôt.
 - Les bornes de taille, de pages, de durée et de débit empêchent un fichier piégé d'épuiser le serveur.
 
 ## Options écartées
@@ -123,6 +129,8 @@ Les tests de la mise en œuvre prouvent chaque contrôle par le refus :
 - un chemin qui sort du dossier lié, ou qui entre dans le dossier d'export, reçoit `null` ;
 - une activité sans le module documents ne rend aucun texte ;
 - un fichier de plus de 10 Mo, un format non lu et une extraction trop longue reçoivent leur code, sans texte partiel ;
+- un fichier dont le fournisseur ne rend pas la taille se coupe à 10 Mo pendant le téléchargement ;
+- une personne sans droit reçoit `null` pour un fichier trop lourd ou d'un format non lu, comme pour un fichier absent ;
 - un PDF de plus de 200 pages et un texte de plus de 200 000 caractères rendent `tronque` à vrai ;
 - la limite de 60 textes par heure compte les sessions et les jetons d'une même personne ;
 - le journal du serveur ne contient ni nom de fichier, ni chemin, ni texte.
