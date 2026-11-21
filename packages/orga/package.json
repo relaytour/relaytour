@@ -54,11 +54,11 @@
     "@eslint/js": "^9.39.0",
     "@graphql-codegen/cli": "^7.4.6",
     "@graphql-codegen/client-preset": "^6.2.3",
-    "@lingui/babel-plugin-lingui-macro": "~6.9.1",
-    "@lingui/cli": "~6.9.1",
-    "@lingui/conf": "~6.9.1",
-    "@lingui/format-po": "~6.9.1",
-    "@lingui/vite-plugin": "~6.9.1",
+    "@lingui/babel-plugin-lingui-macro": "~6.12.0",
+    "@lingui/cli": "~6.12.0",
+    "@lingui/conf": "~6.12.0",
+    "@lingui/format-po": "~6.12.0",
+    "@lingui/vite-plugin": "~6.12.0",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -66,11 +66,11 @@
     "eslint": "^9.39.0",
     "eslint-plugin-lingui": "~0.16.0",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.7",
-    "globals": "^17.13.0",
+    "eslint-plugin-react-refresh": "^0.5.8",
+    "globals": "^17.14.0",
     "typescript": "~5.9.0",
-    "typescript-eslint": "^8.71.2",
+    "typescript-eslint": "^8.73.0",
     "vite": "^7.3.6",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   }
 }
