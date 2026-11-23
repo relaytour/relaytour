@@ -29,7 +29,7 @@
     "langues:extraire": "lingui extract --clean && lingui compile"
   },
   "dependencies": {
-    "@apollo/server": "^5.5.2",
+    "@apollo/server": "^5.5.1",
     "@as-integrations/express5": "^1.1.2",
     "@lingui/core": "~6.12.0",
     "@pothos/core": "^4.18.0",
