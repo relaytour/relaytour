@@ -124,7 +124,11 @@ const ANGLAIS_DES_GESTES = {
   'Voir l’aperçu': 'View preview',
   'Vérifier la liste': 'Check the list',
   commentaire: 'comment',
+  'Compte rendu': 'Minutes',
+  'Jours passés': 'Past days',
   // Données du contenu d'exemple anglais
+  'Réunion de lancement': 'Kickoff meeting',
+  'Recueillir les besoins': 'Collect the volunteer needs',
   'Date du point bénévoles de janvier': 'Date of the January volunteer meeting',
   'Point bénévoles': 'Volunteer check-in',
   'Point information': 'Information desk',
@@ -295,6 +299,22 @@ const ECRANS = [
     avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
     apres: `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main button.rt-agenda-ouvrir')].find(b => b.textContent.trim() === ${JSON.stringify(x('Point bénévoles'))}))`,
   },
+  // Le volet d'une réunion passée, terminée, avec la fiche de son compte rendu
+  // (ADR 0066). L'instance d'exemple doit lier une fiche à la réunion de lancement.
+  {
+    nom: 'reunion-terminee',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/agenda`,
+    avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
+    apres: `(volet => {
+      if (volet) return volet.innerText.includes(${JSON.stringify(x('Compte rendu'))})
+      const bouton = [...document.querySelectorAll('main button.rt-agenda-ouvrir')].find(b => b.textContent.trim() === ${JSON.stringify(x('Réunion de lancement'))})
+      if (bouton) return (bouton.click(), false)
+      // La réunion passée n'apparaît qu'avec les jours passés.
+      const passe = [...document.querySelectorAll('main button')].find(b => b.innerText.trim() === ${JSON.stringify(x('Jours passés'))} && b.getAttribute('aria-pressed') !== 'true')
+      return (passe?.click(), false)
+    })(document.querySelector('.ant-drawer-open'))`,
+  },
   // Le programme du jour J en grille, puis la vue « Mon jour J » de la référente
   // (ADR 0040).
   {
@@ -412,6 +432,19 @@ const ECRANS = [
       const bouton = [...document.querySelectorAll('main .rt-ouvrir-fil')].find(b => b.innerText.includes(${JSON.stringify(x('commentaire'))}))
       return (bouton?.click(), false)
     })(document.querySelector('.rt-fil-volet'))`,
+  },
+  // La fenêtre d'une tâche ouverte en grand, avec son fil et son bouton de
+  // partage (#368). Le geste ouvre la tâche par son titre et attend son fil.
+  {
+    nom: 'tache-fenetre',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/perimetres/benevoles`,
+    avant: "localStorage.setItem('relaytour.taches.regroupement', 'echeance')",
+    apres: `(fenetre => {
+      if (fenetre) return fenetre.querySelectorAll('.rt-fil-commentaire').length > 0
+      const titre = [...document.querySelectorAll('main a[href*="/taches/"]')].find(a => a.innerText.includes(${JSON.stringify(x('Recueillir les besoins'))}))
+      return (titre?.click(), false)
+    })(document.querySelector('.ant-modal-wrap'))`,
   },
   // La fenêtre « Nouvelle tâche », avec les périmètres où la décliner. Le geste
   // ouvre la fenêtre, ajoute les sports, puis la fait défiler jusqu'à ce champ.

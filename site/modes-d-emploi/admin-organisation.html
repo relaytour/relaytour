@@ -114,6 +114,21 @@
           </figure>
         </article>
 
+        <article class="verre ecran" id="e-api">
+          <div class="ecran-tete"><h3>API, robots et applications</h3><span class="route">/&lt;activité&gt;/admin/organisation</span></div>
+          <p>Le panneau « API » de la page Organisation ouvre l'accès des programmes à votre organisation. Le module est inactif par défaut. Une fois actif, chaque membre crée ses jetons d'accès dans ses préférences, ou autorise une application en un clic.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Activer l'API</span></span><span>Ouvrir le module à l'organisation. Le désactiver ne révoque aucun jeton : les jetons cessent de servir tant que le module reste inactif.</span></li>
+            <li><span><span class="libelle">Jetons de l'organisation</span></span><span>Lire les jetons et les applications autorisées de tous les membres, et en révoquer un. Le panneau indique, pour chacun, s'il lit le texte des documents.</span></li>
+            <li><span><span class="libelle">Robots</span></span><span>Créer un robot : un membre sans connexion qui porte les jetons d'une automatisation partagée. Vous choisissez ses activités, et la case « Lecture de ces activités » lui en ouvre la lecture. Il prend une place de membre. Les admins de chaque activité donnent ou retirent ensuite cette lecture depuis l'écran Personnes.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/organisation-api.webp" data-mobile="../captures/mobile/organisation-api.webp" width="1440" height="900" loading="lazy" alt="Panneau API de la page Organisation : le module actif, les jetons et les applications des membres, et les robots." />
+            <figcaption>Le panneau API, sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <p class="note">Les modes d'emploi <a href="api.html">« Utiliser l'API »</a> et <a href="applications.html">« Connecter une application »</a> décrivent les jetons, les robots et les applications en détail.</p>
+        </article>
+
         <article class="verre ecran" id="e-activites">
           <div class="ecran-tete"><h3>Créer et archiver une activité</h3><span class="route">/&lt;activité&gt;/admin/activites</span></div>
           <p>Vous voyez toutes les activités de l'organisation, y compris celles que vous n'administrez pas nommément. Deux commandes vous sont réservées.</p>
@@ -282,7 +297,7 @@
       </section>
 
       <footer>
-        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.29.0.
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.36.0.
       </footer>
     </main>
     <script src="../menu.js"></script>

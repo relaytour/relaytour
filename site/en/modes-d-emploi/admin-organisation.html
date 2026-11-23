@@ -114,6 +114,21 @@
           </figure>
         </article>
 
+        <article class="verre ecran" id="e-api">
+          <div class="ecran-tete"><h3>API, robots and applications</h3><span class="route">/&lt;activity&gt;/admin/organisation</span></div>
+          <p>The “API” panel of the Organization page opens access to your organization for programs. The module is off by default. Once it is on, each member creates their access tokens in their preferences, or authorizes an application in one click.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Turn on the API</span></span><span>Open the module to the organization. Turning it off revokes no token: the tokens stop working while the module stays off.</span></li>
+            <li><span><span class="libelle">Organization tokens</span></span><span>Read the tokens and authorized applications of all members, and revoke one. The panel shows, for each one, whether it reads the text of documents.</span></li>
+            <li><span><span class="libelle">Robots</span></span><span>Create a robot: a member without sign-in who holds the tokens of a shared automation. You choose its activities, and the “Read access to these activities” box gives it read access to them. It takes a member seat. The admins of each activity then give or remove this access from the People screen.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/organisation-api.webp" data-mobile="../captures/mobile/organisation-api.webp" width="1440" height="900" loading="lazy" alt="API panel of the Organization page: the active module, the tokens and applications of members, and the robots." />
+            <figcaption>The API panel, on the sample organization.</figcaption>
+          </figure>
+          <p class="note">The <a href="api.html">“Use the API”</a> and <a href="applications.html">“Connect an application”</a> guides describe tokens, robots and applications in detail.</p>
+        </article>
+
         <article class="verre ecran" id="e-activites">
           <div class="ecran-tete"><h3>Create and archive an activity</h3><span class="route">/&lt;activity&gt;/admin/activites</span></div>
           <p>You see all the activities of the organization, including those you are not appointed to administer. Two commands are reserved for you.</p>
@@ -282,7 +297,7 @@
       </section>
 
       <footer>
-        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.29.0.
+        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.36.0.
       </footer>
     </main>
     <script src="../../menu.js"></script>
