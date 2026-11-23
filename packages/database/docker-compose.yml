@@ -25,7 +25,7 @@ services:
       retries: 20
 
   redis:
-    image: valkey/valkey:8-alpine
+    image: valkey/valkey:9-alpine
     container_name: redis_relaytour
     restart: unless-stopped
     # noeviction : BullMQ perd des jobs si Redis évince des clés.
