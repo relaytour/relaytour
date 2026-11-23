@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.38.0
 fr:
   titre: >-
     L'agenda filtre les réunions
