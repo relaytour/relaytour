@@ -4741,14 +4741,12 @@ msgstr "Later due date"
 msgid "Échéance sous 7 jours"
 msgstr "Due within 7 days"
 
+#. Puce : afficher les échéances des tâches
 #: src/composants/PreferencePush.tsx
+#: src/pages/Agenda.tsx
 #: src/pages/Preferences.tsx
 msgid "Échéances"
 msgstr "Due dates"
-
-#: src/pages/Agenda.tsx
-msgid "Échéances de mes périmètres"
-msgstr "Due dates for my areas"
 
 #: src/composants/GestionAcces.tsx
 msgid "Échec"
@@ -10408,6 +10406,11 @@ msgstr "Meeting canceled."
 msgid "Réunion enregistrée."
 msgstr "Meeting saved."
 
+#. Puce : afficher les réunions
+#: src/pages/Agenda.tsx
+msgid "Réunions"
+msgstr "Meetings"
+
 #: src/composants/ChampsActivite.tsx
 msgid "Réunions, sondages de dates, dates clés et abonnements à un agenda externe."
 msgstr "Meetings, date polls, key dates and calendar subscriptions."
@@ -11393,6 +11396,7 @@ msgstr "All members of the reader areas"
 #: src/composants/Priorites.tsx
 #: src/composants/Repartition.tsx
 #: src/pages/admin/Personnes.tsx
+#: src/pages/Agenda.tsx
 #: src/pages/Retroplanning.tsx
 #: src/pages/TousLesPerimetres.tsx
 msgid "Tous les périmètres"

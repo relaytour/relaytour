@@ -3765,6 +3765,11 @@ type Query {
     Les périmètres des échéances. Sans valeur : les périmètres de la personne pour la période.
     """
     perimetreIds: [ID!]
+
+    """
+    Les échéances de tous les périmètres non archivés de l’activité que la personne lit. L’emporte sur `perimetreIds`.
+    """
+    tousLesPerimetres: Boolean = false
   ): Agenda!
 
   """L’état du module « API » de l’organisation active."""
