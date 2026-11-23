@@ -277,4 +277,22 @@ describe('resoudreEnv', () => {
       })
     ).toThrow(/CLE_CHIFFREMENT_ESPACE_FICHIERS/)
   })
+  it('accepte une image d’aperçu en https ou en chemin, et rien d’autre', () => {
+    for (const image of [
+      'https://hebergeur.exemple.com/carte.png',
+      '/carte.png',
+    ])
+      expect(resoudreEnv({ ...BASE, APERCU_IMAGE: image }).APERCU_IMAGE).toBe(
+        image
+      )
+    for (const image of [
+      'http://hebergeur.exemple.com/carte.png',
+      '//hebergeur.exemple.com/carte.png',
+      'javascript:alert(1)',
+      '/carte.png" onload="x',
+    ])
+      expect(() => resoudreEnv({ ...BASE, APERCU_IMAGE: image })).toThrow(
+        /APERCU_IMAGE/
+      )
+  })
 })

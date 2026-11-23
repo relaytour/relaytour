@@ -15,6 +15,15 @@
 	}
 }
 
+# Politique de contenu de l'espace organisateur. Tout vient de cette origine :
+# scripts, polices et images d'identité ; les styles autorisent l'inline, posé par
+# la bibliothèque de composants ; les images des fiches peuvent venir d'un site
+# https. Retirez « https: » d'img-src pour les limiter à cette origine. Le préfixe
+# « > » remplace la politique de la page que sert l'API : la réponse n'en porte qu'une.
+(politique-orga) {
+	header >Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+}
+
 # L'API lit l'adresse du client dans X-Relaytour-Ip, que Caddy remplit avec {client_ip}.
 # Un intermédiaire devant Caddy (CDN, répartiteur) se déclare dans `trusted_proxies`
 # du bloc global `servers`, pour que {client_ip} reste l'adresse du client.
@@ -46,14 +55,48 @@ orga.exemple.org {
 	handle {
 		root * /srv/relaytour/orga
 		encode zstd gzip
-		# Politique de contenu de l'espace organisateur. Tout vient de cette origine :
-		# scripts, polices et images d'identité ; les styles autorisent l'inline, posé par
-		# la bibliothèque de composants ; les images des fiches peuvent venir d'un site
-		# https. Retirez « https: » d'img-src pour les limiter à cette origine.
-		header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+		import politique-orga
 		@assets path /assets/*
-		header @assets Cache-Control "public, max-age=31536000, immutable"
-		try_files {path} /index.html
-		file_server
+		# « ? » laisse le « no-cache » de la page servie par l'API à une adresse absente.
+		header @assets ?Cache-Control "public, max-age=31536000, immutable"
+		# Un fichier existant se sert tel quel. Toute autre adresse, et la racine, est
+		# une page de l'application : l'API la sert avec l'aperçu d'un lien partagé,
+		# qui nomme l'organisation (ADR 0073).
+		@fichier {
+			file
+			not path /
+		}
+		handle @fichier {
+			file_server
+		}
+		# Une API qui ne sert pas la page (404 sans ESPACE_ORGANISATEUR_DOSSIER, 5xx)
+		# laisse la place au fichier du dossier, avec l'aperçu fixe.
+		handle {
+			rewrite * /espace/page?{query}
+			reverse_proxy 127.0.0.1:4400 {
+				header_up X-Relaytour-Ip {client_ip}
+				@sans-page status 404 5xx
+				handle_response @sans-page {
+					root * /srv/relaytour/orga
+					rewrite * /index.html
+					file_server
+				}
+			}
+		}
+	}
+	# Si l'API ne répond pas, une page se sert depuis le dossier, avec l'aperçu fixe :
+	# l'application s'ouvre et affiche son propre message d'erreur. Les chemins de
+	# l'API gardent leur erreur. Caddy y voit l'adresse d'origine, avant la réécriture.
+	handle_errors 502 503 504 {
+		import entetes-securite
+		handle @api {
+			respond {err.status_code}
+		}
+		handle {
+			import politique-orga
+			root * /srv/relaytour/orga
+			rewrite * /index.html
+			file_server
+		}
 	}
 }

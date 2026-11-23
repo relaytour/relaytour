@@ -39,6 +39,7 @@ import {
 import { fermerLesFlux } from './lib/flux.ts'
 import { revoquerApplicationsRefusees } from './oauth/entretien.ts'
 import { routesOAuth } from './oauth/routes.ts'
+import { routePageOrganisateur } from './route-page-organisateur.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
 import { avecLangue, langueDe, languesDuNavigateur } from './lib/langue.ts'
@@ -48,6 +49,7 @@ import { EXTENSIONS, type TypeMedia } from './lib/medias.ts'
 import {
   assurerOrganisationParDefaut,
   configurationOrganisation,
+  configurationPublique,
 } from './lib/organisation.ts'
 import { writeSchemaFile } from './lib/print-schema.ts'
 import { requeteLocale } from './lib/requete-locale.ts'
@@ -419,6 +421,24 @@ app.post(`${CHEMIN_REVOCATION}/:jeton`, servirRevocation('POST'))
 // Serveur d'autorisation des applications tierces (ADR 0067) : métadonnées et
 // points /oauth/*, que le relais de l'exploitant transmet.
 routesOAuth(app)
+
+// Page de l'espace organisateur avec l'aperçu d'un lien partagé (ADR 0073). Une
+// adresse lit la base trente fois par minute au plus ; au-delà, l'aperçu ne nomme
+// personne et la page part quand même.
+routePageOrganisateur(app, {
+  dossier: env.ESPACE_ORGANISATEUR_DOSSIER,
+  reglages: {
+    nomSite: env.APERCU_NOM_SITE,
+    description: env.APERCU_DESCRIPTION,
+    image: env.APERCU_IMAGE,
+    origineOrga: env.ORIGINE_ORGA,
+  },
+  configuration: slug => configurationPublique(undefined, slug),
+  limiter: adresse =>
+    limiterParCle(`page-organisateur:${adresse}`, 30, 60, {
+      libelle: 'la limite de la page de l’espace organisateur',
+    }),
+})
 
 // Better Auth lit lui-même le corps des requêtes : son routeur passe avant express.json().
 const gestionnaireAuth = toNodeHandler(auth)

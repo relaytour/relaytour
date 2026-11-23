@@ -78,6 +78,15 @@ L'espace organisateur s'installe sur un téléphone (ADR 0023). Deux points conc
 
 Le manifest de chaque organisation se sert sous `/medias/application/`, chemin déjà relayé vers l'API.
 
+### Aperçu d'un lien partagé
+
+Une messagerie lit la page d'un lien partagé pour en composer l'aperçu (ADR 0073). Le `Caddyfile` d'exemple sert les fichiers existants depuis `ORGA_DIR` et relaie toute autre adresse de l'espace vers `/espace/page` de l'API. L'API y sert `index.html` avec le nom de l'organisation. Le Compose de référence monte `ORGA_DIR` en lecture seule dans l'API (`ESPACE_ORGANISATEUR_DOSSIER=/orga`).
+
+- Un proxy qui sert encore `index.html` lui-même donne un aperçu fixe : Relaytour et relaytour.org, sans le nom de l'organisation.
+- Si l'API ne répond pas, ou répond 404 ou une erreur 5xx pour la page, le `Caddyfile` d'exemple sert la page depuis le dossier, avec l'aperçu fixe. Un `Caddyfile` mis à jour avant le Compose garde donc l'espace ouvert.
+- L'aperçu fixe cite son image par une adresse relative : certaines messageries ne l'affichent pas.
+- `APERCU_NOM_SITE`, `APERCU_DESCRIPTION` et `APERCU_IMAGE` remplacent le nom du site, la description et l'image. Une image de 1200 × 630 pixels convient à la plupart des messageries.
+
 ### Revenir à une version antérieure
 
 Une version récente peut écrire, dans la configuration d'une organisation, un champ qu'une version antérieure ne connaît pas. À partir de la version 0.13, le serveur écarte ce champ à la lecture et garde le reste : un retour arrière ne change pas l'identité de l'organisation. Une configuration qu'il ne sait pas lire du tout n'est jamais écrasée : le journal porte l'événement `configuration-illisible`, et l'organisation s'affiche avec l'identité d'amorçage jusqu'à son réimport.
