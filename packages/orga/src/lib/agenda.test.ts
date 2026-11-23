@@ -8,6 +8,7 @@ import {
   grouperParMoisAgenda,
   jourLocal,
   libelleJours,
+  prochaineReunion,
   quantieme,
   toucheLeMois,
 } from './agenda'
@@ -85,5 +86,71 @@ describe('éléments d’un jour et d’un mois', () => {
       ['2027-02', ['b']],
       ['2027-03', ['c']],
     ])
+  })
+})
+
+describe('prochaineReunion', () => {
+  const reunion = (
+    id: string,
+    debut: string,
+    autres: Partial<{
+      etat: 'ANNULEE' | 'PREVUE' | 'TERMINEE'
+      estConvoquee: boolean
+      perimetre: { id: string } | null
+    }> = {}
+  ) => ({
+    id,
+    debut,
+    etat: 'PREVUE' as const,
+    estConvoquee: false,
+    perimetre: null,
+    ...autres,
+  })
+
+  it('choisit la réunion prévue qui commence la première', () => {
+    const reunions = [
+      reunion('b', '2026-11-30T18:00:00.000Z'),
+      reunion('a', '2026-11-23T18:00:00.000Z'),
+    ]
+    expect(prochaineReunion(reunions, new Set())?.id).toBe('a')
+  })
+
+  it('écarte les réunions annulées et terminées', () => {
+    const reunions = [
+      reunion('terminee', '2026-11-16T18:00:00.000Z', { etat: 'TERMINEE' }),
+      reunion('annulee', '2026-11-20T18:00:00.000Z', { etat: 'ANNULEE' }),
+      reunion('prevue', '2026-11-23T18:00:00.000Z'),
+    ]
+    expect(prochaineReunion(reunions, new Set())?.id).toBe('prevue')
+  })
+
+  it('garde les réunions des périmètres de la personne ou de ses convocations', () => {
+    const reunions = [
+      reunion('autre', '2026-11-20T08:00:00.000Z', {
+        perimetre: { id: 'natation' },
+      }),
+      reunion('convoquee', '2026-11-21T08:00:00.000Z', {
+        perimetre: { id: 'logistique' },
+        estConvoquee: true,
+      }),
+      reunion('mien', '2026-11-22T08:00:00.000Z', {
+        perimetre: { id: 'communication' },
+      }),
+    ]
+    expect(prochaineReunion(reunions, new Set())?.id).toBe('convoquee')
+    expect(
+      prochaineReunion(reunions.slice(2), new Set(['communication']))?.id
+    ).toBe('mien')
+    expect(prochaineReunion(reunions.slice(0, 1), new Set())).toBeNull()
+  })
+
+  it('prend toutes les réunions avec « Tous les périmètres »', () => {
+    const reunions = [
+      reunion('autre', '2026-11-20T08:00:00.000Z', {
+        perimetre: { id: 'natation' },
+      }),
+      reunion('globale', '2026-11-22T08:00:00.000Z'),
+    ]
+    expect(prochaineReunion(reunions, new Set(), true)?.id).toBe('autre')
   })
 })
