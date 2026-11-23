@@ -21,6 +21,7 @@ Caddy servait ce fichier tel quel, depuis le dossier que l'image `-orga` dépose
 - L'image est `/apercu.jpg`, de 1200 × 630 pixels : le logo de Relaytour, son nom et l'adresse relaytour.org.
 - La description présente Relaytour comme logiciel libre et renvoie à relaytour.org.
 - Cet aperçu fixe vaut pour toute installation dont le proxy sert la page lui-même.
+- Le fichier ne connaît pas l'origine de l'installation : son image a une adresse relative. Le protocole Open Graph demande une adresse absolue, et certains robots, dont celui de WhatsApp, ignorent alors l'image. L'aperçu fixe garde dans tous les cas son titre et sa description.
 
 ### Un aperçu de l'organisation, servi par l'API
 
@@ -30,7 +31,14 @@ Caddy servait ce fichier tel quel, depuis le dossier que l'image `-orga` dépose
 - L'aperçu ne porte que le nom de l'organisation, déjà public par l'écran de connexion et par le manifest (ADR 0023). Il ne lit jamais le contenu de la page désignée : une adresse de tâche ne donne ni son titre ni son périmètre.
 - Le titre suit la langue de l'organisation (ADR 0047). Le serveur échappe le nom avant de l'écrire.
 - La page porte `Cache-Control: no-cache` et la politique de contenu de l'espace organisateur.
-- Sans `ESPACE_ORGANISATEUR_DOSSIER`, la route répond 404. Une page qui ne porte pas le bloc d'aperçu n'est jamais servie : la route répond 500 et le journal le note.
+- Sans `ESPACE_ORGANISATEUR_DOSSIER`, la route répond 404. Un fichier illisible donne 503.
+- Une page qui ne porte pas le bloc d'aperçu part telle quelle, et le journal le note.
+
+### Ce que coûte une page
+
+- La route se lit sans session et reçoit toute adresse inconnue de l'espace, y compris celles des robots qui sondent un site.
+- Une page composée se garde une minute par slug. Cent pages au plus restent en mémoire.
+- Hors de ce cache, une adresse IP lit la base trente fois par minute au plus. Au-delà, la page part avec l'aperçu qui ne nomme personne, sans lire la base. Une page de l'application n'est jamais refusée.
 
 ### Ce que l'hébergeur règle
 
@@ -42,7 +50,8 @@ Caddy servait ce fichier tel quel, depuis le dossier que l'image `-orga` dépose
 ### Le proxy de référence
 
 - Le `Caddyfile` d'exemple sert un fichier existant tel quel, et relaie toute autre adresse de l'espace vers `/espace/page`.
-- Si l'API ne répond pas, Caddy sert `index.html` depuis le dossier, avec l'aperçu fixe et les en-têtes de sécurité. L'application s'ouvre et affiche son propre message d'erreur. Les chemins de l'API gardent leur erreur.
+- Si l'API répond 404 ou une erreur 5xx pour la page, Caddy sert `index.html` depuis le dossier, avec l'aperçu fixe (`handle_response`). Ce cas couvre un Caddyfile mis à jour avant le Compose.
+- Si l'API ne répond pas, Caddy sert aussi `index.html` depuis le dossier, avec les en-têtes de sécurité. L'application s'ouvre et affiche son propre message d'erreur. Les chemins de l'API gardent leur erreur.
 - Une seule politique de contenu part avec la page : Caddy remplace celle de l'API (`header >`).
 - Le Compose de référence monte `ORGA_DIR` en lecture seule dans le conteneur de l'API.
 
@@ -51,7 +60,7 @@ Caddy servait ce fichier tel quel, depuis le dossier que l'image `-orga` dépose
 - Un lien partagé montre une carte de 1200 × 630 pixels au lieu de l'icône d'application.
 - Le titre d'un lien nomme l'organisation sur une installation à une organisation, ou avec le paramètre `organisation`.
 - Une installation qui garde son ancien proxy reçoit l'aperçu fixe sans autre changement. Elle reçoit l'aperçu de l'organisation après la mise à jour de son proxy et de son Compose.
-- Chaque ouverture d'une page passe par l'API, qui lit la configuration publique de l'organisation. Cette lecture est déjà faite par l'écran de connexion, et la page se garde en mémoire tant que son fichier ne change pas.
+- Chaque ouverture d'une page passe par l'API. Elle lit la base au plus une fois par minute et par slug, dans la limite de chaque adresse.
 - Le service worker garde `/index.html`, servi tel quel par le proxy. Le repli hors connexion ne change pas (ADR 0023).
 
 ## Options écartées

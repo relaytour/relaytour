@@ -69,9 +69,19 @@ orga.exemple.org {
 		handle @fichier {
 			file_server
 		}
+		# Une API qui ne sert pas la page (404 sans ESPACE_ORGANISATEUR_DOSSIER, 5xx)
+		# laisse la place au fichier du dossier, avec l'aperçu fixe.
 		handle {
 			rewrite * /espace/page?{query}
-			import relais-api
+			reverse_proxy 127.0.0.1:4400 {
+				header_up X-Relaytour-Ip {client_ip}
+				@sans-page status 404 5xx
+				handle_response @sans-page {
+					root * /srv/relaytour/orga
+					rewrite * /index.html
+					file_server
+				}
+			}
 		}
 	}
 	# Si l'API ne répond pas, une page se sert depuis le dossier, avec l'aperçu fixe :
