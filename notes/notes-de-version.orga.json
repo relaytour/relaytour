@@ -8,6 +8,20 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-11-23-orga-les-polices-restent-des-fichiers-autorises-par-la-politique-",
+          "date": "2026-11-23",
+          "type": "correctif",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les polices restent des fichiers, autorisés par la politique de contenu",
+            "texte": "Le navigateur charge tous les sous-ensembles de la police Hanken Grotesk. Un sous-ensemble de moins de 4 ko était intégré à la feuille de style, et la politique de contenu le refusait.",
+            "migration": null
+          },
+          "en": null
+        },
+        {
           "id": "2026-11-23-orga-la-description-d-une-case-s-affiche-sous-son-libelle",
           "date": "2026-11-23",
           "type": "correctif",

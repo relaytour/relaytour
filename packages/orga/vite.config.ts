@@ -93,6 +93,11 @@ export default defineConfig({
   },
   build: {
     sourcemap: false,
+    // Une police reste un fichier, quelle que soit sa taille. Vite intègre sinon les
+    // fichiers de moins de 4 ko en adresse data:, que la politique de contenu de
+    // l'espace organisateur refuse pour les polices (font-src 'self').
+    assetsInlineLimit: fichier =>
+      /\.(?:woff2?|ttf|otf)$/.test(fichier) ? false : undefined,
     // Les bibliothèques changent rarement : des fichiers séparés restent en cache
     // d'un déploiement à l'autre.
     rollupOptions: {
