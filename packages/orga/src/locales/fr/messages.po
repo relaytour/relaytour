@@ -399,6 +399,10 @@ msgstr "{jourPlage}, {heureDebut} → {heureFin}"
 msgid "{jourPlage}, {heureDebut} → {heureFin} le lendemain"
 msgstr "{jourPlage}, {heureDebut} → {heureFin} le lendemain"
 
+#: src/pages/Agenda.tsx
+msgid "{jourReunion}, de {debutReunion} à {finReunion}"
+msgstr "{jourReunion}, de {debutReunion} à {finReunion}"
+
 #: src/composants/Priorites.tsx
 msgid "{jours, plural, one {Échéance dans # jour} other {Échéance dans # jours}}"
 msgstr "{jours, plural, one {Échéance dans # jour} other {Échéance dans # jours}}"
@@ -2028,6 +2032,10 @@ msgstr "Afficher mon adresse dans l’organigramme"
 #: src/pages/Agenda.tsx
 msgid "Agenda"
 msgstr "Agenda"
+
+#: src/pages/Agenda.tsx
+msgid "Agenda global"
+msgstr "Agenda global"
 
 #: src/composants/ReunionDetail.tsx
 #: src/composants/SondageDetail.tsx
@@ -4733,14 +4741,12 @@ msgstr "Échéance plus lointaine"
 msgid "Échéance sous 7 jours"
 msgstr "Échéance sous 7 jours"
 
+#. Puce : afficher les échéances des tâches
 #: src/composants/PreferencePush.tsx
+#: src/pages/Agenda.tsx
 #: src/pages/Preferences.tsx
 msgid "Échéances"
 msgstr "Échéances"
-
-#: src/pages/Agenda.tsx
-msgid "Échéances de mes périmètres"
-msgstr "Échéances de mes périmètres"
 
 #: src/composants/GestionAcces.tsx
 msgid "Échec"
@@ -4892,6 +4898,7 @@ msgstr "En attente d’accord"
 msgid "En attente de votre accord dans Nextcloud. <0>Rouvrir la page de Nextcloud</0>"
 msgstr "En attente de votre accord dans Nextcloud. <0>Rouvrir la page de Nextcloud</0>"
 
+#. Réunion commencée
 #. Statut d’un message préparé
 #. Statut d’une période
 #. Statut d’une tâche
@@ -4902,6 +4909,7 @@ msgstr "En attente de votre accord dans Nextcloud. <0>Rouvrir la page de Nextclo
 #: src/lib/messages.ts
 #: src/lib/taches.ts
 #: src/pages/admin/Editions.tsx
+#: src/pages/Agenda.tsx
 #: src/pages/Charge.tsx
 #: src/pages/Retroplanning.tsx
 msgid "En cours"
@@ -9538,6 +9546,10 @@ msgstr "Prochain point d’équipe : {jourPoint} à {heurePoint}."
 msgid "Prochaine place au programme : {dateProchaine}."
 msgstr "Prochaine place au programme : {dateProchaine}."
 
+#: src/pages/Agenda.tsx
+msgid "Prochaine réunion"
+msgstr "Prochaine réunion"
+
 #: src/composants/ReunionsDuPerimetre.tsx
 msgid "Prochaines réunions"
 msgstr "Prochaines réunions"
@@ -9901,6 +9913,7 @@ msgstr "Rejoindre l’équipe d’organisation"
 
 #: src/composants/Priorites.tsx
 #: src/composants/ReunionDetail.tsx
+#: src/pages/Agenda.tsx
 msgid "Rejoindre la visio"
 msgstr "Rejoindre la visio"
 
@@ -10392,6 +10405,11 @@ msgstr "Réunion annulée."
 #: src/composants/ReunionFormulaire.tsx
 msgid "Réunion enregistrée."
 msgstr "Réunion enregistrée."
+
+#. Puce : afficher les réunions
+#: src/pages/Agenda.tsx
+msgid "Réunions"
+msgstr "Réunions"
 
 #: src/composants/ChampsActivite.tsx
 msgid "Réunions, sondages de dates, dates clés et abonnements à un agenda externe."
@@ -11378,6 +11396,7 @@ msgstr "Tous les membres des périmètres lecteurs"
 #: src/composants/Priorites.tsx
 #: src/composants/Repartition.tsx
 #: src/pages/admin/Personnes.tsx
+#: src/pages/Agenda.tsx
 #: src/pages/Retroplanning.tsx
 #: src/pages/TousLesPerimetres.tsx
 msgid "Tous les périmètres"
@@ -12158,6 +12177,10 @@ msgstr "Voir l’aperçu"
 #: src/pages/MonEspace.tsx
 msgid "Voir la charge de l’équipe"
 msgstr "Voir la charge de l’équipe"
+
+#: src/pages/Agenda.tsx
+msgid "Voir la réunion"
+msgstr "Voir la réunion"
 
 #: src/pages/FicheEditeur.tsx
 msgid "Voir la version actuelle"

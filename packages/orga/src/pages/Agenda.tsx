@@ -5,12 +5,13 @@ import {
   LeftOutlined,
   PlusOutlined,
   RightOutlined,
+  VideoCameraOutlined,
 } from '@ant-design/icons'
 import type { MessageDescriptor } from '@lingui/core'
 import { msg, plural, t } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Empty, Grid, Result, Skeleton } from 'antd'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
 import { AbonnementActivite } from '../composants/AbonnementAgenda'
@@ -18,6 +19,7 @@ import ChoixEdition from '../composants/ChoixEdition'
 import DateCleFormulaire, {
   type DateCleSaisie,
 } from '../composants/DateCleFormulaire'
+import { PastilleEtat } from '../composants/Etat'
 import { DeuxColonnes, Groupe, Panneau, Section } from '../composants/Panneau'
 import PastillePerimetre from '../composants/PastillePerimetre'
 import ReunionDetail from '../composants/ReunionDetail'
@@ -45,12 +47,16 @@ import {
   grouperParMoisAgenda,
   joursDeLaSemaine,
   jourLocal,
+  concerneLaPersonne,
   libelleJours,
+  prochaineReunion,
   quantieme,
   toucheLeMois,
 } from '../lib/agenda'
 import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
+import { jourAvecNom } from '../lib/priorites'
+import { heureCourte, minutes } from '../lib/programme'
 import { useGroupesReplies } from '../lib/groupes-replies'
 import { ecrireRegroupement, lireRegroupement } from '../lib/regroupement'
 import { EDITION_COURANTE, PERIMETRES } from '../lib/requetes'
@@ -58,8 +64,16 @@ import { libelleMois } from '../lib/retroplanning'
 import { comparerTextes } from '../lib/langue'
 
 const AGENDA = graphql(`
-  query Agenda($editionId: ID!, $echeances: Boolean) {
-    agenda(editionId: $editionId, echeances: $echeances) {
+  query Agenda(
+    $editionId: ID!
+    $echeances: Boolean
+    $tousLesPerimetres: Boolean
+  ) {
+    agenda(
+      editionId: $editionId
+      echeances: $echeances
+      tousLesPerimetres: $tousLesPerimetres
+    ) {
       peutGerer
       edition {
         id
@@ -90,11 +104,13 @@ const REUNIONS = graphql(`
       titre
       jour
       jourFin
+      debut
       heureDebut
       heureFin
       statut
       etat
       lieu
+      lienVisio
       detailMasque
       estConvoquee
       maReponse
@@ -244,6 +260,9 @@ export default function Agenda() {
   const { data: perimetres } = useQuery(PERIMETRES)
   const editionId = parametres.get('edition') ?? courante?.editionCourante?.id
   const [echeances, setEcheances] = useState(true)
+  const [reunionsAffichees, setReunionsAffichees] = useState(true)
+  // « Tous les périmètres » n'est jamais actif à l'ouverture : il ne se garde pas.
+  const [tousChoisi, setTousChoisi] = useState(false)
   const [passe, setPasse] = useState(false)
   const [vueChoisie, setVueChoisie] = useState<Vue>(() =>
     lireRegroupement(CLE_VUE_AGENDA, VUES, 'liste')
@@ -253,6 +272,13 @@ export default function Agenda() {
     ecrireRegroupement(CLE_VUE_AGENDA, valeur)
   }
   const aujourdhui = jourLocal()
+  // L'heure courante, relue chaque minute : la pastille « En cours » la compare
+  // au début de la réunion. L'état de la réunion vient du serveur à chaque relecture.
+  const [maintenant, setMaintenant] = useState(() => Date.now())
+  useEffect(() => {
+    const minuteur = setInterval(() => setMaintenant(Date.now()), 60_000)
+    return () => clearInterval(minuteur)
+  }, [])
   const [mois, setMois] = useState(aujourdhui.slice(0, 7))
   const [saisie, setSaisie] = useState<DateCleSaisie | 'nouvelle' | null>(null)
   const [nouvelleReunion, setNouvelleReunion] =
@@ -270,7 +296,11 @@ export default function Agenda() {
     null
   )
   const { data, error } = useQuery(AGENDA, {
-    variables: { editionId: editionId ?? '', echeances },
+    variables: {
+      editionId: editionId ?? '',
+      echeances,
+      tousLesPerimetres: tousChoisi,
+    },
     skip: editionId === undefined,
     fetchPolicy: 'cache-and-network',
   })
@@ -293,6 +323,21 @@ export default function Agenda() {
   // La grille du mois demande de la largeur : un téléphone garde la liste.
   const vue: Vue = vueChoisie === 'mois' && ecrans.md ? 'mois' : 'liste'
   const agenda = data?.agenda
+  // Le bouton « Tous les périmètres » n'existe que pour les admins de l'activité.
+  const tous = tousChoisi && (agenda?.peutGerer ?? false)
+  const mesPerimetres = useMemo(
+    () => new Set((moi?.moi?.affectations ?? []).map(a => a.perimetre.id)),
+    [moi]
+  )
+  // Les réunions affichées : celles qui concernent la personne, ou toutes avec
+  // « Tous les périmètres ».
+  const reunionsVisibles = useMemo(
+    () =>
+      (reunions?.reunions ?? []).filter(
+        r => tous || concerneLaPersonne(r, mesPerimetres)
+      ),
+    [reunions, tous, mesPerimetres]
+  )
   const elements = useMemo(() => agenda?.elements ?? [], [agenda])
   const phases = elements.filter(e => e.sorte === 'PHASE')
   const datesCles = elements.filter(e => e.sorte === 'DATE_CLE')
@@ -304,7 +349,7 @@ export default function Agenda() {
   const lignes = useMemo(() => {
     const toutes: Ligne[] = [
       ...elements,
-      ...(reunions?.reunions ?? []).map(ligneDeReunion),
+      ...(reunionsAffichees ? reunionsVisibles.map(ligneDeReunion) : []),
     ]
     return toutes.sort(
       (a, b) =>
@@ -315,7 +360,7 @@ export default function Agenda() {
         ) ||
         comparerTextes(a.titre, b.titre)
     )
-  }, [elements, reunions])
+  }, [elements, reunionsAffichees, reunionsVisibles])
   const groupes = useMemo(
     () => grouperParMoisAgenda(lignes, passe ? null : aujourdhui),
     [lignes, passe, aujourdhui]
@@ -338,6 +383,11 @@ export default function Agenda() {
       .filter(p => miens.has(p.id))
       .map(p => ({ perimetreId: p.id, nom: p.nom }))
   }, [agenda, perimetres, moi, t])
+  // La prochaine réunion qui concerne la personne, en tête des deux vues.
+  const suivante = useMemo(
+    () => prochaineReunion(reunions?.reunions ?? [], mesPerimetres, tous),
+    [reunions, mesPerimetres, tous]
+  )
 
   if (editionId === undefined && courante && !courante.editionCourante) {
     // L'abonnement partagé ne dépend d'aucune période : ses admins le gèrent
@@ -508,6 +558,96 @@ export default function Agenda() {
       </li>
     )
   }
+
+  const panneauProchaineReunion = (() => {
+    if (!suivante) return null
+    const perimetre = suivante.perimetre
+      ? perimetreDe.get(suivante.perimetre.id)
+      : undefined
+    const jourReunion =
+      suivante.jourFin === suivante.jour
+        ? majuscule(jourAvecNom(suivante.jour))
+        : libelleJours(suivante.jour, suivante.jourFin)
+    const debutReunion = heureCourte(minutes(suivante.heureDebut))
+    const finReunion = heureCourte(minutes(suivante.heureFin))
+    const enCours = Date.parse(suivante.debut) <= maintenant
+    const reponseConvocation = suivante.maReponse
+      ? t(REPONSES[suivante.maReponse])
+      : null
+    const details = [
+      suivante.lieu,
+      suivante.estConvoquee
+        ? reponseConvocation
+          ? t`Vous êtes convoqué·e, ${reponseConvocation}`
+          : t`Vous êtes convoqué·e, sans réponse`
+        : null,
+    ].filter(Boolean)
+    return (
+      <div style={{ marginBottom: 16 }}>
+        <Panneau
+          titre={t`Prochaine réunion`}
+          repliable={{
+            replie: replies.estReplie('prochaine-reunion'),
+            onBasculer: () => replies.basculer('prochaine-reunion'),
+            nom: t`Prochaine réunion`,
+          }}
+          extra={
+            enCours && (
+              <PastilleEtat variante="en-cours">
+                {t({ message: 'En cours', comment: 'Réunion commencée' })}
+              </PastilleEtat>
+            )
+          }
+        >
+          <div className="rt-prochaine-reunion">
+            <div className="rt-prochaine-reunion-texte">
+              <span className="rt-prochaine-reunion-quand">
+                {t`${jourReunion}, de ${debutReunion} à ${finReunion}`}
+              </span>
+              <span className="rt-prochaine-reunion-titre">
+                <button
+                  type="button"
+                  className="rt-agenda-ouvrir"
+                  onClick={() => ouvrirReunion(suivante.id)}
+                >
+                  {suivante.titre}
+                </button>
+                {perimetre ? (
+                  <PastillePerimetre
+                    nom={perimetre.nom}
+                    couleur={perimetre.couleur}
+                  />
+                ) : (
+                  <span className="rt-note">
+                    <Trans>Agenda global</Trans>
+                  </span>
+                )}
+              </span>
+              {details.length > 0 && (
+                <span className="rt-note">{details.join(' · ')}</span>
+              )}
+            </div>
+            <div className="rt-prochaine-reunion-actions">
+              {suivante.lienVisio && (
+                <Button
+                  type="primary"
+                  icon={<VideoCameraOutlined />}
+                  href={suivante.lienVisio}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Trans>Rejoindre la visio</Trans>
+                </Button>
+              )}
+              <Button onClick={() => ouvrirReunion(suivante.id)}>
+                <Trans>Voir la réunion</Trans>
+              </Button>
+            </div>
+          </div>
+        </Panneau>
+      </div>
+    )
+  })()
 
   const listeParMois =
     groupes.length === 0 ? (
@@ -695,15 +835,31 @@ export default function Agenda() {
             <SeparateurPuces />
           </>
         )}
+        <PuceBascule actif={reunionsAffichees} onChange={setReunionsAffichees}>
+          {t({ message: 'Réunions', comment: 'Puce : afficher les réunions' })}
+        </PuceBascule>
         <PuceBascule actif={echeances} onChange={setEcheances}>
-          <Trans>Échéances de mes périmètres</Trans>
+          {t({
+            message: 'Échéances',
+            comment: 'Puce : afficher les échéances des tâches',
+          })}
         </PuceBascule>
         {vue === 'liste' && (
           <PuceBascule actif={passe} onChange={setPasse}>
             <Trans>Jours passés</Trans>
           </PuceBascule>
         )}
+        {agenda?.peutGerer && (
+          <>
+            <SeparateurPuces />
+            <PuceBascule actif={tousChoisi} onChange={setTousChoisi}>
+              <Trans>Tous les périmètres</Trans>
+            </PuceBascule>
+          </>
+        )}
       </div>
+
+      {agenda && panneauProchaineReunion}
 
       {!agenda ? (
         <Skeleton active />

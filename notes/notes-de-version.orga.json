@@ -5,6 +5,47 @@
   "version": "0.37.1",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-11-23-orga-l-agenda-filtre-les-reunions",
+          "date": "2026-11-23",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'agenda filtre les réunions",
+            "texte": "L'agenda affiche vos réunions : celles de l'agenda global, de vos périmètres et celles où vous êtes convoqué·e. La puce « Réunions » les affiche ou les masque, comme la puce « Échéances ». Les admins de l'activité disposent aussi d'une puce « Tous les périmètres », inactive à l'ouverture, qui ajoute les réunions et les échéances de chaque périmètre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The calendar filters meetings",
+            "texte": "The calendar shows your meetings: those of the global calendar, those of your areas and those you have a meeting notice for. The \"Meetings\" chip shows or hides them, like the \"Due dates\" chip. Activity admins also have an \"All areas\" chip, off when the screen opens, which adds the meetings and due dates of every area.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-11-23-orga-l-agenda-affiche-la-prochaine-reunion-en-tete",
+          "date": "2026-11-23",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'agenda affiche la prochaine réunion en tête",
+            "texte": "Un panneau en haut de l'agenda présente votre prochaine réunion, dans la vue Liste comme dans la vue Mois. Il indique le jour, l'horaire, le lieu et votre réponse à la convocation. Le bouton « Rejoindre la visio » ouvre le lien de la réunion.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The calendar shows the next meeting at the top",
+            "texte": "A panel at the top of the calendar shows your next meeting, in the List view and in the Month view. It gives the day, the time, the place and your reply to the meeting notice. The \"Join the video call\" button opens the meeting link.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.37.1",
       "notes": [
         {

@@ -4861,3 +4861,54 @@ button.rt-carte-fiche {
   font-weight: 600;
   color: var(--rt-encre-70);
 }
+
+/* Prochaine réunion : le premier panneau de l'agenda. */
+.rt-prochaine-reunion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+
+.rt-prochaine-reunion-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rt-prochaine-reunion-quand {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rt-encre-55);
+}
+
+.rt-prochaine-reunion-titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 16px;
+}
+
+.rt-prochaine-reunion button.rt-agenda-ouvrir {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--rt-primaire);
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+
+.rt-prochaine-reunion button.rt-agenda-ouvrir:hover {
+  text-decoration: underline;
+}
+
+.rt-prochaine-reunion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
