@@ -58,8 +58,8 @@ async function executer(
 const code = (r: Awaited<ReturnType<typeof executer>>) =>
   r.errors?.[0]?.extensions?.code
 
-const AGENDA = `query ($e: ID!, $ech: Boolean, $p: [ID!]) {
-  agenda(editionId: $e, echeances: $ech, perimetreIds: $p) {
+const AGENDA = `query ($e: ID!, $ech: Boolean, $p: [ID!], $tous: Boolean) {
+  agenda(editionId: $e, echeances: $ech, perimetreIds: $p, tousLesPerimetres: $tous) {
     peutGerer
     elements { cle sorte titre jour jourFin dateCleId version tacheId faite }
   }
@@ -327,6 +327,50 @@ describe('lecture de l’agenda', () => {
     expect(
       agenda.elements.filter(e => e.sorte === 'ECHEANCE').map(e => e.titre)
     ).toEqual(['Choisir la date', 'Réserver le bassin'])
+  })
+
+  it('lit les échéances de tous les périmètres de l’activité, à la demande', async () => {
+    for (const qui of [ids.adminActivite, ids.referent]) {
+      const agenda = await lire(qui, { ech: true, tous: true })
+      expect(
+        agenda.elements
+          .filter(e => e.sorte === 'ECHEANCE')
+          .map(e => e.titre)
+          .sort()
+      ).toEqual(['Choisir la date', 'Réserver le bassin', 'Tracer le terrain'])
+    }
+  })
+
+  it('refuse tous les périmètres sans session, sans affectation, archivé ou extérieur', async () => {
+    const variables = { e: ids.edition, ech: true, tous: true }
+    expect(code(await executer(null, AGENDA, variables))).toBe('FORBIDDEN')
+    for (const qui of [ids.membre, ids.archive, ids.adminAutre]) {
+      expect(code(await executer(qui, AGENDA, variables))).toBe('FORBIDDEN')
+    }
+    expect(
+      code(await executer(ids.externe, AGENDA, variables, slugAutre))
+    ).toBe('FORBIDDEN')
+  })
+
+  it('n’ajoute pas les échéances d’un périmètre archivé', async () => {
+    await prisma.perimetre.update({
+      where: { id: ids.basket },
+      data: { archivedAt: new Date() },
+    })
+    try {
+      const agenda = await lire(ids.adminActivite, { ech: true, tous: true })
+      expect(
+        agenda.elements
+          .filter(e => e.sorte === 'ECHEANCE')
+          .map(e => e.titre)
+          .sort()
+      ).toEqual(['Choisir la date', 'Réserver le bassin'])
+    } finally {
+      await prisma.perimetre.update({
+        where: { id: ids.basket },
+        data: { archivedAt: null },
+      })
+    }
   })
 
   it('dit à l’admin de l’activité qu’il gère les dates clés', async () => {
