@@ -172,7 +172,9 @@
             <li><span><span class="libelle">Remove from the activity</span></span><span>Take a person with no appointment for the selected period off the team of the activity. Their interests for the current periods are removed, and their account stays in the organization. First remove their appointments from the other current periods and their role as activity admin.</span></li>
             <li><span><span class="libelle">Pending invitations</span></span><span>A box lists the invitations awaiting approval, with the name and address you entered and the proposed areas. You resend an invitation once an hour, or you withdraw it. An invitation expires after 30 days. The person appears in the team only after approving; a declined invitation and an expired invitation look the same.</span></li>
             <li><span><span class="libelle">Message</span></span><span>Prepare a message for one person. “Message the selection” prepares a message for the checked people.</span></li>
+            <li><span><span class="libelle">Give read access</span><span class="libelle">Remove read access</span></span><span>Open the activity in read-only mode to a robot of the organization, which carries the “robot” tag in the team. The robot then reads every period of the activity: editions, venues, schedule, calendar, shared sheets and change stream. It writes nothing and reads no contact details. Removing read access keeps it in the team.</span></li>
           </ul>
+          <p class="note">A robot serves the organization’s automations, for example a dashboard. Only an organization admin creates one, in the “API” module; the <a href="api.html">“Use the API”</a> guide describes it.</p>
           <p class="note">Your team gathers the people affiliated with, appointed to, interested in, or admins of your activity. A person affiliated without an area has the “No area” role. Each appointment also affiliates the person with the activity. You do not read the other members of the organization: only its admins read the full directory. The appointments and interests you see are those of your activities only. An organization admin edits the name of an existing account.</p>
           <figure>
             <img src="../captures/personnes.webp" data-mobile="../captures/mobile/personnes.webp" width="1440" height="900" loading="lazy" alt="People screen, Activity team tab: the filters, then the name, the address, the appointments, the interests, and the role of each person." />
@@ -215,6 +217,7 @@
             <img src="../captures/messages-historique.webp" data-mobile="../captures/mobile/messages-historique.webp" width="1440" height="900" loading="lazy" alt="Messages screen: two messages with their date, subject, template, author, recipients, and status." />
             <figcaption>Messages screen, on the sample organization. The people and the messages are fictional.</figcaption>
           </figure>
+          <p>A message can also be prepared by a program or by an authorized application, for example an assistant. It then shows, under its author, “Prepared by a program” or “Prepared by an application”, with the name of the application. An application that registered itself also carries the “not verified” tag: its name is not verified. The person who authorized the program remains the author of the message, and sends it from their own mail app.</p>
           <p class="note">The status of a message is the one its author declares: Relaytour does not know whether the message went out. A message has at most 500 recipients, and a prepared message can no longer be edited.</p>
           <p class="note">A very long text or a very large number of recipients exceeds what a link to the mail app can carry. The window then asks you to copy the text, or the addresses, and paste them into the message.</p>
         </article>
@@ -401,7 +404,7 @@
       </section>
 
       <footer>
-        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.29.0.
+        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.36.0.
       </footer>
     </main>
     <script src="../../menu.js"></script>
