@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.37.0
 fr:
   titre: >-
     L'API sert la page de l'espace organisateur avec l'aperçu d'un lien

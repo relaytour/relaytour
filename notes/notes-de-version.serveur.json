@@ -2,10 +2,10 @@
   "schemaVersion": 5,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.36.0",
+  "version": "0.37.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.37.0",
       "notes": [
         {
           "id": "2026-11-23-serveur-un-lien-partage-montre-l-apercu-de-l-organisation",
