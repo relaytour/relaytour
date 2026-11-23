@@ -95,10 +95,15 @@
             <li><span><span class="libelle">Organisation</span></span><span>Choisir l'organisation où l'application travaillera. Ce choix n'apparaît que si vous êtes membre de plusieurs organisations.</span></li>
             <li><span><span class="libelle">Lecture seule</span></span><span>Limiter l'application à la lecture des tâches, des fiches, de l'agenda et de l'équipe que vous voyez.</span></li>
             <li><span><span class="libelle">Lecture et écriture</span></span><span>Permettre aussi à l'application de créer, de modifier et de commenter des tâches en votre nom. Ce choix n'apparaît que si l'application demande l'écriture.</span></li>
+            <li><span><span class="libelle">Lire le texte des documents du fournisseur cloud</span></span><span>Permettre à l'application de lire le texte des documents que vous ouvrez déjà dans l'espace organisateur. Sans cette case, elle lit seulement leurs noms. La case est décochée par défaut, et elle n'apparaît que si l'application demande cette lecture.</span></li>
             <li><span><span class="libelle">Seulement ces activités</span></span><span>Choisir les activités que l'application voit. Sans ce choix, l'autorisation couvre toutes vos activités.</span></li>
             <li><span><span class="libelle">Autoriser</span></span><span>Accorder l'accès. Votre navigateur revient dans l'application, qui reçoit ses jetons.</span></li>
             <li><span><span class="libelle">Refuser</span></span><span>Ne rien accorder. Votre navigateur revient dans l'application avec votre refus.</span></li>
           </ul>
+          <figure>
+            <img src="../captures/autoriser-application.webp" data-mobile="../captures/mobile/autoriser-application.webp" width="1440" height="900" loading="lazy" alt="Écran de consentement : une application fictive demande l'accès au compte d'une référente dans l'organisation d'exemple. La portée Lecture et écriture est choisie, la case de lecture du texte des documents est décochée, et toutes les activités sont couvertes." />
+            <figcaption>L'écran de consentement d'une application fictive, qui demande l'écriture et la lecture du texte des documents.</figcaption>
+          </figure>
           <p class="note">Une application qui s'est enregistrée elle-même porte l'étiquette « Non vérifiée ». Son nom vient de l'application seule, et l'installation ne peut pas le confirmer.</p>
         </article>
 
@@ -129,10 +134,14 @@
 
         <article class="verre ecran" id="e-applications">
           <div class="ecran-tete"><h3>La section « Applications autorisées »</h3><span class="route">/&lt;activité&gt;/preferences#applications</span></div>
-          <p>Chaque ligne indique le nom de l'application, sa portée, ses activités, la date de l'accord, la date de fin et le dernier usage.</p>
+          <p>Chaque ligne indique le nom de l'application, sa portée, ses activités, la date de l'accord, la date de fin et le dernier usage. L'étiquette « Texte des documents » signale une application qui lit le texte des documents.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Révoquer</span></span><span>Mettre fin à l'autorisation. L'application reçoit un refus dès sa requête suivante.</span></li>
           </ul>
+          <figure>
+            <img src="../captures/preferences-applications.webp" data-mobile="../captures/mobile/preferences-applications.webp" width="1440" height="900" loading="lazy" alt="Écran Préférences d'une référente : la section Applications autorisées, avec une application fictive en lecture seule sur toutes les activités, qui lit le texte des documents, et son bouton Révoquer." />
+            <figcaption>La section « Applications autorisées », sur l'organisation d'exemple. L'application est fictive.</figcaption>
+          </figure>
           <p class="note">Une autorisation révoquée ou expirée reste affichée trente jours, avec son état. Une personne a au plus vingt autorisations actives dans une organisation.</p>
         </article>
 
@@ -165,7 +174,7 @@
         <div class="grille-3">
           <div class="verre panneau">
             <h3>Lire les autorisations</h3>
-            <p>Le panneau liste les jetons de toute l'organisation. Une autorisation d'application y porte le nom de l'application et son identifiant.</p>
+            <p>Le panneau liste les jetons de toute l'organisation. Une autorisation d'application y porte le nom de l'application, son identifiant et, le cas échéant, l'étiquette « Texte des documents ».</p>
           </div>
           <div class="verre panneau">
             <h3>Révoquer celle d'un membre</h3>
@@ -242,7 +251,7 @@
   &amp;code_challenge=…
   &amp;code_challenge_method=S256
   &amp;resource=https%3A%2F%2Fvotre-installation.exemple</pre>
-          <p class="note">La portée vaut <span class="route">lecture</span>, ou <span class="route">lecture ecriture</span>. La personne peut réduire la portée demandée, jamais l'élargir. Le retour porte <span class="route">code</span>, <span class="route">state</span> et <span class="route">iss</span> (RFC 9207) : l'application vérifie que <span class="route">iss</span> vaut l'émetteur attendu.</p>
+          <p class="note">La portée vaut <span class="route">lecture</span>, ou <span class="route">lecture ecriture</span>. Une application qui lit le texte des documents ajoute <span class="route">documents</span> (voir <a href="api.html#t-documents">Lire le texte d'un document</a>). La personne peut réduire la portée demandée, jamais l'élargir. Le retour porte <span class="route">code</span>, <span class="route">state</span> et <span class="route">iss</span> (RFC 9207) : l'application vérifie que <span class="route">iss</span> vaut l'émetteur attendu.</p>
         </div>
 
         <div class="verre panneau">
@@ -255,7 +264,7 @@
   -d client_id=https://outil.exemple/relaytour/client.json \
   -d redirect_uri=https://outil.exemple/relaytour/retour \
   -d resource=https://votre-installation.exemple</pre>
-          <p class="note">La réponse porte <span class="route">access_token</span> (préfixe <span class="route">rto_</span>, une heure), <span class="route">refresh_token</span> (préfixe <span class="route">rtr_</span>, 90 jours) et la portée accordée dans <span class="route">scope</span>.</p>
+          <p class="note">La réponse porte <span class="route">access_token</span> (préfixe <span class="route">rto_</span>, une heure), <span class="route">refresh_token</span> (préfixe <span class="route">rtr_</span>, 90 jours) et la portée accordée dans <span class="route">scope</span>. Cette portée contient <span class="route">documents</span> seulement si la personne a coché la case des documents.</p>
         </div>
 
         <div class="grille-3">
@@ -280,7 +289,7 @@
             </thead>
             <tbody>
               <tr><th><span class="route">invalid_request</span></th><td>Un paramètre manque ou n'a pas la forme attendue, par exemple un défi PKCE absent ou d'une autre méthode que S256.</td></tr>
-              <tr><th><span class="route">invalid_scope</span></th><td>La portée demandée contient une valeur autre que <span class="route">lecture</span> ou <span class="route">ecriture</span>.</td></tr>
+              <tr><th><span class="route">invalid_scope</span></th><td>La portée demandée contient une valeur autre que <span class="route">lecture</span>, <span class="route">ecriture</span> ou <span class="route">documents</span>.</td></tr>
               <tr><th><span class="route">invalid_target</span></th><td>Le paramètre <span class="route">resource</span> manque ou désigne une autre installation.</td></tr>
               <tr><th><span class="route">invalid_grant</span></th><td>Le code ou le jeton de renouvellement est inconnu, expiré, déjà utilisé ou présenté par une autre application. L'autorisation a pu prendre fin.</td></tr>
               <tr><th><span class="route">access_denied</span></th><td>La personne a refusé l'accès.</td></tr>
@@ -334,7 +343,7 @@
       </section>
 
       <footer>
-        Relaytour, espace organisateur. Mode d'emploi à jour de la version 0.36.0.
+        Relaytour, espace organisateur. Mode d'emploi à jour de la version 0.37.0.
       </footer>
     </main>
     <script src="../menu.js"></script>

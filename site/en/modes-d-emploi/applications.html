@@ -95,10 +95,15 @@
             <li><span><span class="libelle">Organization</span></span><span>Choose the organization where the application will work. This choice only appears if you are a member of several organizations.</span></li>
             <li><span><span class="libelle">Read only</span></span><span>Limit the application to reading the tasks, sheets, calendar and team that you see.</span></li>
             <li><span><span class="libelle">Read and write</span></span><span>Also let the application create, edit and comment on tasks on your behalf. This choice only appears if the application asks for writing.</span></li>
+            <li><span><span class="libelle">Read the text of cloud provider documents</span></span><span>Let the application read the text of the documents that you already open in the organizer workspace. Without this box, it reads only their names. The box is unchecked by default, and it appears only if the application asks for this access.</span></li>
             <li><span><span class="libelle">Only these activities</span></span><span>Choose the activities that the application sees. Without this choice, the authorization covers all your activities.</span></li>
             <li><span><span class="libelle">Allow</span></span><span>Grant access. Your browser returns to the application, which receives its tokens.</span></li>
             <li><span><span class="libelle">Decline</span></span><span>Grant nothing. Your browser returns to the application with your refusal.</span></li>
           </ul>
+          <figure>
+            <img src="../captures/autoriser-application.webp" data-mobile="../captures/mobile/autoriser-application.webp" width="1440" height="900" loading="lazy" alt="Consent screen: a fictitious application asks for access to a coordinator's account in the sample organization. The Read and write scope is selected, the box for reading the text of documents is unchecked, and all activities are covered." />
+            <figcaption>The consent screen of a fictitious application, which asks for write access and for the text of documents.</figcaption>
+          </figure>
           <p class="note">An application that registered itself carries the “Not verified” label. Its name comes from the application alone, and the installation cannot confirm it.</p>
         </article>
 
@@ -129,10 +134,14 @@
 
         <article class="verre ecran" id="e-applications">
           <div class="ecran-tete"><h3>The “Authorized applications” section</h3><span class="route">/&lt;activity&gt;/preferences#applications</span></div>
-          <p>Each line shows the name of the application, its scope, its activities, the date of approval, the end date and the last use.</p>
+          <p>Each line shows the name of the application, its scope, its activities, the date of approval, the end date and the last use. The “Document text” label marks an application that reads the text of documents.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Revoke</span></span><span>End the authorization. The application receives a refusal on its next request.</span></li>
           </ul>
+          <figure>
+            <img src="../captures/preferences-applications.webp" data-mobile="../captures/mobile/preferences-applications.webp" width="1440" height="900" loading="lazy" alt="Preferences screen of a coordinator: the Authorized applications section, with a fictitious application in read-only access to all activities, which reads the text of documents, and its Revoke button." />
+            <figcaption>The “Authorized applications” section, in the sample organization. The application is fictitious.</figcaption>
+          </figure>
           <p class="note">A revoked or expired authorization stays in the list for thirty days, with its state. A person has at most twenty active authorizations in one organization.</p>
         </article>
 
@@ -165,7 +174,7 @@
         <div class="grille-3">
           <div class="verre panneau">
             <h3>Read the authorizations</h3>
-            <p>The panel lists the tokens of the whole organization. An application authorization shows the name of the application and its identifier.</p>
+            <p>The panel lists the tokens of the whole organization. An application authorization shows the name of the application, its identifier and, where relevant, the “Document text” label.</p>
           </div>
           <div class="verre panneau">
             <h3>Revoke a member’s authorization</h3>
@@ -242,7 +251,7 @@
   &amp;code_challenge=…
   &amp;code_challenge_method=S256
   &amp;resource=https%3A%2F%2Fyour-installation.example</pre>
-          <p class="note">The scope is <span class="route">lecture</span> (read), or <span class="route">lecture ecriture</span> (read and write). The person can narrow the requested scope, never widen it. The callback carries <span class="route">code</span>, <span class="route">state</span> and <span class="route">iss</span> (RFC 9207): the application checks that <span class="route">iss</span> is the expected issuer.</p>
+          <p class="note">The scope is <span class="route">lecture</span> (read), or <span class="route">lecture ecriture</span> (read and write). An application that reads the text of documents adds <span class="route">documents</span> (see <a href="api.html#t-documents">Read the text of a document</a>). The person can narrow the requested scope, never widen it. The callback carries <span class="route">code</span>, <span class="route">state</span> and <span class="route">iss</span> (RFC 9207): the application checks that <span class="route">iss</span> is the expected issuer.</p>
         </div>
 
         <div class="verre panneau">
@@ -255,7 +264,7 @@
   -d client_id=https://tool.example/relaytour/client.json \
   -d redirect_uri=https://tool.example/relaytour/callback \
   -d resource=https://your-installation.example</pre>
-          <p class="note">The response carries <span class="route">access_token</span> (prefix <span class="route">rto_</span>, one hour), <span class="route">refresh_token</span> (prefix <span class="route">rtr_</span>, 90 days) and the granted scope in <span class="route">scope</span>.</p>
+          <p class="note">The response carries <span class="route">access_token</span> (prefix <span class="route">rto_</span>, one hour), <span class="route">refresh_token</span> (prefix <span class="route">rtr_</span>, 90 days) and the granted scope in <span class="route">scope</span>. This scope contains <span class="route">documents</span> only if the person checked the documents box.</p>
         </div>
 
         <div class="grille-3">
@@ -280,7 +289,7 @@
             </thead>
             <tbody>
               <tr><th><span class="route">invalid_request</span></th><td>A parameter is missing or malformed, for example a missing PKCE challenge or a method other than S256.</td></tr>
-              <tr><th><span class="route">invalid_scope</span></th><td>The requested scope contains a value other than <span class="route">lecture</span> or <span class="route">ecriture</span>.</td></tr>
+              <tr><th><span class="route">invalid_scope</span></th><td>The requested scope contains a value other than <span class="route">lecture</span>, <span class="route">ecriture</span> or <span class="route">documents</span>.</td></tr>
               <tr><th><span class="route">invalid_target</span></th><td>The <span class="route">resource</span> parameter is missing or names another installation.</td></tr>
               <tr><th><span class="route">invalid_grant</span></th><td>The code or refresh token is unknown, expired, already used or presented by another application. The authorization may have ended.</td></tr>
               <tr><th><span class="route">access_denied</span></th><td>The person declined access.</td></tr>
@@ -334,7 +343,7 @@
       </section>
 
       <footer>
-        Relaytour, organizer workspace. User guide up to date with version 0.36.0.
+        Relaytour, organizer workspace. User guide up to date with version 0.37.0.
       </footer>
     </main>
     <script src="../../menu.js"></script>

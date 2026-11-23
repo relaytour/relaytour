@@ -5,6 +5,29 @@
   "version": "0.37.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-11-23-orga-la-description-d-une-case-s-affiche-sous-son-libelle",
+          "date": "2026-11-23",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La description d'une case s'affiche sous son libellé",
+            "texte": "Dans la création d'un jeton d'accès et sur l'écran de consentement d'une application, la description de la case des documents et de celle des membres s'affiche sur sa propre ligne. Elle ne se colle plus au libellé.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A checkbox description appears below its label",
+            "texte": "When you create an access token, and on an application's consent screen, the description of the documents checkbox and of the members checkbox appears on its own line. It no longer runs into the label.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.36.0",
       "notes": [
         {

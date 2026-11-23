@@ -1461,6 +1461,11 @@ button.rt-ligne-lien {
   color: var(--rt-encre-55);
 }
 
+/* La description d'une case à cocher, sous son libellé. */
+.rt-note-ligne {
+  display: block;
+}
+
 /* Puces de filtre (Puces, PuceBascule). Une puce d'un groupe exclusif active
    se lit en encre pleine ; une bascule active se lit en primaire clair. */
 .rt-puces {
