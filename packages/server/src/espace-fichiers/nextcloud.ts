@@ -641,7 +641,7 @@ export function espaceNextcloud(
       },
     }))
     const texteRecu = await texteBorne(reponse)
-    let donnees: unknown = {}
+    let donnees: unknown
     try {
       donnees = (JSON.parse(texteRecu) as { ocs?: { data?: unknown } }).ocs
         ?.data
