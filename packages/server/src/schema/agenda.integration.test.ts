@@ -341,6 +341,17 @@ describe('lecture de l’agenda', () => {
     }
   })
 
+  it('refuse tous les périmètres sans session, sans affectation, archivé ou extérieur', async () => {
+    const variables = { e: ids.edition, ech: true, tous: true }
+    expect(code(await executer(null, AGENDA, variables))).toBe('FORBIDDEN')
+    for (const qui of [ids.membre, ids.archive, ids.adminAutre]) {
+      expect(code(await executer(qui, AGENDA, variables))).toBe('FORBIDDEN')
+    }
+    expect(
+      code(await executer(ids.externe, AGENDA, variables, slugAutre))
+    ).toBe('FORBIDDEN')
+  })
+
   it('n’ajoute pas les échéances d’un périmètre archivé', async () => {
     await prisma.perimetre.update({
       where: { id: ids.basket },
