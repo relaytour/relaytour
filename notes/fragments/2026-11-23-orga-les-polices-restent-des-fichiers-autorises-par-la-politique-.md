@@ -3,6 +3,7 @@ cible: orga
 type: correctif
 audience: interne
 etat: prevu
+version: 0.37.1
 fr:
   titre: >-
     Les polices restent des fichiers, autorisés par la politique de contenu
