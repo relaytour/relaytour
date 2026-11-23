@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.37.0
 fr:
   titre: >-
     Un lien partagé montre l'aperçu de l'organisation
