@@ -155,8 +155,27 @@ const ORDRE_SORTES: Record<SorteElement, number> = {
 async function perimetresDesEcheances(
   ctx: Parameters<typeof accesAuPerimetre>[0],
   edition: { id: string; activiteId: string },
-  demandes: readonly (string | number)[] | null | undefined
+  demandes: readonly (string | number)[] | null | undefined,
+  tous = false
 ): Promise<string[]> {
+  if (tous) {
+    // Tous les périmètres non archivés de l'activité que la personne lit, en
+    // consultation comprise : la même règle que pour une liste demandée.
+    const perimetres = await prisma.perimetre.findMany({
+      where: {
+        activiteId: edition.activiteId,
+        organisationId: ctx.organisation!.id,
+        archivedAt: null,
+      },
+      select: { id: true, organisationId: true, activiteId: true },
+    })
+    const lus: string[] = []
+    for (const perimetre of perimetres) {
+      if ((await accesAuPerimetre(ctx, perimetre)) !== 'AUCUN')
+        lus.push(perimetre.id)
+    }
+    return lus
+  }
   if (demandes === null || demandes === undefined) {
     return [...(await ctx.perimetresAffectes(edition.id))]
   }
@@ -194,6 +213,11 @@ builder.queryFields(t => ({
       perimetreIds: t.arg.idList({
         description:
           'Les périmètres des échéances. Sans valeur : les périmètres de la personne pour la période.',
+      }),
+      tousLesPerimetres: t.arg.boolean({
+        defaultValue: false,
+        description:
+          'Les échéances de tous les périmètres non archivés de l’activité que la personne lit. L’emporte sur `perimetreIds`.',
       }),
     },
     resolve: async (_root, args, ctx) => {
@@ -261,7 +285,8 @@ builder.queryFields(t => ({
         const perimetreIds = await perimetresDesEcheances(
           ctx,
           lue,
-          args.perimetreIds
+          args.perimetreIds,
+          args.tousLesPerimetres ?? false
         )
         const taches =
           perimetreIds.length === 0

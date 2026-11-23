@@ -157,21 +157,34 @@ interface ReunionAVenir {
 }
 
 /**
- * La prochaine réunion qui concerne la personne : une réunion de l'agenda
- * global, une réunion d'un de ses périmètres, ou une réunion où elle est
- * convoquée. Une réunion commencée reste la prochaine jusqu'à sa fin (état
- * `PREVUE`, ADR 0066). Nul si aucune réunion n'est prévue.
+ * Vrai si la réunion concerne la personne : une réunion de l'agenda global,
+ * d'un de ses périmètres, ou une réunion où elle est convoquée.
+ */
+export function concerneLaPersonne(
+  reunion: Pick<ReunionAVenir, 'estConvoquee' | 'perimetre'>,
+  mesPerimetres: ReadonlySet<string>
+): boolean {
+  return (
+    !reunion.perimetre ||
+    reunion.estConvoquee ||
+    mesPerimetres.has(reunion.perimetre.id)
+  )
+}
+
+/**
+ * La prochaine réunion qui concerne la personne (`concerneLaPersonne`), ou de
+ * tout périmètre avec `tous`. Une réunion commencée reste la prochaine jusqu'à
+ * sa fin (état `PREVUE`, ADR 0066). Nul si aucune réunion n'est prévue.
  */
 export function prochaineReunion<T extends ReunionAVenir>(
   reunions: readonly T[],
-  mesPerimetres: ReadonlySet<string>
+  mesPerimetres: ReadonlySet<string>,
+  tous = false
 ): T | null {
   let suivante: T | null = null
   for (const r of reunions) {
     if (r.etat !== 'PREVUE') continue
-    const concerne =
-      !r.perimetre || r.estConvoquee || mesPerimetres.has(r.perimetre.id)
-    if (!concerne) continue
+    if (!tous && !concerneLaPersonne(r, mesPerimetres)) continue
     if (!suivante || Date.parse(r.debut) < Date.parse(suivante.debut)) {
       suivante = r
     }

@@ -47,6 +47,7 @@ import {
   grouperParMoisAgenda,
   joursDeLaSemaine,
   jourLocal,
+  concerneLaPersonne,
   libelleJours,
   prochaineReunion,
   quantieme,
@@ -63,8 +64,16 @@ import { libelleMois } from '../lib/retroplanning'
 import { comparerTextes } from '../lib/langue'
 
 const AGENDA = graphql(`
-  query Agenda($editionId: ID!, $echeances: Boolean) {
-    agenda(editionId: $editionId, echeances: $echeances) {
+  query Agenda(
+    $editionId: ID!
+    $echeances: Boolean
+    $tousLesPerimetres: Boolean
+  ) {
+    agenda(
+      editionId: $editionId
+      echeances: $echeances
+      tousLesPerimetres: $tousLesPerimetres
+    ) {
       peutGerer
       edition {
         id
@@ -251,6 +260,9 @@ export default function Agenda() {
   const { data: perimetres } = useQuery(PERIMETRES)
   const editionId = parametres.get('edition') ?? courante?.editionCourante?.id
   const [echeances, setEcheances] = useState(true)
+  const [reunionsAffichees, setReunionsAffichees] = useState(true)
+  // « Tous les périmètres » n'est jamais actif à l'ouverture : il ne se garde pas.
+  const [tousChoisi, setTousChoisi] = useState(false)
   const [passe, setPasse] = useState(false)
   const [vueChoisie, setVueChoisie] = useState<Vue>(() =>
     lireRegroupement(CLE_VUE_AGENDA, VUES, 'liste')
@@ -284,7 +296,11 @@ export default function Agenda() {
     null
   )
   const { data, error } = useQuery(AGENDA, {
-    variables: { editionId: editionId ?? '', echeances },
+    variables: {
+      editionId: editionId ?? '',
+      echeances,
+      tousLesPerimetres: tousChoisi,
+    },
     skip: editionId === undefined,
     fetchPolicy: 'cache-and-network',
   })
@@ -307,6 +323,21 @@ export default function Agenda() {
   // La grille du mois demande de la largeur : un téléphone garde la liste.
   const vue: Vue = vueChoisie === 'mois' && ecrans.md ? 'mois' : 'liste'
   const agenda = data?.agenda
+  // Le bouton « Tous les périmètres » n'existe que pour les admins de l'activité.
+  const tous = tousChoisi && (agenda?.peutGerer ?? false)
+  const mesPerimetres = useMemo(
+    () => new Set((moi?.moi?.affectations ?? []).map(a => a.perimetre.id)),
+    [moi]
+  )
+  // Les réunions affichées : celles qui concernent la personne, ou toutes avec
+  // « Tous les périmètres ».
+  const reunionsVisibles = useMemo(
+    () =>
+      (reunions?.reunions ?? []).filter(
+        r => tous || concerneLaPersonne(r, mesPerimetres)
+      ),
+    [reunions, tous, mesPerimetres]
+  )
   const elements = useMemo(() => agenda?.elements ?? [], [agenda])
   const phases = elements.filter(e => e.sorte === 'PHASE')
   const datesCles = elements.filter(e => e.sorte === 'DATE_CLE')
@@ -318,7 +349,7 @@ export default function Agenda() {
   const lignes = useMemo(() => {
     const toutes: Ligne[] = [
       ...elements,
-      ...(reunions?.reunions ?? []).map(ligneDeReunion),
+      ...(reunionsAffichees ? reunionsVisibles.map(ligneDeReunion) : []),
     ]
     return toutes.sort(
       (a, b) =>
@@ -329,7 +360,7 @@ export default function Agenda() {
         ) ||
         comparerTextes(a.titre, b.titre)
     )
-  }, [elements, reunions])
+  }, [elements, reunionsAffichees, reunionsVisibles])
   const groupes = useMemo(
     () => grouperParMoisAgenda(lignes, passe ? null : aujourdhui),
     [lignes, passe, aujourdhui]
@@ -354,12 +385,8 @@ export default function Agenda() {
   }, [agenda, perimetres, moi, t])
   // La prochaine réunion qui concerne la personne, en tête des deux vues.
   const suivante = useMemo(
-    () =>
-      prochaineReunion(
-        reunions?.reunions ?? [],
-        new Set((moi?.moi?.affectations ?? []).map(a => a.perimetre.id))
-      ),
-    [reunions, moi]
+    () => prochaineReunion(reunions?.reunions ?? [], mesPerimetres, tous),
+    [reunions, mesPerimetres, tous]
   )
 
   if (editionId === undefined && courante && !courante.editionCourante) {
@@ -808,13 +835,27 @@ export default function Agenda() {
             <SeparateurPuces />
           </>
         )}
+        <PuceBascule actif={reunionsAffichees} onChange={setReunionsAffichees}>
+          {t({ message: 'Réunions', comment: 'Puce : afficher les réunions' })}
+        </PuceBascule>
         <PuceBascule actif={echeances} onChange={setEcheances}>
-          <Trans>Échéances de mes périmètres</Trans>
+          {t({
+            message: 'Échéances',
+            comment: 'Puce : afficher les échéances des tâches',
+          })}
         </PuceBascule>
         {vue === 'liste' && (
           <PuceBascule actif={passe} onChange={setPasse}>
             <Trans>Jours passés</Trans>
           </PuceBascule>
+        )}
+        {agenda?.peutGerer && (
+          <>
+            <SeparateurPuces />
+            <PuceBascule actif={tousChoisi} onChange={setTousChoisi}>
+              <Trans>Tous les périmètres</Trans>
+            </PuceBascule>
+          </>
         )}
       </div>
 

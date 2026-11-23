@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-11-23-orga-l-agenda-filtre-les-reunions",
+          "date": "2026-11-23",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'agenda filtre les réunions",
+            "texte": "L'agenda affiche vos réunions : celles de l'agenda global, de vos périmètres et celles où vous êtes convoqué·e. La puce « Réunions » les affiche ou les masque, comme la puce « Échéances ». Les admins de l'activité disposent aussi d'une puce « Tous les périmètres », inactive à l'ouverture, qui ajoute les réunions et les échéances de chaque périmètre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The calendar filters meetings",
+            "texte": "The calendar shows your meetings: those of the global calendar, those of your areas and those you have a meeting notice for. The \"Meetings\" chip shows or hides them, like the \"Due dates\" chip. Activity admins also have an \"All areas\" chip, off when the screen opens, which adds the meetings and due dates of every area.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-11-23-orga-l-agenda-affiche-la-prochaine-reunion-en-tete",
           "date": "2026-11-23",
           "type": "fonctionnalite",

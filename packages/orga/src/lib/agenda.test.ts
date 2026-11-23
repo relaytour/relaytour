@@ -143,4 +143,14 @@ describe('prochaineReunion', () => {
     ).toBe('mien')
     expect(prochaineReunion(reunions.slice(0, 1), new Set())).toBeNull()
   })
+
+  it('prend toutes les réunions avec « Tous les périmètres »', () => {
+    const reunions = [
+      reunion('autre', '2026-11-20T08:00:00.000Z', {
+        perimetre: { id: 'natation' },
+      }),
+      reunion('globale', '2026-11-22T08:00:00.000Z'),
+    ]
+    expect(prochaineReunion(reunions, new Set(), true)?.id).toBe('autre')
+  })
 })
