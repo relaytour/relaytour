@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.37.1
 fr:
   titre: >-
     La description d'une case s'affiche sous son libellé
