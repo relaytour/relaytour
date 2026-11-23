@@ -101,6 +101,7 @@ const ANGLAIS_DES_GESTES = {
   'Documents liés': 'Linked documents',
   'Votre adresse dans l’organigramme': 'Your address in the org chart',
   'Jetons et API': 'Tokens and API',
+  'Applications autorisées': 'Authorized applications',
   'API pour les programmes tiers': 'API for third-party programs',
   'Votre agenda dans Outlook, Google ou Apple':
     'Your calendar in Outlook, Google or Apple',
@@ -508,6 +509,35 @@ const ECRANS = [
     compte: 'referent',
     chemin: `${ACTIVITE}/preferences`,
     apres: placer('Jetons et API', 140),
+  },
+  // Les applications autorisées, dont une qui lit le texte des documents (ADR 0067,
+  // 0072). L'instance d'exemple porte une autorisation de l'application fictive.
+  {
+    nom: 'preferences-applications',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/preferences`,
+    apres: placer('Applications autorisées', 140),
+  },
+  // L'écran de consentement d'une application qui demande l'écriture et le texte
+  // des documents. Chaque chargement crée une demande, valable quinze minutes.
+  // L'instance garde une copie de l'application fictive, décrite par un document
+  // (`https://assistant.exemple.org/client.json`, adresse de retour
+  // `https://assistant.exemple.org/retour`) : le serveur ne lit pas ce document
+  // tant que la copie est valable.
+  {
+    nom: 'autoriser-application',
+    compte: 'referent',
+    chemin: `/oauth/autoriser?${new URLSearchParams({
+      client_id: 'https://assistant.exemple.org/client.json',
+      redirect_uri: 'https://assistant.exemple.org/retour',
+      response_type: 'code',
+      code_challenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+      code_challenge_method: 'S256',
+      scope: 'lecture ecriture documents',
+      resource: values.origine,
+      state: 'captures',
+    })}`,
+    apres: `document.querySelector('.ant-checkbox-wrapper') !== null`,
   },
   // Le tiroir de la cloche, rangé par activité (ADR 0032). La cloche est dans la
   // barre haute, hors de <main>.
