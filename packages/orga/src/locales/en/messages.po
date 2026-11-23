@@ -399,6 +399,10 @@ msgstr "{jourPlage}, {heureDebut} → {heureFin}"
 msgid "{jourPlage}, {heureDebut} → {heureFin} le lendemain"
 msgstr "{jourPlage}, {heureDebut} → {heureFin} the next day"
 
+#: src/pages/Agenda.tsx
+msgid "{jourReunion}, de {debutReunion} à {finReunion}"
+msgstr "{jourReunion}, {debutReunion} to {finReunion}"
+
 #: src/composants/Priorites.tsx
 msgid "{jours, plural, one {Échéance dans # jour} other {Échéance dans # jours}}"
 msgstr "{jours, plural, one {Due in # day} other {Due in # days}}"
@@ -2028,6 +2032,10 @@ msgstr "Show my address in the org chart"
 #: src/pages/Agenda.tsx
 msgid "Agenda"
 msgstr "Calendar"
+
+#: src/pages/Agenda.tsx
+msgid "Agenda global"
+msgstr "Activity-wide calendar"
 
 #: src/composants/ReunionDetail.tsx
 #: src/composants/SondageDetail.tsx
@@ -4892,6 +4900,7 @@ msgstr "Awaiting approval"
 msgid "En attente de votre accord dans Nextcloud. <0>Rouvrir la page de Nextcloud</0>"
 msgstr "Waiting for your approval in Nextcloud. <0>Reopen the Nextcloud page</0>"
 
+#. Réunion commencée
 #. Statut d’un message préparé
 #. Statut d’une période
 #. Statut d’une tâche
@@ -4902,6 +4911,7 @@ msgstr "Waiting for your approval in Nextcloud. <0>Reopen the Nextcloud page</0>
 #: src/lib/messages.ts
 #: src/lib/taches.ts
 #: src/pages/admin/Editions.tsx
+#: src/pages/Agenda.tsx
 #: src/pages/Charge.tsx
 #: src/pages/Retroplanning.tsx
 msgid "En cours"
@@ -9538,6 +9548,10 @@ msgstr "Next team check-in: {jourPoint} at {heurePoint}."
 msgid "Prochaine place au programme : {dateProchaine}."
 msgstr "Next place in the schedule: {dateProchaine}."
 
+#: src/pages/Agenda.tsx
+msgid "Prochaine réunion"
+msgstr "Next meeting"
+
 #: src/composants/ReunionsDuPerimetre.tsx
 msgid "Prochaines réunions"
 msgstr "Upcoming meetings"
@@ -9901,6 +9915,7 @@ msgstr "Join the organizing team"
 
 #: src/composants/Priorites.tsx
 #: src/composants/ReunionDetail.tsx
+#: src/pages/Agenda.tsx
 msgid "Rejoindre la visio"
 msgstr "Join the video call"
 
@@ -12158,6 +12173,10 @@ msgstr "View preview"
 #: src/pages/MonEspace.tsx
 msgid "Voir la charge de l’équipe"
 msgstr "See the team workload"
+
+#: src/pages/Agenda.tsx
+msgid "Voir la réunion"
+msgstr "View meeting"
 
 #: src/pages/FicheEditeur.tsx
 msgid "Voir la version actuelle"

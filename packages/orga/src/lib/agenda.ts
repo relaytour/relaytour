@@ -147,3 +147,34 @@ export function joursDeLaSemaine(): string[] {
     format.format(new Date(instantDuJour(decalerJour('2027-03-01', rang))))
   )
 }
+
+interface ReunionAVenir {
+  /** Instant ISO du début. */
+  debut: string
+  etat: 'ANNULEE' | 'PREVUE' | 'TERMINEE'
+  estConvoquee: boolean
+  perimetre?: { id: string } | null
+}
+
+/**
+ * La prochaine réunion qui concerne la personne : une réunion de l'agenda
+ * global, une réunion d'un de ses périmètres, ou une réunion où elle est
+ * convoquée. Une réunion commencée reste la prochaine jusqu'à sa fin (état
+ * `PREVUE`, ADR 0066). Nul si aucune réunion n'est prévue.
+ */
+export function prochaineReunion<T extends ReunionAVenir>(
+  reunions: readonly T[],
+  mesPerimetres: ReadonlySet<string>
+): T | null {
+  let suivante: T | null = null
+  for (const r of reunions) {
+    if (r.etat !== 'PREVUE') continue
+    const concerne =
+      !r.perimetre || r.estConvoquee || mesPerimetres.has(r.perimetre.id)
+    if (!concerne) continue
+    if (!suivante || Date.parse(r.debut) < Date.parse(suivante.debut)) {
+      suivante = r
+    }
+  }
+  return suivante
+}

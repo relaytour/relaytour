@@ -5,6 +5,7 @@ import {
   LeftOutlined,
   PlusOutlined,
   RightOutlined,
+  VideoCameraOutlined,
 } from '@ant-design/icons'
 import type { MessageDescriptor } from '@lingui/core'
 import { msg, plural, t } from '@lingui/core/macro'
@@ -18,6 +19,7 @@ import ChoixEdition from '../composants/ChoixEdition'
 import DateCleFormulaire, {
   type DateCleSaisie,
 } from '../composants/DateCleFormulaire'
+import { PastilleEtat } from '../composants/Etat'
 import { DeuxColonnes, Groupe, Panneau, Section } from '../composants/Panneau'
 import PastillePerimetre from '../composants/PastillePerimetre'
 import ReunionDetail from '../composants/ReunionDetail'
@@ -46,11 +48,14 @@ import {
   joursDeLaSemaine,
   jourLocal,
   libelleJours,
+  prochaineReunion,
   quantieme,
   toucheLeMois,
 } from '../lib/agenda'
 import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
+import { jourAvecNom } from '../lib/priorites'
+import { heureCourte, minutes } from '../lib/programme'
 import { useGroupesReplies } from '../lib/groupes-replies'
 import { ecrireRegroupement, lireRegroupement } from '../lib/regroupement'
 import { EDITION_COURANTE, PERIMETRES } from '../lib/requetes'
@@ -90,11 +95,13 @@ const REUNIONS = graphql(`
       titre
       jour
       jourFin
+      debut
       heureDebut
       heureFin
       statut
       etat
       lieu
+      lienVisio
       detailMasque
       estConvoquee
       maReponse
@@ -253,6 +260,9 @@ export default function Agenda() {
     ecrireRegroupement(CLE_VUE_AGENDA, valeur)
   }
   const aujourdhui = jourLocal()
+  // L'instant d'ouverture de l'écran : la pastille « En cours » le compare au
+  // début de la réunion. L'état de la réunion vient du serveur à chaque relecture.
+  const [maintenant] = useState(() => Date.now())
   const [mois, setMois] = useState(aujourdhui.slice(0, 7))
   const [saisie, setSaisie] = useState<DateCleSaisie | 'nouvelle' | null>(null)
   const [nouvelleReunion, setNouvelleReunion] =
@@ -338,6 +348,15 @@ export default function Agenda() {
       .filter(p => miens.has(p.id))
       .map(p => ({ perimetreId: p.id, nom: p.nom }))
   }, [agenda, perimetres, moi, t])
+  // La prochaine réunion qui concerne la personne, en tête des deux vues.
+  const suivante = useMemo(
+    () =>
+      prochaineReunion(
+        reunions?.reunions ?? [],
+        new Set((moi?.moi?.affectations ?? []).map(a => a.perimetre.id))
+      ),
+    [reunions, moi]
+  )
 
   if (editionId === undefined && courante && !courante.editionCourante) {
     // L'abonnement partagé ne dépend d'aucune période : ses admins le gèrent
@@ -508,6 +527,96 @@ export default function Agenda() {
       </li>
     )
   }
+
+  const panneauProchaineReunion = (() => {
+    if (!suivante) return null
+    const perimetre = suivante.perimetre
+      ? perimetreDe.get(suivante.perimetre.id)
+      : undefined
+    const jourReunion =
+      suivante.jourFin === suivante.jour
+        ? majuscule(jourAvecNom(suivante.jour))
+        : libelleJours(suivante.jour, suivante.jourFin)
+    const debutReunion = heureCourte(minutes(suivante.heureDebut))
+    const finReunion = heureCourte(minutes(suivante.heureFin))
+    const enCours = Date.parse(suivante.debut) <= maintenant
+    const reponseConvocation = suivante.maReponse
+      ? t(REPONSES[suivante.maReponse])
+      : null
+    const details = [
+      suivante.lieu,
+      suivante.estConvoquee
+        ? reponseConvocation
+          ? t`Vous êtes convoqué·e, ${reponseConvocation}`
+          : t`Vous êtes convoqué·e, sans réponse`
+        : null,
+    ].filter(Boolean)
+    return (
+      <div style={{ marginBottom: 16 }}>
+        <Panneau
+          titre={t`Prochaine réunion`}
+          repliable={{
+            replie: replies.estReplie('prochaine-reunion'),
+            onBasculer: () => replies.basculer('prochaine-reunion'),
+            nom: t`Prochaine réunion`,
+          }}
+          extra={
+            enCours && (
+              <PastilleEtat variante="en-cours">
+                {t({ message: 'En cours', comment: 'Réunion commencée' })}
+              </PastilleEtat>
+            )
+          }
+        >
+          <div className="rt-prochaine-reunion">
+            <div className="rt-prochaine-reunion-texte">
+              <span className="rt-prochaine-reunion-quand">
+                {t`${jourReunion}, de ${debutReunion} à ${finReunion}`}
+              </span>
+              <span className="rt-prochaine-reunion-titre">
+                <button
+                  type="button"
+                  className="rt-agenda-ouvrir"
+                  onClick={() => ouvrirReunion(suivante.id)}
+                >
+                  {suivante.titre}
+                </button>
+                {perimetre ? (
+                  <PastillePerimetre
+                    nom={perimetre.nom}
+                    couleur={perimetre.couleur}
+                  />
+                ) : (
+                  <span className="rt-note">
+                    <Trans>Agenda global</Trans>
+                  </span>
+                )}
+              </span>
+              {details.length > 0 && (
+                <span className="rt-note">{details.join(' · ')}</span>
+              )}
+            </div>
+            <div className="rt-prochaine-reunion-actions">
+              {suivante.lienVisio && (
+                <Button
+                  type="primary"
+                  icon={<VideoCameraOutlined />}
+                  href={suivante.lienVisio}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Trans>Rejoindre la visio</Trans>
+                </Button>
+              )}
+              <Button onClick={() => ouvrirReunion(suivante.id)}>
+                <Trans>Voir la réunion</Trans>
+              </Button>
+            </div>
+          </div>
+        </Panneau>
+      </div>
+    )
+  })()
 
   const listeParMois =
     groupes.length === 0 ? (
@@ -704,6 +813,8 @@ export default function Agenda() {
           </PuceBascule>
         )}
       </div>
+
+      {agenda && panneauProchaineReunion}
 
       {!agenda ? (
         <Skeleton active />
