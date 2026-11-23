@@ -11,7 +11,7 @@ import type { MessageDescriptor } from '@lingui/core'
 import { msg, plural, t } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Empty, Grid, Result, Skeleton } from 'antd'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
 import { AbonnementActivite } from '../composants/AbonnementAgenda'
@@ -260,9 +260,13 @@ export default function Agenda() {
     ecrireRegroupement(CLE_VUE_AGENDA, valeur)
   }
   const aujourdhui = jourLocal()
-  // L'instant d'ouverture de l'écran : la pastille « En cours » le compare au
-  // début de la réunion. L'état de la réunion vient du serveur à chaque relecture.
-  const [maintenant] = useState(() => Date.now())
+  // L'heure courante, relue chaque minute : la pastille « En cours » la compare
+  // au début de la réunion. L'état de la réunion vient du serveur à chaque relecture.
+  const [maintenant, setMaintenant] = useState(() => Date.now())
+  useEffect(() => {
+    const minuteur = setInterval(() => setMaintenant(Date.now()), 60_000)
+    return () => clearInterval(minuteur)
+  }, [])
   const [mois, setMois] = useState(aujourdhui.slice(0, 7))
   const [saisie, setSaisie] = useState<DateCleSaisie | 'nouvelle' | null>(null)
   const [nouvelleReunion, setNouvelleReunion] =
