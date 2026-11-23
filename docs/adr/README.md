@@ -74,5 +74,6 @@
 | [0070](0070-garde-d-etat-des-decisions-de-candidature.md) | Garde d'état des décisions de candidature | Acceptée |
 | [0071](0071-origine-d-un-message-prepare-par-une-application.md) | Origine d'un message préparé par une application | Acceptée |
 | [0072](0072-lecture-du-texte-d-un-document-par-un-jeton.md) | Lecture du texte d'un document par un jeton | Acceptée |
+| [0073](0073-apercu-d-un-lien-partage.md) | Aperçu d'un lien partagé | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

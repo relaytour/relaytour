@@ -22,6 +22,18 @@ function adresseRetourValide(s: string): boolean {
   }
 }
 
+// L'image de l'aperçu d'un lien (ADR 0073) : une adresse https, ou un chemin de
+// l'espace organisateur que le serveur complète par ORIGINE_ORGA.
+function imageApercuValide(s: string): boolean {
+  if (/^\/(?!\/)[^\s"'<>]*$/.test(s)) return true
+  if (/[\s"'<>]/.test(s)) return false
+  try {
+    return new URL(s).protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 // Une liste d'identifiants ou d'hôtes d'applications tierces (ADR 0067).
 const listeApplications = optionnelle.transform(s =>
   s === undefined
@@ -242,6 +254,24 @@ const EnvSchema = z
     ESPACE_FICHIERS_RETOUR_ETIQUETTE: optionnelle.refine(
       s => s === undefined || /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(s),
       'ESPACE_FICHIERS_RETOUR_ETIQUETTE : minuscules, chiffres et tirets, 63 caractères au plus'
+    ),
+    // Aperçu d'un lien partagé (ADR 0073). Le dossier des fichiers de l'espace
+    // organisateur, monté en lecture seule : le serveur y lit index.html pour servir
+    // la page avec l'aperçu de l'organisation. Absent, la route de la page répond 404.
+    ESPACE_ORGANISATEUR_DOSSIER: optionnelle,
+    // Textes et image de l'aperçu, que l'hébergeur peut remplacer. Absents, l'aperçu
+    // présente Relaytour et relaytour.org.
+    APERCU_NOM_SITE: optionnelle.refine(
+      s => s === undefined || s.length <= 60,
+      'APERCU_NOM_SITE : 60 caractères au plus'
+    ),
+    APERCU_DESCRIPTION: optionnelle.refine(
+      s => s === undefined || s.length <= 300,
+      'APERCU_DESCRIPTION : 300 caractères au plus'
+    ),
+    APERCU_IMAGE: optionnelle.refine(
+      s => s === undefined || imageApercuValide(s),
+      'APERCU_IMAGE : adresse https ou chemin qui commence par /'
     ),
     // Liste des modes d'emploi, liée depuis le menu du compte et le mail
     // d'invitation : un dossier ou une page. Les pages des rôles se placent dans

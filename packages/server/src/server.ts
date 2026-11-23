@@ -39,6 +39,7 @@ import {
 import { fermerLesFlux } from './lib/flux.ts'
 import { revoquerApplicationsRefusees } from './oauth/entretien.ts'
 import { routesOAuth } from './oauth/routes.ts'
+import { routePageOrganisateur } from './route-page-organisateur.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
 import { avecLangue, langueDe, languesDuNavigateur } from './lib/langue.ts'
@@ -419,6 +420,9 @@ app.post(`${CHEMIN_REVOCATION}/:jeton`, servirRevocation('POST'))
 // Serveur d'autorisation des applications tierces (ADR 0067) : métadonnées et
 // points /oauth/*, que le relais de l'exploitant transmet.
 routesOAuth(app)
+
+// Page de l'espace organisateur avec l'aperçu d'un lien partagé (ADR 0073).
+routePageOrganisateur(app)
 
 // Better Auth lit lui-même le corps des requêtes : son routeur passe avant express.json().
 const gestionnaireAuth = toNodeHandler(auth)

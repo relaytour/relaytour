@@ -5,6 +5,47 @@
   "version": "0.36.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-11-23-serveur-un-lien-partage-montre-l-apercu-de-l-organisation",
+          "date": "2026-11-23",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un lien partagé montre l'aperçu de l'organisation",
+            "texte": "Un lien vers l'espace organisateur, partagé dans une messagerie, affiche une carte avec le nom de votre organisation. L'icône de l'application ne s'affiche plus en grand.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A shared link shows the organization's preview",
+            "texte": "A link to the organizer workspace, shared in a messaging app, shows a card with your organization's name. The app icon no longer appears in large size.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-11-23-serveur-l-api-sert-la-page-de-l-espace-organisateur-avec-l-apercu-d-",
+          "date": "2026-11-23",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'API sert la page de l'espace organisateur avec l'aperçu d'un lien",
+            "texte": "La route `/espace/page` sert `index.html` avec le nom de l'organisation dans les balises Open Graph. Elle lit le dossier `ESPACE_ORGANISATEUR_DOSSIER`, monté en lecture seule. Le `Caddyfile` d'exemple relaie vers elle toute adresse de l'espace qui ne désigne pas un fichier, et sert la page depuis le dossier si l'API ne répond pas. Le Compose de référence monte `ORGA_DIR` dans l'API. `APERCU_NOM_SITE`, `APERCU_DESCRIPTION` et `APERCU_IMAGE` remplacent le nom du site, la description et l'image. Sans ces changements, un lien partagé montre l'aperçu fixe de Relaytour.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The API serves the organizer workspace page with a link preview",
+            "texte": "The `/espace/page` route serves `index.html` with the organization's name in the Open Graph tags. It reads the `ESPACE_ORGANISATEUR_DOSSIER` folder, mounted read-only. The example `Caddyfile` relays every workspace address that does not name a file to this route, and serves the page from the folder when the API does not answer. The reference Compose file mounts `ORGA_DIR` into the API. `APERCU_NOM_SITE`, `APERCU_DESCRIPTION` and `APERCU_IMAGE` replace the site name, the description and the image. Without these changes, a shared link shows the fixed Relaytour preview.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.36.0",
       "notes": [
         {

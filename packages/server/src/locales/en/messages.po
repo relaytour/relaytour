@@ -1514,6 +1514,27 @@ msgid "Une date clé dure {max} jours au plus."
 msgstr "A key date lasts {max} days at most."
 
 #. js-lingui-explicit-id
+#: src/lib/apercu.ts
+msgid "Espace organisateur"
+msgstr "Organizer workspace"
+
+#. js-lingui-explicit-id
+#: src/lib/apercu.ts
+#: src/lib/application.ts
+msgid "Espace organisateur · {nom}"
+msgstr "Organizer workspace · {nom}"
+
+#. js-lingui-explicit-id
+#: src/lib/apercu.ts
+msgid "Les équipes d’une organisation préparent ici leurs activités avec Relaytour, logiciel libre présenté sur relaytour.org."
+msgstr "The teams of an organization prepare their activities here with Relaytour, free software presented at relaytour.org."
+
+#. js-lingui-explicit-id
+#: src/lib/apercu.ts
+msgid "Les équipes de l’organisation {nom} préparent ici leurs activités avec Relaytour, logiciel libre présenté sur relaytour.org."
+msgstr "The teams of {nom} prepare their activities here with Relaytour, free software presented at relaytour.org."
+
+#. js-lingui-explicit-id
 #: src/lib/appartenances.ts
 msgid "Cette personne est archivée dans votre organisation : un admin de l’organisation la rétablit depuis l’annuaire."
 msgstr "This person is archived in your organization: an organization admin can restore them from the directory."
@@ -1562,11 +1583,6 @@ msgstr "A window falls within the days of the period or of its schedule."
 #: src/lib/appels.ts
 msgid "Le statut de ce choix a changé depuis votre lecture."
 msgstr "The status of this choice has changed since you read it."
-
-#. js-lingui-explicit-id
-#: src/lib/application.ts
-msgid "Espace organisateur · {nom}"
-msgstr "Organizer workspace · {nom}"
 
 #. js-lingui-explicit-id
 #: src/lib/benevoles.ts
