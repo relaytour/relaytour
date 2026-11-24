@@ -107,7 +107,7 @@ Un hébergeur a aussi besoin d'un portail client, d'une facturation et de palier
 ### Worker
 
 - Un seul préfixe BullMQ existe par installation. Les identifiants des jobs planifiés et des résumés portent l'organisation. Les clés de limite de la connexion restent par adresse : la connexion vaut pour le compte, pas pour une organisation.
-- Un mail porte le nom et les couleurs de l'organisation de son job, sinon de l'unique organisation de la personne, sinon de la première organisation de l'installation.
+- Un mail porte le nom et les couleurs de l'organisation de son job, sinon de l'unique organisation de la personne, sinon de l'unique organisation de l'installation. Une installation qui porte plusieurs organisations sert alors l'identité d'amorçage de l'environnement (ADR 0030). Un mail sans organisation désignée ne prend ainsi le nom ni le logo d'aucune organisation.
 - Une personne membre de plusieurs organisations reçoit le résumé de chacune. La date du dernier résumé se note par organisation (migration `resumes_par_organisation`).
 - Un planificateur horaire crée et retire un scheduler `rappels` et un scheduler `resumes` par organisation active, avec son fuseau horaire.
 - `genererRappels` et `personnesAResumer` reçoivent une organisation. `periodeEdition` cherche la période précédente dans la même activité. `aujourdhuiParis` devient `aujourdhui(fuseau)`.
